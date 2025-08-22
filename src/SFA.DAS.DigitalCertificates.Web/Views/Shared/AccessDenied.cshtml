@@ -1,0 +1,23 @@
+﻿@inject SFA.DAS.Employer.Shared.UI.UrlBuilder UrlBuilder
+
+@{
+    ViewData["Title"] = "You need different access to view this page";
+    ViewBag.GaData.Vpv = "/error/403";
+}
+<main class="govuk-main-wrapper govuk-main-wrapper--auto-spacing" id="main-content">
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+            <h1 class="govuk-heading-l">@ViewData["Title"]</h1>
+
+            <p class="govuk-body">
+                To continue, contact the employer account owner who can change what they allow you to do.
+            </p>
+
+            <p class="govuk-body">
+                If you came here by mistake, go back to the <a class="govuk-link" href="@UrlBuilder.AccountsLink()">homepage of this service</a>.
+            </p>
+        </div>
+    </div>
+</main>
+
+

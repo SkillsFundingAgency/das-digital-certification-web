@@ -1,0 +1,15 @@
+﻿@using SFA.DAS.DigitalCertificates.Web.Controllers
+@{
+    ViewData["Title"] = "Digital Certificates Check";
+    ViewBag.GaData.Vpv = "/digital-certificates-check";
+}
+<main class="govuk-main-wrapper govuk-main-wrapper--auto-spacing">
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+            <h1 class="govuk-heading-xl">@ViewData["Title"]</h1>
+            <a asp-route="@HomeController.VerifiedRouteGet" class="govuk-button">
+                Verify
+            </a>
+        </div>
+    </div>
+</main>

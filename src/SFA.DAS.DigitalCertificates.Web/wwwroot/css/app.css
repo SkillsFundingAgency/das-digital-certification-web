@@ -1,0 +1,342 @@
+.app-highlight {
+    color: #fff;
+    background: #1d70b8;
+    padding: 15px;
+    margin-bottom: 15px;
+    display: inline-block;
+}
+
+@media (min-width: 40.0625em) {
+    .app-highlight {
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+}
+
+.app-highlight__title {
+    font-weight: 700;
+    font-size: 16px;
+    margin: 0;
+}
+
+.app-highlight__figure {
+    font-weight: 700;
+    font-size: 36px;
+    margin: 0 0 -5px;
+}
+
+.app-data {
+    padding: 20px;
+    margin-bottom: 20px;
+    background: #f3f2f1;
+}
+
+.app-data__figure {
+    margin: 0;
+    padding: 0 !important;
+    color: inherit;
+}
+
+.app-data__title {
+    margin: 0;
+    padding: 0 !important;
+    color: inherit;
+    font-size:15px;
+}
+
+.app-data--information {
+    background: #1d70b8;
+    color: #fff;
+}
+
+@media (min-width: 40.0625em) {
+    .app-task-list {
+        min-width: 0;
+    }
+}
+
+.app-task-list__group-header-hint {
+    margin: 5px 0;
+}
+
+.app-task-list__group-header-tag {
+    margin-top: -5px;
+    margin-bottom: 15px;
+}
+
+@media (min-width: 40.0625em) {
+    .app-task-list__group-header {
+        display: flex;
+    }
+
+    .app-task-list__group-header-tag {
+        float: right;
+        margin-bottom: 0;
+        margin-top: 25px;
+    }
+}
+
+/* Overwrite the style in the CDN */
+.das-task-list__task-tag {
+    display: block;
+}
+
+.app-checkboxes__select-all {
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #b1b4b6;
+}
+
+/* Inline definition list */
+
+.app-dl-inline {
+    overflow: hidden;
+    margin: 0;
+}
+
+.app-dl-inline__title {
+    clear: both;
+    float: left;
+    margin-right: .3em;
+}
+
+.app-dl-inline__title--strong {
+    font-weight: 700;
+    clear: both;
+    float: left;
+    margin-right: .3em;
+}
+
+.app-dl-inline__title:after, .app-dl-inline__title--strong:after {
+    content: ':';
+}
+
+.app-dl-inline__title:after {
+    content: ':';
+}
+
+.app-dl-inline__title-no-colon:after {
+    content: '';
+}
+
+.app-dl-inline__definition {
+    margin: 0;
+    float: left;
+}
+
+.app-dl-inline__definition--strong {
+    font-weight: 700;
+    margin: 0;
+    float: left;
+}
+
+/* Inline definition list with icons */
+
+.app-dl-icon-list {
+    overflow: hidden;
+    margin: 0;
+    padding-left: 1.6em;
+}
+
+.app-dl-icon-list__title {
+    clear: both;
+    float: left;
+    margin-right: .3em;
+    position: relative;
+    display: flex;
+}
+
+.app-dl-icon-list__title:after {
+    content: ':';
+}
+
+.app-dl-icon-list__definition {
+    font-weight: 700;
+    margin: 0;
+    float: left;
+}
+
+.app-dl-icon-list__icon {
+    height: .95em;
+    width: .95em;
+    position: absolute;
+    background-size: contain;
+    background-repeat: no-repeat;
+    left: -1.6em;
+    top: .2em;
+    overflow: hidden;
+    text-indent: -9999px;
+}
+
+.app-dl-icon-list__icon--tick {
+    background-image: url("../assets/images/icon-tick--green.svg");
+    width: 1.2em;
+}
+
+/* Darker footer area for a highlight element */
+
+.app-highlight__footer {
+    background: #dbd9d6;
+    margin: 0 -15px -15px -15px;
+    padding: 10px 15px;
+}
+
+@media (min-width: 40.0625em) {
+    .app-highlight__footer {
+        margin: 0 -20px -25px -20px;
+        padding: 15px 20px;
+    }
+}
+
+.app-highlight__footer p:last-child {
+    margin: 0
+}
+
+/* Extra fields */
+
+.app-extra-fields__fieldset {
+    border-left: 5px solid #b1b4b6;
+    padding: 0 0 0 20px;
+    margin: 0 0 30px;
+    padding-top: 10px;
+}
+
+.js-enabled .app-extra-fields__fieldset {
+    margin-bottom: 10px;
+}
+
+.js-enabled .app-extra-fields__fieldset--all-hidden {
+    padding: 0;
+    margin: 0;
+}
+
+.app-extra-fields__form-group {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.app-extra-field__form-group-link--add {
+    display: inline-block;
+    font-size: 19px;
+    margin-bottom: 20px;
+}
+
+.app-extra-field__form-group-link--remove {
+    display: inline-block;
+    margin-top: 5px;
+    margin-bottom: -10px;
+}
+
+.app-extra-field__form-group--hidden {
+    display: none;
+}
+
+.das-preformatted-body {
+    white-space: pre-wrap;
+}
+
+.app-estimate {
+    display: none;
+    background: #1d70b8;
+    padding: 20px;
+    margin-bottom: 20px;
+    animation: fadeIn ease 1s;
+}
+
+.app-estimate--not-enough {
+    background: #d4351c;
+}
+
+.app-estimate__heading {
+    color: #fff;
+    margin-bottom: 5px;
+}
+
+.app-estimate__estimate {
+    color: #fff;
+    margin: 0;
+    }
+
+@keyframes fadeIn {
+    0% {opacity:0;}
+    100% {opacity:1;}
+}
+
+.app-icon-list {
+    line-height: 1.2em;
+}
+
+.app-icon-list__list-item {
+    position: relative;
+    padding-left: 1.6em;
+}
+
+.app-icon-list__icon {
+    height: .95em;
+    width: .95em;
+    position: absolute;
+    background-size: contain;
+    background-repeat: no-repeat;
+    left: 0;
+    top: .2em;
+    overflow: hidden;
+    text-indent: -9999px;
+}
+
+.app-icon-list__icon--cross {
+    background-image: url("/assets/images/icon-cross--red.svg");
+}
+
+.app-icon-list__icon--tick {
+    background-image: url("/assets/images/icon-tick--green.svg");
+    width: 1.2em;
+}
+
+.app-icon-list__icon--user {
+    background-image: url("/assets/images/icon-user--blue.svg");
+}
+
+.app-icon-list__icon--email {
+    background-image: url("/assets/images/icon-email--blue.svg");
+}
+
+.app-icon-list__icon--phone {
+    background-image: url("/assets/images/icon-phone--blue.svg");
+}
+
+.app-icon-list__icon--website {
+    background-image: url("/assets/images/icon-website--blue.svg");
+}
+
+/* Section break options */  
+
+.app-section-break--dashed {
+    border-bottom-style: dashed;
+}
+
+.app-criteria-list {
+    color: grey;
+    font-size: 16px;
+}
+.app-section-break--medium {
+    border-bottom-width: 2px;
+}
+
+.app-section-break--heavy {
+    border-bottom-width: 5px;
+}
+
+
+.app-download-link {
+    background-image: url("/assets/images/icon-document--black.svg");
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-position: top left;
+    padding: .5em .5em .5em 2.4em;
+    display: inline-block;
+}
+
+/* Additional autocomplete */
+.autocomplete__input--error {
+    border-color: #d4351c; /* Same color as .govuk-input--error */
+}
