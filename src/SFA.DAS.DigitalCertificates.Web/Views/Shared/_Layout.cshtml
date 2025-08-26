@@ -1,16 +1,10 @@
 ﻿@using Microsoft.Extensions.Configuration
-@using SFA.DAS.Employer.Shared.UI.Models
 @using SFA.DAS.DigitalCertificates.Web.Extensions
 @using SFA.DAS.DigitalCertificates.Web.ViewDataKeys
 @inject IConfiguration Configuration
 
-@{
-    ViewBag.HideHeaderBorder = true;
-    var cookieBannerModel = new CookieBannerModel { AccountId = "" };
-    var footerModel = new FooterModel { AccountId = "", UsePrivacyV2 = true };
-
-    var hideHeader = false;// (bool) ViewData[ViewDataKeys.HideAccountNavigation];
-    var hideNavigationLinks = false;// !(bool) ViewData[ViewDataKeys.ShowNav];
+@{ 
+    var showServiceNavigation = !(bool)(ViewData[ViewDataKeys.HideServiceNavigation] ?? false);
 }
 
 <!DOCTYPE html>
@@ -18,7 +12,7 @@
 <head>
     <partial name="_GoogleAnalytics" model="GoogleAnalyticsTag.Head" />
     <meta charset="utf-8" />
-    <title>@(ViewData["Title"] ?? "Manage apprenticeships")</title>
+    <title>@(ViewData[ViewDataKeys.ServiceName])</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#0b0c0c" />
 
@@ -46,12 +40,12 @@
 
     <a href="#main-content" class="govuk-skip-link">Skip to main content</a>
 
-    <partial name="_CookieBanner" model="@cookieBannerModel"></partial>
+    <partial name="_CookieBanner"></partial>
 
     <partial name="_Header" />
-    @if (("" != null && !hideHeader) || (!hideHeader && hideNavigationLinks))
+    @if (showServiceNavigation)
     {
-        <partial name="_Menu" />
+        <partial name="_ServiceNavigation" />
     }
 
     <div class="govuk-phase-banner govuk-width-container">
@@ -68,7 +62,7 @@
     <div class="govuk-width-container">
         @RenderBody()
     </div>
-    <partial name="_Footer" model="@footerModel" />
+    <partial name="_Footer" />
     <partial name="_GoogleAnalyticsInfo" />
 
     @* These javascripts are not included in the project they are loaded from the cdn *@

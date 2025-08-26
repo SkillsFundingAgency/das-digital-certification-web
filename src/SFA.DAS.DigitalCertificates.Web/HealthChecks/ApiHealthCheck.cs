@@ -20,7 +20,7 @@ namespace SFA.DAS.DigitalCertificates.Web.HealthChecks
 
         public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = new())
         {
-            var description = "Ping of Digital Certificates outer API";
+            var description = "Ping of Apprenticeship certificates outer API";
 
             try
             {

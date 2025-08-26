@@ -15,7 +15,6 @@ using SFA.DAS.DigitalCertificates.Web.Attributes;
 using SFA.DAS.DigitalCertificates.Web.Controllers;
 using SFA.DAS.DigitalCertificates.Web.Filters;
 using SFA.DAS.DigitalCertificates.Web.StartupExtensions;
-using SFA.DAS.Employer.Shared.UI;
 using SFA.DAS.GovUK.Auth.Controllers;
 using SFA.DAS.Validation.Mvc.Extensions;
 using System.Diagnostics.CodeAnalysis;
@@ -61,8 +60,7 @@ namespace SFA.DAS.DigitalCertificates.Web
                     options.Filters.Add(new EnableGoogleAnalyticsAttribute(_configuration.GetSection<GoogleAnalytics>()));
                     options.Filters.Add(new GoogleAnalyticsFilterAttribute());
                 })
-                .AddControllersAsServices()
-                .SetDefaultNavigationSection(NavigationSection.AccountsFinance);
+                .AddControllersAsServices();
 
             services
                 .AddValidatorsFromAssemblyContaining<Startup>()
@@ -80,7 +78,6 @@ namespace SFA.DAS.DigitalCertificates.Web
                 .AddEncodingService()
                 .AddServiceRegistrations()
                 .AddOuterApi(configurationOuterApi)
-                .AddEmployerSharedUi(_configuration)
                 .AddSingleton<IActionContextAccessor, ActionContextAccessor>();
 
 #if DEBUG

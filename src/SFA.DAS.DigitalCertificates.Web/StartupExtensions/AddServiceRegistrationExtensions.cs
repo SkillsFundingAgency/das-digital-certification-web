@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using RestEase.HttpClientFactory;
@@ -8,6 +9,8 @@ using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
 using SFA.DAS.DigitalCertificates.Infrastructure.Services.CacheStorage;
 using SFA.DAS.DigitalCertificates.Infrastructure.Services.SessionStorage;
 using SFA.DAS.DigitalCertificates.Web.Attributes;
+using SFA.DAS.DigitalCertificates.Web.Authorization;
+using SFA.DAS.DigitalCertificates.Web.Orchestrators;
 using SFA.DAS.GovUK.Auth.Authentication;
 using SFA.DAS.GovUK.Auth.Employer;
 using SFA.DAS.Http.Configuration;
@@ -28,6 +31,8 @@ namespace SFA.DAS.DigitalCertificates.Web.StartupExtensions
             services.AddTransient<ICacheStorageService, CacheStorageService>();
 
             services.AddTransient<ValidateRequiredQueryParametersAttribute>();
+            services.AddTransient<IHomeOrchestrator, HomeOrchestrator>();
+            services.AddTransient<IClaimsTransformation, DigitalCertificatesClaimsTransformer>();
 
             return services;
         }

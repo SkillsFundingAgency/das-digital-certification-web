@@ -5,8 +5,10 @@ namespace SFA.DAS.DigitalCertificates.Web.ViewDataKeys
     [ExcludeFromCodeCoverage]
     public static class ViewDataKeys
     {
-        public const string HideAccountNavigation = "UI.HideNavigation";
-        public const string ShowNav = nameof(ShowNav);
+        public const string Title = "UI.Title";
+        public const string ServiceName = "UI.ServiceName";
+        public const string GaDataVpvPrefix = "UI.GaDataVpvPrefix";
+        public const string HideServiceNavigation = "UI.HideServiceNavigation";
         public const string GoogleAnalyticsConfiguration = "UI.GoogleAnalyticsConfiguration";
     }
 }

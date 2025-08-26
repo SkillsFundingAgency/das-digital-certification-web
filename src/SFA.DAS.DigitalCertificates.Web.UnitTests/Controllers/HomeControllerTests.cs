@@ -6,26 +6,25 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Moq;
 using NUnit.Framework;
-using SFA.DAS.Employer.Shared.UI;
-using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
 using SFA.DAS.DigitalCertificates.TestHelper.Extensions;
 using SFA.DAS.DigitalCertificates.Web.Controllers;
 using SFA.DAS.DigitalCertificates.Web.Models;
+using SFA.DAS.DigitalCertificates.Web.Orchestrators;
 using SFA.DAS.GovUK.Auth.Services;
 using System;
 using System.Collections.Generic;
 using System.Security.Claims;
-using System.Threading.Tasks;
 
 namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
 {
     [TestFixture]
     public class HomeControllerTests
     {
+        private Mock<IHomeOrchestrator> _orchestratorMock;
         private Mock<IConfiguration> _configMock;
+        private Mock<IGovUkAuthenticationService> _govUkAuthenticationServiceMock;
         private Mock<IHttpContextAccessor> _contextAccessorMock;
         private Mock<ILogger<HomeController>> _loggerMock;
         private HomeController _sut;
@@ -33,12 +32,16 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
         [SetUp]
         public void Setup()
         {
+            _orchestratorMock = new Mock<IHomeOrchestrator>();
             _configMock = new Mock<IConfiguration>();
+            _govUkAuthenticationServiceMock = new Mock<IGovUkAuthenticationService>();
             _contextAccessorMock = new Mock<IHttpContextAccessor>();
             _loggerMock = new Mock<ILogger<HomeController>>();
             
             _sut = new HomeController(
+                _orchestratorMock.Object,
                 _configMock.Object,
+                _govUkAuthenticationServiceMock.Object,
                 _contextAccessorMock.Object,
                 _loggerMock.Object
             );

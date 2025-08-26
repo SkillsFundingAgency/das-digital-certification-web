@@ -6,14 +6,19 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using SFA.DAS.DigitalCertificates.Web.Exceptions;
+using SFA.DAS.DigitalCertificates.Web.Extensions;
 using SFA.DAS.DigitalCertificates.Web.Models;
 using SFA.DAS.DigitalCertificates.Web.Models.User;
 using SFA.DAS.DigitalCertificates.Web.Orchestrators;
 using SFA.DAS.DigitalCertificates.Web.StartupExtensions;
 using SFA.DAS.GovUK.Auth.Authentication;
+using SFA.DAS.GovUK.Auth.Exceptions;
 using SFA.DAS.GovUK.Auth.Models;
 using SFA.DAS.GovUK.Auth.Services;
+using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -31,6 +36,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         public const string VerifiedRouteGet = nameof(VerifiedRouteGet);
         public const string CheckRouteGet = nameof(CheckRouteGet);
         public const string LockedRouteGet = nameof(LockedRouteGet);
+        public const string CookiesRouteGet = nameof(CookiesRouteGet);
+        public const string CookieDetailsRouteGet = nameof(CookieDetailsRouteGet);
         public const string ErrorRouteGet = nameof(ErrorRouteGet);
         public const string SignOutRouteGet = nameof(SignOutRouteGet);
         public const string UserSignedOutRouteGet = nameof(UserSignedOutRouteGet);
@@ -66,25 +73,33 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             return View();
         }
 
-        [Route("verified",  Name = VerifiedRouteGet)]
+        [Route("verified", Name = VerifiedRouteGet)]
         [Authorize(Policy = nameof(PolicyNames.IsVerified))]
         public async Task<IActionResult> Verified()
         {
             var token = await HttpContextAccessor.HttpContext.GetTokenAsync("access_token");
             var details = await _govUkAuthenticationService.GetAccountDetails(token);
 
+            if (details == null)
+                throw new VerifyException("Unable to load verify details");
+
             await _homeOrchestrator.CreateOrUpdateUser(new CreateOrUpdateUserModel
             {
                 GovUkIdentifier = details.Sub,
                 EmailAddress = details.Email,
                 PhoneNumber = details.PhoneNumber,
-                Names = details.CoreIdentityJwt.Vc.CredentialSubject.GetHistoricalNames().Select(x => new NameModel
-                { 
-                    ValidSince = x.ValidFrom,
-                    ValidUntil = x.ValidUntil,
-                    FamilyName = x.FamilyNames,
-                    GivenNames = x.GivenNames
-                }).ToList()
+                Names = details.CoreIdentityJwt.Vc.CredentialSubject
+                    .GetHistoricalNames().Select(x => new NameModel
+                    {
+                        ValidSince = x.ValidFrom,
+                        ValidUntil = x.ValidUntil,
+                        FamilyName = x.FamilyNames,
+                        GivenNames = x.GivenNames
+                    }).ToList(),
+                DateOfBirth = details.CoreIdentityJwt.Vc.CredentialSubject.BirthDates
+                        .OrderByDescending(p => p.ValidUntil)
+                        .First().Value
+                        .ParseEnGbDateTime()
             });
 
             return RedirectToRoute(CertificatesController.CertificatesListRouteGet);
@@ -93,6 +108,18 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         [Route("locked", Name = LockedRouteGet)]
         [Authorize(Policy = nameof(PolicyNames.IsAuthenticated))]
         public IActionResult Locked()
+        {
+            return View();
+        }
+
+        [Route("cookies", Name = CookiesRouteGet)]
+        public IActionResult Cookies()
+        {
+            return View();
+        }
+
+        [Route("cookie-details", Name = CookieDetailsRouteGet)]
+        public IActionResult CookieDetails()
         {
             return View();
         }
