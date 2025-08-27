@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authentication;
-using SFA.DAS.DigitalCertificates.Domain.Interfaces;
-using SFA.DAS.DigitalCertificates.Infrastructure.Services.CacheStorage;
-using System;
+using SFA.DAS.DigitalCertificates.Web.Services;
+using SFA.DAS.GovUK.Auth.Authentication;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -10,13 +9,11 @@ namespace SFA.DAS.DigitalCertificates.Web.Authorization
 {
     public sealed class DigitalCertificatesClaimsTransformer : IClaimsTransformation
     {
-        private readonly IDigitalCertificatesOuterApi _outerApi;
-        private readonly ICacheStorageService _cacheStorageService;
+        private readonly IUserCacheService _userCacheService;
 
-        public DigitalCertificatesClaimsTransformer(IDigitalCertificatesOuterApi outerApi, ICacheStorageService cacheStorageService)
+        public DigitalCertificatesClaimsTransformer(IUserCacheService userCacheService)
         {
-            _outerApi = outerApi;
-            _cacheStorageService = cacheStorageService;
+            _userCacheService = userCacheService;
         }
 
         public async Task<ClaimsPrincipal> TransformAsync(ClaimsPrincipal principal)
@@ -29,11 +26,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Authorization
                 var govUkIdentifier = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(govUkIdentifier)) return principal;
 
-                var user = await _cacheStorageService.GetOrCreateAsync($"user:{govUkIdentifier}", async e =>
-                {
-                    e.AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(60);
-                    return await _outerApi.GetUser(govUkIdentifier);
-                });
+                var user = await _userCacheService.CacheUserForGovUkIdentifier(govUkIdentifier);
 
                 var authorizationDecisionClaim = principal.FindFirst(ClaimTypes.AuthorizationDecision);
                 if (authorizationDecisionClaim != null)
@@ -41,11 +34,11 @@ namespace SFA.DAS.DigitalCertificates.Web.Authorization
                     var authorizationDecision = authorizationDecisionClaim.Value;
                     if (!string.IsNullOrEmpty(authorizationDecision))
                     {
-                        var userSuspended = user.LockedAt.HasValue ? "Suspended" : string.Empty;
-                        if (userSuspended != authorizationDecision)
+                        var userAuthorizationDecision = user.LockedAt.HasValue ? AuthorizationDecisions.Suspended : AuthorizationDecisions.Allowed;
+                        if (userAuthorizationDecision != authorizationDecision)
                         {
                             principal.Identities.First().RemoveClaim(authorizationDecisionClaim);
-                            principal.Identities.First().AddClaim(new Claim(ClaimTypes.AuthorizationDecision, userSuspended));
+                            principal.Identities.First().AddClaim(new Claim(ClaimTypes.AuthorizationDecision, userAuthorizationDecision));
                         }
                     }
                 }

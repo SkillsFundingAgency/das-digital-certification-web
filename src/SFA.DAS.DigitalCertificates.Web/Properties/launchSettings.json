@@ -16,13 +16,16 @@
         "EnvironmentName": "LOCAL"
       }
     },
-    "SFA.DAS.DigitalCertificates.Web": {
+    "SFA.DAS.DigitalCertificates.Web.Stub.Auth": {
       "commandName": "Project",
       "launchBrowser": true,
       "applicationUrl": "https://localhost:5003;http://localhost:5002",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
         "EnvironmentName": "LOCAL",
+        "StubId": "71CDF94A-B6F0-41EE-F895-08DDE4955C11",
+        "StubEmail": "chris+sfa+one@humesoftware.com",
+        "StubPhone": "01234 567890",
         "StubAuth": "true"
       }
     },

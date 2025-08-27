@@ -10,7 +10,7 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="RestEase" Version="1.6.4" />
     <PackageReference Include="SFA.DAS.Encoding" Version="1.1.76" />
-    <PackageReference Include="SFA.DAS.GovUK.Auth" Version="17.1.141" />
+    <PackageReference Include="SFA.DAS.GovUK.Auth" Version="17.1.149-prerelease-23" />
     <PackageReference Include="SFA.DAS.Http" Version="3.2.69" />
     <PackageReference Include="System.Text.Encodings.Web" Version="8.0.0" />
   </ItemGroup>

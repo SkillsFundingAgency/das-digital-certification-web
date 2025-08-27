@@ -41,6 +41,11 @@
                 @Html.TextBoxFor(m => m.Email, new { @class = "govuk-input", id = "Email", type = "email" })
             </govuk-form-group>
 
+            <govuk-form-group asp-for="Phone">
+                <label class="govuk-label" for="Phone">Phone</label>
+                @Html.TextBoxFor(m => m.Phone, new { @class = "govuk-input", id = "Phone", type = "phone" })
+            </govuk-form-group>
+
             @if (!string.IsNullOrEmpty(GovUkOidcConfiguration.RequestedUserInfoClaims))
             {
                 <govuk-form-group asp-for="UserFile">

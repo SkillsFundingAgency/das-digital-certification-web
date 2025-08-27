@@ -16,6 +16,9 @@ namespace SFA.DAS.DigitalCertificates.Web.Validators
                 .NotEmpty().WithMessage("Email is required")
                 .EmailAddress().WithMessage("Enter a valid email address");
 
+            RuleFor(x => x.Phone)
+                .NotEmpty().WithMessage("Phone is required");
+
             When(_ => !string.IsNullOrWhiteSpace(config.RequestedUserInfoClaims), () =>
             {
                 RuleFor(x => x.UserFile)

@@ -11,6 +11,7 @@ using SFA.DAS.DigitalCertificates.Infrastructure.Services.SessionStorage;
 using SFA.DAS.DigitalCertificates.Web.Attributes;
 using SFA.DAS.DigitalCertificates.Web.Authorization;
 using SFA.DAS.DigitalCertificates.Web.Orchestrators;
+using SFA.DAS.DigitalCertificates.Web.Services;
 using SFA.DAS.GovUK.Auth.Authentication;
 using SFA.DAS.GovUK.Auth.Employer;
 using SFA.DAS.Http.Configuration;
@@ -29,6 +30,7 @@ namespace SFA.DAS.DigitalCertificates.Web.StartupExtensions
 
             services.AddTransient<ISessionStorageService, SessionStorageService>();
             services.AddTransient<ICacheStorageService, CacheStorageService>();
+            services.AddTransient<IUserCacheService, UserCacheService>();
 
             services.AddTransient<ValidateRequiredQueryParametersAttribute>();
             services.AddTransient<IHomeOrchestrator, HomeOrchestrator>();

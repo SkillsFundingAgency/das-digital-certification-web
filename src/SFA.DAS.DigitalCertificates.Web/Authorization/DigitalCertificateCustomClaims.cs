@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using SFA.DAS.DigitalCertificates.Domain.Interfaces;
+using SFA.DAS.DigitalCertificates.Web.Services;
+using SFA.DAS.GovUK.Auth.Authentication;
 using SFA.DAS.GovUK.Auth.Services;
 using System.Collections.Generic;
 using System.Security.Claims;
@@ -9,11 +10,11 @@ namespace SFA.DAS.DigitalCertificates.Web.Authorization
 {
     public class DigitalCertificateCustomClaims : ICustomClaims
     {
-        private readonly IDigitalCertificatesOuterApi _outerApi;
+        private readonly IUserCacheService _userCacheService;
 
-        public DigitalCertificateCustomClaims(IDigitalCertificatesOuterApi outerApi)
+        public DigitalCertificateCustomClaims(IUserCacheService userCacheService)
         {
-            _outerApi = outerApi;
+            _userCacheService = userCacheService;
         }
 
         public async Task<IEnumerable<Claim>> GetClaims(TokenValidatedContext tokenValidatedContext)
@@ -25,15 +26,14 @@ namespace SFA.DAS.DigitalCertificates.Web.Authorization
         {
             var claims = new List<Claim>();
             
-            var user = await _outerApi.GetUser(principal.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            var user = await _userCacheService.CacheUserForGovUkIdentifier(principal.FindFirst(ClaimTypes.NameIdentifier)?.Value);
             if (user != null)
             {
-                claims.Add(new Claim(DigitalCertificateClaimsTypes.UserId, user.Id.ToString()));
-
-                if (user.LockedAt.HasValue)
-                {
-                    claims.Add(new Claim(ClaimTypes.AuthorizationDecision, "Suspended"));
-                }
+                claims.Add(new Claim(DigitalCertificateClaimsTypes.UserId, 
+                    user.Id.ToString()));
+                
+                claims.Add(new Claim(ClaimTypes.AuthorizationDecision, 
+                    user.LockedAt.HasValue ? AuthorizationDecisions.Suspended : AuthorizationDecisions.Allowed));
             }
 
             return claims;

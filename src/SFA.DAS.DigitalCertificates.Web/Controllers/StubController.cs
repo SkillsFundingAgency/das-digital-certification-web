@@ -37,6 +37,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             {
                 Id = ModelState.IsValid ? _config["StubId"] : ModelState[nameof(SignInStubViewModel.Id)]?.AttemptedValue,
                 Email = ModelState.IsValid ? _config["StubEmail"] : ModelState[nameof(SignInStubViewModel.Email)]?.AttemptedValue,
+                Phone = ModelState.IsValid ? _config["StubPhone"] : ModelState[nameof(SignInStubViewModel.Phone)]?.AttemptedValue,
                 ReturnUrl = returnUrl
             });
         }
@@ -57,6 +58,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
                 {
                     Id = model.Id,
                     Email = model.Email,
+                    Mobile = model.Phone,
                     GovUkUser = govUkUser
                 });
 
