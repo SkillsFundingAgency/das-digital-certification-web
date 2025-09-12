@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Moq;
 using NUnit.Framework;
 using SFA.DAS.DigitalCertificates.TestHelper.Extensions;
@@ -16,6 +17,7 @@ using SFA.DAS.GovUK.Auth.Services;
 using System;
 using System.Collections.Generic;
 using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
 {
@@ -116,48 +118,58 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
         }
 
         [Test]
-        public void SignOut_ShouldSignOutUser()
+        public async Task SigningOut_ReturnsSignOutResult_WithOidcHint_AndSchemes()
         {
             // Arrange
-            var idToken = "test_id_token";
-            var httpContext = new DefaultHttpContext();
-            _contextAccessorMock.Setup(c => c.HttpContext).Returns(httpContext);
+            var idToken = "some_id_token";
+            var http = new DefaultHttpContext();
+
+            var oidcProps = new AuthenticationProperties();
+            oidcProps.StoreTokens(new[]
+            {
+                new AuthenticationToken { Name = OpenIdConnectParameterNames.IdToken, Value = idToken }
+            });
+
+            var oidcTicket = new AuthenticationTicket(
+                new ClaimsPrincipal(new ClaimsIdentity(CookieAuthenticationDefaults.AuthenticationScheme)),
+                oidcProps,
+                OpenIdConnectDefaults.AuthenticationScheme);
+
+            var cookieTicket = new AuthenticationTicket(
+                new ClaimsPrincipal(new ClaimsIdentity(CookieAuthenticationDefaults.AuthenticationScheme)),
+                new AuthenticationProperties(),
+                CookieAuthenticationDefaults.AuthenticationScheme);
+
+            var auth = new Mock<IAuthenticationService>();
+            auth.Setup(a => a.AuthenticateAsync(http, CookieAuthenticationDefaults.AuthenticationScheme))
+                .ReturnsAsync(AuthenticateResult.Success(cookieTicket));
+            auth.Setup(a => a.AuthenticateAsync(http, OpenIdConnectDefaults.AuthenticationScheme))
+                .ReturnsAsync(AuthenticateResult.Success(oidcTicket));
+
+            var sp = new Mock<IServiceProvider>();
+            sp.Setup(s => s.GetService(typeof(IAuthenticationService))).Returns(auth.Object);
+            http.RequestServices = sp.Object;
+
+            _contextAccessorMock.Setup(a => a.HttpContext).Returns(http);
             _configMock.Setup(c => c["StubAuth"]).Returns("false");
 
-            var claims = new List<Claim>
-            {
-                new Claim("id_token", idToken)
-            };
-
-            httpContext.User = new ClaimsPrincipal(new ClaimsIdentity(claims));
-
-            var authResult = AuthenticateResult.Success(new AuthenticationTicket(
-                new ClaimsPrincipal(new ClaimsIdentity(claims, "Cookies")),
-                new AuthenticationProperties(),
-                CookieAuthenticationDefaults.AuthenticationScheme));
-
-            var authServiceMock = new Mock<IAuthenticationService>();
-            authServiceMock.Setup(s => s.AuthenticateAsync(httpContext, CookieAuthenticationDefaults.AuthenticationScheme))
-                .ReturnsAsync(authResult);
-
-            var serviceProviderMock = new Mock<IServiceProvider>();
-            serviceProviderMock.Setup(s => s.GetService(typeof(IAuthenticationService)))
-                .Returns(authServiceMock.Object);
-
-            httpContext.RequestServices = serviceProviderMock.Object;
-
-            _contextAccessorMock.Setup(c => c.HttpContext.RequestServices).Returns(serviceProviderMock.Object);
-
             // Act
-            var result = _sut.SignOut();
+            var actionResult = await _sut.SigningOut();
 
             // Assert
-            result.Should().NotBeNull();
-            result.AuthenticationSchemes.Should().Contain(new[]
+            var signOut = actionResult as SignOutResult;
+            signOut.Should().NotBeNull();
+
+            signOut!.AuthenticationSchemes.Should().Contain(new[]
             {
                 CookieAuthenticationDefaults.AuthenticationScheme,
                 OpenIdConnectDefaults.AuthenticationScheme
             });
+
+            signOut.Properties.Parameters.Should().ContainKey(OpenIdConnectParameterNames.IdTokenHint);
+            signOut.Properties.Parameters[OpenIdConnectParameterNames.IdTokenHint].Should().Be(idToken);
+
+            auth.Verify(a => a.AuthenticateAsync(http, OpenIdConnectDefaults.AuthenticationScheme), Times.AtLeastOnce);
         }
 
         [Test]

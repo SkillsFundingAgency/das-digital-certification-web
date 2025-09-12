@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using SFA.DAS.DigitalCertificates.Web.Exceptions;
 using SFA.DAS.DigitalCertificates.Web.Extensions;
 using SFA.DAS.DigitalCertificates.Web.Models;
@@ -13,12 +14,8 @@ using SFA.DAS.DigitalCertificates.Web.Models.User;
 using SFA.DAS.DigitalCertificates.Web.Orchestrators;
 using SFA.DAS.DigitalCertificates.Web.StartupExtensions;
 using SFA.DAS.GovUK.Auth.Authentication;
-using SFA.DAS.GovUK.Auth.Exceptions;
-using SFA.DAS.GovUK.Auth.Models;
 using SFA.DAS.GovUK.Auth.Services;
-using System;
 using System.Diagnostics;
-using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -142,11 +139,11 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         [Authorize(Policy = nameof(PolicyNames.IsAuthenticated))]
         public async Task<IActionResult> SigningOut()
         {
-            var idToken = await HttpContext.GetTokenAsync("id_token");
+            var idToken = await HttpContextAccessor.HttpContext
+                .GetTokenAsync(OpenIdConnectDefaults.AuthenticationScheme, OpenIdConnectParameterNames.IdToken);
 
             var authenticationProperties = new AuthenticationProperties();
-            authenticationProperties.Parameters.Clear();
-            authenticationProperties.Parameters.Add("id_token", idToken);
+            authenticationProperties.Parameters[OpenIdConnectParameterNames.IdTokenHint] = idToken;
 
             var authenticationSchemes = new[] { CookieAuthenticationDefaults.AuthenticationScheme };
             if (!bool.TryParse(_config["StubAuth"], out var stubAuth) || !stubAuth)
