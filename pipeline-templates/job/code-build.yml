@@ -15,6 +15,7 @@ jobs:
 
   - template: azure-pipelines-templates/build/step/app-build.yml@das-platform-building-blocks
     parameters:
+      SonarCloudProjectKey: SkillsFundingAgency_das-digital-certification-web
       ContinueOnVulnerablePackageScanError: true
 
   - task: DotNetCoreCLI@2
