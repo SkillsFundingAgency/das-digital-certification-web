@@ -8,7 +8,7 @@ namespace SFA.DAS.DigitalCertificates.Web.StartupExtensions
     [ExcludeFromCodeCoverage]
     public static class CacheStartupExtensions
     {
-        public static IServiceCollection AddCache(this IServiceCollection services, IHostEnvironment environment, DigitalCertificatesWebConfiguration config)
+        public static IServiceCollection AddCache(this IServiceCollection services, DigitalCertificatesWebConfiguration config, IHostEnvironment environment)
         {
             if (environment.IsDevelopment())
             {

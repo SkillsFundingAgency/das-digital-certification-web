@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+using System.Threading.Tasks;
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
@@ -15,10 +17,9 @@ using SFA.DAS.DigitalCertificates.Web.Attributes;
 using SFA.DAS.DigitalCertificates.Web.Controllers;
 using SFA.DAS.DigitalCertificates.Web.Filters;
 using SFA.DAS.DigitalCertificates.Web.StartupExtensions;
+using SFA.DAS.GovUK.Auth.Configuration;
 using SFA.DAS.GovUK.Auth.Controllers;
 using SFA.DAS.Validation.Mvc.Extensions;
-using System.Diagnostics.CodeAnalysis;
-using System.Threading.Tasks;
 
 namespace SFA.DAS.DigitalCertificates.Web
 {
@@ -41,12 +42,14 @@ namespace SFA.DAS.DigitalCertificates.Web
 
             services.AddOpenTelemetryRegistration(_configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"]!);
 
-            var configurationWeb = _configuration.GetSection<DigitalCertificatesWebConfiguration>();
-            var configurationOuterApi = _configuration.GetSection<DigitalCertificatesOuterApiConfiguration>();
+            var webConfiguration = _configuration.GetSection<DigitalCertificatesWebConfiguration>();
+            var outerApiConfiguration = _configuration.GetSection<DigitalCertificatesOuterApiConfiguration>();
+            var govUkOidcConfiguration = _configuration.GetSection<GovUkOidcConfiguration>();
 
             services
-                .AddSingleton(configurationWeb)
-                .AddSingleton(configurationOuterApi);
+                .AddSingleton(webConfiguration)
+                .AddSingleton(outerApiConfiguration)
+                .AddSingleton(govUkOidcConfiguration);
 
             services.AddControllersWithViews()
                 .ConfigureApplicationPartManager(apm =>
@@ -67,17 +70,17 @@ namespace SFA.DAS.DigitalCertificates.Web
                 .AddValidatorsFromAssemblyContaining<GetUserQueryValidator>();
 
             services
-                .AddEmployerAuthentication(_configuration)
+                .AddGovUkOneLoginAuthentication(webConfiguration, _configuration)
                 .AddAuthorizationPolicies()
                 .AddSession()
-                .AddCache(_environment, configurationWeb)
+                .AddCache(webConfiguration, _environment)
                 .AddMemoryCache()
                 .AddCookieTempDataProvider()
-                .AddDasDataProtection(configurationWeb, _environment)
-                .AddDasHealthChecks(configurationWeb)
+                .AddDasDataProtection(webConfiguration, _environment)
+                .AddDasHealthChecks(webConfiguration)
                 .AddEncodingService()
                 .AddServiceRegistrations()
-                .AddOuterApi(configurationOuterApi)
+                .AddOuterApi(outerApiConfiguration)
                 .AddSingleton<IActionContextAccessor, ActionContextAccessor>();
 
 #if DEBUG
