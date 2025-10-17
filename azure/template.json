@@ -70,6 +70,12 @@
             "type": "string",
             "defaultValue": "[utcNow()]"
         },
+        "cdnUrl": {
+            "type": "string"
+        },
+        "stubAuth": {
+            "type": "string"
+        },
         "vnetRouteAllEnabled": {
             "type": "bool",
             "defaultValue": false
@@ -81,7 +87,7 @@
         "resourceGroupName": "[concat(variables('resourceNamePrefix'), '-rg')]",
         "appServiceName": "[concat(variables('resourceNamePrefix'), '-as')]",
         "privateLinkScopeName": "[toLower(concat('das-', parameters('resourceEnvironmentName'),'-shared-ampls'))]",
-        "configNames": "SFA.DAS.DigitalCertificates"
+        "configNames": "SFA.DAS.DigitalCertificates.Web,SFA.DAS.DigitalCertificates.GovSignIn"
     },
     "resources": [
         {
@@ -222,6 +228,18 @@
                                 {
                                     "name": "LoggingRedisKey",
                                     "value": "[parameters('loggingRedisKey')]"
+                                },
+                                {
+                                    "name": "Cdn:Url",
+                                    "value": "[parameters('cdnUrl')]"
+                                },
+                                {
+                                    "name": "ResourceEnvironmentName",
+                                    "value": "[parameters('resourceEnvironmentName')]"
+                                },
+                                {
+                                    "name": "StubAuth",
+                                    "value": "[parameters('stubAuth')]"
                                 }
                             ]
                         }
@@ -280,6 +298,3 @@
         }
     }
 }
-
-
-
