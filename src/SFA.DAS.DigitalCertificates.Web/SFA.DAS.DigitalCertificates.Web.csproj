@@ -11,6 +11,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Models\Home\**" />
+    <Content Remove="Models\Home\**" />
+    <EmbeddedResource Remove="Models\Home\**" />
+    <None Remove="Models\Home\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="AspNetCore.HealthChecks.Redis" Version="8.0.0" />
     <PackageReference Include="Azure.Monitor.OpenTelemetry.AspNetCore" Version="1.2.0" />
     <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0" />
@@ -39,10 +46,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SFA.DAS.DigitalCertificates.Application\SFA.DAS.DigitalCertificates.Application.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Models\Home\" />
   </ItemGroup>
 
   <ItemGroup>

@@ -66,22 +66,16 @@
     <partial name="_GoogleAnalyticsInfo" />
 
     @* These javascripts are not included in the project they are loaded from the cdn *@
-    <script type="module" src="/libs/govuk-frontend/govuk-frontend.min.js"></script>
-    <script type="module" cdnify>
-        import {
-            initAll
-        } from '@Configuration["cdn:url"]/libs/govuk-frontend/govuk-frontend.min.js'
-        initAll()
-    </script>
-    <script src="/libs/accessible-autocomplete/accessible-autocomplete.min.js"></script>
-    <script src="/libs/jquery/jquery.min.js"></script>
-    <script src="/js/das-all.min.js"></script>
-    <script src="/js/app.min.js"></script>
-
+    <script src="libs/govuk-frontend/all.js"></script>
+    <script src="libs/jquery/jquery.min.js"></script>
+    <script src="js/das-all.js"></script>
+    <script src="js/app.min.js"></script>
+    
     @* This javascript is included in the project it is not loaded from the cdn *@
     <script src="/js/app.js" no-cdn></script>
-
+    
     <script>
+        window.GOVUKFrontend.initAll();
         window.DASFrontend.initAll();
     </script>
 </body>
