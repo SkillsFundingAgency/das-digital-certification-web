@@ -1,4 +1,6 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
+using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
@@ -15,6 +17,8 @@ namespace SFA.DAS.DigitalCertificates.Web.StartupExtensions
         public static IServiceCollection AddGovUkOneLoginAuthentication(this IServiceCollection services, DigitalCertificatesWebConfiguration webConfiguration,
             IConfiguration configuration)
         {
+            var uri = new Uri(webConfiguration.ServiceBaseUrl);
+
             services.AddTransient<IStubAuthenticationService, StubAuthenticationService>();
             services.AddAndConfigureGovUkAuthentication(configuration,
                 new AuthRedirects
@@ -22,7 +26,8 @@ namespace SFA.DAS.DigitalCertificates.Web.StartupExtensions
                     SuspendedRedirectUrl = "/locked",
                     SignedOutRedirectUrl = "/user-signed-out",
                     LoginRedirect = webConfiguration.ServiceBaseUrl + "/stub/sign-in-stub",
-                    LocalStubLoginPath = "/stub/sign-in-Stub"
+                    LocalStubLoginPath = "/stub/sign-in-Stub",
+                    CookieDomain = uri.Host
                 },
                 typeof(DigitalCertificateCustomClaims),
                 null
