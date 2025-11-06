@@ -7,11 +7,13 @@ using SFA.DAS.DigitalCertificates.Application.Queries.GetUser;
 using SFA.DAS.DigitalCertificates.Domain.Interfaces;
 using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
 using SFA.DAS.DigitalCertificates.Infrastructure.Services.CacheStorage;
-using SFA.DAS.DigitalCertificates.Infrastructure.Services.SessionStorage;
 using SFA.DAS.DigitalCertificates.Web.Attributes;
+using SFA.DAS.DigitalCertificates.Web.Authentication;
 using SFA.DAS.DigitalCertificates.Web.Authorization;
 using SFA.DAS.DigitalCertificates.Web.Orchestrators;
 using SFA.DAS.DigitalCertificates.Web.Services;
+using SFA.DAS.DigitalCertificates.Web.Services.SessionStorage;
+using SFA.DAS.DigitalCertificates.Web.Services.User;
 using SFA.DAS.GovUK.Auth.Authentication;
 using SFA.DAS.Http.Configuration;
 
@@ -28,10 +30,16 @@ namespace SFA.DAS.DigitalCertificates.Web.StartupExtensions
 
             services.AddTransient<ISessionStorageService, SessionStorageService>();
             services.AddTransient<ICacheStorageService, CacheStorageService>();
+            services.AddTransient<IUserService, UserService>();
             services.AddTransient<IUserCacheService, UserCacheService>();
+
+            services.AddSingleton<IAuthorizationHandler, CertificateOwnerAuthorizationHandler>();
+            services.AddSingleton<IAuthorizationFailureHandler, CertificateOwnerFailureHandler>();
 
             services.AddTransient<ValidateRequiredQueryParametersAttribute>();
             services.AddTransient<IHomeOrchestrator, HomeOrchestrator>();
+            services.AddTransient<ICertificatesOrchestrator, CertificatesOrchestrator>();
+            
             services.AddTransient<IClaimsTransformation, DigitalCertificatesClaimsTransformer>();
 
             return services;

@@ -2,7 +2,7 @@
 {
     public static class DigitalCertificateClaimsTypes
     {
-        public readonly static string UserId = nameof(UserId);
-        public readonly static string Sub = "sub";
+        public const string UserId = "UserId";
+        public const string Sub = "sub";
     }
 }

@@ -17,7 +17,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
             _cacheStorageService = cacheStorageService;
         }
 
-        public async Task<User> CacheUserForGovUkIdentifier(string govUkIdentifier)
+        public async Task<UserResponse> CacheUserForGovUkIdentifier(string govUkIdentifier)
         {
             var user = await _cacheStorageService.GetOrCreateAsync($"User:{govUkIdentifier}", async e =>
             {

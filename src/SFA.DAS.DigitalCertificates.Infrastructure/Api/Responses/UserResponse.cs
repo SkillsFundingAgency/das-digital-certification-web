@@ -2,7 +2,7 @@
 
 namespace SFA.DAS.DigitalCertificates.Infrastructure.Api.Responses
 {
-    public class User
+    public class UserResponse
     {
         public Guid Id { get; set; }
         public string GovUkIdentifier { get; set; }

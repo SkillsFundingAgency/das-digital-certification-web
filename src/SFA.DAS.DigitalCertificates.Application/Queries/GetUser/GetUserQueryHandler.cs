@@ -5,7 +5,7 @@ using SFA.DAS.DigitalCertificates.Infrastructure.Api.Responses;
 
 namespace SFA.DAS.DigitalCertificates.Application.Queries.GetUser
 {
-    public class GetUserQueryHandler : IRequestHandler<GetUserQuery, User?>
+    public class GetUserQueryHandler : IRequestHandler<GetUserQuery, UserResponse?>
     {
         private readonly IDigitalCertificatesOuterApi _outerApi;
         private readonly IValidator<GetUserQuery> _validator;
@@ -16,11 +16,11 @@ namespace SFA.DAS.DigitalCertificates.Application.Queries.GetUser
             _validator = validator;
         }
 
-        public async Task<User?> Handle(GetUserQuery request, CancellationToken cancellationToken)
+        public async Task<UserResponse?> Handle(GetUserQuery request, CancellationToken cancellationToken)
         {
             await _validator.ValidateAsync(request, cancellationToken);
 
-            User user = await _outerApi.GetUser(request.GovUkIdentifier);
+            UserResponse user = await _outerApi.GetUser(request.GovUkIdentifier);
 
             return user;
         }
