@@ -1,19 +1,24 @@
-﻿using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+﻿using System.Collections.Generic;
+using System.Reflection;
+using System.Security.Claims;
+using System.Threading.Tasks;
+using MediatR;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using SFA.DAS.DigitalCertificates.Application.Commands.CreateOrUpdateUser;
 using SFA.DAS.DigitalCertificates.Web.Services;
 using SFA.DAS.GovUK.Auth.Authentication;
 using SFA.DAS.GovUK.Auth.Services;
-using System.Collections.Generic;
-using System.Security.Claims;
-using System.Threading.Tasks;
 
 namespace SFA.DAS.DigitalCertificates.Web.Authorization
 {
     public class DigitalCertificateCustomClaims : ICustomClaims
     {
+        private readonly IMediator _mediator;
         private readonly IUserCacheService _userCacheService;
 
-        public DigitalCertificateCustomClaims(IUserCacheService userCacheService)
+        public DigitalCertificateCustomClaims(IMediator mediator, IUserCacheService userCacheService)
         {
+            _mediator = mediator;
             _userCacheService = userCacheService;
         }
 
@@ -25,8 +30,19 @@ namespace SFA.DAS.DigitalCertificates.Web.Authorization
         public async Task<IEnumerable<Claim>> GetClaims(ClaimsPrincipal principal)
         {
             var claims = new List<Claim>();
-            
-            var user = await _userCacheService.CacheUserForGovUkIdentifier(principal.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+
+            var govUkIdentifier = principal.FindFirstValue(ClaimTypes.NameIdentifier);
+            var email = principal.FindFirstValue(ClaimTypes.Email);
+            var mobilePhone = principal.FindFirstValue(ClaimTypes.MobilePhone);
+
+            await _mediator.Send(new CreateOrUpdateUserCommand
+            {
+                GovUkIdentifier = govUkIdentifier,
+                EmailAddress = email,
+                PhoneNumber = mobilePhone
+            });
+
+            var user = await _userCacheService.CacheUserForGovUkIdentifier(govUkIdentifier);
             if (user != null)
             {
                 claims.Add(new Claim(DigitalCertificateClaimsTypes.UserId, 

@@ -9,7 +9,7 @@ namespace SFA.DAS.DigitalCertificates.Application.Commands.CreateOrUpdateUser
         public required string EmailAddress { get; set; }
         public string? PhoneNumber { get; set; }
 
-        public required List<Name> Names { get; set; }
+        public List<Name>? Names { get; set; }
         public DateTime DateOfBirth { get; set; }
     }
 }
