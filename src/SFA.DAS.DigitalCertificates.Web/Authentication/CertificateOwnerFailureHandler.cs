@@ -38,10 +38,9 @@ namespace SFA.DAS.DigitalCertificates.Web.Authentication
                     if (!string.IsNullOrEmpty(route))
                     {
                         context.Response.Redirect(route);
+                        return Task.FromResult(true);
                     }
                 }
-
-                return Task.FromResult(true);
             }
 
             return Task.FromResult(false);

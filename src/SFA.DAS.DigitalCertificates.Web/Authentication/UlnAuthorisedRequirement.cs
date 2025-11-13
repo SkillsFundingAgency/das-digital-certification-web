@@ -2,7 +2,7 @@
 
 namespace SFA.DAS.DigitalCertificates.Web.Authentication
 {
-    public class UlnAuthorizedRequirement : IAuthorizationRequirement
+    public class UlnAuthorisedRequirement : IAuthorizationRequirement
     {
     }
 }

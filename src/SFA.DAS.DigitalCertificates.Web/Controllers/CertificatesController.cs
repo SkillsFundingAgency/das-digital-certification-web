@@ -13,13 +13,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
     [Authorize(Policy = nameof(PolicyNames.IsVerified))]
     public class CertificatesController : BaseController
     {
-        private readonly ICertificatesOrchestrator _certificatesOrchestrator;
-        public CertificatesController(IHttpContextAccessor contextAccessor, ICertificatesOrchestrator certificatesOrchestrator)
-            : base(contextAccessor) 
-        {
-            _certificatesOrchestrator = certificatesOrchestrator;
-        }
-
         #region Routes
         public const string BaseRoute = "certificates";
         public const string CertificatesListRouteGet = nameof(CertificatesListRouteGet);
@@ -27,7 +20,16 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         public const string CertificateFrameworkRouteGet = nameof(CertificateFrameworkRouteGet);
         #endregion
 
+        private readonly ICertificatesOrchestrator _certificatesOrchestrator;
+        
+        public CertificatesController(IHttpContextAccessor contextAccessor, ICertificatesOrchestrator certificatesOrchestrator)
+            : base(contextAccessor) 
+        {
+            _certificatesOrchestrator = certificatesOrchestrator;
+        }
+
         [HttpGet("list", Name = CertificatesListRouteGet)]
+        [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsUlnAuthorised))]
         public async Task<IActionResult> CertificatesList()
         {
             var viewModel = await _certificatesOrchestrator.GetCertificatesListViewModel();

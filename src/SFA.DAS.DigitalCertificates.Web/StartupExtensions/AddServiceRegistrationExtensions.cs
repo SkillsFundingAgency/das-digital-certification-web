@@ -33,6 +33,8 @@ namespace SFA.DAS.DigitalCertificates.Web.StartupExtensions
             services.AddTransient<IUserService, UserService>();
             services.AddTransient<IUserCacheService, UserCacheService>();
 
+            services.AddSingleton<IAuthorizationHandler, UlnAuthorisedAuthorizationHandler>();
+            services.AddSingleton<IAuthorizationFailureHandler, UlnAuthorisedFailureHandler>();
             services.AddSingleton<IAuthorizationHandler, CertificateOwnerAuthorizationHandler>();
             services.AddSingleton<IAuthorizationFailureHandler, CertificateOwnerFailureHandler>();
 

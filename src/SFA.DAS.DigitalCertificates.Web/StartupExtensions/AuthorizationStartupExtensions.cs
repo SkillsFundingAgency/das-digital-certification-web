@@ -32,12 +32,22 @@ namespace SFA.DAS.DigitalCertificates.Web.StartupExtensions
                         policy.Requirements.Add(new VerifiedIdentityRequirement());
                         policy.RequireAuthenticatedUser();
                     });
-                
+
+                options.AddPolicy(
+                    DigitalCertificatesPolicyNames.IsUlnAuthorised, policy =>
+                    {
+                        policy.Requirements.Add(new AccountActiveRequirement());
+                        policy.Requirements.Add(new VerifiedIdentityRequirement());
+                        policy.Requirements.Add(new UlnAuthorisedRequirement());
+                        policy.RequireAuthenticatedUser();
+                    });
+
                 options.AddPolicy(
                     DigitalCertificatesPolicyNames.IsCertificateOwner, policy =>
                     {
                         policy.Requirements.Add(new AccountActiveRequirement());
                         policy.Requirements.Add(new VerifiedIdentityRequirement());
+                        policy.Requirements.Add(new UlnAuthorisedRequirement());
                         policy.Requirements.Add(new CertificateOwnerRequirement());
                     });
             });
