@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using SFA.DAS.DigitalCertificates.Domain.Extensions;
 using SFA.DAS.DigitalCertificates.Web.Exceptions;
 using SFA.DAS.DigitalCertificates.Web.Extensions;
 using SFA.DAS.DigitalCertificates.Web.Models;
@@ -128,7 +129,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error(string errorMessage)
         {
-            _logger.LogError(errorMessage);
+            _logger.LogError(errorMessage.SanitizeLogData());
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContextAccessor.HttpContext.TraceIdentifier, ErrorMessage = errorMessage });
         }
     }
