@@ -25,15 +25,18 @@ namespace SFA.DAS.DigitalCertificates.Web.Authorization
         public async Task<IEnumerable<Claim>> GetClaims(ClaimsPrincipal principal)
         {
             var claims = new List<Claim>();
-            
-            var user = await _userCacheService.CacheUserForGovUkIdentifier(principal.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-            if (user != null)
+
+            if (principal != null)
             {
-                claims.Add(new Claim(DigitalCertificateClaimsTypes.UserId, 
-                    user.Id.ToString()));
-                
-                claims.Add(new Claim(ClaimTypes.AuthorizationDecision, 
-                    user.LockedAt.HasValue ? AuthorizationDecisions.Suspended : AuthorizationDecisions.Allowed));
+                var user = await _userCacheService.CacheUserForGovUkIdentifier(principal.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+                if (user != null)
+                {
+                    claims.Add(new Claim(DigitalCertificateClaimsTypes.UserId,
+                        user.Id.ToString()));
+
+                    claims.Add(new Claim(ClaimTypes.AuthorizationDecision,
+                        user.LockedAt.HasValue ? AuthorizationDecisions.Suspended : AuthorizationDecisions.Allowed));
+                }
             }
 
             return claims;

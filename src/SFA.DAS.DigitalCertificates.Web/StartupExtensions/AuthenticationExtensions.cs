@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
-using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
@@ -24,7 +23,7 @@ namespace SFA.DAS.DigitalCertificates.Web.StartupExtensions
                 new AuthRedirects
                 {
                     SuspendedRedirectUrl = "/locked",
-                    SignedOutRedirectUrl = "/user-signed-out",
+                    SignedOutRedirectUrl = "/signed-out",
                     LoginRedirect = webConfiguration.ServiceBaseUrl + "/stub/sign-in-stub",
                     LocalStubLoginPath = "/stub/sign-in-Stub",
                     CookieDomain = uri.Host

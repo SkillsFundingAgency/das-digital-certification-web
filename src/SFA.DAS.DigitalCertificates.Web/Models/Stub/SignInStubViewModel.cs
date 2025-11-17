@@ -10,7 +10,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Models.Stub
         public string Email { get; set; }
         public string Phone { get; set; }
         
-        public IFormFile? UserFile { get; set; }
+        public IFormFile UserFile { get; set; }
         public string ReturnUrl { get; set; }
     }
 }

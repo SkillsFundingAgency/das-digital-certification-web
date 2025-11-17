@@ -21,7 +21,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 EmailAddress = model.EmailAddress,
                 PhoneNumber = model.PhoneNumber,
                 Names = model.Names
-                    .Select(x => new Name
+                    ?.Select(x => new Name
                     {
                         ValidSince = x.ValidSince,
                         ValidUntil = x.ValidUntil,

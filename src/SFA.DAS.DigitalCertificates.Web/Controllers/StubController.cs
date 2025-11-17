@@ -52,7 +52,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
 
             try
             {
-                GovUkUser? govUkUser = await _stubAuthenticationService.GetStubVerifyGovUkUser(model.UserFile);
+                GovUkUser govUkUser = await _stubAuthenticationService.GetStubVerifyGovUkUser(model.UserFile);
 
                 var claims = await _stubAuthenticationService.GetStubSignInClaims(new StubAuthUserDetails
                 {

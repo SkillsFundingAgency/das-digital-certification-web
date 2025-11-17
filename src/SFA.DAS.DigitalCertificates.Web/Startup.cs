@@ -11,7 +11,6 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using SFA.DAS.DigitalCertificates.Application.Queries.GetUser;
 using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
 using SFA.DAS.DigitalCertificates.Web.Attributes;
 using SFA.DAS.DigitalCertificates.Web.Controllers;
@@ -66,8 +65,7 @@ namespace SFA.DAS.DigitalCertificates.Web
                 .AddControllersAsServices();
 
             services
-                .AddValidatorsFromAssemblyContaining<Startup>()
-                .AddValidatorsFromAssemblyContaining<GetUserQueryValidator>();
+                .AddValidatorsFromAssemblyContaining<Startup>();
 
             services
                 .AddGovUkOneLoginAuthentication(webConfiguration, _configuration)

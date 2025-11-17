@@ -9,15 +9,21 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Models\**" />
     <Compile Remove="StartupExtensions\**" />
     <Compile Remove="TagHelpers\**" />
     <Compile Remove="ValidatorInteceptors\**" />
+    <Compile Remove="Validators\**" />
+    <EmbeddedResource Remove="Models\**" />
     <EmbeddedResource Remove="StartupExtensions\**" />
     <EmbeddedResource Remove="TagHelpers\**" />
     <EmbeddedResource Remove="ValidatorInteceptors\**" />
+    <EmbeddedResource Remove="Validators\**" />
+    <None Remove="Models\**" />
     <None Remove="StartupExtensions\**" />
     <None Remove="TagHelpers\**" />
     <None Remove="ValidatorInteceptors\**" />
+    <None Remove="Validators\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -43,13 +49,6 @@
     <ProjectReference Include="..\SFA.DAS.DigitalCertificates.Infrastructure\SFA.DAS.DigitalCertificates.Infrastructure.csproj" />
     <ProjectReference Include="..\SFA.DAS.DigitalCertificates.TestHelper\SFA.DAS.DigitalCertificates.TestHelper.csproj" />
     <ProjectReference Include="..\SFA.DAS.DigitalCertificates.Web\SFA.DAS.DigitalCertificates.Web.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Models\" />
-    <Folder Include="Orchestrators\" />
-    <Folder Include="Services\" />
-    <Folder Include="Validators\" />
   </ItemGroup>
 
 </Project>
