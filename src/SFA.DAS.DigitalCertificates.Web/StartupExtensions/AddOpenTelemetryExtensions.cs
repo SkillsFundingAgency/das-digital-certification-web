@@ -1,8 +1,10 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Azure.Monitor.OpenTelemetry.AspNetCore;
+using System.Diagnostics.CodeAnalysis;
 
 namespace SFA.DAS.DigitalCertificates.Web.StartupExtensions
 {
+    [ExcludeFromCodeCoverage]
     public static class AddOpenTelemetryExtensions
     {
         /// <summary>
