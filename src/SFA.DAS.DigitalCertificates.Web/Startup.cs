@@ -65,9 +65,6 @@ namespace SFA.DAS.DigitalCertificates.Web
                 .AddControllersAsServices();
 
             services
-                .AddValidatorsFromAssemblyContaining<Startup>();
-
-            services
                 .AddGovUkOneLoginAuthentication(webConfiguration, _configuration)
                 .AddAuthorizationPolicies()
                 .AddSession()
