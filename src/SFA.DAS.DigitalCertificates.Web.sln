@@ -1,0 +1,85 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.9.34607.119
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{49D40A60-5C9B-49C1-947E-18D07E5A5F73}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "README", "README", "{FF34D9C8-203E-4214-88D6-8EDF2146EA5B}"
+	ProjectSection(SolutionItems) = preProject
+		..\README.md = ..\README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{10964E4C-0272-40E1-B51D-7992745D9A45}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SFA.DAS.DigitalCertificates.Application.UnitTests", "SFA.DAS.DigitalCertificates.Application.UnitTests\SFA.DAS.DigitalCertificates.Application.UnitTests.csproj", "{51296197-D3F9-779A-C4FA-C9117323F2A3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SFA.DAS.DigitalCertificates.Infrastructure.UnitTests", "SFA.DAS.DigitalCertificates.Infrastructure.UnitTests\SFA.DAS.DigitalCertificates.Infrastructure.UnitTests.csproj", "{97D39E2E-0296-6AD5-EF5A-8E73D9D3CE6B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SFA.DAS.DigitalCertificates.TestHelper", "SFA.DAS.DigitalCertificates.TestHelper\SFA.DAS.DigitalCertificates.TestHelper.csproj", "{EFDE14B7-6801-621B-4B25-DC3CD7B737EE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SFA.DAS.DigitalCertificates.Web.UnitTests", "SFA.DAS.DigitalCertificates.Web.UnitTests\SFA.DAS.DigitalCertificates.Web.UnitTests.csproj", "{5510092D-3952-FA1E-C3D9-8B2B4B8D5528}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SFA.DAS.DigitalCertificates.Application", "SFA.DAS.DigitalCertificates.Application\SFA.DAS.DigitalCertificates.Application.csproj", "{5FEAC171-6FC9-59B5-884B-0E950D5EFC2E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SFA.DAS.DigitalCertificates.Domain", "SFA.DAS.DigitalCertificates.Domain\SFA.DAS.DigitalCertificates.Domain.csproj", "{547E76C7-E4D3-8F58-08AA-1D165B8FD209}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SFA.DAS.DigitalCertificates.Infrastructure", "SFA.DAS.DigitalCertificates.Infrastructure\SFA.DAS.DigitalCertificates.Infrastructure.csproj", "{1BD42BC0-B661-1C3E-88DA-63DED15DB082}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SFA.DAS.DigitalCertificates.Web", "SFA.DAS.DigitalCertificates.Web\SFA.DAS.DigitalCertificates.Web.csproj", "{7AE03DA9-43EA-3F73-D221-E076B217380E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{51296197-D3F9-779A-C4FA-C9117323F2A3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{51296197-D3F9-779A-C4FA-C9117323F2A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{51296197-D3F9-779A-C4FA-C9117323F2A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{51296197-D3F9-779A-C4FA-C9117323F2A3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{97D39E2E-0296-6AD5-EF5A-8E73D9D3CE6B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{97D39E2E-0296-6AD5-EF5A-8E73D9D3CE6B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{97D39E2E-0296-6AD5-EF5A-8E73D9D3CE6B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{97D39E2E-0296-6AD5-EF5A-8E73D9D3CE6B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EFDE14B7-6801-621B-4B25-DC3CD7B737EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EFDE14B7-6801-621B-4B25-DC3CD7B737EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EFDE14B7-6801-621B-4B25-DC3CD7B737EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EFDE14B7-6801-621B-4B25-DC3CD7B737EE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5510092D-3952-FA1E-C3D9-8B2B4B8D5528}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5510092D-3952-FA1E-C3D9-8B2B4B8D5528}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5510092D-3952-FA1E-C3D9-8B2B4B8D5528}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5510092D-3952-FA1E-C3D9-8B2B4B8D5528}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5FEAC171-6FC9-59B5-884B-0E950D5EFC2E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5FEAC171-6FC9-59B5-884B-0E950D5EFC2E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5FEAC171-6FC9-59B5-884B-0E950D5EFC2E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5FEAC171-6FC9-59B5-884B-0E950D5EFC2E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{547E76C7-E4D3-8F58-08AA-1D165B8FD209}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{547E76C7-E4D3-8F58-08AA-1D165B8FD209}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{547E76C7-E4D3-8F58-08AA-1D165B8FD209}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{547E76C7-E4D3-8F58-08AA-1D165B8FD209}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1BD42BC0-B661-1C3E-88DA-63DED15DB082}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1BD42BC0-B661-1C3E-88DA-63DED15DB082}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1BD42BC0-B661-1C3E-88DA-63DED15DB082}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1BD42BC0-B661-1C3E-88DA-63DED15DB082}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7AE03DA9-43EA-3F73-D221-E076B217380E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7AE03DA9-43EA-3F73-D221-E076B217380E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7AE03DA9-43EA-3F73-D221-E076B217380E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7AE03DA9-43EA-3F73-D221-E076B217380E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{51296197-D3F9-779A-C4FA-C9117323F2A3} = {49D40A60-5C9B-49C1-947E-18D07E5A5F73}
+		{97D39E2E-0296-6AD5-EF5A-8E73D9D3CE6B} = {49D40A60-5C9B-49C1-947E-18D07E5A5F73}
+		{EFDE14B7-6801-621B-4B25-DC3CD7B737EE} = {49D40A60-5C9B-49C1-947E-18D07E5A5F73}
+		{5510092D-3952-FA1E-C3D9-8B2B4B8D5528} = {49D40A60-5C9B-49C1-947E-18D07E5A5F73}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {5269BF15-B665-45BF-B034-C3B78B800BE2}
+	EndGlobalSection
+EndGlobal

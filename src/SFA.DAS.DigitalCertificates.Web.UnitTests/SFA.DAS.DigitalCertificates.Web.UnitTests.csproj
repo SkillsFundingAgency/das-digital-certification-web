@@ -1,0 +1,51 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+
+    <IsPackable>false</IsPackable>
+
+    <LangVersion>latestmajor</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Models\**" />
+    <Compile Remove="StartupExtensions\**" />
+    <Compile Remove="TagHelpers\**" />
+    <Compile Remove="ValidatorInteceptors\**" />
+    <EmbeddedResource Remove="Models\**" />
+    <EmbeddedResource Remove="StartupExtensions\**" />
+    <EmbeddedResource Remove="TagHelpers\**" />
+    <EmbeddedResource Remove="ValidatorInteceptors\**" />
+    <None Remove="Models\**" />
+    <None Remove="StartupExtensions\**" />
+    <None Remove="TagHelpers\**" />
+    <None Remove="ValidatorInteceptors\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoFixture" Version="4.18.1" />
+    <PackageReference Include="CompareNETObjects" Version="4.83.0" />
+    <PackageReference Include="coverlet.msbuild" Version="6.0.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="FluentAssertions" Version="6.12.0" />
+    <PackageReference Include="Moq" Version="4.20.70" />
+    <PackageReference Include="nunit" Version="3.14.0" />
+    <PackageReference Include="NUnit.Analyzers" Version="3.10.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
+    <PackageReference Include="SFA.DAS.Testing.AutoFixture" Version="3.0.169" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SFA.DAS.DigitalCertificates.Infrastructure\SFA.DAS.DigitalCertificates.Infrastructure.csproj" />
+    <ProjectReference Include="..\SFA.DAS.DigitalCertificates.TestHelper\SFA.DAS.DigitalCertificates.TestHelper.csproj" />
+    <ProjectReference Include="..\SFA.DAS.DigitalCertificates.Web\SFA.DAS.DigitalCertificates.Web.csproj" />
+  </ItemGroup>
+
+</Project>

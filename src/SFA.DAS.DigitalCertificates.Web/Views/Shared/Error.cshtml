@@ -1,0 +1,22 @@
+﻿@using SFA.DAS.DigitalCertificates.Web.ViewDataKeys
+@model ErrorViewModel
+@{
+    ViewData[ViewDataKeys.Title] = "Error";
+}
+
+<div class="govuk-width-container">
+    <main class="govuk-main-wrapper govuk-main-wrapper--l" id="main-content" role="main">
+        <div class="govuk-grid-row">
+            <div class="govuk-grid-column-two-thirds">
+                <h1 class="govuk-heading-l">Sorry, there is a problem with the service</h1>
+                <p class="govuk-body">Try again later.</p>
+                @if (Model.ShowRequestId)
+                {
+                    <p class="govuk-body-s"><b>Request ID: </b>@Model.RequestId</p>
+                }
+                <p class="govuk-body-s"><b>Message: </b>@Model.ErrorMessage</p>
+                <p class="govuk-body-s"><b>Date: </b>@DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss")</p>
+            </div>
+        </div>
+    </main>
+</div>
