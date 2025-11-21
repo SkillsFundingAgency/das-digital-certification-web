@@ -2,6 +2,7 @@
 using System.Linq;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Logging;
+using SFA.DAS.DigitalCertificates.Domain.Extensions;
 
 namespace SFA.DAS.DigitalCertificates.Web.Attributes
 {
@@ -28,7 +29,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Attributes
             if (requiredParameterErrors.Any())
             {
                 var errorMessage = $"Missing required query parameters: {string.Join(", ", requiredParameterErrors)}";
-                _logger.LogError(errorMessage);
+                _logger.LogError(errorMessage.SanitizeLogData());
 
                 throw new ArgumentException(errorMessage);
             }

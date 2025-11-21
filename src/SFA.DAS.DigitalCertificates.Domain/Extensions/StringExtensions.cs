@@ -2,7 +2,7 @@
 {
     public static class StringExtensions
     {
-        public static string SanitizeLogData(this string data)
+        public static string? SanitizeLogData(this string data)
         {
             if (data != null)
             {

@@ -35,9 +35,9 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         {
             return View("SignInStub", new SignInStubViewModel
             {
-                Id = ModelState.IsValid ? _config["StubId"] : ModelState[nameof(SignInStubViewModel.Id)]?.AttemptedValue,
-                Email = ModelState.IsValid ? _config["StubEmail"] : ModelState[nameof(SignInStubViewModel.Email)]?.AttemptedValue,
-                Phone = ModelState.IsValid ? _config["StubPhone"] : ModelState[nameof(SignInStubViewModel.Phone)]?.AttemptedValue,
+                Id = ModelState.IsValid ? (_config["StubId"] ?? string.Empty) : (ModelState[nameof(SignInStubViewModel.Id)]?.AttemptedValue ?? string.Empty),
+                Email = ModelState.IsValid ? (_config["StubEmail"] ?? string.Empty) : (ModelState[nameof(SignInStubViewModel.Email)]?.AttemptedValue ?? string.Empty),
+                Phone = ModelState.IsValid ? (_config["StubPhone"] ?? string.Empty) : (ModelState[nameof(SignInStubViewModel.Phone)]?.AttemptedValue ?? string.Empty),
                 ReturnUrl = returnUrl
             });
         }
@@ -52,7 +52,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
 
             try
             {
-                GovUkUser? govUkUser = await _stubAuthenticationService.GetStubVerifyGovUkUser(model.UserFile);
+                GovUkUser govUkUser = await _stubAuthenticationService.GetStubVerifyGovUkUser(model.UserFile);
 
                 var claims = await _stubAuthenticationService.GetStubSignInClaims(new StubAuthUserDetails
                 {

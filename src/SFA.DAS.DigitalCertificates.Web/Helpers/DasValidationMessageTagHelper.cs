@@ -13,11 +13,11 @@ namespace SFA.DAS.DigitalCertificates.Web.Helpers
         private const string ValidationForAttributeName = "das-validation-for";
 
         [HtmlAttributeName(ValidationForAttributeName)]
-        public ModelExpression Property { get; set; }
+        public ModelExpression? Property { get; set; }
 
         [ViewContext]
         [HtmlAttributeNotBound]
-        public ViewContext ViewContext { get; set; }
+        public ViewContext? ViewContext { get; set; }
 
         protected IHtmlGenerator Generator { get; }
 
@@ -28,6 +28,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Helpers
 
         public override void Process(TagHelperContext context, TagHelperOutput output)
         {
+            if (ViewContext == null || Property == null) return;
             if (!ViewContext.ModelState.ContainsKey(Property.Name)) return;
 
             var tagBuilder = Generator.GenerateValidationMessage(

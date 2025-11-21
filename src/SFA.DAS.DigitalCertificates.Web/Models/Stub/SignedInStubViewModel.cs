@@ -9,16 +9,16 @@ namespace SFA.DAS.DigitalCertificates.Web.Models.Stub
     public class SignedInStubViewModel
     {
         public const string HashedAccountIdPlaceholder = "{{hashedAccountId}}";
-        private readonly ClaimsPrincipal _claimsPrinciple;
+        private readonly ClaimsPrincipal? _claimsPrinciple;
 
         public SignedInStubViewModel(IHttpContextAccessor httpContextAccessor, string returnUrl)
         {
-            _claimsPrinciple = httpContextAccessor.HttpContext.User;
+            _claimsPrinciple = httpContextAccessor?.HttpContext?.User;
             ReturnUrl = returnUrl;
         }
 
-        public string StubEmail => _claimsPrinciple.Claims.FirstOrDefault(c => c.Type.Equals(ClaimTypes.Email))?.Value;
-        public string StubId => _claimsPrinciple.Claims.FirstOrDefault(c => c.Type.Equals(ClaimTypes.NameIdentifier))?.Value;
+        public string? StubEmail => _claimsPrinciple?.Claims.FirstOrDefault(c => c.Type.Equals(ClaimTypes.Email))?.Value;
+        public string? StubId => _claimsPrinciple?.Claims.FirstOrDefault(c => c.Type.Equals(ClaimTypes.NameIdentifier))?.Value;
 
         public string ReturnUrl { get; }
 

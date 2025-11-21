@@ -1,7 +1,7 @@
 ﻿using MediatR;
 using SFA.DAS.DigitalCertificates.Application.Commands.CreateOrUpdateUser;
-using SFA.DAS.DigitalCertificates.Infrastructure.Api.Types;
-using SFA.DAS.DigitalCertificates.Web.Models.User;
+using SFA.DAS.DigitalCertificates.Domain.Models;
+using SFA.DAS.DigitalCertificates.Web.Models.Home;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -21,7 +21,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 EmailAddress = model.EmailAddress,
                 PhoneNumber = model.PhoneNumber,
                 Names = model.Names
-                    .Select(x => new Name
+                    ?.Select(x => new Name
                     {
                         ValidSince = x.ValidSince,
                         ValidUntil = x.ValidUntil,

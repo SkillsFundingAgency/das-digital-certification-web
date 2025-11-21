@@ -1,28 +1,22 @@
-﻿using FluentValidation;
-using MediatR;
+﻿using MediatR;
 using SFA.DAS.DigitalCertificates.Domain.Interfaces;
-using SFA.DAS.DigitalCertificates.Infrastructure.Api.Responses;
+using SFA.DAS.DigitalCertificates.Domain.Models;
 
 namespace SFA.DAS.DigitalCertificates.Application.Queries.GetUser
 {
-    public class GetUserQueryHandler : IRequestHandler<GetUserQuery, UserResponse?>
+    public class GetUserQueryHandler : IRequestHandler<GetUserQuery, User?>
     {
         private readonly IDigitalCertificatesOuterApi _outerApi;
-        private readonly IValidator<GetUserQuery> _validator;
 
-        public GetUserQueryHandler(IDigitalCertificatesOuterApi outerApi, IValidator<GetUserQuery> validator)
+        public GetUserQueryHandler(IDigitalCertificatesOuterApi outerApi)
         {
             _outerApi = outerApi;
-            _validator = validator;
         }
 
-        public async Task<UserResponse?> Handle(GetUserQuery request, CancellationToken cancellationToken)
+        public async Task<User?> Handle(GetUserQuery request, CancellationToken cancellationToken)
         {
-            await _validator.ValidateAsync(request, cancellationToken);
-
-            UserResponse user = await _outerApi.GetUser(request.GovUkIdentifier);
-
-            return user;
+            var response = await _outerApi.GetUser(request.GovUkIdentifier);
+            return (User?)response;
         }
     }
 }

@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using RestEase.HttpClientFactory;
-using SFA.DAS.DigitalCertificates.Application.Queries.GetUser;
+using SFA.DAS.DigitalCertificates.Application.Commands.CreateOrUpdateUser;
 using SFA.DAS.DigitalCertificates.Domain.Interfaces;
 using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
 using SFA.DAS.DigitalCertificates.Infrastructure.Services.CacheStorage;
@@ -12,8 +12,6 @@ using SFA.DAS.DigitalCertificates.Web.Authentication;
 using SFA.DAS.DigitalCertificates.Web.Authorization;
 using SFA.DAS.DigitalCertificates.Web.Orchestrators;
 using SFA.DAS.DigitalCertificates.Web.Services;
-using SFA.DAS.DigitalCertificates.Web.Services.SessionStorage;
-using SFA.DAS.DigitalCertificates.Web.Services.User;
 using SFA.DAS.GovUK.Auth.Authentication;
 using SFA.DAS.Http.Configuration;
 
@@ -24,14 +22,13 @@ namespace SFA.DAS.DigitalCertificates.Web.StartupExtensions
     {
         public static IServiceCollection AddServiceRegistrations(this IServiceCollection services)
         {
-            services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(GetUserQuery).Assembly));
+            services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(CreateOrUpdateUserCommand).Assembly));
 
             services.AddSingleton<IAuthorizationHandler, AccountActiveAuthorizationHandler>();
 
-            services.AddTransient<ISessionStorageService, SessionStorageService>();
             services.AddTransient<ICacheStorageService, CacheStorageService>();
+            services.AddTransient<ISessionStorageService, SessionStorageService>();
             services.AddTransient<IUserService, UserService>();
-            services.AddTransient<IUserCacheService, UserCacheService>();
 
             services.AddSingleton<IAuthorizationHandler, UlnAuthorisedAuthorizationHandler>();
             services.AddSingleton<IAuthorizationFailureHandler, UlnAuthorisedFailureHandler>();

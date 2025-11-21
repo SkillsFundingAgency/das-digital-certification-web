@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SFA.DAS.DigitalCertificates.Web.Models.User
+namespace SFA.DAS.DigitalCertificates.Web.Models.Home
 {
     public class NameModel
     {

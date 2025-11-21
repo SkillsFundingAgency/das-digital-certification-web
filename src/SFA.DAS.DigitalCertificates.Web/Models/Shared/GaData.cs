@@ -7,8 +7,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Models.Shared
     public class GaData
     {
         public string DataLoaded { get; set; } = "dataLoaded";
-        public string UserId { get; set; }
-        public string Vpv { get; set; }
+        public string? UserId { get; set; }
+        public string? Vpv { get; set; }
         public IDictionary<string, string> Extras { get; set; } = new Dictionary<string, string>();
     }
 }

@@ -39,17 +39,19 @@
     {
         var result = new Dictionary<string, string>();
 
-        var state = ViewData.ModelState[property.PropertyName];
-
-        var errors = state?.Errors ?? null;
-
-        if (errors != null)
+        if (property?.PropertyName != null)
         {
-            foreach (var error in errors)
-            {
-                result.Add(property.PropertyName, error.ErrorMessage);
-            }
+            var state = ViewData.ModelState[property.PropertyName];
+            var errors = state?.Errors ?? null;
 
+            if (errors != null)
+            {
+                foreach (var error in errors)
+                {
+                    result.Add(property.PropertyName, error.ErrorMessage);
+                }
+
+            }
         }
 
         return result;
@@ -60,33 +62,36 @@
     {
         var result = new Dictionary<string, string>();
 
-        var propertyErrors = ViewData.ModelState[property.PropertyName]?.Errors;
-        if (propertyErrors != null && propertyErrors.Any())
-            result.Add(property.PropertyName, propertyErrors.First().ErrorMessage);
-
-        var i = 0;
-        while (true)
+        if (property.PropertyName != null)
         {
-            var key = $"{property.PropertyName}[{i}]";
+            var propertyErrors = ViewData.ModelState[property.PropertyName]?.Errors;
+            if (propertyErrors != null && propertyErrors.Any())
+                result.Add(property.PropertyName, propertyErrors[0].ErrorMessage);
 
-            if (!ViewData.ModelState.ContainsKey(key))
+            var i = 0;
+            while (true)
             {
-                break;
-            }
-            else
-            {
-                var state = ViewData.ModelState[key];
-                var errors = state?.Errors ?? null;
-                if (errors != null)
+                var key = $"{property.PropertyName}[{i}]";
+
+                if (!ViewData.ModelState.ContainsKey(key))
                 {
-                    foreach (var error in errors)
+                    break;
+                }
+                else
+                {
+                    var state = ViewData.ModelState[key];
+                    var errors = state?.Errors ?? null;
+                    if (errors != null)
                     {
-                        result.Add($"{property.PropertyName}_{i}_", error.ErrorMessage);
+                        foreach (var error in errors)
+                        {
+                            result.Add($"{property.PropertyName}_{i}_", error.ErrorMessage);
+                        }
                     }
                 }
-            }
 
-            i++;
+                i++;
+            }
         }
 
         return result;

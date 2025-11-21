@@ -9,7 +9,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Extensions
     {
         public static T GetAttemptedValueWhenInvalid<T>(this ModelStateDictionary modelState, string key, T defaultValue, T validValue)
         {
-            if (modelState.IsValid || !modelState.TryGetValue(key, out ModelStateEntry entry))
+            if (modelState.IsValid || !modelState.TryGetValue(key, out ModelStateEntry? entry))
             {
                 return validValue;
             }

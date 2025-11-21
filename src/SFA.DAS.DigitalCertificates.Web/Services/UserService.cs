@@ -3,7 +3,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using SFA.DAS.DigitalCertificates.Web.Authorization;
 
-namespace SFA.DAS.DigitalCertificates.Web.Services.User
+namespace SFA.DAS.DigitalCertificates.Web.Services
 {
     public class UserService : IUserService
     {
@@ -21,31 +21,30 @@ namespace SFA.DAS.DigitalCertificates.Web.Services.User
 
         public string GetGovUkIdentifier()
         {
-            return GetUserClaimAsString(ClaimTypes.NameIdentifier);
+            return GetUserClaimAsString(ClaimTypes.NameIdentifier) ?? string.Empty;
         }
 
-        private string GetUserClaimAsString(string claim)
+        private string? GetUserClaimAsString(string claim)
         {
             if (IsUserAuthenticated() && TryGetUserClaimValue(claim, out var value))
             {
                 return value;
             }
+
             return null;
         }
 
         private bool IsUserAuthenticated()
         {
-            return _httpContextAccessor.HttpContext.User.Identity.IsAuthenticated;
+            return _httpContextAccessor?.HttpContext?.User?.Identity?.IsAuthenticated ?? false;
         }
 
-        private bool TryGetUserClaimValue(string key, out string value)
+        private bool TryGetUserClaimValue(string key, out string? value)
         {
-            var claimsIdentity = (ClaimsIdentity)_httpContextAccessor.HttpContext.User.Identity;
-            var claim = claimsIdentity.FindFirst(key);
-            var exists = claim != null;
-            value = exists ? claim.Value : null;
-
-            return exists;
+            var claimsIdentity = (ClaimsIdentity?)_httpContextAccessor?.HttpContext?.User?.Identity;
+            var claim = claimsIdentity?.FindFirst(key);
+            value = claim?.Value;
+            return claim != null;
         }
     }
 }

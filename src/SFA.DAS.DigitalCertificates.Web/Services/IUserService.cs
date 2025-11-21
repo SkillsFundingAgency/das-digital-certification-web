@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SFA.DAS.DigitalCertificates.Web.Services.User
+namespace SFA.DAS.DigitalCertificates.Web.Services
 {
     public interface IUserService
     {

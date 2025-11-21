@@ -1,6 +1,6 @@
+using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
-using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
@@ -11,10 +11,10 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using SFA.DAS.DigitalCertificates.Application.Queries.GetUser;
 using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
 using SFA.DAS.DigitalCertificates.Web.Attributes;
 using SFA.DAS.DigitalCertificates.Web.Controllers;
+using SFA.DAS.DigitalCertificates.Web.Extensions;
 using SFA.DAS.DigitalCertificates.Web.Filters;
 using SFA.DAS.DigitalCertificates.Web.StartupExtensions;
 using SFA.DAS.GovUK.Auth.Configuration;
@@ -42,14 +42,18 @@ namespace SFA.DAS.DigitalCertificates.Web
 
             services.AddOpenTelemetryRegistration(_configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"]!);
 
-            var webConfiguration = _configuration.GetSection<DigitalCertificatesWebConfiguration>();
-            var outerApiConfiguration = _configuration.GetSection<DigitalCertificatesOuterApiConfiguration>();
-            var govUkOidcConfiguration = _configuration.GetSection<GovUkOidcConfiguration>();
+            if (!_configuration.TryGetSection<DigitalCertificatesWebConfiguration>(out var webConfiguration))
+                throw new InvalidOperationException("Missing DigitalCertificatesWebConfiguration");
 
-            services
-                .AddSingleton(webConfiguration)
-                .AddSingleton(outerApiConfiguration)
-                .AddSingleton(govUkOidcConfiguration);
+            if (!_configuration.TryGetSection<DigitalCertificatesOuterApiConfiguration>(out var outerApiConfiguration))
+                throw new InvalidOperationException("Missing DigitalCertificatesOuterApiConfiguration");
+
+            if (!_configuration.TryGetSection<GovUkOidcConfiguration>(out var govUkOidcConfiguration))
+                throw new InvalidOperationException("Missing GovUkOidcConfiguration");
+
+            services.AddSingleton(webConfiguration!);
+            services.AddSingleton(outerApiConfiguration!);
+            services.AddSingleton(govUkOidcConfiguration!);
 
             services.AddControllersWithViews()
                 .ConfigureApplicationPartManager(apm =>
@@ -60,27 +64,28 @@ namespace SFA.DAS.DigitalCertificates.Web
                 {
                     options.AddValidation();
                     options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
-                    options.Filters.Add(new EnableGoogleAnalyticsAttribute(_configuration.GetSection<GoogleAnalytics>()));
+                    
+                    if(_configuration.TryGetSection<GoogleAnalytics>(out var googleAnalyticsSection))
+                    {
+                        options.Filters.Add(new EnableGoogleAnalyticsAttribute(googleAnalyticsSection!));
+                    }
+                    
                     options.Filters.Add(new GoogleAnalyticsFilterAttribute());
                 })
                 .AddControllersAsServices();
 
             services
-                .AddValidatorsFromAssemblyContaining<Startup>()
-                .AddValidatorsFromAssemblyContaining<GetUserQueryValidator>();
-
-            services
-                .AddGovUkOneLoginAuthentication(webConfiguration, _configuration)
+                .AddGovUkOneLoginAuthentication(webConfiguration!, _configuration)
                 .AddAuthorizationPolicies()
                 .AddSession()
-                .AddCache(webConfiguration, _environment)
+                .AddCache(webConfiguration!, _environment)
                 .AddMemoryCache()
                 .AddCookieTempDataProvider()
-                .AddDasDataProtection(webConfiguration, _environment)
-                .AddDasHealthChecks(webConfiguration)
+                .AddDasDataProtection(webConfiguration!, _environment)
+                .AddDasHealthChecks(webConfiguration!)
                 .AddEncodingService()
                 .AddServiceRegistrations()
-                .AddOuterApi(outerApiConfiguration)
+                .AddOuterApi(outerApiConfiguration!)
                 .AddSingleton<IActionContextAccessor, ActionContextAccessor>();
 
 #if DEBUG
@@ -107,7 +112,11 @@ namespace SFA.DAS.DigitalCertificates.Web
                         var query = new RouteValueDictionary(new { errorMessage = errorMessage });
                         var url = linkGenerator.GetPathByName(HomeController.ErrorRouteGet, query);
 
-                        context.Response.Redirect(url);
+                        if (url != null)
+                        {
+                            context.Response.Redirect(url);
+                        }
+                        
                         await Task.CompletedTask;
                     });
                 });

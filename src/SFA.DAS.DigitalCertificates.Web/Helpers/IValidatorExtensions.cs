@@ -16,7 +16,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Helpers
             {
                 foreach (var error in result.Errors)
                 {
-                    if (!modelState.ContainsKey(error.PropertyName) || modelState[error.PropertyName].Errors.Count == 0)
+                    if (!modelState.ContainsKey(error.PropertyName) || modelState[error.PropertyName]?.Errors.Count == 0)
                         modelState.AddModelError(error.PropertyName, error.ErrorMessage);
                 }
             }

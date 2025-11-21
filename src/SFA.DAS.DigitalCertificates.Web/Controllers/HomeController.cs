@@ -1,23 +1,22 @@
-﻿using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+﻿using System;
+using System.Diagnostics;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+using SFA.DAS.DigitalCertificates.Domain.Extensions;
 using SFA.DAS.DigitalCertificates.Web.Exceptions;
 using SFA.DAS.DigitalCertificates.Web.Extensions;
 using SFA.DAS.DigitalCertificates.Web.Models;
-using SFA.DAS.DigitalCertificates.Web.Models.User;
+using SFA.DAS.DigitalCertificates.Web.Models.Home;
 using SFA.DAS.DigitalCertificates.Web.Orchestrators;
 using SFA.DAS.DigitalCertificates.Web.StartupExtensions;
 using SFA.DAS.GovUK.Auth.Authentication;
 using SFA.DAS.GovUK.Auth.Services;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace SFA.DAS.DigitalCertificates.Web.Controllers
 {
@@ -74,6 +73,11 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         [Authorize(Policy = nameof(PolicyNames.IsVerified))]
         public async Task<IActionResult> Verified()
         {
+            if (HttpContextAccessor?.HttpContext == null)
+            {
+                throw new InvalidOperationException("No HttpContext available.");
+            }
+
             var token = await HttpContextAccessor.HttpContext.GetTokenAsync("access_token");
             var details = await _govUkAuthenticationService.GetAccountDetails(token);
 
@@ -131,39 +135,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error(string errorMessage)
         {
-            _logger.LogError(errorMessage);
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContextAccessor.HttpContext.TraceIdentifier, ErrorMessage = errorMessage });
-        }
-
-        [Route("sign-out", Name = SignOutRouteGet)]
-        [Authorize(Policy = nameof(PolicyNames.IsAuthenticated))]
-        public async Task<IActionResult> SigningOut()
-        {
-            var idToken = await HttpContextAccessor.HttpContext
-                .GetTokenAsync(OpenIdConnectDefaults.AuthenticationScheme, OpenIdConnectParameterNames.IdToken);
-
-            var authenticationProperties = new AuthenticationProperties();
-            authenticationProperties.Parameters[OpenIdConnectParameterNames.IdTokenHint] = idToken;
-
-            var authenticationSchemes = new[] { CookieAuthenticationDefaults.AuthenticationScheme };
-            if (!bool.TryParse(_config["StubAuth"], out var stubAuth) || !stubAuth)
-            {
-                authenticationSchemes = authenticationSchemes
-                    .Append(OpenIdConnectDefaults.AuthenticationScheme)
-                    .ToArray();
-            }
-
-            return SignOut(
-                authenticationProperties,
-                authenticationSchemes);
-        }
-
-        [Route("user-signed-out", Name = UserSignedOutRouteGet)]
-        public IActionResult UserSignedOut()
-        {
-            HttpContextAccessor.HttpContext.Response.Cookies.Delete("SFA.DAS.DigitalCertificates.Web.Auth");
-
-            return View();
+            _logger.LogError(errorMessage.SanitizeLogData());
+            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContextAccessor?.HttpContext?.TraceIdentifier, ErrorMessage = errorMessage });
         }
     }
 }

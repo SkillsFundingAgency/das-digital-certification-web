@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
-using Newtonsoft.Json;
-using SFA.DAS.DigitalCertificates.Infrastructure.Api.Types;
+using SFA.DAS.DigitalCertificates.Domain.Models;
 using SFA.DAS.DigitalCertificates.Web.Controllers;
-using SFA.DAS.DigitalCertificates.Web.Services.SessionStorage;
+using SFA.DAS.DigitalCertificates.Web.Services;
 using SFA.DAS.GovUK.Auth.Authentication;
 
 namespace SFA.DAS.DigitalCertificates.Web.Authentication
@@ -16,10 +14,12 @@ namespace SFA.DAS.DigitalCertificates.Web.Authentication
     public class CertificateOwnerAuthorizationHandler : AuthorizationHandler<CertificateOwnerRequirement>
     {
         private readonly ISessionStorageService _sessionStorageService;
+        private readonly IUserService _userService;
 
-        public CertificateOwnerAuthorizationHandler(ISessionStorageService sessionStorageService)
+        public CertificateOwnerAuthorizationHandler(ISessionStorageService sessionStorageService, IUserService userService)
         {
             _sessionStorageService = sessionStorageService;
+            _userService = userService;
         }
 
         protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, CertificateOwnerRequirement requirement)
@@ -43,7 +43,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Authentication
                 _ => null
             };
 
-            var certificates = await _sessionStorageService.GetOwnedCertificatesAsync() ?? new List<Certificate>();
+            var certificates = await _sessionStorageService.GetOwnedCertificatesAsync(_userService.GetGovUkIdentifier()) ?? new List<Certificate>();
 
             var match = certificates.FirstOrDefault(p =>
                 p.CertificateId == certificateId &&

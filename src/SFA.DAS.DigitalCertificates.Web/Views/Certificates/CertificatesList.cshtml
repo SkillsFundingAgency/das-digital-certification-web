@@ -23,13 +23,16 @@
                     </tr>
                 </thead>
                 <tbody class="govuk-table__body">
-                    @foreach (var certificate in Model.Certificates)
+                    @if(Model.Certificates != null)
                     {
-                        <tr class="govuk-table__row">
-                            <td class="govuk-table__cell"><a href="">@certificate.CourseName</a></td>
-                            <td class="govuk-table__cell">@certificate.CourseLevel</td>
-                            <td class="govuk-table__cell">@certificate.DateAwarded.ToString("dd MMMM yyyy")</td>
-                        </tr>
+                        foreach (var certificate in Model.Certificates)
+                        {
+                            <tr class="govuk-table__row">
+                                <td class="govuk-table__cell"><a href="">@certificate.CourseName</a></td>
+                                <td class="govuk-table__cell">@certificate.CourseLevel</td>
+                                <td class="govuk-table__cell">@certificate.DateAwarded.ToString("dd MMMM yyyy")</td>
+                            </tr>
+                        }
                     }
                 </tbody>
             </table>

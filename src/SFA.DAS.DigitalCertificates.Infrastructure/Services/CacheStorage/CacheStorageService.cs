@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 
 namespace SFA.DAS.DigitalCertificates.Infrastructure.Services.CacheStorage
@@ -25,16 +24,16 @@ namespace SFA.DAS.DigitalCertificates.Infrastructure.Services.CacheStorage
             var cached = await _distributedCache.GetStringAsync(key, cancellationToken);
             if (!string.IsNullOrEmpty(cached))
             {
-                return JsonConvert.DeserializeObject<T>(cached);
+                return JsonConvert.DeserializeObject<T>(cached)!;
             }
 
             return await SetAsync(key, factory, cancellationToken);
         }
 
-        public async Task<T> GetAsync<T>(string key)
+        public async Task<T?> GetAsync<T>(string key)
         {
             var json = await _distributedCache.GetStringAsync(key);
-            return json == null ? default(T) : JsonConvert.DeserializeObject<T>(json);
+            return json == null ? default : JsonConvert.DeserializeObject<T>(json);
         }
 
         public async Task<T> SetAsync<T>(string key, 

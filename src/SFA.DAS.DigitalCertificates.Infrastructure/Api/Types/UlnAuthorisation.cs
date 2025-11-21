@@ -6,6 +6,6 @@ namespace SFA.DAS.DigitalCertificates.Infrastructure.Api.Types
     {
         public Guid AuthorisationId { get; set; }
         public DateTime AuthorisedAt { get; set; }
-        public string Uln { get; set; }
+        public required string Uln { get; set; }
     }
 }

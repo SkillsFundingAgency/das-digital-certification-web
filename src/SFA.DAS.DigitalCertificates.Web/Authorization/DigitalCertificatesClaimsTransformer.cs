@@ -9,16 +9,16 @@ namespace SFA.DAS.DigitalCertificates.Web.Authorization
 {
     public sealed class DigitalCertificatesClaimsTransformer : IClaimsTransformation
     {
-        private readonly IUserCacheService _userCacheService;
+        private readonly ISessionStorageService _sessionStorageService;
 
-        public DigitalCertificatesClaimsTransformer(IUserCacheService userCacheService)
+        public DigitalCertificatesClaimsTransformer(ISessionStorageService sessionStorageService)
         {
-            _userCacheService = userCacheService;
+            _sessionStorageService = sessionStorageService;
         }
 
         public async Task<ClaimsPrincipal> TransformAsync(ClaimsPrincipal principal)
         {
-            if (principal?.Identity?.IsAuthenticated != true) return principal;
+            if (principal?.Identity?.IsAuthenticated != true) return principal!;
 
             var userId = principal.FindFirst(DigitalCertificateClaimsTypes.UserId)?.Value;
             if (!string.IsNullOrEmpty(userId))
@@ -26,19 +26,21 @@ namespace SFA.DAS.DigitalCertificates.Web.Authorization
                 var govUkIdentifier = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(govUkIdentifier)) return principal;
 
-                var user = await _userCacheService.CacheUserForGovUkIdentifier(govUkIdentifier);
-
-                var authorizationDecisionClaim = principal.FindFirst(ClaimTypes.AuthorizationDecision);
-                if (authorizationDecisionClaim != null)
+                var user = await _sessionStorageService.GetUserAsync(govUkIdentifier);
+                if (user != null)
                 {
-                    var authorizationDecision = authorizationDecisionClaim.Value;
-                    if (!string.IsNullOrEmpty(authorizationDecision))
+                    var authorizationDecisionClaim = principal.FindFirst(ClaimTypes.AuthorizationDecision);
+                    if (authorizationDecisionClaim != null)
                     {
-                        var userAuthorizationDecision = user.LockedAt.HasValue ? AuthorizationDecisions.Suspended : AuthorizationDecisions.Allowed;
-                        if (userAuthorizationDecision != authorizationDecision)
+                        var authorizationDecision = authorizationDecisionClaim.Value;
+                        if (!string.IsNullOrEmpty(authorizationDecision))
                         {
-                            principal.Identities.First().RemoveClaim(authorizationDecisionClaim);
-                            principal.Identities.First().AddClaim(new Claim(ClaimTypes.AuthorizationDecision, userAuthorizationDecision));
+                            var userAuthorizationDecision = user.LockedAt.HasValue ? AuthorizationDecisions.Suspended : AuthorizationDecisions.Allowed;
+                            if (userAuthorizationDecision != authorizationDecision)
+                            {
+                                principal.Identities.First().RemoveClaim(authorizationDecisionClaim);
+                                principal.Identities.First().AddClaim(new Claim(ClaimTypes.AuthorizationDecision, userAuthorizationDecision));
+                            }
                         }
                     }
                 }

@@ -14,13 +14,13 @@ namespace SFA.DAS.DigitalCertificates.Web.StartupExtensions
         {
             services.AddOptions();
             services.Configure<DigitalCertificatesWebConfiguration>(configuration.GetSection(nameof(DigitalCertificatesWebConfiguration)));
-            services.AddSingleton(cfg => cfg.GetService<IOptions<DigitalCertificatesWebConfiguration>>().Value);
+            services.AddSingleton(cfg => cfg.GetRequiredService<IOptions<DigitalCertificatesWebConfiguration>>().Value);
 
             services.Configure<DigitalCertificatesOuterApiConfiguration>(configuration.GetSection(nameof(DigitalCertificatesOuterApiConfiguration)));
-            services.AddSingleton(cfg => cfg.GetService<IOptions<DigitalCertificatesOuterApiConfiguration>>().Value);
+            services.AddSingleton(cfg => cfg.GetRequiredService<IOptions<DigitalCertificatesOuterApiConfiguration>>().Value);
 
             services.Configure<EncodingConfig>(configuration.GetSection(nameof(EncodingConfig)));
-            services.AddSingleton(cfg => cfg.GetService<IOptions<EncodingConfig>>().Value);
+            services.AddSingleton(cfg => cfg.GetRequiredService<IOptions<EncodingConfig>>().Value);
         }
     }
 }

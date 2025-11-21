@@ -1,4 +1,4 @@
-﻿namespace SFA.DAS.DigitalCertificates.Infrastructure.Api.Types
+﻿namespace SFA.DAS.DigitalCertificates.Domain.Models
 {
     public enum CertificateType
     {
