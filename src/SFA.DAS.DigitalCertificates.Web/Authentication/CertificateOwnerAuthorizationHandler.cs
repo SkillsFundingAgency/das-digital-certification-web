@@ -58,6 +58,5 @@ namespace SFA.DAS.DigitalCertificates.Web.Authentication
                 context.Fail(new AuthorizationFailureReason(this, DigitalCertificatesAuthorizationFailureMessages.NotCertificateOwner));
             }
         }
-
     }
 }
