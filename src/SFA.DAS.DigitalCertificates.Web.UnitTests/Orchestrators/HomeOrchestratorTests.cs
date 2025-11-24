@@ -8,7 +8,7 @@ using MediatR;
 using Moq;
 using NUnit.Framework;
 using SFA.DAS.DigitalCertificates.Application.Commands.CreateOrUpdateUser;
-using SFA.DAS.DigitalCertificates.Web.Models.User;
+using SFA.DAS.DigitalCertificates.Web.Models.Home;
 using SFA.DAS.DigitalCertificates.Web.Orchestrators;
 
 namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators

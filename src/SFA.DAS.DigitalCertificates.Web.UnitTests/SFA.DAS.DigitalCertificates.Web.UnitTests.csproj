@@ -10,19 +10,16 @@
 
   <ItemGroup>
     <Compile Remove="Models\**" />
-    <Compile Remove="Orchestrators\**" />
     <Compile Remove="StartupExtensions\**" />
     <Compile Remove="TagHelpers\**" />
     <Compile Remove="ValidatorInteceptors\**" />
     <Compile Remove="Validators\**" />
     <EmbeddedResource Remove="Models\**" />
-    <EmbeddedResource Remove="Orchestrators\**" />
     <EmbeddedResource Remove="StartupExtensions\**" />
     <EmbeddedResource Remove="TagHelpers\**" />
     <EmbeddedResource Remove="ValidatorInteceptors\**" />
     <EmbeddedResource Remove="Validators\**" />
     <None Remove="Models\**" />
-    <None Remove="Orchestrators\**" />
     <None Remove="StartupExtensions\**" />
     <None Remove="TagHelpers\**" />
     <None Remove="ValidatorInteceptors\**" />
