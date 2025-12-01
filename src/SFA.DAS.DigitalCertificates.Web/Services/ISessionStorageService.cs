@@ -9,5 +9,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
         Task<User?> GetUserAsync(string govUkIdentifier);
         Task<List<Certificate>?> GetOwnedCertificatesAsync(string govUkIdentifier);
         Task<UlnAuthorisation?> GetUlnAuthorisationAsync(string govUkIdentifier);
+        Task Clear(string govUkIdentifier);
     }
 }

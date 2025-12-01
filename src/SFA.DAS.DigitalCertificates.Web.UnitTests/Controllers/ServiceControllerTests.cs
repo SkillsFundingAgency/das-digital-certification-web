@@ -12,6 +12,7 @@ using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Moq;
 using NUnit.Framework;
 using SFA.DAS.DigitalCertificates.Web.Controllers;
+using SFA.DAS.DigitalCertificates.Web.Services;
 
 namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
 {
@@ -20,16 +21,21 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
     {
         private Mock<IConfiguration> _configMock;
         private Mock<IHttpContextAccessor> _contextAccessorMock;
+        private Mock<IUserService> _userServiceMock;
+        private Mock<ISessionStorageService> _sessionStorageServiceMock;
         private ServiceController _sut;
 
         [SetUp]
         public void Setup()
         {
-            
             _configMock = new Mock<IConfiguration>();
             _contextAccessorMock = new Mock<IHttpContextAccessor>();
-            
+            _userServiceMock = new Mock<IUserService>();
+            _sessionStorageServiceMock = new Mock<ISessionStorageService>();
+
             _sut = new ServiceController(
+                _userServiceMock.Object,
+                _sessionStorageServiceMock.Object,
                 _configMock.Object,
                 _contextAccessorMock.Object
             );
@@ -42,10 +48,15 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
         }
 
         [Test]
-        public async Task SigningOut_ReturnsSignOutResult_WithOidcHint_AndSchemes()
+        public async Task SigningOut_ReturnsSignOutResult_WithOidcHint_AndSchemes_AndClearsSession()
         {
             // Arrange
             var idToken = "some_id_token";
+            var govUkIdentifier = "gov-123";
+
+            _userServiceMock.Setup(x => x.GetGovUkIdentifier())
+                .Returns(govUkIdentifier);
+
             var http = new DefaultHttpContext();
 
             var oidcProps = new AuthenticationProperties();
@@ -93,7 +104,10 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             signOut.Properties.Parameters.Should().ContainKey(OpenIdConnectParameterNames.IdTokenHint);
             signOut.Properties.Parameters[OpenIdConnectParameterNames.IdTokenHint].Should().Be(idToken);
 
-            auth.Verify(a => a.AuthenticateAsync(http, OpenIdConnectDefaults.AuthenticationScheme), Times.AtLeastOnce);
+            _sessionStorageServiceMock.Verify(
+                x => x.Clear(govUkIdentifier),
+                Times.Once
+            );
         }
 
         [Test]

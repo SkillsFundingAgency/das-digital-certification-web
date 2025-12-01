@@ -245,6 +245,22 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
         }
 
         [Test]
+        public async Task Clear_Removes_User_And_Certificates_Cache_Entries()
+        {
+            var govUkIdentifier = "gov-999";
+
+            var expectedUserKey = SessionStorageService.GetScopedKey(nameof(User), govUkIdentifier);
+            var expectedCertsKey = SessionStorageService.GetScopedKey(nameof(CertificatesResponse), govUkIdentifier);
+
+            // Act
+            await _sut.Clear(govUkIdentifier);
+
+            // Assert
+            _cacheStorageMock.Verify(x => x.RemoveAsync(expectedUserKey), Times.Once);
+            _cacheStorageMock.Verify(x => x.RemoveAsync(expectedCertsKey), Times.Once);
+        }
+
+        [Test]
         public void GetScopedKey_Returns_Correct_Format()
         {
             var key = SessionStorageService.GetScopedKey("User", "gov-123");

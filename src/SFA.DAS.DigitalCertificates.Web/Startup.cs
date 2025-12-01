@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
+using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
@@ -17,6 +18,7 @@ using SFA.DAS.DigitalCertificates.Web.Controllers;
 using SFA.DAS.DigitalCertificates.Web.Extensions;
 using SFA.DAS.DigitalCertificates.Web.Filters;
 using SFA.DAS.DigitalCertificates.Web.StartupExtensions;
+using SFA.DAS.DigitalCertificates.Web.Validators;
 using SFA.DAS.GovUK.Auth.Configuration;
 using SFA.DAS.GovUK.Auth.Controllers;
 using SFA.DAS.Validation.Mvc.Extensions;
@@ -73,6 +75,9 @@ namespace SFA.DAS.DigitalCertificates.Web
                     options.Filters.Add(new GoogleAnalyticsFilterAttribute());
                 })
                 .AddControllersAsServices();
+           
+            services
+                .AddValidatorsFromAssemblyContaining<SignInStubViewModelValidator>();
 
             services
                 .AddGovUkOneLoginAuthentication(webConfiguration!, _configuration)

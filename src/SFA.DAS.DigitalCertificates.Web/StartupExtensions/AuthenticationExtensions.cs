@@ -23,7 +23,7 @@ namespace SFA.DAS.DigitalCertificates.Web.StartupExtensions
                 new AuthRedirects
                 {
                     SuspendedRedirectUrl = "/locked",
-                    SignedOutRedirectUrl = "/signed-out",
+                    SignedOutRedirectUrl = "/service/signed-out",
                     LoginRedirect = webConfiguration.ServiceBaseUrl + "/stub/sign-in-stub",
                     LocalStubLoginPath = "/stub/sign-in-Stub",
                     CookieDomain = uri.Host

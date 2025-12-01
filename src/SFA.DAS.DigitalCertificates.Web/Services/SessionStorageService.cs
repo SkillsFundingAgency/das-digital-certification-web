@@ -66,6 +66,12 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
             return response;
         }
 
+        public async Task Clear(string govUkIdentifier)
+        {
+            await _sessionCache.RemoveAsync(GetScopedKey(nameof(User), govUkIdentifier));
+            await _sessionCache.RemoveAsync(GetScopedKey(nameof(CertificatesResponse), govUkIdentifier));
+        }
+
         private async Task<T?> Get<T>(string key, string govUkIdentifier)
         {
             var scopedKey = GetScopedKey(key, govUkIdentifier);

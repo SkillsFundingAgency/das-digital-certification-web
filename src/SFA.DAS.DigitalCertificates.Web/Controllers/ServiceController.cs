@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+using SFA.DAS.DigitalCertificates.Web.Services;
 using SFA.DAS.GovUK.Auth.Authentication;
 
 namespace SFA.DAS.DigitalCertificates.Web.Controllers
@@ -16,6 +17,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
     [Route("service")]
     public class ServiceController : BaseController
     {
+        private readonly IUserService _userService;
+        private readonly ISessionStorageService _sessionStorageService;
         private readonly IConfiguration _config;
 
         #region Routes
@@ -23,9 +26,11 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         public const string SignedOutRouteGet = nameof(SignedOutRouteGet);
         #endregion Routes
 
-        public ServiceController(IConfiguration config, IHttpContextAccessor contextAccessor)
+        public ServiceController(IUserService userService, ISessionStorageService sessionStorageService, IConfiguration config, IHttpContextAccessor contextAccessor)
             : base(contextAccessor) 
         {
+            _userService = userService;
+            _sessionStorageService = sessionStorageService;
             _config = config;
         }
 
@@ -51,6 +56,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
                     .Append(OpenIdConnectDefaults.AuthenticationScheme)
                     .ToArray();
             }
+
+            await _sessionStorageService.Clear(_userService.GetGovUkIdentifier());
 
             return SignOut(
                 authenticationProperties,
