@@ -38,7 +38,8 @@ namespace SFA.DAS.DigitalCertificates.Web.StartupExtensions
             services.AddTransient<ValidateRequiredQueryParametersAttribute>();
             services.AddTransient<IHomeOrchestrator, HomeOrchestrator>();
             services.AddTransient<ICertificatesOrchestrator, CertificatesOrchestrator>();
-            
+            services.AddTransient<ICertificateSharingOrchestrator, CertificateSharingOrchestrator>();
+
             services.AddTransient<IClaimsTransformation, DigitalCertificatesClaimsTransformer>();
 
             return services;
