@@ -66,11 +66,26 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
 
         [HttpPost("{certificateId}/sharing", Name = CreateCertificateSharingRoutePost)]
         [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsCertificateOwner))]
-        public async Task<IActionResult> CreateCertificateSharingPost(Guid certificateId, [FromForm] string courseName)
+        public async Task<IActionResult> CreateCertificateSharingPost(Guid certificateId)
         {
-            var result = await _certificateSharingOrchestrator.CreateCertificateSharing(certificateId, courseName);
+            var result = await _certificateSharingOrchestrator.CreateCertificateSharing(certificateId);
 
             return RedirectToRoute(CertificateSharingLinkRouteGet, new { certificateId });
+        }
+
+        [HttpGet("{certificateId}/sharingLink", Name = CertificateSharingLinkRouteGet)]
+        [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsCertificateOwner))]
+        public IActionResult CertificateSharingLink(Guid certificateId)
+        {
+            return View();
+        }
+
+        [HttpPost("{certificateId}/sharingLink", Name = CertificateSharingLinkRoutePost)]
+        [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsCertificateOwner))]
+        public IActionResult CertificateSharingLinkPost(Guid certificateId)
+        {
+            // Handle form submission for sharing link
+            return View();
         }
     }
 }

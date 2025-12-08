@@ -1,0 +1,15 @@
+@using SFA.DAS.DigitalCertificates.Web.Controllers
+@using SFA.DAS.DigitalCertificates.Web.ViewDataKeys
+@{
+    ViewData[ViewDataKeys.Title] = ViewData[ViewDataKeys.ServiceName] + "Sharing Link";
+    ViewBag.GaData.Vpv = @ViewData[ViewDataKeys.GaDataVpvPrefix] + "sharing-link";
+    var certificateId = ViewContext.RouteData.Values["certificateId"]?.ToString() ?? throw new InvalidOperationException("Certificate ID is required"); // TODO: Update to read certificateId from the model instead of RouteData.
+}
+<main class="govuk-main-wrapper govuk-main-wrapper--auto-spacing">
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+            <h1 class="govuk-heading-xl">@ViewData[ViewDataKeys.Title]</h1>
+            <h2 class="govuk-heading-m">Certificate Sharing Link</h2>
+        </div>
+    </div>
+</main>

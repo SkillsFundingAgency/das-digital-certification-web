@@ -7,6 +7,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
     public interface ICertificateSharingOrchestrator
     {
         Task<CertificateSharingViewModel> GetCertificateSharings(Guid certificateId);
-        Task<Guid> CreateCertificateSharing(Guid certificateId, string courseName);
+        Task<Guid> CreateCertificateSharing(Guid certificateId);
     }
 }

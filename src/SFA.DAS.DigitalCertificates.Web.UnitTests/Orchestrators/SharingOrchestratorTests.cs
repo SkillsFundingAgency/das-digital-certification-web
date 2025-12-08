@@ -129,7 +129,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
 
             _mediatorMock
                 .Setup(m => m.Send(It.IsAny<GetCertificateSharingDetailsQuery>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync((GetCertificateSharingDetailsQueryResult?)null);
+                .ReturnsAsync((GetCertificateSharingDetailsQueryResult)null);
 
             var result = await _sut.GetCertificateSharings(certificateId);
 
@@ -269,7 +269,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 .Setup(m => m.Send(It.IsAny<CreateCertificateSharingCommand>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(commandResult);
 
-            var result = await _sut.CreateCertificateSharing(certificateId, courseName);
+            var result = await _sut.CreateCertificateSharing(certificateId);
 
             result.Should().Be(sharingId);
 
@@ -307,9 +307,9 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
 
             _mediatorMock
                 .Setup(m => m.Send(It.IsAny<CreateCertificateSharingCommand>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync((CreateCertificateSharingCommandResult?)null);
+                .ReturnsAsync((CreateCertificateSharingCommandResult)null);
 
-            var result = await _sut.CreateCertificateSharing(certificateId, courseName);
+            var result = await _sut.CreateCertificateSharing(certificateId);
 
             result.Should().Be(Guid.Empty);
         }
@@ -319,7 +319,6 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         {
             var userId = Guid.NewGuid();
             var certificateId = Guid.NewGuid();
-            var courseName = "Software Development";
             var govUkIdentifier = "test-gov-uk-id";
 
             _userServiceMock.Setup(x => x.GetUserId()).Returns(userId);
@@ -329,7 +328,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 .ReturnsAsync(new List<Certificate>());
 
             var exception = Assert.ThrowsAsync<InvalidOperationException>(
-                () => _sut.CreateCertificateSharing(certificateId, courseName));
+                () => _sut.CreateCertificateSharing(certificateId));
 
             exception.Message.Should().Be($"Certificate {certificateId} not found for authenticated user");
         }

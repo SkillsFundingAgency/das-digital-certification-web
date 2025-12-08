@@ -67,7 +67,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             };
         }
 
-        public async Task<Guid> CreateCertificateSharing(Guid certificateId, string courseName)
+        public async Task<Guid> CreateCertificateSharing(Guid certificateId)
         {
             var userId = _userService.GetUserId()!.Value;
 
@@ -83,7 +83,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 UserId = userId,
                 CertificateId = certificateId,
                 CertificateType = certificateData.CertificateType.ToString(),
-                CourseName = courseName
+                CourseName = certificateData.CourseName
             });
 
             return response?.SharingId ?? Guid.Empty;
