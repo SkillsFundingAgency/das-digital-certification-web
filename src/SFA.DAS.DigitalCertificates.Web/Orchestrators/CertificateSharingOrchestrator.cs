@@ -6,6 +6,7 @@ using MediatR;
 using SFA.DAS.DigitalCertificates.Application.Commands.CreateCertificateSharing;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetCertificateSharingDetails;
 using SFA.DAS.DigitalCertificates.Domain.Models;
+using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
 using SFA.DAS.DigitalCertificates.Web.Models.Sharing;
 using SFA.DAS.DigitalCertificates.Web.Services;
 
@@ -15,12 +16,14 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
     {
         private readonly IUserService _userService;
         private readonly ISessionStorageService _sessionStorageService;
+        private readonly DigitalCertificatesWebConfiguration _digitalCertificatesWebConfiguration;
 
-        public CertificateSharingOrchestrator(IMediator mediator, IUserService userService, ISessionStorageService sessionStorageService)
+        public CertificateSharingOrchestrator(IMediator mediator, IUserService userService, ISessionStorageService sessionStorageService, DigitalCertificatesWebConfiguration digitalCertificatesWebConfiguration)
           : base(mediator)
         {
             _userService = userService;
             _sessionStorageService = sessionStorageService;
+            _digitalCertificatesWebConfiguration = digitalCertificatesWebConfiguration;
         }
 
         public async Task<CertificateSharingViewModel> GetCertificateSharings(Guid certificateId)
@@ -38,7 +41,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             {
                 UserId = userId,
                 CertificateId = certificateId,
-                Limit = 10
+                Limit = _digitalCertificatesWebConfiguration.SharingListLimit
             });
 
             if (response == null)

@@ -9,6 +9,7 @@ using NUnit.Framework;
 using SFA.DAS.DigitalCertificates.Application.Commands.CreateCertificateSharing;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetCertificateSharingDetails;
 using SFA.DAS.DigitalCertificates.Domain.Models;
+using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
 using SFA.DAS.DigitalCertificates.Web.Orchestrators;
 using SFA.DAS.DigitalCertificates.Web.Services;
 
@@ -20,6 +21,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         private Mock<IMediator> _mediatorMock;
         private Mock<IUserService> _userServiceMock;
         private Mock<ISessionStorageService> _sessionStorageServiceMock;
+        private DigitalCertificatesWebConfiguration _digitalCertificatesWebConfiguration;
         private CertificateSharingOrchestrator _sut;
 
         [SetUp]
@@ -28,7 +30,14 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             _mediatorMock = new Mock<IMediator>();
             _userServiceMock = new Mock<IUserService>();
             _sessionStorageServiceMock = new Mock<ISessionStorageService>();
-            _sut = new CertificateSharingOrchestrator(_mediatorMock.Object, _userServiceMock.Object, _sessionStorageServiceMock.Object);
+            _digitalCertificatesWebConfiguration = new DigitalCertificatesWebConfiguration
+            {
+                ServiceBaseUrl = "https://test.com",
+                RedisConnectionString = "test",
+                DataProtectionKeysDatabase = "test",
+                SharingListLimit = 10
+            };
+            _sut = new CertificateSharingOrchestrator(_mediatorMock.Object, _userServiceMock.Object, _sessionStorageServiceMock.Object, _digitalCertificatesWebConfiguration);
         }
 
         [TearDown]
@@ -230,6 +239,101 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         }
 
         [Test]
+        public async Task GetCertificateSharings_Uses_Configured_Limit_Value()
+        {
+            var userId = Guid.NewGuid();
+            var certificateId = Guid.NewGuid();
+            var govUkIdentifier = "test-gov-uk-id";
+            var customLimit = 25;
+
+            _digitalCertificatesWebConfiguration.SharingListLimit = customLimit;
+
+            _userServiceMock.Setup(x => x.GetUserId()).Returns(userId);
+            _userServiceMock.Setup(x => x.GetGovUkIdentifier()).Returns(govUkIdentifier);
+
+            var certificate = new Certificate
+            {
+                CertificateId = certificateId,
+                CertificateType = CertificateType.Standard,
+                CourseName = "Test Course",
+                CourseLevel = "Level 3",
+                DateAwarded = DateTime.UtcNow
+            };
+            _sessionStorageServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
+                .ReturnsAsync(new List<Certificate> { certificate });
+
+            var queryResult = new GetCertificateSharingDetailsQueryResult
+            {
+                UserId = userId,
+                CertificateId = certificateId,
+                CertificateType = "Standard",
+                CourseName = "Test Course",
+                Sharings = new List<CertificateSharingDetailsQueryResultItem>()
+            };
+
+            _mediatorMock
+                .Setup(m => m.Send(It.IsAny<GetCertificateSharingDetailsQuery>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(queryResult);
+
+            await _sut.GetCertificateSharings(certificateId);
+
+            _mediatorMock.Verify(m => m.Send(
+                It.Is<GetCertificateSharingDetailsQuery>(q =>
+                    q.UserId == userId &&
+                    q.CertificateId == certificateId &&
+                    q.Limit == customLimit),
+                It.IsAny<CancellationToken>()),
+                Times.Once);
+        }
+
+        [Test]
+        public async Task GetCertificateSharings_Uses_Null_Limit_When_Config_Is_Null()
+        {
+            var userId = Guid.NewGuid();
+            var certificateId = Guid.NewGuid();
+            var govUkIdentifier = "test-gov-uk-id";
+
+            _digitalCertificatesWebConfiguration.SharingListLimit = null;
+
+            _userServiceMock.Setup(x => x.GetUserId()).Returns(userId);
+            _userServiceMock.Setup(x => x.GetGovUkIdentifier()).Returns(govUkIdentifier);
+
+            var certificate = new Certificate
+            {
+                CertificateId = certificateId,
+                CertificateType = CertificateType.Standard,
+                CourseName = "Test Course",
+                CourseLevel = "Level 3",
+                DateAwarded = DateTime.UtcNow
+            };
+            _sessionStorageServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
+                .ReturnsAsync(new List<Certificate> { certificate });
+
+            var queryResult = new GetCertificateSharingDetailsQueryResult
+            {
+                UserId = userId,
+                CertificateId = certificateId,
+                CertificateType = "Standard",
+                CourseName = "Test Course",
+                Sharings = new List<CertificateSharingDetailsQueryResultItem>()
+            };
+
+            _mediatorMock
+                .Setup(m => m.Send(It.IsAny<GetCertificateSharingDetailsQuery>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(queryResult);
+
+            await _sut.GetCertificateSharings(certificateId);
+
+            _mediatorMock.Verify(m => m.Send(
+                It.Is<GetCertificateSharingDetailsQuery>(q =>
+                    q.UserId == userId &&
+                    q.CertificateId == certificateId &&
+                    q.Limit == null),
+                It.IsAny<CancellationToken>()),
+                Times.Once);
+        }
+
+        [Test]
         public async Task CreateCertificateSharing_Sends_Command_With_Correct_Values_And_Returns_Success()
         {
             var userId = Guid.NewGuid();
@@ -332,7 +436,5 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
 
             exception.Message.Should().Be($"Certificate {certificateId} not found for authenticated user");
         }
-
-
     }
 }
