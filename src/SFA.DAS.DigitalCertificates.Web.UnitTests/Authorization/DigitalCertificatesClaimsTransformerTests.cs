@@ -101,7 +101,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authorization
                     Id = Guid.NewGuid(),
                     GovUkIdentifier = "gov-123",
                     EmailAddress = "name@domain.com",
-                    LockedAt = null });
+                    IsLocked = false });
 
             // Act
             var result = await _sut.TransformAsync(principal);
@@ -129,7 +129,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authorization
 
             _sessionStorageServiceMock
                 .Setup(s => s.GetUserAsync(govUkIdentifier))
-                .ReturnsAsync(new User { Id = Guid.NewGuid(), LockedAt = DateTime.UtcNow, GovUkIdentifier = "gov-123", EmailAddress = "name@domain.com" });
+                .ReturnsAsync(new User { Id = Guid.NewGuid(), IsLocked = true, GovUkIdentifier = "gov-123", EmailAddress = "name@domain.com" });
 
             // Act
             var result = await _sut.TransformAsync(principal);
@@ -156,7 +156,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authorization
 
             _sessionStorageServiceMock
                 .Setup(s => s.GetUserAsync(govUkIdentifier))
-                .ReturnsAsync(new User { Id = Guid.NewGuid(), LockedAt = null, GovUkIdentifier = "gov-123", EmailAddress = "name@domain.com" });
+                .ReturnsAsync(new User { Id = Guid.NewGuid(), IsLocked = false, GovUkIdentifier = "gov-123", EmailAddress = "name@domain.com" });
 
             // Act
             var result = await _sut.TransformAsync(principal);

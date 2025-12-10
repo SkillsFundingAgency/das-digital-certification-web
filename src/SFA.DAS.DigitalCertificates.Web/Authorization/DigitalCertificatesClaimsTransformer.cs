@@ -35,7 +35,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Authorization
                         var authorizationDecision = authorizationDecisionClaim.Value;
                         if (!string.IsNullOrEmpty(authorizationDecision))
                         {
-                            var userAuthorizationDecision = user.LockedAt.HasValue ? AuthorizationDecisions.Suspended : AuthorizationDecisions.Allowed;
+                            var userAuthorizationDecision = user.IsLocked ? AuthorizationDecisions.Suspended : AuthorizationDecisions.Allowed;
                             if (userAuthorizationDecision != authorizationDecision)
                             {
                                 principal.Identities.First().RemoveClaim(authorizationDecisionClaim);
