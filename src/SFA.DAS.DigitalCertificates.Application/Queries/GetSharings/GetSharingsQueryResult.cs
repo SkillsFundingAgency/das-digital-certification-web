@@ -1,8 +1,8 @@
 using SFA.DAS.DigitalCertificates.Infrastructure.Api.Responses;
 
-namespace SFA.DAS.DigitalCertificates.Application.Queries.GetCertificateSharingDetails
+namespace SFA.DAS.DigitalCertificates.Application.Queries.GetSharings
 {
-    public class GetCertificateSharingDetailsQueryResult
+    public class GetSharingsQueryResult
     {
         public Guid UserId { get; set; }
         public Guid CertificateId { get; set; }
@@ -10,14 +10,14 @@ namespace SFA.DAS.DigitalCertificates.Application.Queries.GetCertificateSharingD
         public required string CourseName { get; set; }
         public List<CertificateSharingDetailsQueryResultItem> Sharings { get; set; } = new List<CertificateSharingDetailsQueryResultItem>();
 
-        public static implicit operator GetCertificateSharingDetailsQueryResult?(GetCertificateSharingDetailsResponse? source)
+        public static implicit operator GetSharingsQueryResult?(GetSharingsResponse? source)
         {
             if (source == null)
             {
                 return null;
             }
 
-            return new GetCertificateSharingDetailsQueryResult
+            return new GetSharingsQueryResult
             {
                 UserId = source.UserId,
                 CertificateId = source.CertificateId,

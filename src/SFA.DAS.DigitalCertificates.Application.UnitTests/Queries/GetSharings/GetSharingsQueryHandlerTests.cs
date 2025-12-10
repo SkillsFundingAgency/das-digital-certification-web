@@ -1,23 +1,23 @@
 using FluentAssertions;
 using Moq;
 using NUnit.Framework;
-using SFA.DAS.DigitalCertificates.Application.Queries.GetCertificateSharingDetails;
+using SFA.DAS.DigitalCertificates.Application.Queries.GetSharings;
 using SFA.DAS.DigitalCertificates.Domain.Interfaces;
 using SFA.DAS.DigitalCertificates.Infrastructure.Api.Responses;
 
-namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetCertificateSharingDetails
+namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetSharings
 {
     [TestFixture]
-    public class GetCertificateSharingDetailsQueryHandlerTests
+    public class GetSharingsQueryHandlerTests
     {
         private Mock<IDigitalCertificatesOuterApi> _outerApiMock;
-        private GetCertificateSharingDetailsQueryHandler _sut;
+        private GetSharingsQueryHandler _sut;
 
         [SetUp]
         public void SetUp()
         {
             _outerApiMock = new Mock<IDigitalCertificatesOuterApi>();
-            _sut = new GetCertificateSharingDetailsQueryHandler(_outerApiMock.Object);
+            _sut = new GetSharingsQueryHandler(_outerApiMock.Object);
         }
 
         [Test]
@@ -27,14 +27,14 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetCertifica
             var certificateId = Guid.NewGuid();
             var limit = 15;
 
-            var query = new GetCertificateSharingDetailsQuery
+            var query = new GetSharingsQuery
             {
                 UserId = userId,
                 CertificateId = certificateId,
                 Limit = limit
             };
 
-            var expectedResponse = new GetCertificateSharingDetailsResponse
+            var expectedResponse = new GetSharingsResponse
             {
                 UserId = userId,
                 CertificateId = certificateId,
@@ -72,7 +72,7 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetCertifica
             };
 
             _outerApiMock
-                .Setup(x => x.GetCertificateSharings(It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<int>()))
+                .Setup(x => x.GetSharings(It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<int>()))
                 .ReturnsAsync(expectedResponse);
 
             var result = await _sut.Handle(query, CancellationToken.None);
@@ -89,50 +89,16 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetCertifica
             sharing.SharingEmails.Should().HaveCount(1);
             sharing.SharingEmails[0].EmailAddress.Should().Be("test@example.com");
 
-            _outerApiMock.Verify(x => x.GetCertificateSharings(
+            _outerApiMock.Verify(x => x.GetSharings(
                 userId.ToString(),
                 certificateId,
                 limit), Times.Once);
         }
 
         [Test]
-        public async Task Handle_Uses_Default_Limit_When_Not_Specified()
-        {
-            var userId = Guid.NewGuid();
-            var certificateId = Guid.NewGuid();
-
-            var query = new GetCertificateSharingDetailsQuery
-            {
-                UserId = userId,
-                CertificateId = certificateId
-            };
-
-            var expectedResponse = new GetCertificateSharingDetailsResponse
-            {
-                UserId = userId,
-                CertificateId = certificateId,
-                CertificateType = "Framework",
-                CourseName = "Business Administration"
-            };
-
-            _outerApiMock
-                .Setup(x => x.GetCertificateSharings(It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<int>()))
-                .ReturnsAsync(expectedResponse);
-
-            var result = await _sut.Handle(query, CancellationToken.None);
-
-            result.Should().NotBeNull();
-
-            _outerApiMock.Verify(x => x.GetCertificateSharings(
-                userId.ToString(),
-                certificateId,
-                10), Times.Once);
-        }
-
-        [Test]
         public async Task Handle_Returns_Null_When_OuterApi_Returns_Null()
         {
-            var query = new GetCertificateSharingDetailsQuery
+            var query = new GetSharingsQuery
             {
                 UserId = Guid.NewGuid(),
                 CertificateId = Guid.NewGuid(),
@@ -140,8 +106,8 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetCertifica
             };
 
             _outerApiMock
-                .Setup(x => x.GetCertificateSharings(It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<int>()))
-                .ReturnsAsync((GetCertificateSharingDetailsResponse)null!);
+                .Setup(x => x.GetSharings(It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<int>()))
+                .ReturnsAsync((GetSharingsResponse)null!);
 
             var result = await _sut.Handle(query, CancellationToken.None);
 
@@ -151,7 +117,7 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetCertifica
         [Test]
         public void Handle_Throws_If_OuterApi_Fails()
         {
-            var query = new GetCertificateSharingDetailsQuery
+            var query = new GetSharingsQuery
             {
                 UserId = Guid.NewGuid(),
                 CertificateId = Guid.NewGuid(),
@@ -159,7 +125,7 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetCertifica
             };
 
             _outerApiMock
-                .Setup(x => x.GetCertificateSharings(It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<int>()))
+                .Setup(x => x.GetSharings(It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<int>()))
                 .ThrowsAsync(new Exception("API failure"));
 
             Func<Task> act = async () => await _sut.Handle(query, CancellationToken.None);

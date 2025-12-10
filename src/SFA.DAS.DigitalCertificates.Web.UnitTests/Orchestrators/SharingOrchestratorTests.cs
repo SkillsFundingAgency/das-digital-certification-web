@@ -6,8 +6,8 @@ using FluentAssertions;
 using MediatR;
 using Moq;
 using NUnit.Framework;
-using SFA.DAS.DigitalCertificates.Application.Commands.CreateCertificateSharing;
-using SFA.DAS.DigitalCertificates.Application.Queries.GetCertificateSharingDetails;
+using SFA.DAS.DigitalCertificates.Application.Commands.CreateSharing;
+using SFA.DAS.DigitalCertificates.Application.Queries.GetSharings;
 using SFA.DAS.DigitalCertificates.Domain.Models;
 using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
 using SFA.DAS.DigitalCertificates.Web.Orchestrators;
@@ -22,7 +22,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         private Mock<IUserService> _userServiceMock;
         private Mock<ISessionStorageService> _sessionStorageServiceMock;
         private DigitalCertificatesWebConfiguration _digitalCertificatesWebConfiguration;
-        private CertificateSharingOrchestrator _sut;
+        private SharingOrchestrator _sut;
 
         [SetUp]
         public void SetUp()
@@ -37,7 +37,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 DataProtectionKeysDatabase = "test",
                 SharingListLimit = 10
             };
-            _sut = new CertificateSharingOrchestrator(_mediatorMock.Object, _userServiceMock.Object, _sessionStorageServiceMock.Object, _digitalCertificatesWebConfiguration);
+            _sut = new SharingOrchestrator(_mediatorMock.Object, _userServiceMock.Object, _sessionStorageServiceMock.Object, _digitalCertificatesWebConfiguration);
         }
 
         [TearDown]
@@ -47,7 +47,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         }
 
         [Test]
-        public async Task GetCertificateSharings_Sends_Query_With_Correct_Values_And_Returns_ViewModel()
+        public async Task GetSharings_Sends_Query_With_Correct_Values_And_Returns_ViewModel()
         {
             var userId = Guid.NewGuid();
             var certificateId = Guid.NewGuid();
@@ -71,7 +71,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             _sessionStorageServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
                 .ReturnsAsync(new List<Certificate> { certificate });
 
-            var queryResult = new GetCertificateSharingDetailsQueryResult
+            var queryResult = new GetSharingsQueryResult
             {
                 UserId = userId,
                 CertificateId = certificateId,
@@ -91,10 +91,10 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             };
 
             _mediatorMock
-                .Setup(m => m.Send(It.IsAny<GetCertificateSharingDetailsQuery>(), It.IsAny<CancellationToken>()))
+                .Setup(m => m.Send(It.IsAny<GetSharingsQuery>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(queryResult);
 
-            var result = await _sut.GetCertificateSharings(certificateId);
+            var result = await _sut.GetSharings(certificateId);
 
             result.Should().NotBeNull();
             result.CertificateId.Should().Be(certificateId);
@@ -107,7 +107,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             result.Sharings[0].ExpiryTime.Should().Be(expiryTime);
 
             _mediatorMock.Verify(m => m.Send(
-                It.Is<GetCertificateSharingDetailsQuery>(q =>
+                It.Is<GetSharingsQuery>(q =>
                     q.UserId == userId &&
                     q.CertificateId == certificateId &&
                     q.Limit == 10),
@@ -116,7 +116,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         }
 
         [Test]
-        public async Task GetCertificateSharings_When_Query_Returns_Null_Returns_Empty_ViewModel()
+        public async Task GetSharings_When_Query_Returns_Null_Returns_Empty_ViewModel()
         {
             var userId = Guid.NewGuid();
             var certificateId = Guid.NewGuid();
@@ -137,10 +137,10 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 .ReturnsAsync(new List<Certificate> { certificate });
 
             _mediatorMock
-                .Setup(m => m.Send(It.IsAny<GetCertificateSharingDetailsQuery>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync((GetCertificateSharingDetailsQueryResult)null);
+                .Setup(m => m.Send(It.IsAny<GetSharingsQuery>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((GetSharingsQueryResult)null);
 
-            var result = await _sut.GetCertificateSharings(certificateId);
+            var result = await _sut.GetSharings(certificateId);
 
             result.Should().NotBeNull();
             result.CertificateId.Should().Be(certificateId);
@@ -149,7 +149,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             result.Sharings.Should().BeEmpty();
         }
         [Test]
-        public async Task GetCertificateSharings_When_Multiple_Sharings_Exist_Returns_All_Sharings()
+        public async Task GetSharings_When_Multiple_Sharings_Exist_Returns_All_Sharings()
         {
             var userId = Guid.NewGuid();
             var certificateId = Guid.NewGuid();
@@ -176,7 +176,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             _sessionStorageServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
                 .ReturnsAsync(new List<Certificate> { certificate });
 
-            var queryResult = new GetCertificateSharingDetailsQueryResult
+            var queryResult = new GetSharingsQueryResult
             {
                 UserId = userId,
                 CertificateId = certificateId,
@@ -204,10 +204,10 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             };
 
             _mediatorMock
-                .Setup(m => m.Send(It.IsAny<GetCertificateSharingDetailsQuery>(), It.IsAny<CancellationToken>()))
+                .Setup(m => m.Send(It.IsAny<GetSharingsQuery>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(queryResult);
 
-            var result = await _sut.GetCertificateSharings(certificateId);
+            var result = await _sut.GetSharings(certificateId);
 
             result.Should().NotBeNull();
             result.CertificateId.Should().Be(certificateId);
@@ -220,7 +220,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             result.Sharings[1].SharingNumber.Should().Be(222222);
         }
         [Test]
-        public void GetCertificateSharings_When_Certificate_Not_Found_In_Session_Throws_InvalidOperationException()
+        public void GetSharings_When_Certificate_Not_Found_In_Session_Throws_InvalidOperationException()
         {
             var userId = Guid.NewGuid();
             var certificateId = Guid.NewGuid();
@@ -233,13 +233,13 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 .ReturnsAsync(new List<Certificate>());
 
             var exception = Assert.ThrowsAsync<InvalidOperationException>(
-                () => _sut.GetCertificateSharings(certificateId));
+                () => _sut.GetSharings(certificateId));
 
             exception.Message.Should().Be($"Certificate {certificateId} not found for authenticated user");
         }
 
         [Test]
-        public async Task GetCertificateSharings_Uses_Configured_Limit_Value()
+        public async Task GetSharings_Uses_Configured_Limit_Value()
         {
             var userId = Guid.NewGuid();
             var certificateId = Guid.NewGuid();
@@ -262,7 +262,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             _sessionStorageServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
                 .ReturnsAsync(new List<Certificate> { certificate });
 
-            var queryResult = new GetCertificateSharingDetailsQueryResult
+            var queryResult = new GetSharingsQueryResult
             {
                 UserId = userId,
                 CertificateId = certificateId,
@@ -272,13 +272,13 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             };
 
             _mediatorMock
-                .Setup(m => m.Send(It.IsAny<GetCertificateSharingDetailsQuery>(), It.IsAny<CancellationToken>()))
+                .Setup(m => m.Send(It.IsAny<GetSharingsQuery>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(queryResult);
 
-            await _sut.GetCertificateSharings(certificateId);
+            await _sut.GetSharings(certificateId);
 
             _mediatorMock.Verify(m => m.Send(
-                It.Is<GetCertificateSharingDetailsQuery>(q =>
+                It.Is<GetSharingsQuery>(q =>
                     q.UserId == userId &&
                     q.CertificateId == certificateId &&
                     q.Limit == customLimit),
@@ -287,7 +287,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         }
 
         [Test]
-        public async Task GetCertificateSharings_Uses_Null_Limit_When_Config_Is_Null()
+        public async Task GetSharings_Uses_Null_Limit_When_Config_Is_Null()
         {
             var userId = Guid.NewGuid();
             var certificateId = Guid.NewGuid();
@@ -309,7 +309,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             _sessionStorageServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
                 .ReturnsAsync(new List<Certificate> { certificate });
 
-            var queryResult = new GetCertificateSharingDetailsQueryResult
+            var queryResult = new GetSharingsQueryResult
             {
                 UserId = userId,
                 CertificateId = certificateId,
@@ -319,13 +319,13 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             };
 
             _mediatorMock
-                .Setup(m => m.Send(It.IsAny<GetCertificateSharingDetailsQuery>(), It.IsAny<CancellationToken>()))
+                .Setup(m => m.Send(It.IsAny<GetSharingsQuery>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(queryResult);
 
-            await _sut.GetCertificateSharings(certificateId);
+            await _sut.GetSharings(certificateId);
 
             _mediatorMock.Verify(m => m.Send(
-                It.Is<GetCertificateSharingDetailsQuery>(q =>
+                It.Is<GetSharingsQuery>(q =>
                     q.UserId == userId &&
                     q.CertificateId == certificateId &&
                     q.Limit == null),
@@ -334,7 +334,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         }
 
         [Test]
-        public async Task CreateCertificateSharing_Sends_Command_With_Correct_Values_And_Returns_Success()
+        public async Task CreateSharing_Sends_Command_With_Correct_Values_And_Returns_Success()
         {
             var userId = Guid.NewGuid();
             var certificateId = Guid.NewGuid();
@@ -356,7 +356,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             _sessionStorageServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
                 .ReturnsAsync(new List<Certificate> { certificate });
 
-            var commandResult = new CreateCertificateSharingCommandResult
+            var commandResult = new CreateSharingCommandResult
             {
                 Userid = userId,
                 CertificateId = certificateId,
@@ -370,15 +370,15 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             };
 
             _mediatorMock
-                .Setup(m => m.Send(It.IsAny<CreateCertificateSharingCommand>(), It.IsAny<CancellationToken>()))
+                .Setup(m => m.Send(It.IsAny<CreateSharingCommand>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(commandResult);
 
-            var result = await _sut.CreateCertificateSharing(certificateId);
+            var result = await _sut.CreateSharing(certificateId);
 
             result.Should().Be(sharingId);
 
             _mediatorMock.Verify(m => m.Send(
-                It.Is<CreateCertificateSharingCommand>(c =>
+                It.Is<CreateSharingCommand>(c =>
                     c.UserId == userId &&
                     c.CertificateId == certificateId &&
                     c.CertificateType == "Standard" &&
@@ -388,7 +388,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         }
 
         [Test]
-        public async Task CreateCertificateSharing_When_Command_Returns_Null_Returns_Failed_Result()
+        public async Task CreateSharing_When_Command_Returns_Null_Returns_Failed_Result()
         {
             var userId = Guid.NewGuid();
             var certificateId = Guid.NewGuid();
@@ -410,16 +410,16 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 .ReturnsAsync(new List<Certificate> { certificate });
 
             _mediatorMock
-                .Setup(m => m.Send(It.IsAny<CreateCertificateSharingCommand>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync((CreateCertificateSharingCommandResult)null);
+                .Setup(m => m.Send(It.IsAny<CreateSharingCommand>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((CreateSharingCommandResult)null);
 
-            var result = await _sut.CreateCertificateSharing(certificateId);
+            var result = await _sut.CreateSharing(certificateId);
 
             result.Should().Be(Guid.Empty);
         }
 
         [Test]
-        public void CreateCertificateSharing_When_Certificate_Not_Found_In_Session_Throws_InvalidOperationException()
+        public void CreateSharing_When_Certificate_Not_Found_In_Session_Throws_InvalidOperationException()
         {
             var userId = Guid.NewGuid();
             var certificateId = Guid.NewGuid();
@@ -432,7 +432,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 .ReturnsAsync(new List<Certificate>());
 
             var exception = Assert.ThrowsAsync<InvalidOperationException>(
-                () => _sut.CreateCertificateSharing(certificateId));
+                () => _sut.CreateSharing(certificateId));
 
             exception.Message.Should().Be($"Certificate {certificateId} not found for authenticated user");
         }

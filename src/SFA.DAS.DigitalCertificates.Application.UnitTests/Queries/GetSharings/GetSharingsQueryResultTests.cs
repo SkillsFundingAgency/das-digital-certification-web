@@ -1,15 +1,15 @@
 using FluentAssertions;
 using NUnit.Framework;
-using SFA.DAS.DigitalCertificates.Application.Queries.GetCertificateSharingDetails;
+using SFA.DAS.DigitalCertificates.Application.Queries.GetSharings;
 using SFA.DAS.DigitalCertificates.Infrastructure.Api.Responses;
 
-namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetCertificateSharingDetails
+namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetSharings
 {
     [TestFixture]
-    public class GetCertificateSharingDetailsQueryResultTests
+    public class GetSharingsQueryResultTests
     {
         [Test]
-        public void Should_Convert_From_GetCertificateSharingDetailsResponse_Successfully()
+        public void Should_Convert_From_GetSharingsResponse_Successfully()
         {
             var userId = Guid.NewGuid();
             var certificateId = Guid.NewGuid();
@@ -18,7 +18,7 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetCertifica
             var sharingEmailId = Guid.NewGuid();
             var emailLinkCode = Guid.NewGuid();
 
-            var response = new GetCertificateSharingDetailsResponse
+            var response = new GetSharingsResponse
             {
                 UserId = userId,
                 CertificateId = certificateId,
@@ -56,7 +56,7 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetCertifica
                 }
             };
 
-            GetCertificateSharingDetailsQueryResult? result = response;
+            GetSharingsQueryResult? result = response;
 
             result.Should().NotBeNull();
             result!.UserId.Should().Be(userId);

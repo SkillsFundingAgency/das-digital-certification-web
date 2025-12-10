@@ -3,8 +3,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using MediatR;
-using SFA.DAS.DigitalCertificates.Application.Commands.CreateCertificateSharing;
-using SFA.DAS.DigitalCertificates.Application.Queries.GetCertificateSharingDetails;
+using SFA.DAS.DigitalCertificates.Application.Commands.CreateSharing;
+using SFA.DAS.DigitalCertificates.Application.Queries.GetSharings;
 using SFA.DAS.DigitalCertificates.Domain.Models;
 using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
 using SFA.DAS.DigitalCertificates.Web.Models.Sharing;
@@ -12,13 +12,13 @@ using SFA.DAS.DigitalCertificates.Web.Services;
 
 namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 {
-    public class CertificateSharingOrchestrator : BaseOrchestrator, ICertificateSharingOrchestrator
+    public class SharingOrchestrator : BaseOrchestrator, ISharingOrchestrator
     {
         private readonly IUserService _userService;
         private readonly ISessionStorageService _sessionStorageService;
         private readonly DigitalCertificatesWebConfiguration _digitalCertificatesWebConfiguration;
 
-        public CertificateSharingOrchestrator(IMediator mediator, IUserService userService, ISessionStorageService sessionStorageService, DigitalCertificatesWebConfiguration digitalCertificatesWebConfiguration)
+        public SharingOrchestrator(IMediator mediator, IUserService userService, ISessionStorageService sessionStorageService, DigitalCertificatesWebConfiguration digitalCertificatesWebConfiguration)
           : base(mediator)
         {
             _userService = userService;
@@ -26,7 +26,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             _digitalCertificatesWebConfiguration = digitalCertificatesWebConfiguration;
         }
 
-        public async Task<CertificateSharingViewModel> GetCertificateSharings(Guid certificateId)
+        public async Task<CertificateSharingViewModel> GetSharings(Guid certificateId)
         {
             var userId = _userService.GetUserId()!.Value;
 
@@ -37,7 +37,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 throw new InvalidOperationException($"Certificate {certificateId} not found for authenticated user");
             }
 
-            var response = await Mediator.Send(new GetCertificateSharingDetailsQuery
+            var response = await Mediator.Send(new GetSharingsQuery
             {
                 UserId = userId,
                 CertificateId = certificateId,
@@ -70,7 +70,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             };
         }
 
-        public async Task<Guid> CreateCertificateSharing(Guid certificateId)
+        public async Task<Guid> CreateSharing(Guid certificateId)
         {
             var userId = _userService.GetUserId()!.Value;
 
@@ -81,7 +81,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 throw new InvalidOperationException($"Certificate {certificateId} not found for authenticated user");
             }
 
-            var response = await Mediator.Send(new CreateCertificateSharingCommand
+            var response = await Mediator.Send(new CreateSharingCommand
             {
                 UserId = userId,
                 CertificateId = certificateId,

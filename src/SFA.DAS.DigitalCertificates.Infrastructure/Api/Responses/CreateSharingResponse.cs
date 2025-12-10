@@ -2,7 +2,7 @@ using System;
 
 namespace SFA.DAS.DigitalCertificates.Infrastructure.Api.Responses
 {
-    public class CreateCertificateSharingResponse
+    public class CreateSharingResponse
     {
         public Guid Userid { get; set; }
         public Guid CertificateId { get; set; }

@@ -1,7 +1,7 @@
 using FluentAssertions;
 using Moq;
 using NUnit.Framework;
-using SFA.DAS.DigitalCertificates.Application.Commands.CreateCertificateSharing;
+using SFA.DAS.DigitalCertificates.Application.Commands.CreateSharing;
 using SFA.DAS.DigitalCertificates.Domain.Interfaces;
 using SFA.DAS.DigitalCertificates.Infrastructure.Api.Requests;
 using SFA.DAS.DigitalCertificates.Infrastructure.Api.Responses;
@@ -9,16 +9,16 @@ using SFA.DAS.DigitalCertificates.Infrastructure.Api.Responses;
 namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Commands
 {
     [TestFixture]
-    public class CreateCertificateSharingCommandHandlerTests
+    public class CreateSharingCommandHandlerTests
     {
         private Mock<IDigitalCertificatesOuterApi> _outerApiMock;
-        private CreateCertificateSharingCommandHandler _sut;
+        private CreateSharingCommandHandler _sut;
 
         [SetUp]
         public void SetUp()
         {
             _outerApiMock = new Mock<IDigitalCertificatesOuterApi>();
-            _sut = new CreateCertificateSharingCommandHandler(_outerApiMock.Object);
+            _sut = new CreateSharingCommandHandler(_outerApiMock.Object);
         }
 
         [Test]
@@ -31,7 +31,7 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Commands
             var createdAt = new DateTime(2024, 1, 1, 10, 0, 0, DateTimeKind.Unspecified);
             var expiryTime = new DateTime(2024, 2, 1, 10, 0, 0, DateTimeKind.Unspecified);
 
-            var command = new CreateCertificateSharingCommand
+            var command = new CreateSharingCommand
             {
                 UserId = userId,
                 CertificateId = certificateId,
@@ -39,7 +39,7 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Commands
                 CourseName = "Software Developer"
             };
 
-            var expectedResponse = new CreateCertificateSharingResponse
+            var expectedResponse = new CreateSharingResponse
             {
                 Userid = userId,
                 CertificateId = certificateId,
@@ -53,7 +53,7 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Commands
             };
 
             _outerApiMock
-                .Setup(x => x.CreateCertificateSharing(It.IsAny<CreateCertificateSharingRequest>()))
+                .Setup(x => x.CreateSharing(It.IsAny<CreateSharingRequest>()))
                 .ReturnsAsync(expectedResponse);
 
             var result = await _sut.Handle(command, CancellationToken.None);
@@ -69,8 +69,8 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Commands
             result.LinkCode.Should().Be(linkCode);
             result.ExpiryTime.Should().Be(expiryTime);
 
-            _outerApiMock.Verify(x => x.CreateCertificateSharing(
-                It.Is<CreateCertificateSharingRequest>(r =>
+            _outerApiMock.Verify(x => x.CreateSharing(
+                It.Is<CreateSharingRequest>(r =>
                     r.Userid == command.UserId &&
                     r.CertificateId == command.CertificateId &&
                     r.CertificateType == command.CertificateType &&
@@ -81,7 +81,7 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Commands
         [Test]
         public async Task Handle_Returns_Null_When_OuterApi_Returns_Null()
         {
-            var command = new CreateCertificateSharingCommand
+            var command = new CreateSharingCommand
             {
                 UserId = Guid.NewGuid(),
                 CertificateId = Guid.NewGuid(),
@@ -90,8 +90,8 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Commands
             };
 
             _outerApiMock
-                .Setup(x => x.CreateCertificateSharing(It.IsAny<CreateCertificateSharingRequest>()))
-                .ReturnsAsync((CreateCertificateSharingResponse)null!);
+                .Setup(x => x.CreateSharing(It.IsAny<CreateSharingRequest>()))
+                .ReturnsAsync((CreateSharingResponse)null!);
 
             var result = await _sut.Handle(command, CancellationToken.None);
 
@@ -101,7 +101,7 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Commands
         [Test]
         public void Handle_Throws_If_OuterApi_Fails()
         {
-            var command = new CreateCertificateSharingCommand
+            var command = new CreateSharingCommand
             {
                 UserId = Guid.NewGuid(),
                 CertificateId = Guid.NewGuid(),
@@ -110,7 +110,7 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Commands
             };
 
             _outerApiMock
-                .Setup(x => x.CreateCertificateSharing(It.IsAny<CreateCertificateSharingRequest>()))
+                .Setup(x => x.CreateSharing(It.IsAny<CreateSharingRequest>()))
                 .ThrowsAsync(new Exception("API failure"));
 
             Func<Task> act = async () => await _sut.Handle(command, CancellationToken.None);
@@ -124,7 +124,7 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Commands
             var userId = Guid.NewGuid();
             var certificateId = Guid.NewGuid();
 
-            var command = new CreateCertificateSharingCommand
+            var command = new CreateSharingCommand
             {
                 UserId = userId,
                 CertificateId = certificateId,
@@ -132,7 +132,7 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Commands
                 CourseName = "Digital Marketing"
             };
 
-            var expectedResponse = new CreateCertificateSharingResponse
+            var expectedResponse = new CreateSharingResponse
             {
                 Userid = userId,
                 CertificateId = certificateId,
@@ -146,15 +146,15 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Commands
             };
 
             _outerApiMock
-                .Setup(x => x.CreateCertificateSharing(It.IsAny<CreateCertificateSharingRequest>()))
+                .Setup(x => x.CreateSharing(It.IsAny<CreateSharingRequest>()))
                 .ReturnsAsync(expectedResponse);
 
             var result = await _sut.Handle(command, CancellationToken.None);
 
             result.Should().NotBeNull();
 
-            _outerApiMock.Verify(x => x.CreateCertificateSharing(
-                It.Is<CreateCertificateSharingRequest>(r =>
+            _outerApiMock.Verify(x => x.CreateSharing(
+                It.Is<CreateSharingRequest>(r =>
                     r.Userid == userId &&
                     r.CertificateId == certificateId &&
                     r.CertificateType == "Framework" &&

@@ -15,7 +15,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
     {
         private Mock<IHttpContextAccessor> _contextAccessorMock;
         private Mock<ICertificatesOrchestrator> _certificatesOrchestratorMock;
-        private Mock<ICertificateSharingOrchestrator> _certificateSharingOrchestratorMock;
+        private Mock<ISharingOrchestrator> _certificateSharingOrchestratorMock;
         private CertificatesController _sut;
 
         [SetUp]
@@ -23,7 +23,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
         {
             _contextAccessorMock = new Mock<IHttpContextAccessor>();
             _certificatesOrchestratorMock = new Mock<ICertificatesOrchestrator>();
-            _certificateSharingOrchestratorMock = new Mock<ICertificateSharingOrchestrator>();
+            _certificateSharingOrchestratorMock = new Mock<ISharingOrchestrator>();
             _sut = new CertificatesController(
                 _contextAccessorMock.Object,
                 _certificatesOrchestratorMock.Object,

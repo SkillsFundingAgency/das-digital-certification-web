@@ -25,9 +25,9 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         #endregion
 
         private readonly ICertificatesOrchestrator _certificatesOrchestrator;
-        private readonly ICertificateSharingOrchestrator _certificateSharingOrchestrator;
+        private readonly ISharingOrchestrator _certificateSharingOrchestrator;
 
-        public CertificatesController(IHttpContextAccessor contextAccessor, ICertificatesOrchestrator certificatesOrchestrator, ICertificateSharingOrchestrator certificateSharingOrchestrator)
+        public CertificatesController(IHttpContextAccessor contextAccessor, ICertificatesOrchestrator certificatesOrchestrator, ISharingOrchestrator certificateSharingOrchestrator)
             : base(contextAccessor)
         {
             _certificatesOrchestrator = certificatesOrchestrator;
@@ -60,7 +60,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsCertificateOwner))]
         public async Task<IActionResult> CreateCertificateSharing(Guid certificateId)
         {
-            var model = await _certificateSharingOrchestrator.GetCertificateSharings(certificateId);
+            var model = await _certificateSharingOrchestrator.GetSharings(certificateId);
             return View(model);
         }
 
@@ -68,7 +68,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsCertificateOwner))]
         public async Task<IActionResult> CreateCertificateSharingPost(Guid certificateId)
         {
-            var result = await _certificateSharingOrchestrator.CreateCertificateSharing(certificateId);
+            var result = await _certificateSharingOrchestrator.CreateSharing(certificateId);
 
             return RedirectToRoute(CertificateSharingLinkRouteGet, new { certificateId });
         }

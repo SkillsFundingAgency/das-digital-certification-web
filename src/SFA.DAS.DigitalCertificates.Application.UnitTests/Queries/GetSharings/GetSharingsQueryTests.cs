@@ -1,11 +1,11 @@
 using FluentAssertions;
 using NUnit.Framework;
-using SFA.DAS.DigitalCertificates.Application.Queries.GetCertificateSharingDetails;
+using SFA.DAS.DigitalCertificates.Application.Queries.GetSharings;
 
-namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetCertificateSharingDetails
+namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetSharings
 {
     [TestFixture]
-    public class GetCertificateSharingDetailsQueryTests
+    public class GetSharingsQueryTests
     {
         [Test]
         public void Should_Set_Properties_Correctly()
@@ -14,7 +14,7 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetCertifica
             var certificateId = Guid.NewGuid();
             var limit = 15;
 
-            var query = new GetCertificateSharingDetailsQuery
+            var query = new GetSharingsQuery
             {
                 UserId = userId,
                 CertificateId = certificateId,

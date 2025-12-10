@@ -1,15 +1,15 @@
 using FluentAssertions;
 using NUnit.Framework;
-using SFA.DAS.DigitalCertificates.Application.Commands.CreateCertificateSharing;
+using SFA.DAS.DigitalCertificates.Application.Commands.CreateSharing;
 using SFA.DAS.DigitalCertificates.Infrastructure.Api.Responses;
 
-namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Commands.CreateCertificateSharing
+namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Commands.CreateSharing
 {
     [TestFixture]
-    public class CreateCertificateSharingCommandResultTests
+    public class CreateSharingCommandResultTests
     {
         [Test]
-        public void Should_Convert_From_CreateCertificateSharingResponse_Successfully()
+        public void Should_Convert_From_CreateSharingResponse_Successfully()
         {
             var userId = Guid.NewGuid();
             var certificateId = Guid.NewGuid();
@@ -18,7 +18,7 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Commands.CreateCerti
             var createdAt = new DateTime(2024, 1, 1, 10, 0, 0, DateTimeKind.Unspecified);
             var expiryTime = new DateTime(2024, 2, 1, 10, 0, 0, DateTimeKind.Unspecified);
 
-            var response = new CreateCertificateSharingResponse
+            var response = new CreateSharingResponse
             {
                 Userid = userId,
                 CertificateId = certificateId,
@@ -31,7 +31,7 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Commands.CreateCerti
                 ExpiryTime = expiryTime
             };
 
-            CreateCertificateSharingCommandResult? result = response;
+            CreateSharingCommandResult? result = response;
 
             result.Should().NotBeNull();
             result!.Userid.Should().Be(userId);
