@@ -77,9 +77,9 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 CertificateId = certificateId,
                 CertificateType = "Standard",
                 CourseName = courseName,
-                Sharings = new List<CertificateSharingDetailsQueryResultItem>
+                Sharings = new List<SharingDetailsQueryResultItem>
                 {
-                    new CertificateSharingDetailsQueryResultItem
+                    new SharingDetailsQueryResultItem
                     {
                         SharingId = sharingId,
                         SharingNumber = 123456,
@@ -182,9 +182,9 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 CertificateId = certificateId,
                 CertificateType = "Standard",
                 CourseName = courseName,
-                Sharings = new List<CertificateSharingDetailsQueryResultItem>
+                Sharings = new List<SharingDetailsQueryResultItem>
                 {
-                    new CertificateSharingDetailsQueryResultItem
+                    new SharingDetailsQueryResultItem
                     {
                         SharingId = sharingId1,
                         SharingNumber = 111111,
@@ -192,7 +192,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                         LinkCode = Guid.NewGuid(),
                         ExpiryTime = expiryTime1
                     },
-                    new CertificateSharingDetailsQueryResultItem
+                    new SharingDetailsQueryResultItem
                     {
                         SharingId = sharingId2,
                         SharingNumber = 222222,
@@ -268,7 +268,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 CertificateId = certificateId,
                 CertificateType = "Standard",
                 CourseName = "Test Course",
-                Sharings = new List<CertificateSharingDetailsQueryResultItem>()
+                Sharings = new List<SharingDetailsQueryResultItem>()
             };
 
             _mediatorMock
@@ -315,7 +315,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 CertificateId = certificateId,
                 CertificateType = "Standard",
                 CourseName = "Test Course",
-                Sharings = new List<CertificateSharingDetailsQueryResultItem>()
+                Sharings = new List<SharingDetailsQueryResultItem>()
             };
 
             _mediatorMock

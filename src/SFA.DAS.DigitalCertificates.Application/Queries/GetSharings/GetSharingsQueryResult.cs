@@ -8,7 +8,7 @@ namespace SFA.DAS.DigitalCertificates.Application.Queries.GetSharings
         public Guid CertificateId { get; set; }
         public required string CertificateType { get; set; }
         public required string CourseName { get; set; }
-        public List<CertificateSharingDetailsQueryResultItem> Sharings { get; set; } = new List<CertificateSharingDetailsQueryResultItem>();
+        public List<SharingDetailsQueryResultItem> Sharings { get; set; } = new List<SharingDetailsQueryResultItem>();
 
         public static implicit operator GetSharingsQueryResult?(GetSharingsResponse? source)
         {
@@ -23,7 +23,7 @@ namespace SFA.DAS.DigitalCertificates.Application.Queries.GetSharings
                 CertificateId = source.CertificateId,
                 CertificateType = source.CertificateType,
                 CourseName = source.CourseName,
-                Sharings = source.Sharings?.Select(s => new CertificateSharingDetailsQueryResultItem
+                Sharings = source.Sharings?.Select(s => new SharingDetailsQueryResultItem
                 {
                     SharingId = s.SharingId,
                     SharingNumber = s.SharingNumber,
@@ -39,12 +39,12 @@ namespace SFA.DAS.DigitalCertificates.Application.Queries.GetSharings
                         SentTime = e.SentTime,
                         SharingEmailAccess = e.SharingEmailAccess
                     }).ToList() ?? new List<SharingEmailQueryResultItem>()
-                }).ToList() ?? new List<CertificateSharingDetailsQueryResultItem>()
+                }).ToList() ?? new List<SharingDetailsQueryResultItem>()
             };
         }
     }
 
-    public class CertificateSharingDetailsQueryResultItem
+    public class SharingDetailsQueryResultItem
     {
         public Guid SharingId { get; set; }
         public int SharingNumber { get; set; }
