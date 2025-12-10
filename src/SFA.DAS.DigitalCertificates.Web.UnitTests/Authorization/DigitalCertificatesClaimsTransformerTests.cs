@@ -97,11 +97,13 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authorization
 
             _sessionStorageServiceMock
                 .Setup(s => s.GetUserAsync(govUkIdentifier))
-                .ReturnsAsync(new User {
+                .ReturnsAsync(new User
+                {
                     Id = Guid.NewGuid(),
                     GovUkIdentifier = "gov-123",
                     EmailAddress = "name@domain.com",
-                    IsLocked = false });
+                    IsLocked = false
+                });
 
             // Act
             var result = await _sut.TransformAsync(principal);

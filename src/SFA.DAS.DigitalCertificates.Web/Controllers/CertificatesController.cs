@@ -21,9 +21,9 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         #endregion
 
         private readonly ICertificatesOrchestrator _certificatesOrchestrator;
-        
+
         public CertificatesController(IHttpContextAccessor contextAccessor, ICertificatesOrchestrator certificatesOrchestrator)
-            : base(contextAccessor) 
+            : base(contextAccessor)
         {
             _certificatesOrchestrator = certificatesOrchestrator;
         }

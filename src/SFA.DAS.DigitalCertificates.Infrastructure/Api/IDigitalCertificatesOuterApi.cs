@@ -16,7 +16,7 @@ namespace SFA.DAS.DigitalCertificates.Domain.Interfaces
 
         [Get("/ping")]
         Task Ping();
-        
+
         [Get("/users/{userId}/certificates")]
         Task<CertificatesResponse> GetCertificates([Path] Guid userId);
     }

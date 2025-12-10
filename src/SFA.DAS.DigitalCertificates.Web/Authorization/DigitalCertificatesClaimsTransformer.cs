@@ -1,9 +1,9 @@
-﻿using Microsoft.AspNetCore.Authentication;
-using SFA.DAS.DigitalCertificates.Web.Services;
-using SFA.DAS.GovUK.Auth.Authentication;
-using System.Linq;
+﻿using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication;
+using SFA.DAS.DigitalCertificates.Web.Services;
+using SFA.DAS.GovUK.Auth.Authentication;
 
 namespace SFA.DAS.DigitalCertificates.Web.Authorization
 {

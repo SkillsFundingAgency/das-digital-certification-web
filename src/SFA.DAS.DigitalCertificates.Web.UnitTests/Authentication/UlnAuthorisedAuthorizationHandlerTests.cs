@@ -46,7 +46,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authentication
                 .Returns(govId);
 
             _sessionMock.Setup(x => x.GetUlnAuthorisationAsync(govId))
-                .ReturnsAsync(new UlnAuthorisation { AuthorisationId = Guid.NewGuid(), AuthorisedAt = DateTime.Now, Uln = "123456789"}); 
+                .ReturnsAsync(new UlnAuthorisation { AuthorisationId = Guid.NewGuid(), AuthorisedAt = DateTime.Now, Uln = "123456789" });
 
             // Act
             await _sut.HandleAsync(_authContext);
@@ -74,7 +74,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authentication
             _authContext.HasFailed.Should().BeTrue();
             _authContext.FailureReasons
                 .Should()
-                .ContainSingle(r =>  r.Message == DigitalCertificatesAuthorizationFailureMessages.NotUlnAuthorized);
+                .ContainSingle(r => r.Message == DigitalCertificatesAuthorizationFailureMessages.NotUlnAuthorized);
         }
     }
 }
