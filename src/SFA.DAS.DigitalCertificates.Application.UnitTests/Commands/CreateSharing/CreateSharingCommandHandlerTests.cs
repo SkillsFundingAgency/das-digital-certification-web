@@ -3,6 +3,7 @@ using Moq;
 using NUnit.Framework;
 using SFA.DAS.DigitalCertificates.Application.Commands.CreateSharing;
 using SFA.DAS.DigitalCertificates.Domain.Interfaces;
+using SFA.DAS.DigitalCertificates.Domain.Models;
 using SFA.DAS.DigitalCertificates.Infrastructure.Api.Requests;
 using SFA.DAS.DigitalCertificates.Infrastructure.Api.Responses;
 
@@ -24,6 +25,7 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Commands
         [Test]
         public async Task Handle_Calls_OuterApi_With_Correct_Request_And_Returns_Result()
         {
+            // Arrange
             var userId = Guid.NewGuid();
             var certificateId = Guid.NewGuid();
             var sharingId = Guid.NewGuid();
@@ -35,7 +37,7 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Commands
             {
                 UserId = userId,
                 CertificateId = certificateId,
-                CertificateType = "Standard",
+                CertificateType = CertificateType.Standard,
                 CourseName = "Software Developer"
             };
 
@@ -56,12 +58,14 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Commands
                 .Setup(x => x.CreateSharing(It.IsAny<CreateSharingRequest>()))
                 .ReturnsAsync(expectedResponse);
 
+            // Act
             var result = await _sut.Handle(command, CancellationToken.None);
 
+            // Assert
             result.Should().NotBeNull();
             result!.Userid.Should().Be(userId);
             result.CertificateId.Should().Be(certificateId);
-            result.CertificateType.Should().Be("Standard");
+            result.CertificateType.Should().Be(CertificateType.Standard);
             result.CourseName.Should().Be("Software Developer");
             result.SharingId.Should().Be(sharingId);
             result.SharingNumber.Should().Be(1);
@@ -73,7 +77,7 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Commands
                 It.Is<CreateSharingRequest>(r =>
                     r.Userid == command.UserId &&
                     r.CertificateId == command.CertificateId &&
-                    r.CertificateType == command.CertificateType &&
+                    r.CertificateType == command.CertificateType.ToString() &&
                     r.CourseName == command.CourseName
                 )), Times.Once);
         }
@@ -81,11 +85,12 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Commands
         [Test]
         public async Task Handle_Returns_Null_When_OuterApi_Returns_Null()
         {
+            // Arrange
             var command = new CreateSharingCommand
             {
                 UserId = Guid.NewGuid(),
                 CertificateId = Guid.NewGuid(),
-                CertificateType = "Framework",
+                CertificateType = CertificateType.Framework,
                 CourseName = "Business Administration"
             };
 
@@ -93,19 +98,22 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Commands
                 .Setup(x => x.CreateSharing(It.IsAny<CreateSharingRequest>()))
                 .ReturnsAsync((CreateSharingResponse)null!);
 
+            // Act
             var result = await _sut.Handle(command, CancellationToken.None);
 
+            // Assert
             result.Should().BeNull();
         }
 
         [Test]
         public void Handle_Throws_If_OuterApi_Fails()
         {
+            // Arrange
             var command = new CreateSharingCommand
             {
                 UserId = Guid.NewGuid(),
                 CertificateId = Guid.NewGuid(),
-                CertificateType = "Standard",
+                CertificateType = CertificateType.Standard,
                 CourseName = "Data Science"
             };
 
@@ -113,14 +121,17 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Commands
                 .Setup(x => x.CreateSharing(It.IsAny<CreateSharingRequest>()))
                 .ThrowsAsync(new Exception("API failure"));
 
+            // Act
             Func<Task> act = async () => await _sut.Handle(command, CancellationToken.None);
 
+            // Assert
             act.Should().ThrowAsync<Exception>().WithMessage("API failure");
         }
 
         [Test]
         public async Task Handle_Uses_Implicit_Conversion_From_Command_To_Request()
         {
+            // Arrange
             var userId = Guid.NewGuid();
             var certificateId = Guid.NewGuid();
 
@@ -128,7 +139,7 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Commands
             {
                 UserId = userId,
                 CertificateId = certificateId,
-                CertificateType = "Framework",
+                CertificateType = CertificateType.Framework,
                 CourseName = "Digital Marketing"
             };
 
@@ -149,8 +160,10 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Commands
                 .Setup(x => x.CreateSharing(It.IsAny<CreateSharingRequest>()))
                 .ReturnsAsync(expectedResponse);
 
+            // Act
             var result = await _sut.Handle(command, CancellationToken.None);
 
+            // Assert
             result.Should().NotBeNull();
 
             _outerApiMock.Verify(x => x.CreateSharing(

@@ -1,6 +1,7 @@
 using FluentAssertions;
 using NUnit.Framework;
 using SFA.DAS.DigitalCertificates.Application.Commands.CreateSharing;
+using SFA.DAS.DigitalCertificates.Domain.Models;
 using SFA.DAS.DigitalCertificates.Infrastructure.Api.Responses;
 
 namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Commands.CreateSharing
@@ -11,6 +12,7 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Commands.CreateShari
         [Test]
         public void Should_Convert_From_CreateSharingResponse_Successfully()
         {
+            // Arrange
             var userId = Guid.NewGuid();
             var certificateId = Guid.NewGuid();
             var sharingId = Guid.NewGuid();
@@ -31,12 +33,14 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Commands.CreateShari
                 ExpiryTime = expiryTime
             };
 
+            // Act
             CreateSharingCommandResult? result = response;
 
+            // Assert
             result.Should().NotBeNull();
             result!.Userid.Should().Be(userId);
             result.CertificateId.Should().Be(certificateId);
-            result.CertificateType.Should().Be("Standard");
+            result.CertificateType.Should().Be(CertificateType.Standard);
             result.CourseName.Should().Be("Software Developer");
             result.SharingId.Should().Be(sharingId);
             result.SharingNumber.Should().Be(1);

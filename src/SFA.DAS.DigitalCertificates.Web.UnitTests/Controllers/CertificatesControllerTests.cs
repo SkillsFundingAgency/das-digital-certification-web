@@ -7,6 +7,7 @@ using Moq;
 using NUnit.Framework;
 using SFA.DAS.DigitalCertificates.Web.Controllers;
 using SFA.DAS.DigitalCertificates.Web.Orchestrators;
+using SFA.DAS.DigitalCertificates.Web.Models.Sharing;
 
 namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
 {
@@ -54,6 +55,53 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
 
             // Assert
             result.Should().NotBeNull();
+        }
+
+        [Test]
+        public async Task CreateCertificateSharing_Get_Returns_View_With_Model()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+            var model = new CertificateSharingViewModel
+            {
+                CertificateId = certificateId,
+                CourseName = "Test Course",
+                CertificateType = Domain.Models.CertificateType.Standard
+            };
+
+            _sharingOrchestratorMock
+                .Setup(s => s.GetSharings(certificateId))
+                .ReturnsAsync(model);
+
+            // Act
+            var result = await _sut.CreateCertificateSharing(certificateId) as ViewResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            result!.Model.Should().BeEquivalentTo(model);
+            _sharingOrchestratorMock.Verify(s => s.GetSharings(certificateId), Times.Once);
+        }
+
+        [Test]
+        public async Task CreateCertificateSharingPost_Post_Calls_Orchestrator_And_Redirects()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+            var returnedSharingId = Guid.NewGuid();
+
+            _sharingOrchestratorMock
+                .Setup(s => s.CreateSharing(certificateId))
+                .ReturnsAsync(returnedSharingId);
+
+            // Act
+            var result = await _sut.CreateCertificateSharingPost(certificateId) as RedirectToRouteResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            result!.RouteName.Should().Be(CertificatesController.CertificateSharingLinkRouteGet);
+            result.RouteValues.Should().ContainKey("certificateId");
+            result.RouteValues["certificateId"].Should().Be(certificateId);
+            _sharingOrchestratorMock.Verify(s => s.CreateSharing(certificateId), Times.Once);
         }
     }
 }

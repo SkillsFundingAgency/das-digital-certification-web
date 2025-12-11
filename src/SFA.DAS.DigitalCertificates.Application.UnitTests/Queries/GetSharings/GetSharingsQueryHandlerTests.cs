@@ -3,6 +3,7 @@ using Moq;
 using NUnit.Framework;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetSharings;
 using SFA.DAS.DigitalCertificates.Domain.Interfaces;
+using SFA.DAS.DigitalCertificates.Domain.Models;
 using SFA.DAS.DigitalCertificates.Infrastructure.Api.Responses;
 
 namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetSharings
@@ -23,6 +24,7 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetSharings
         [Test]
         public async Task Handle_Calls_OuterApi_With_Correct_Parameters_And_Returns_Result()
         {
+            // Arrange
             var userId = Guid.NewGuid();
             var certificateId = Guid.NewGuid();
             var limit = 15;
@@ -75,12 +77,14 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetSharings
                 .Setup(x => x.GetSharings(It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<int>()))
                 .ReturnsAsync(expectedResponse);
 
+            // Act
             var result = await _sut.Handle(query, CancellationToken.None);
 
+            // Assert
             result.Should().NotBeNull();
             result!.UserId.Should().Be(userId);
             result.CertificateId.Should().Be(certificateId);
-            result.CertificateType.Should().Be("Standard");
+            result.CertificateType.Should().Be(CertificateType.Standard);
             result.CourseName.Should().Be("Software Developer");
             result.Sharings.Should().HaveCount(1);
 
@@ -98,6 +102,7 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetSharings
         [Test]
         public async Task Handle_Returns_Null_When_OuterApi_Returns_Null()
         {
+            // Arrange
             var query = new GetSharingsQuery
             {
                 UserId = Guid.NewGuid(),
@@ -109,14 +114,17 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetSharings
                 .Setup(x => x.GetSharings(It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<int>()))
                 .ReturnsAsync((GetSharingsResponse)null!);
 
+            // Act
             var result = await _sut.Handle(query, CancellationToken.None);
 
+            // Assert
             result.Should().BeNull();
         }
 
         [Test]
         public void Handle_Throws_If_OuterApi_Fails()
         {
+            // Arrange
             var query = new GetSharingsQuery
             {
                 UserId = Guid.NewGuid(),
@@ -128,8 +136,10 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetSharings
                 .Setup(x => x.GetSharings(It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<int>()))
                 .ThrowsAsync(new Exception("API failure"));
 
+            // Act
             Func<Task> act = async () => await _sut.Handle(query, CancellationToken.None);
 
+            // Assert
             act.Should().ThrowAsync<Exception>().WithMessage("API failure");
         }
     }

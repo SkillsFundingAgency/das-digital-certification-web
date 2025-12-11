@@ -85,7 +85,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             {
                 UserId = userId,
                 CertificateId = certificateId,
-                CertificateType = certificateData.CertificateType.ToString(),
+                CertificateType = certificateData.CertificateType,
                 CourseName = certificateData.CourseName
             });
 

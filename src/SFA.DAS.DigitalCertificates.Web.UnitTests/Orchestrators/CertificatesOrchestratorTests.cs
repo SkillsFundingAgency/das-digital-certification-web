@@ -72,7 +72,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
 
             _sessionMock
                 .Setup(x => x.GetOwnedCertificatesAsync(govId))
-                .ReturnsAsync((List<Certificate>?)null);
+                .ReturnsAsync((List<Certificate>)null);
 
             // Act
             var result = await _sut.GetCertificatesListViewModel();

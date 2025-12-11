@@ -1,4 +1,5 @@
 using SFA.DAS.DigitalCertificates.Infrastructure.Api.Responses;
+using SFA.DAS.DigitalCertificates.Domain.Models;
 
 namespace SFA.DAS.DigitalCertificates.Application.Commands.CreateSharing
 {
@@ -6,7 +7,7 @@ namespace SFA.DAS.DigitalCertificates.Application.Commands.CreateSharing
     {
         public Guid Userid { get; set; }
         public Guid CertificateId { get; set; }
-        public required string CertificateType { get; set; }
+        public CertificateType CertificateType { get; set; }
         public required string CourseName { get; set; }
         public Guid SharingId { get; set; }
         public int SharingNumber { get; set; }
@@ -25,7 +26,7 @@ namespace SFA.DAS.DigitalCertificates.Application.Commands.CreateSharing
             {
                 Userid = source.Userid,
                 CertificateId = source.CertificateId,
-                CertificateType = source.CertificateType,
+                CertificateType = Enum.Parse<CertificateType>(source.CertificateType),
                 CourseName = source.CourseName,
                 SharingId = source.SharingId,
                 SharingNumber = source.SharingNumber,
