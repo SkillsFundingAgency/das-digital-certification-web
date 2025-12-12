@@ -78,9 +78,9 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 CertificateId = certificateId,
                 CertificateType = CertificateType.Standard,
                 CourseName = courseName,
-                Sharings = new List<SharingDetailsQueryResultItem>
+                Sharings = new List<Sharing>
                 {
-                    new SharingDetailsQueryResultItem
+                    new Sharing
                     {
                         SharingId = sharingId,
                         SharingNumber = 123456,
@@ -189,9 +189,9 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 CertificateId = certificateId,
                 CertificateType = CertificateType.Standard,
                 CourseName = courseName,
-                Sharings = new List<SharingDetailsQueryResultItem>
+                Sharings = new List<Sharing>
                 {
-                    new SharingDetailsQueryResultItem
+                    new Sharing
                     {
                         SharingId = sharingId1,
                         SharingNumber = 111111,
@@ -199,7 +199,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                         LinkCode = Guid.NewGuid(),
                         ExpiryTime = expiryTime1
                     },
-                    new SharingDetailsQueryResultItem
+                    new Sharing
                     {
                         SharingId = sharingId2,
                         SharingNumber = 222222,
@@ -280,7 +280,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 CertificateId = certificateId,
                 CertificateType = CertificateType.Standard,
                 CourseName = "Test Course",
-                Sharings = new List<SharingDetailsQueryResultItem>()
+                Sharings = new List<Sharing>()
             };
 
             _mediatorMock
@@ -330,7 +330,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 CertificateId = certificateId,
                 CertificateType = CertificateType.Standard,
                 CourseName = "Test Course",
-                Sharings = new List<SharingDetailsQueryResultItem>()
+                Sharings = new List<Sharing>()
             };
 
             _mediatorMock

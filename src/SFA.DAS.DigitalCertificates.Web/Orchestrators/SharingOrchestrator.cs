@@ -60,13 +60,14 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 CertificateId = response.CertificateId,
                 CourseName = response.CourseName,
                 CertificateType = certificateData.CertificateType,
-                Sharings = response.Sharings.Select(s => new CertificateSharingItemViewModel
+                Sharings = response.Sharings?.Select(s => new CertificateSharingItemViewModel
                 {
                     SharingId = s.SharingId,
                     SharingNumber = s.SharingNumber,
                     CreatedAt = s.CreatedAt,
                     ExpiryTime = s.ExpiryTime
                 }).ToList()
+                ?? new List<CertificateSharingItemViewModel>()
             };
         }
 
