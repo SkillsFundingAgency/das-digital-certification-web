@@ -1,4 +1,6 @@
-﻿using FluentAssertions;
+﻿using System;
+using System.Collections.Generic;
+using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
@@ -9,8 +11,6 @@ using Moq;
 using NUnit.Framework;
 using SFA.DAS.DigitalCertificates.TestHelper.Extensions;
 using SFA.DAS.DigitalCertificates.Web.Attributes;
-using System;
-using System.Collections.Generic;
 
 namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Attributes
 {

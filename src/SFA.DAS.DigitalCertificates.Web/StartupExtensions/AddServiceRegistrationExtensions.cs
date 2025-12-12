@@ -8,6 +8,7 @@ using SFA.DAS.DigitalCertificates.Domain.Interfaces;
 using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
 using SFA.DAS.DigitalCertificates.Infrastructure.Services.CacheStorage;
 using SFA.DAS.DigitalCertificates.Web.Attributes;
+using SFA.DAS.DigitalCertificates.Web.Authentication;
 using SFA.DAS.DigitalCertificates.Web.Authorization;
 using SFA.DAS.DigitalCertificates.Web.Orchestrators;
 using SFA.DAS.DigitalCertificates.Web.Services;
@@ -26,10 +27,18 @@ namespace SFA.DAS.DigitalCertificates.Web.StartupExtensions
             services.AddSingleton<IAuthorizationHandler, AccountActiveAuthorizationHandler>();
 
             services.AddTransient<ICacheStorageService, CacheStorageService>();
-            services.AddTransient<IUserCacheService, UserCacheService>();
+            services.AddTransient<ISessionStorageService, SessionStorageService>();
+            services.AddTransient<IUserService, UserService>();
+
+            services.AddSingleton<IAuthorizationHandler, UlnAuthorisedAuthorizationHandler>();
+            services.AddSingleton<IAuthorizationFailureHandler, UlnAuthorisedFailureHandler>();
+            services.AddSingleton<IAuthorizationHandler, CertificateOwnerAuthorizationHandler>();
+            services.AddSingleton<IAuthorizationFailureHandler, CertificateOwnerFailureHandler>();
 
             services.AddTransient<ValidateRequiredQueryParametersAttribute>();
             services.AddTransient<IHomeOrchestrator, HomeOrchestrator>();
+            services.AddTransient<ICertificatesOrchestrator, CertificatesOrchestrator>();
+
             services.AddTransient<IClaimsTransformation, DigitalCertificatesClaimsTransformer>();
 
             return services;

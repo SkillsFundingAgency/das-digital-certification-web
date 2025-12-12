@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -14,7 +13,7 @@ using NUnit.Framework;
 using SFA.DAS.DigitalCertificates.Web.Controllers;
 using SFA.DAS.DigitalCertificates.Web.Exceptions;
 using SFA.DAS.DigitalCertificates.Web.Models;
-using SFA.DAS.DigitalCertificates.Web.Models.User;
+using SFA.DAS.DigitalCertificates.Web.Models.Home;
 using SFA.DAS.DigitalCertificates.Web.Orchestrators;
 using SFA.DAS.GovUK.Auth.Models;
 using SFA.DAS.GovUK.Auth.Services;

@@ -1,10 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using SFA.DAS.DigitalCertificates.Web.Authorization;
 using SFA.DAS.DigitalCertificates.Web.Models.Shared;
-using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 
 namespace SFA.DAS.DigitalCertificates.Web.Filters
 {
@@ -26,7 +26,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Filters
 
         private static GaData PopulateGaData(ActionExecutingContext context)
         {
-            var userId = context.HttpContext.User.Claims.FirstOrDefault(c => c.Type.Equals(DigitalCertificateClaimsTypes.UserId))?.Value;
+            var userId = context.HttpContext?.User.Claims.FirstOrDefault(c => c.Type.Equals(DigitalCertificateClaimsTypes.UserId))?.Value;
 
             return new GaData
             {

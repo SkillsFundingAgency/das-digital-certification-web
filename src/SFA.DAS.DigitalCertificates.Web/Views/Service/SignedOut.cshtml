@@ -1,0 +1,17 @@
+﻿@using SFA.DAS.DigitalCertificates.Web.ViewDataKeys;
+@{
+    ViewData["Title"] = "Signed out";
+    ViewBag.GaData.Vpv = "/service/signed-out";
+}
+
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+        <h1 class="govuk-heading-l">
+            You have been signed out of @ViewData[ViewDataKeys.ServiceName]
+        </h1>
+    </div>
+    <div class="govuk-grid-column-two-thirds">
+        <p><a class="govuk-link" href="https://gov.uk/">Go to the GOV.UK homepage</a></p>
+    </div>
+
+</div>

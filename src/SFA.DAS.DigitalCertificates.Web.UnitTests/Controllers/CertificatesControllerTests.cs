@@ -1,9 +1,12 @@
-﻿using FluentAssertions;
+﻿using System;
+using System.Threading.Tasks;
+using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using NUnit.Framework;
 using SFA.DAS.DigitalCertificates.Web.Controllers;
+using SFA.DAS.DigitalCertificates.Web.Orchestrators;
 
 namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
 {
@@ -11,13 +14,15 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
     public class CertificatesControllerTests
     {
         private Mock<IHttpContextAccessor> _contextAccessorMock;
+        private Mock<ICertificatesOrchestrator> _certificatesOrchestratorMock;
         private CertificatesController _sut;
 
         [SetUp]
         public void SetUp()
         {
             _contextAccessorMock = new Mock<IHttpContextAccessor>();
-            _sut = new CertificatesController(_contextAccessorMock.Object);
+            _certificatesOrchestratorMock = new Mock<ICertificatesOrchestrator>();
+            _sut = new CertificatesController(_contextAccessorMock.Object, _certificatesOrchestratorMock.Object);
         }
 
         [TearDown]
@@ -27,10 +32,10 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
         }
 
         [Test]
-        public void CertificatesList_Returns_View()
+        public async Task CertificatesList_Returns_View()
         {
             // Act
-            var result = _sut.CertificatesList() as ViewResult;
+            var result = await _sut.CertificatesList() as ViewResult;
 
             // Assert
             result.Should().NotBeNull();
@@ -40,7 +45,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
         public void Certificate_Returns_View()
         {
             // Act
-            var result = _sut.Certificate() as ViewResult;
+            var result = _sut.CertificateStandard(Guid.NewGuid()) as ViewResult;
 
             // Assert
             result.Should().NotBeNull();

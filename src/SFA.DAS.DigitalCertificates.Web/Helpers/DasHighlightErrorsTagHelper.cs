@@ -1,10 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc.Rendering;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Text.Encodings.Web;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.TagHelpers;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Razor.TagHelpers;
 using SFA.DAS.DigitalCertificates.Web.Extensions;
-using System.Diagnostics.CodeAnalysis;
-using System.Text.Encodings.Web;
 
 namespace SFA.DAS.DigitalCertificates.Web.Helpers
 {
@@ -19,14 +19,14 @@ namespace SFA.DAS.DigitalCertificates.Web.Helpers
         private const string ErrorCssClass = "error-class";
 
         [HtmlAttributeName(HighlightErrorForAttributeName)]
-        public ModelExpression Property { get; set; }
+        public ModelExpression? Property { get; set; }
 
         [HtmlAttributeName(ErrorCssClass)]
-        public string CssClass { get; set; }
+        public string? CssClass { get; set; }
 
         [ViewContext]
         [HtmlAttributeNotBound]
-        public ViewContext ViewContext { get; set; }
+        public ViewContext? ViewContext { get; set; }
 
         protected IHtmlGenerator Generator { get; }
 
@@ -37,6 +37,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Helpers
 
         public override void Process(TagHelperContext context, TagHelperOutput output)
         {
+            if (ViewContext == null || Property == null) return;
+
             var tagBuilder = Generator.GenerateValidationMessage(
                 ViewContext,
                 Property.ModelExplorer,

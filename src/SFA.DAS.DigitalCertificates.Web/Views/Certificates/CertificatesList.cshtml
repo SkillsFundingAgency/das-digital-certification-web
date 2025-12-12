@@ -1,16 +1,42 @@
 ﻿@using SFA.DAS.DigitalCertificates.Web.Controllers
 @using SFA.DAS.DigitalCertificates.Web.ViewDataKeys
+@model SFA.DAS.DigitalCertificates.Web.Models.Certificates.CertificatesListViewModel
 @{
-    ViewData[ViewDataKeys.Title] = ViewData[ViewDataKeys.ServiceName] + " Certificates List";
-    ViewBag.GaData.Vpv = @ViewData[ViewDataKeys.GaDataVpvPrefix] + "certificates-list";
+    ViewData[ViewDataKeys.Title] = "Your apprenticeship courses";
+    ViewBag.GaData.Vpv = @ViewData[ViewDataKeys.GaDataVpvPrefix] + "your-apprenticeship-courses";
 }
-<main class="govuk-main-wrapper govuk-main-wrapper--auto-spacing">
+<main class="govuk-main-wrapper govuk-main-wrapper--auto-spacing" id="main-content">
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
-            <h1 class="govuk-heading-xl">@ViewData[ViewDataKeys.Title]</h1>
-            <a asp-route="@CertificatesController.CertificateRouteGet" class="govuk-button">
-                Certificate
-            </a>
+            <h1 class="govuk-label-wrapper">
+                <label class="govuk-label govuk-label--l" for="NumberOfApprentices">
+                    @ViewData[ViewDataKeys.Title]
+                </label>
+            </h1>
+            <p class="govuk-text">Select a course to view your result and certificate.</p>
+            <table class="govuk-table">
+                <thead class="govuk-table__head">
+                    <tr class="govuk-table__row">
+                        <th scope="col" class="govuk-table__header govuk-!-width-two-quarters">Course name</th>
+                        <th scope="col" class="govuk-table__header govuk-!-width-one-quarter">Level</th>
+                        <th scope="col" class="govuk-table__header govuk-!-width-one-quarter">Date awarded</th>
+                    </tr>
+                </thead>
+                <tbody class="govuk-table__body">
+                    @if(Model.Certificates != null)
+                    {
+                        foreach (var certificate in Model.Certificates)
+                        {
+                            <tr class="govuk-table__row">
+                                <td class="govuk-table__cell"><a href="">@certificate.CourseName</a></td>
+                                <td class="govuk-table__cell">@certificate.CourseLevel</td>
+                                <td class="govuk-table__cell">@certificate.DateAwarded.ToString("dd MMMM yyyy")</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+            <p class="govuk-text">If you’re waiting for the result of your end-point assessment, contact your training provider.</p>
         </div>
     </div>
 </main>

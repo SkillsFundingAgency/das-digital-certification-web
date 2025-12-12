@@ -1,8 +1,8 @@
-﻿using FluentValidation;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Threading.Tasks;
+using FluentValidation;
 using FluentValidation.Results;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
-using System.Diagnostics.CodeAnalysis;
-using System.Threading.Tasks;
 
 namespace SFA.DAS.DigitalCertificates.Web.Helpers
 {
@@ -16,7 +16,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Helpers
             {
                 foreach (var error in result.Errors)
                 {
-                    if (!modelState.ContainsKey(error.PropertyName) || modelState[error.PropertyName].Errors.Count == 0)
+                    if (!modelState.ContainsKey(error.PropertyName) || modelState[error.PropertyName]?.Errors.Count == 0)
                         modelState.AddModelError(error.PropertyName, error.ErrorMessage);
                 }
             }

@@ -1,6 +1,7 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System.Diagnostics.CodeAnalysis;
+using Microsoft.Extensions.DependencyInjection;
+using SFA.DAS.DigitalCertificates.Web.Authentication;
 using SFA.DAS.GovUK.Auth.Authentication;
-using System.Diagnostics.CodeAnalysis;
 
 namespace SFA.DAS.DigitalCertificates.Web.StartupExtensions
 {
@@ -16,17 +17,38 @@ namespace SFA.DAS.DigitalCertificates.Web.StartupExtensions
                     {
                         policy.RequireAuthenticatedUser();
                     });
+
                 options.AddPolicy(
                     PolicyNames.IsActiveAccount, policy =>
                     {
                         policy.Requirements.Add(new AccountActiveRequirement());
                         policy.RequireAuthenticatedUser();
                     });
+
                 options.AddPolicy(
                     PolicyNames.IsVerified, policy =>
                     {
+                        policy.Requirements.Add(new AccountActiveRequirement());
                         policy.Requirements.Add(new VerifiedIdentityRequirement());
                         policy.RequireAuthenticatedUser();
+                    });
+
+                options.AddPolicy(
+                    DigitalCertificatesPolicyNames.IsUlnAuthorised, policy =>
+                    {
+                        policy.Requirements.Add(new AccountActiveRequirement());
+                        policy.Requirements.Add(new VerifiedIdentityRequirement());
+                        policy.Requirements.Add(new UlnAuthorisedRequirement());
+                        policy.RequireAuthenticatedUser();
+                    });
+
+                options.AddPolicy(
+                    DigitalCertificatesPolicyNames.IsCertificateOwner, policy =>
+                    {
+                        policy.Requirements.Add(new AccountActiveRequirement());
+                        policy.Requirements.Add(new VerifiedIdentityRequirement());
+                        policy.Requirements.Add(new UlnAuthorisedRequirement());
+                        policy.Requirements.Add(new CertificateOwnerRequirement());
                     });
             });
 

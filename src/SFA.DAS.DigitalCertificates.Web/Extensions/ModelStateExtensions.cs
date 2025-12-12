@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
-using System;
+﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace SFA.DAS.DigitalCertificates.Web.Extensions
 {
@@ -9,12 +9,12 @@ namespace SFA.DAS.DigitalCertificates.Web.Extensions
     {
         public static T GetAttemptedValueWhenInvalid<T>(this ModelStateDictionary modelState, string key, T defaultValue, T validValue)
         {
-            if (modelState.IsValid || !modelState.TryGetValue(key, out ModelStateEntry entry))
+            if (modelState.IsValid || !modelState.TryGetValue(key, out ModelStateEntry? entry))
             {
                 return validValue;
             }
 
-            if(entry.AttemptedValue == null)
+            if (entry.AttemptedValue == null)
             {
                 return defaultValue;
             }

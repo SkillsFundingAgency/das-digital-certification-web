@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -8,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+using SFA.DAS.DigitalCertificates.Web.Services;
 using SFA.DAS.GovUK.Auth.Authentication;
 
 namespace SFA.DAS.DigitalCertificates.Web.Controllers
@@ -15,6 +17,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
     [Route("service")]
     public class ServiceController : BaseController
     {
+        private readonly IUserService _userService;
+        private readonly ISessionStorageService _sessionStorageService;
         private readonly IConfiguration _config;
 
         #region Routes
@@ -22,9 +26,11 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         public const string SignedOutRouteGet = nameof(SignedOutRouteGet);
         #endregion Routes
 
-        public ServiceController(IConfiguration config, IHttpContextAccessor contextAccessor)
-            : base(contextAccessor) 
+        public ServiceController(IUserService userService, ISessionStorageService sessionStorageService, IConfiguration config, IHttpContextAccessor contextAccessor)
+            : base(contextAccessor)
         {
+            _userService = userService;
+            _sessionStorageService = sessionStorageService;
             _config = config;
         }
 
@@ -32,6 +38,11 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         [Authorize(Policy = nameof(PolicyNames.IsAuthenticated))]
         public async Task<IActionResult> SigningOut()
         {
+            if (HttpContextAccessor?.HttpContext == null)
+            {
+                throw new InvalidOperationException("No HttpContext available.");
+            }
+
             var idToken = await HttpContextAccessor.HttpContext
                 .GetTokenAsync(OpenIdConnectDefaults.AuthenticationScheme, OpenIdConnectParameterNames.IdToken);
 
@@ -46,6 +57,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
                     .ToArray();
             }
 
+            await _sessionStorageService.Clear(_userService.GetGovUkIdentifier());
+
             return SignOut(
                 authenticationProperties,
                 authenticationSchemes);
@@ -54,6 +67,11 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         [Route("signed-out", Name = SignedOutRouteGet)]
         public IActionResult SignedOut()
         {
+            if (HttpContextAccessor?.HttpContext == null)
+            {
+                throw new InvalidOperationException("No HttpContext available.");
+            }
+
             HttpContextAccessor.HttpContext.Response.Cookies.Delete("SFA.DAS.DigitalCertificates.Web.Auth");
 
             return View();

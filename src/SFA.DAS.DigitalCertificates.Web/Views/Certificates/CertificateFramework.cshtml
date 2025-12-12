@@ -1,0 +1,16 @@
+﻿@using SFA.DAS.DigitalCertificates.Web.Controllers
+@using SFA.DAS.DigitalCertificates.Web.ViewDataKeys
+@{
+    ViewData[ViewDataKeys.Title] = ViewData[ViewDataKeys.ServiceName] + " Certificate Framework";
+    ViewBag.GaData.Vpv = @ViewData[ViewDataKeys.GaDataVpvPrefix] + "certificate-framework";
+}
+<main class="govuk-main-wrapper govuk-main-wrapper--auto-spacing">
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+            <h1 class="govuk-heading-xl">@ViewData[ViewDataKeys.Title]</h1>
+            <a asp-route="@CertificatesController.CertificatesListRouteGet" class="govuk-button">
+                CertificatesList
+            </a>
+        </div>
+    </div>
+</main>

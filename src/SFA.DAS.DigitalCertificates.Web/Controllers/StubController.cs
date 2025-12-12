@@ -1,4 +1,5 @@
-﻿using FluentValidation;
+﻿using System.Threading.Tasks;
+using FluentValidation;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
@@ -9,7 +10,6 @@ using SFA.DAS.DigitalCertificates.Web.Models.Stub;
 using SFA.DAS.GovUK.Auth.Exceptions;
 using SFA.DAS.GovUK.Auth.Models;
 using SFA.DAS.GovUK.Auth.Services;
-using System.Threading.Tasks;
 
 namespace SFA.DAS.DigitalCertificates.Web.Controllers
 {
@@ -35,9 +35,9 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         {
             return View("SignInStub", new SignInStubViewModel
             {
-                Id = ModelState.IsValid ? _config["StubId"] : ModelState[nameof(SignInStubViewModel.Id)]?.AttemptedValue,
-                Email = ModelState.IsValid ? _config["StubEmail"] : ModelState[nameof(SignInStubViewModel.Email)]?.AttemptedValue,
-                Phone = ModelState.IsValid ? _config["StubPhone"] : ModelState[nameof(SignInStubViewModel.Phone)]?.AttemptedValue,
+                Id = ModelState.IsValid ? (_config["StubId"] ?? string.Empty) : (ModelState[nameof(SignInStubViewModel.Id)]?.AttemptedValue ?? string.Empty),
+                Email = ModelState.IsValid ? (_config["StubEmail"] ?? string.Empty) : (ModelState[nameof(SignInStubViewModel.Email)]?.AttemptedValue ?? string.Empty),
+                Phone = ModelState.IsValid ? (_config["StubPhone"] ?? string.Empty) : (ModelState[nameof(SignInStubViewModel.Phone)]?.AttemptedValue ?? string.Empty),
                 ReturnUrl = returnUrl
             });
         }

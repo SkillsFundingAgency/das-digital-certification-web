@@ -1,8 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc.Rendering;
+﻿using System.Diagnostics.CodeAnalysis;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Razor.TagHelpers;
 using SFA.DAS.DigitalCertificates.Web.Extensions;
-using System.Diagnostics.CodeAnalysis;
 
 namespace SFA.DAS.DigitalCertificates.Web.Helpers
 {
@@ -13,11 +13,11 @@ namespace SFA.DAS.DigitalCertificates.Web.Helpers
         private const string ValidationForAttributeName = "das-validation-for";
 
         [HtmlAttributeName(ValidationForAttributeName)]
-        public ModelExpression Property { get; set; }
+        public ModelExpression? Property { get; set; }
 
         [ViewContext]
         [HtmlAttributeNotBound]
-        public ViewContext ViewContext { get; set; }
+        public ViewContext? ViewContext { get; set; }
 
         protected IHtmlGenerator Generator { get; }
 
@@ -28,6 +28,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Helpers
 
         public override void Process(TagHelperContext context, TagHelperOutput output)
         {
+            if (ViewContext == null || Property == null) return;
             if (!ViewContext.ModelState.ContainsKey(Property.Name)) return;
 
             var tagBuilder = Generator.GenerateValidationMessage(

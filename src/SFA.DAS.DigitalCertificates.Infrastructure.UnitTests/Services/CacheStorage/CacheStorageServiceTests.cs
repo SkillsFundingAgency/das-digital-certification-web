@@ -1,13 +1,11 @@
-﻿using FluentAssertions;
+﻿using System.Threading;
+using System.Threading.Tasks;
+using FluentAssertions;
 using Microsoft.Extensions.Caching.Distributed;
 using Moq;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using SFA.DAS.DigitalCertificates.Infrastructure.Services.CacheStorage;
-using System;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace SFA.DAS.DigitalCertificates.Infrastructure.UnitTests.Services
 {
@@ -101,37 +99,6 @@ namespace SFA.DAS.DigitalCertificates.Infrastructure.UnitTests.Services
                 It.IsAny<DistributedCacheEntryOptions>(),
                 It.IsAny<CancellationToken>()),
                 Times.Never);
-        }
-
-        [Test]
-        public async Task CreateAsync_Serialises_And_Sets_With_Expiration()
-        {
-            // Arrange
-            var key = "create-key";
-            var obj = new TestObject { Id = 10, Name = "Item" };
-            byte[] storedBytes = null;
-            DistributedCacheEntryOptions storedOptions = null;
-
-            _distributedCacheMock
-                .Setup(c => c.SetAsync(
-                    key,
-                    It.IsAny<byte[]>(),
-                    It.IsAny<DistributedCacheEntryOptions>(),
-                    It.IsAny<CancellationToken>()))
-                .Callback<string, byte[], DistributedCacheEntryOptions, CancellationToken>((_, b, o, __) =>
-                {
-                    storedBytes = b;
-                    storedOptions = o;
-                })
-                .Returns(Task.CompletedTask);
-
-            // Act
-            await _sut.CreateAsync(key, obj, expirationInHours: 3);
-
-            // Assert
-            var json = System.Text.Encoding.UTF8.GetString(storedBytes);
-            json.Should().Contain("Item");
-            storedOptions.AbsoluteExpirationRelativeToNow.Should().Be(TimeSpan.FromHours(3));
         }
 
         [Test]

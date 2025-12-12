@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
@@ -11,7 +12,7 @@ using SFA.DAS.DigitalCertificates.Domain.Extensions;
 using SFA.DAS.DigitalCertificates.Web.Exceptions;
 using SFA.DAS.DigitalCertificates.Web.Extensions;
 using SFA.DAS.DigitalCertificates.Web.Models;
-using SFA.DAS.DigitalCertificates.Web.Models.User;
+using SFA.DAS.DigitalCertificates.Web.Models.Home;
 using SFA.DAS.DigitalCertificates.Web.Orchestrators;
 using SFA.DAS.DigitalCertificates.Web.StartupExtensions;
 using SFA.DAS.GovUK.Auth.Authentication;
@@ -26,7 +27,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         private readonly IConfiguration _config;
         private readonly IGovUkAuthenticationService _govUkAuthenticationService;
         private readonly ILogger<HomeController> _logger;
-        
+
         #region Routes
         public const string VerifiedRouteGet = nameof(VerifiedRouteGet);
         public const string CheckRouteGet = nameof(CheckRouteGet);
@@ -39,7 +40,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         #endregion Routes
 
         public HomeController(IHomeOrchestrator homeOrchestrator,
-            IConfiguration config, IGovUkAuthenticationService govUkAuthenticationService,  
+            IConfiguration config, IGovUkAuthenticationService govUkAuthenticationService,
             IHttpContextAccessor contextAccessor, ILogger<HomeController> logger)
             : base(contextAccessor)
         {
@@ -72,6 +73,11 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         [Authorize(Policy = nameof(PolicyNames.IsVerified))]
         public async Task<IActionResult> Verified()
         {
+            if (HttpContextAccessor?.HttpContext == null)
+            {
+                throw new InvalidOperationException("No HttpContext available.");
+            }
+
             var token = await HttpContextAccessor.HttpContext.GetTokenAsync("access_token");
             var details = await _govUkAuthenticationService.GetAccountDetails(token);
 
@@ -130,7 +136,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         public IActionResult Error(string errorMessage)
         {
             _logger.LogError(errorMessage.SanitizeLogData());
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContextAccessor.HttpContext.TraceIdentifier, ErrorMessage = errorMessage });
+            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContextAccessor?.HttpContext?.TraceIdentifier, ErrorMessage = errorMessage });
         }
     }
 }

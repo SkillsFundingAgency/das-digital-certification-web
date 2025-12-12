@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\SFA.DAS.DigitalCertificates.Infrastructure\SFA.DAS.DigitalCertificates.Infrastructure.csproj" />
+    <ProjectReference Include="..\SFA.DAS.DigitalCertificates.Domain\SFA.DAS.DigitalCertificates.Domain.csproj" />
   </ItemGroup>
 
 </Project>

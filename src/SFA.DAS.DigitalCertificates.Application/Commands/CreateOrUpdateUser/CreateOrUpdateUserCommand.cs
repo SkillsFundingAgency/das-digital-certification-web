@@ -1,5 +1,5 @@
 ﻿using MediatR;
-using SFA.DAS.DigitalCertificates.Infrastructure.Api.Types;
+using SFA.DAS.DigitalCertificates.Domain.Models;
 
 namespace SFA.DAS.DigitalCertificates.Application.Commands.CreateOrUpdateUser
 {

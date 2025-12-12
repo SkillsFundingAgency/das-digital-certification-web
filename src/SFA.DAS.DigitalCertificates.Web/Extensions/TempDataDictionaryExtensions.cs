@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc.ViewFeatures;
+﻿using System.Diagnostics.CodeAnalysis;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Newtonsoft.Json;
-using System.Diagnostics.CodeAnalysis;
 
 namespace SFA.DAS.DigitalCertificates.Web.Extensions
 {
@@ -44,14 +44,13 @@ namespace SFA.DAS.DigitalCertificates.Web.Extensions
             tempData[key] = JsonConvert.SerializeObject(value);
         }
 
-        private static T Get<T>(this ITempDataDictionary tempData, string key) where T : class
+        private static T? Get<T>(this ITempDataDictionary tempData, string key) where T : class
         {
-            object o;
-            tempData.TryGetValue(key, out o);
+            tempData.TryGetValue(key, out object? o);
             return o == null ? null : JsonConvert.DeserializeObject<T>((string)o);
         }
 
-        public static T GetButDontRemove<T>(this ITempDataDictionary tempData, string key) where T : class
+        public static T? GetButDontRemove<T>(this ITempDataDictionary tempData, string key) where T : class
         {
             var result = Get<T>(tempData, key);
             if (result != null)

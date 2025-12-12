@@ -5,8 +5,8 @@ namespace SFA.DAS.DigitalCertificates.Infrastructure.Configuration
     [ExcludeFromCodeCoverage]
     public class DigitalCertificatesWebConfiguration
     {
-        public string ServiceBaseUrl { get; set; }
-        public string RedisConnectionString { get; set; }
-        public string DataProtectionKeysDatabase { get; set; }
+        public required string ServiceBaseUrl { get; set; }
+        public required string RedisConnectionString { get; set; }
+        public required string DataProtectionKeysDatabase { get; set; }
     }
 }

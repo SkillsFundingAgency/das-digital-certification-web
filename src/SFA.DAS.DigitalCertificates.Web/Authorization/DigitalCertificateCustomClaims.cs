@@ -1,20 +1,24 @@
-﻿using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+﻿using System.Collections.Generic;
+using System.Security.Claims;
+using System.Threading.Tasks;
+using MediatR;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using SFA.DAS.DigitalCertificates.Application.Commands.CreateOrUpdateUser;
 using SFA.DAS.DigitalCertificates.Web.Services;
 using SFA.DAS.GovUK.Auth.Authentication;
 using SFA.DAS.GovUK.Auth.Services;
-using System.Collections.Generic;
-using System.Security.Claims;
-using System.Threading.Tasks;
 
 namespace SFA.DAS.DigitalCertificates.Web.Authorization
 {
     public class DigitalCertificateCustomClaims : ICustomClaims
     {
-        private readonly IUserCacheService _userCacheService;
+        private readonly IMediator _mediator;
+        private readonly ISessionStorageService _sessionStorageService;
 
-        public DigitalCertificateCustomClaims(IUserCacheService userCacheService)
+        public DigitalCertificateCustomClaims(IMediator mediator, ISessionStorageService sessionStorageService)
         {
-            _userCacheService = userCacheService;
+            _mediator = mediator;
+            _sessionStorageService = sessionStorageService;
         }
 
         public async Task<IEnumerable<Claim>> GetClaims(TokenValidatedContext tokenValidatedContext)
@@ -22,20 +26,33 @@ namespace SFA.DAS.DigitalCertificates.Web.Authorization
             return await GetClaims(tokenValidatedContext?.Principal);
         }
 
-        public async Task<IEnumerable<Claim>> GetClaims(ClaimsPrincipal principal)
+        public async Task<IEnumerable<Claim>> GetClaims(ClaimsPrincipal? principal)
         {
             var claims = new List<Claim>();
 
             if (principal != null)
             {
-                var user = await _userCacheService.CacheUserForGovUkIdentifier(principal.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-                if (user != null)
-                {
-                    claims.Add(new Claim(DigitalCertificateClaimsTypes.UserId,
-                        user.Id.ToString()));
+                var govUkIdentifier = principal.FindFirstValue(ClaimTypes.NameIdentifier);
+                var email = principal.FindFirstValue(ClaimTypes.Email);
 
-                    claims.Add(new Claim(ClaimTypes.AuthorizationDecision,
-                        user.LockedAt.HasValue ? AuthorizationDecisions.Suspended : AuthorizationDecisions.Allowed));
+                if (govUkIdentifier != null && email != null)
+                {
+                    await _mediator.Send(new CreateOrUpdateUserCommand
+                    {
+                        GovUkIdentifier = govUkIdentifier,
+                        EmailAddress = email,
+                        PhoneNumber = principal.FindFirstValue(ClaimTypes.MobilePhone)
+                    });
+
+                    var user = await _sessionStorageService.GetUserAsync(govUkIdentifier);
+                    if (user != null)
+                    {
+                        claims.Add(new Claim(DigitalCertificateClaimsTypes.UserId,
+                            user.Id.ToString()));
+
+                        claims.Add(new Claim(ClaimTypes.AuthorizationDecision,
+                            user.IsLocked ? AuthorizationDecisions.Suspended : AuthorizationDecisions.Allowed));
+                    }
                 }
             }
 

@@ -1,13 +1,16 @@
 ﻿@using SFA.DAS.DigitalCertificates.Web.ViewDataKeys
-<section aria-label="Service information" class="govuk-service-navigation"
-         data-module="govuk-service-navigation">
-    <div class="govuk-width-container">
-        <div class="govuk-service-navigation__container">
-            <span class="govuk-service-navigation__service-name">
-                <a href="#" class="govuk-service-navigation__link">
-                    @ViewData[ViewDataKeys.ServiceName]
-                </a>
-            </span>
+@if (User!.Identity!.IsAuthenticated)
+{
+    <section aria-label="Service information" class="govuk-service-navigation das-header__navigation">
+        <div class="govuk-width-container">
+            <div class="govuk-service-navigation__container das-header__navigation__container">
+                <div class="das-header__service-user-name-wrap">
+                    <span class="govuk-service-navigation__service-name">
+                        <span class="govuk-service-navigation__text">@ViewData[ViewDataKeys.ServiceName]</span>
+                    </span>
+                    <p class="das-header__user-name">@User!.Identity!.Name</p>
+                </div>
+            </div>
         </div>
-    </div>
-</section>
+    </section>
+}

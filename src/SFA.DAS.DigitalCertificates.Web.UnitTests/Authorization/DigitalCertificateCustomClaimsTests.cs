@@ -2,12 +2,13 @@
 using System.Security.Claims;
 using System.Threading.Tasks;
 using FluentAssertions;
+using MediatR;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Http;
 using Moq;
 using NUnit.Framework;
-using SFA.DAS.DigitalCertificates.Infrastructure.Api.Responses;
+using SFA.DAS.DigitalCertificates.Domain.Models;
 using SFA.DAS.DigitalCertificates.Web.Authorization;
 using SFA.DAS.DigitalCertificates.Web.Services;
 using SFA.DAS.GovUK.Auth.Authentication;
@@ -17,14 +18,16 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authorization
     [TestFixture]
     public class DigitalCertificateCustomClaimsTests
     {
-        private Mock<IUserCacheService> _userCacheServiceMock;
+        private Mock<IMediator> _mediatorMock;
+        private Mock<ISessionStorageService> _sessionStorageServiceMock;
         private DigitalCertificateCustomClaims _sut;
 
         [SetUp]
         public void SetUp()
         {
-            _userCacheServiceMock = new Mock<IUserCacheService>();
-            _sut = new DigitalCertificateCustomClaims(_userCacheServiceMock.Object);
+            _mediatorMock = new Mock<IMediator>();
+            _sessionStorageServiceMock = new Mock<ISessionStorageService>();
+            _sut = new DigitalCertificateCustomClaims(_mediatorMock.Object, _sessionStorageServiceMock.Object);
         }
 
         [TearDown]
@@ -41,16 +44,19 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authorization
             var user = new User
             {
                 Id = Guid.NewGuid(),
-                LockedAt = null
+                GovUkIdentifier = "gov-123",
+                EmailAddress = "name@domain.com",
+                IsLocked = false
             };
 
-            _userCacheServiceMock
-                .Setup(x => x.CacheUserForGovUkIdentifier(govUkIdentifier))
+            _sessionStorageServiceMock
+                .Setup(x => x.GetUserAsync(govUkIdentifier))
                 .ReturnsAsync(user);
 
             var principal = new ClaimsPrincipal(new ClaimsIdentity(new[]
             {
-                new Claim(ClaimTypes.NameIdentifier, govUkIdentifier)
+                new Claim(ClaimTypes.NameIdentifier, govUkIdentifier),
+                new Claim(ClaimTypes.Email, user.EmailAddress)
             }));
 
             // Act
@@ -65,20 +71,22 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authorization
         public async Task GetClaims_WithPrincipal_Adds_Suspended_When_User_Is_Locked()
         {
             // Arrange
-            var govUkIdentifier = "gov-123";
             var user = new User
             {
                 Id = Guid.NewGuid(),
-                LockedAt = DateTime.UtcNow
+                GovUkIdentifier = "gov-123",
+                EmailAddress = "name@domain.com",
+                IsLocked = true
             };
 
-            _userCacheServiceMock
-                .Setup(x => x.CacheUserForGovUkIdentifier(govUkIdentifier))
+            _sessionStorageServiceMock
+                .Setup(x => x.GetUserAsync(user.GovUkIdentifier))
                 .ReturnsAsync(user);
 
             var principal = new ClaimsPrincipal(new ClaimsIdentity(new[]
             {
-                new Claim(ClaimTypes.NameIdentifier, govUkIdentifier)
+                new Claim(ClaimTypes.NameIdentifier, user.GovUkIdentifier),
+                new Claim(ClaimTypes.Email, user.EmailAddress)
             }));
 
             // Act
@@ -94,8 +102,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authorization
         {
             // Arrange
             var govUkIdentifier = "gov-123";
-            _userCacheServiceMock
-                .Setup(x => x.CacheUserForGovUkIdentifier(govUkIdentifier))
+            _sessionStorageServiceMock
+                .Setup(x => x.GetUserAsync(govUkIdentifier))
                 .ReturnsAsync((User)null);
 
             var principal = new ClaimsPrincipal(new ClaimsIdentity(new[]
@@ -118,27 +126,29 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authorization
 
             // Assert
             result.Should().BeEmpty();
-            _userCacheServiceMock.Verify(x => x.CacheUserForGovUkIdentifier(It.IsAny<string>()), Times.Never);
+            _sessionStorageServiceMock.Verify(x => x.GetUserAsync(It.IsAny<string>()), Times.Never);
         }
 
         [Test]
         public async Task GetClaims_WithTokenValidatedContext_Delegates_To_Principal()
         {
             // Arrange
-            var govUkIdentifier = "gov-123";
             var user = new User
             {
                 Id = Guid.NewGuid(),
-                LockedAt = null
+                GovUkIdentifier = "gov-123",
+                EmailAddress = "name@domain.com",
+                IsLocked = false
             };
 
-            _userCacheServiceMock
-                .Setup(x => x.CacheUserForGovUkIdentifier(govUkIdentifier))
+            _sessionStorageServiceMock
+                .Setup(x => x.GetUserAsync(user.GovUkIdentifier))
                 .ReturnsAsync(user);
 
             var principal = new ClaimsPrincipal(new ClaimsIdentity(new[]
             {
-                new Claim(ClaimTypes.NameIdentifier, govUkIdentifier)
+                new Claim(ClaimTypes.NameIdentifier, user.GovUkIdentifier),
+                new Claim(ClaimTypes.Email, user.EmailAddress)
             }));
 
             var httpContext = new DefaultHttpContext();
@@ -165,7 +175,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authorization
 
             // Assert
             result.Should().BeEmpty();
-            _userCacheServiceMock.Verify(x => x.CacheUserForGovUkIdentifier(It.IsAny<string>()), Times.Never);
+            _sessionStorageServiceMock.Verify(x => x.GetUserAsync(It.IsAny<string>()), Times.Never);
         }
     }
 }

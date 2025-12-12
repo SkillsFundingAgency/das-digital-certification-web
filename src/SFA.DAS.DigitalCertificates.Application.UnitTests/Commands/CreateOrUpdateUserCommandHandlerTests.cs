@@ -3,8 +3,8 @@ using Moq;
 using NUnit.Framework;
 using SFA.DAS.DigitalCertificates.Application.Commands.CreateOrUpdateUser;
 using SFA.DAS.DigitalCertificates.Domain.Interfaces;
+using SFA.DAS.DigitalCertificates.Domain.Models;
 using SFA.DAS.DigitalCertificates.Infrastructure.Api.Requests;
-using SFA.DAS.DigitalCertificates.Infrastructure.Api.Types;
 
 namespace SFA.DAS.DigitalCertificates.UnitTests.Application.Commands
 {
@@ -60,11 +60,14 @@ namespace SFA.DAS.DigitalCertificates.UnitTests.Application.Commands
                     r.EmailAddress == command.EmailAddress &&
                     r.PhoneNumber == command.PhoneNumber &&
                     r.DateOfBirth == command.DateOfBirth &&
-                    r.Names.Count == command.Names.Count &&
-                    r.Names[0].FamilyName == command.Names[0].FamilyName &&
-                    r.Names[0].GivenNames == command.Names[0].GivenNames &&
-                    r.Names[0].ValidSince == command.Names[0].ValidSince &&
-                    r.Names[0].ValidUntil == command.Names[0].ValidUntil
+                    r.Names != null &&
+                    (
+                        r.Names.Count == command.Names.Count &&
+                        r.Names[0].FamilyName == command.Names[0].FamilyName &&
+                        r.Names[0].GivenNames == command.Names[0].GivenNames &&
+                        r.Names[0].ValidSince == command.Names[0].ValidSince &&
+                        r.Names[0].ValidUntil == command.Names[0].ValidUntil
+                    )
                 )), Times.Once);
         }
 

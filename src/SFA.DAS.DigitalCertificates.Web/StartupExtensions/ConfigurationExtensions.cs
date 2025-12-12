@@ -1,8 +1,8 @@
-﻿using Microsoft.Extensions.Configuration;
-using SFA.DAS.Configuration.AzureTableStorage;
-using System;
+﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using Microsoft.Extensions.Configuration;
+using SFA.DAS.Configuration.AzureTableStorage;
 
 namespace SFA.DAS.DigitalCertificates.Web.StartupExtensions
 {
@@ -24,7 +24,7 @@ namespace SFA.DAS.DigitalCertificates.Web.StartupExtensions
             {
                 config.AddAzureTableStorage(options =>
                     {
-                        options.ConfigurationKeys = configuration["ConfigNames"].Split(",");
+                        options.ConfigurationKeys = configuration["ConfigNames"]?.Split(",");
                         options.StorageConnectionString = configuration["ConfigurationStorageConnectionString"];
                         options.EnvironmentName = configuration["EnvironmentName"];
                         options.PreFixConfigurationKeys = false;
@@ -35,21 +35,21 @@ namespace SFA.DAS.DigitalCertificates.Web.StartupExtensions
             return config.Build();
         }
 
-        public static T GetSection<T>(this IConfiguration configuration)
+        public static T? GetSection<T>(this IConfiguration configuration)
         {
             return configuration
                 .GetSection(typeof(T).Name)
-                .Get<T>();
+                .Get<T?>();
         }
 
         public static bool IsRunningInDev(this IConfiguration configuration)
         {
-            return configuration["EnvironmentName"].Equals("DEV", StringComparison.CurrentCultureIgnoreCase);
+            return configuration["EnvironmentName"]?.Equals("DEV", StringComparison.CurrentCultureIgnoreCase) ?? false;
         }
 
         public static bool IsRunningInProd(this IConfiguration configuration)
         {
-            return configuration["EnvironmentName"].Equals("PROD", StringComparison.CurrentCultureIgnoreCase);
+            return configuration["EnvironmentName"]?.Equals("PROD", StringComparison.CurrentCultureIgnoreCase) ?? false;
         }
     }
 }

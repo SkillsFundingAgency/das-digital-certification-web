@@ -1,10 +1,10 @@
-﻿using MediatR;
-using SFA.DAS.DigitalCertificates.Application.Commands.CreateOrUpdateUser;
-using SFA.DAS.DigitalCertificates.Infrastructure.Api.Types;
-using SFA.DAS.DigitalCertificates.Web.Models.User;
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using MediatR;
+using SFA.DAS.DigitalCertificates.Application.Commands.CreateOrUpdateUser;
+using SFA.DAS.DigitalCertificates.Domain.Models;
+using SFA.DAS.DigitalCertificates.Web.Models.Home;
 
 namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 {

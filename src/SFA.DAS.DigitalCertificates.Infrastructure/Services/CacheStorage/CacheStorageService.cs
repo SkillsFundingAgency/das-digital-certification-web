@@ -1,9 +1,9 @@
-﻿using Microsoft.Extensions.Caching.Distributed;
-using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Caching.Distributed;
+using Newtonsoft.Json;
 
 namespace SFA.DAS.DigitalCertificates.Infrastructure.Services.CacheStorage
 {
@@ -24,9 +24,22 @@ namespace SFA.DAS.DigitalCertificates.Infrastructure.Services.CacheStorage
             var cached = await _distributedCache.GetStringAsync(key, cancellationToken);
             if (!string.IsNullOrEmpty(cached))
             {
-                return JsonConvert.DeserializeObject<T>(cached);
+                return JsonConvert.DeserializeObject<T>(cached)!;
             }
 
+            return await SetAsync(key, factory, cancellationToken);
+        }
+
+        public async Task<T?> GetAsync<T>(string key)
+        {
+            var json = await _distributedCache.GetStringAsync(key);
+            return json == null ? default : JsonConvert.DeserializeObject<T>(json);
+        }
+
+        public async Task<T> SetAsync<T>(string key,
+            Func<DistributedCacheEntryOptions, Task<T>> factory,
+            CancellationToken cancellationToken = default)
+        {
             var options = new DistributedCacheEntryOptions();
             var value = await factory(options);
 
@@ -37,22 +50,6 @@ namespace SFA.DAS.DigitalCertificates.Infrastructure.Services.CacheStorage
             }
 
             return value;
-        }
-
-        public async Task CreateAsync<T>(string key, T item, int expirationInHours)
-        {
-            var json = JsonConvert.SerializeObject(item);
-
-            await _distributedCache.SetStringAsync(key, json, new DistributedCacheEntryOptions
-            {
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(expirationInHours)
-            });
-        }
-
-        public async Task<T> GetAsync<T>(string key)
-        {
-            var json = await _distributedCache.GetStringAsync(key);
-            return json == null ? default(T) : JsonConvert.DeserializeObject<T>(json);
         }
 
         public async Task RemoveAsync(string key)

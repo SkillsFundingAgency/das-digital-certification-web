@@ -6,19 +6,19 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
 {
     public class BaseController : Controller
     {
-        private readonly IHttpContextAccessor _contextAccessor;
+        private readonly IHttpContextAccessor? _contextAccessor;
         public BaseController(IHttpContextAccessor contextAccessor)
         {
             _contextAccessor = contextAccessor;
         }
 
-        public IHttpContextAccessor HttpContextAccessor => _contextAccessor;
+        public IHttpContextAccessor? HttpContextAccessor => _contextAccessor;
 
-        public string UserId
+        public string? UserId
         {
             get
             {
-                return HttpContextAccessor.HttpContext.User.FindFirst(DigitalCertificateClaimsTypes.UserId)?.Value;
+                return HttpContextAccessor?.HttpContext?.User.FindFirst(DigitalCertificateClaimsTypes.UserId)?.Value;
             }
         }
     }

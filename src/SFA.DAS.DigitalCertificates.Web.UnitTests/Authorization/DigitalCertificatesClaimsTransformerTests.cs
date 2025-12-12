@@ -1,28 +1,28 @@
-﻿using FluentAssertions;
-using Moq;
-using NUnit.Framework;
-using SFA.DAS.DigitalCertificates.Infrastructure.Api.Responses;
-using SFA.DAS.DigitalCertificates.Web.Authorization;
-using SFA.DAS.DigitalCertificates.Web.Services;
-using SFA.DAS.GovUK.Auth.Authentication;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using FluentAssertions;
+using Moq;
+using NUnit.Framework;
+using SFA.DAS.DigitalCertificates.Domain.Models;
+using SFA.DAS.DigitalCertificates.Web.Authorization;
+using SFA.DAS.DigitalCertificates.Web.Services;
+using SFA.DAS.GovUK.Auth.Authentication;
 
 namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authorization
 {
     [TestFixture]
     public class DigitalCertificatesClaimsTransformerTests
     {
-        private Mock<IUserCacheService> _userCacheServiceMock;
+        private Mock<ISessionStorageService> _sessionStorageServiceMock;
         private DigitalCertificatesClaimsTransformer _sut;
 
         [SetUp]
         public void SetUp()
         {
-            _userCacheServiceMock = new Mock<IUserCacheService>();
-            _sut = new DigitalCertificatesClaimsTransformer(_userCacheServiceMock.Object);
+            _sessionStorageServiceMock = new Mock<ISessionStorageService>();
+            _sut = new DigitalCertificatesClaimsTransformer(_sessionStorageServiceMock.Object);
         }
 
         [TearDown]
@@ -42,7 +42,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authorization
 
             // Assert
             result.Should().BeSameAs(principal);
-            _userCacheServiceMock.VerifyNoOtherCalls();
+            _sessionStorageServiceMock.VerifyNoOtherCalls();
         }
 
         [Test]
@@ -60,7 +60,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authorization
 
             // Assert
             result.Should().BeSameAs(principal);
-            _userCacheServiceMock.VerifyNoOtherCalls();
+            _sessionStorageServiceMock.VerifyNoOtherCalls();
         }
 
         [Test]
@@ -78,7 +78,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authorization
 
             // Assert
             result.Should().BeSameAs(principal);
-            _userCacheServiceMock.VerifyNoOtherCalls();
+            _sessionStorageServiceMock.VerifyNoOtherCalls();
         }
 
         [Test]
@@ -95,9 +95,15 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authorization
 
             var principal = new ClaimsPrincipal(identity);
 
-            _userCacheServiceMock
-                .Setup(s => s.CacheUserForGovUkIdentifier(govUkIdentifier))
-                .ReturnsAsync(new User { LockedAt = null });
+            _sessionStorageServiceMock
+                .Setup(s => s.GetUserAsync(govUkIdentifier))
+                .ReturnsAsync(new User
+                {
+                    Id = Guid.NewGuid(),
+                    GovUkIdentifier = "gov-123",
+                    EmailAddress = "name@domain.com",
+                    IsLocked = false
+                });
 
             // Act
             var result = await _sut.TransformAsync(principal);
@@ -106,7 +112,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authorization
             result.FindFirst(ClaimTypes.AuthorizationDecision)!.Value
                 .Should().Be(AuthorizationDecisions.Allowed);
 
-            _userCacheServiceMock.Verify(s => s.CacheUserForGovUkIdentifier(govUkIdentifier), Times.Once);
+            _sessionStorageServiceMock.Verify(s => s.GetUserAsync(govUkIdentifier), Times.Once);
         }
 
         [Test]
@@ -123,9 +129,9 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authorization
 
             var principal = new ClaimsPrincipal(identity);
 
-            _userCacheServiceMock
-                .Setup(s => s.CacheUserForGovUkIdentifier(govUkIdentifier))
-                .ReturnsAsync(new User { LockedAt = DateTime.UtcNow });
+            _sessionStorageServiceMock
+                .Setup(s => s.GetUserAsync(govUkIdentifier))
+                .ReturnsAsync(new User { Id = Guid.NewGuid(), IsLocked = true, GovUkIdentifier = "gov-123", EmailAddress = "name@domain.com" });
 
             // Act
             var result = await _sut.TransformAsync(principal);
@@ -134,7 +140,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authorization
             result.FindFirst(ClaimTypes.AuthorizationDecision)!.Value
                 .Should().Be(AuthorizationDecisions.Suspended);
 
-            _userCacheServiceMock.Verify(s => s.CacheUserForGovUkIdentifier(govUkIdentifier), Times.Once);
+            _sessionStorageServiceMock.Verify(s => s.GetUserAsync(govUkIdentifier), Times.Once);
         }
 
         [Test]
@@ -150,9 +156,9 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authorization
 
             var principal = new ClaimsPrincipal(identity);
 
-            _userCacheServiceMock
-                .Setup(s => s.CacheUserForGovUkIdentifier(govUkIdentifier))
-                .ReturnsAsync(new User { LockedAt = null });
+            _sessionStorageServiceMock
+                .Setup(s => s.GetUserAsync(govUkIdentifier))
+                .ReturnsAsync(new User { Id = Guid.NewGuid(), IsLocked = false, GovUkIdentifier = "gov-123", EmailAddress = "name@domain.com" });
 
             // Act
             var result = await _sut.TransformAsync(principal);
