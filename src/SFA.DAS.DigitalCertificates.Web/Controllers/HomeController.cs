@@ -27,7 +27,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         private readonly IConfiguration _config;
         private readonly IGovUkAuthenticationService _govUkAuthenticationService;
         private readonly ILogger<HomeController> _logger;
-        
+
         #region Routes
         public const string VerifiedRouteGet = nameof(VerifiedRouteGet);
         public const string CheckRouteGet = nameof(CheckRouteGet);
@@ -40,7 +40,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         #endregion Routes
 
         public HomeController(IHomeOrchestrator homeOrchestrator,
-            IConfiguration config, IGovUkAuthenticationService govUkAuthenticationService,  
+            IConfiguration config, IGovUkAuthenticationService govUkAuthenticationService,
             IHttpContextAccessor contextAccessor, ILogger<HomeController> logger)
             : base(contextAccessor)
         {

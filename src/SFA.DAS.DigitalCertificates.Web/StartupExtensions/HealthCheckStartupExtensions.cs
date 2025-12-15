@@ -1,12 +1,12 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
 using SFA.DAS.DigitalCertificates.Web.Extensions;
 using SFA.DAS.DigitalCertificates.Web.HealthChecks;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 
 namespace SFA.DAS.DigitalCertificates.Web.StartupExtensions
 {

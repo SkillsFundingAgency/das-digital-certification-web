@@ -1,7 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
 
 namespace SFA.DAS.DigitalCertificates.Web.Models.Stub
 {
