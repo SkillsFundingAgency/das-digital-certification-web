@@ -70,22 +70,33 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         {
             var result = await _sharingOrchestrator.CreateSharing(certificateId);
 
-            return RedirectToRoute(CertificateSharingLinkRouteGet, new { certificateId });
+            return RedirectToRoute(CertificateSharingLinkRouteGet, new { certificateId, sharingId = result });
         }
 
-        [HttpGet("{certificateId}/sharingLink", Name = CertificateSharingLinkRouteGet)]
+        [HttpGet("{certificateId}/sharing/{sharingId}", Name = CertificateSharingLinkRouteGet)]
         [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsCertificateOwner))]
-        public IActionResult CertificateSharingLink(Guid certificateId)
+        public async Task<IActionResult> CertificateSharingLink(Guid certificateId, Guid sharingId)
         {
-            return View();
+            var model = await _sharingOrchestrator.GetSharingById(certificateId, sharingId);
+
+            if (model == null)
+            {
+                return RedirectToRoute(CreateCertificateSharingRouteGet, new { certificateId });
+            }
+
+            if (model.ExpiryTime <= DateTime.UtcNow)
+            {
+                return RedirectToRoute(CreateCertificateSharingRouteGet, new { certificateId });
+            }
+
+            return View(model);
         }
 
-        [HttpPost("{certificateId}/sharingLink", Name = CertificateSharingLinkRoutePost)]
+        [HttpPost("{certificateId}/sharing/{sharingId}", Name = CertificateSharingLinkRoutePost)]
         [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsCertificateOwner))]
-        public IActionResult CertificateSharingLinkPost(Guid certificateId)
+        public IActionResult CertificateSharingLinkPost(Guid certificateId, Guid sharingId)
         {
-            // Handle form submission for sharing link
-            return View();
+            return RedirectToRoute(CertificateSharingLinkRouteGet, new { certificateId, sharingId });
         }
     }
 }

@@ -1,9 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Collections.Generic;
+using System.Globalization;
+using SFA.DAS.DigitalCertificates.Web.Extensions;
 using MediatR;
 using SFA.DAS.DigitalCertificates.Application.Commands.CreateSharing;
+using SFA.DAS.DigitalCertificates.Application.Queries.GetSharingById;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetSharings;
 using SFA.DAS.DigitalCertificates.Domain.Models;
 using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
@@ -103,6 +106,51 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 
             var certificates = await _sessionStorageService.GetOwnedCertificatesAsync(govUkIdentifier);
             return certificates?.FirstOrDefault(c => c.CertificateId == certificateId);
+        }
+        public async Task<CertificateSharingLinkViewModel> GetSharingById(Guid certificateId, Guid sharingId)
+        {
+            var certificateData = await GetCertificateFromSessionAsync(certificateId);
+
+            if (certificateData == null)
+            {
+                throw new InvalidOperationException($"Certificate {certificateId} not found for authenticated user");
+            }
+
+            var response = await Mediator.Send(new GetSharingByIdQuery
+            {
+                SharingId = sharingId,
+                Limit = _digitalCertificatesWebConfiguration.SharingListLimit
+            });
+
+            if (response == null)
+            {
+                return null!;
+            }
+
+            string FormatUkDateTime(DateTime dt)
+            {
+                var local = dt.UtcToLocalTime();
+                return local.ToString("h:mmtt d MMMM yyyy", CultureInfo.GetCultureInfo("en-GB")).ToLowerInvariant();
+            }
+
+            var item = new CertificateSharingLinkViewModel
+            {
+                CertificateId = response.CertificateId,
+                CourseName = response.CourseName,
+                CertificateType = response.CertificateType,
+                SharingId = response.SharingId,
+                SharingNumber = response.SharingNumber,
+                CreatedAt = response.CreatedAt,
+                ExpiryTime = response.ExpiryTime,
+                LinkCode = response.LinkCode,
+                FormattedExpiry = response.ExpiryTime.UtcToLocalTime().ToString("h:mmtt 'on' d MMMM yyyy", CultureInfo.GetCultureInfo("en-GB")).ToLowerInvariant(),
+                FormattedCreated = FormatUkDateTime(response.CreatedAt),
+                FormattedAccessTimes = (response.SharingAccess ?? new List<DateTime>()).Select(a => FormatUkDateTime(a)).ToList()
+            };
+
+            item.SecureLink = $"{_digitalCertificatesWebConfiguration?.ServiceBaseUrl}/certificates/{item.LinkCode}";
+
+            return item;
         }
     }
 }
