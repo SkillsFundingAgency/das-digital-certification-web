@@ -9,5 +9,6 @@ namespace SFA.DAS.DigitalCertificates.Infrastructure.Configuration
         public required string RedisConnectionString { get; set; }
         public required string DataProtectionKeysDatabase { get; set; }
         public int? SharingListLimit { get; set; }
+        public int? SharingHistoryLimit { get; set; }
     }
 }

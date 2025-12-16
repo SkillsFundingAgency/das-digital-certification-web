@@ -62,7 +62,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
         {
             // Arrange
             var certificateId = Guid.NewGuid();
-            var model = new CertificateSharingViewModel
+            var model = new CreateCertificateSharingViewModel
             {
                 CertificateId = certificateId,
                 CourseName = "Test Course",

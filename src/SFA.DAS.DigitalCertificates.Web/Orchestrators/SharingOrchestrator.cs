@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Globalization;
 using SFA.DAS.DigitalCertificates.Web.Extensions;
 using MediatR;
 using SFA.DAS.DigitalCertificates.Application.Commands.CreateSharing;
@@ -29,7 +28,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             _digitalCertificatesWebConfiguration = digitalCertificatesWebConfiguration;
         }
 
-        public async Task<CertificateSharingViewModel> GetSharings(Guid certificateId)
+        public async Task<CreateCertificateSharingViewModel> GetSharings(Guid certificateId)
         {
             var userId = _userService.GetUserId()!.Value;
 
@@ -49,28 +48,28 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 
             if (response == null)
             {
-                return new CertificateSharingViewModel
+                return new CreateCertificateSharingViewModel
                 {
                     CertificateId = certificateId,
                     CourseName = certificateData.CourseName,
                     CertificateType = certificateData.CertificateType,
-                    Sharings = new List<CertificateSharingItemViewModel>()
+                    Sharings = new List<CreateCertificateSharingItemViewModel>()
                 };
             }
 
-            return new CertificateSharingViewModel
+            return new CreateCertificateSharingViewModel
             {
                 CertificateId = response.CertificateId,
                 CourseName = response.CourseName,
                 CertificateType = certificateData.CertificateType,
-                Sharings = response.Sharings?.Select(s => new CertificateSharingItemViewModel
+                Sharings = response.Sharings?.Select(s => new CreateCertificateSharingItemViewModel
                 {
                     SharingId = s.SharingId,
                     SharingNumber = s.SharingNumber,
                     CreatedAt = s.CreatedAt,
                     ExpiryTime = s.ExpiryTime
                 }).ToList()
-                ?? new List<CertificateSharingItemViewModel>()
+                ?? new List<CreateCertificateSharingItemViewModel>()
             };
         }
 
@@ -119,18 +118,12 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             var response = await Mediator.Send(new GetSharingByIdQuery
             {
                 SharingId = sharingId,
-                Limit = _digitalCertificatesWebConfiguration.SharingListLimit
+                Limit = _digitalCertificatesWebConfiguration.SharingHistoryLimit
             });
 
             if (response == null)
             {
                 return null!;
-            }
-
-            string FormatUkDateTime(DateTime dt)
-            {
-                var local = dt.UtcToLocalTime();
-                return local.ToString("h:mmtt d MMMM yyyy", CultureInfo.GetCultureInfo("en-GB")).ToLowerInvariant();
             }
 
             var item = new CertificateSharingLinkViewModel
@@ -143,9 +136,9 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 CreatedAt = response.CreatedAt,
                 ExpiryTime = response.ExpiryTime,
                 LinkCode = response.LinkCode,
-                FormattedExpiry = response.ExpiryTime.UtcToLocalTime().ToString("h:mmtt 'on' d MMMM yyyy", CultureInfo.GetCultureInfo("en-GB")).ToLowerInvariant(),
-                FormattedCreated = FormatUkDateTime(response.CreatedAt),
-                FormattedAccessTimes = (response.SharingAccess ?? new List<DateTime>()).Select(a => FormatUkDateTime(a)).ToList()
+                FormattedExpiry = response.ExpiryTime.ToUkExpiryDateTimeString(),
+                FormattedCreated = response.CreatedAt.ToUkDateTimeString(),
+                FormattedAccessTimes = (response.SharingAccess ?? new List<DateTime>()).Select(a => a.ToUkDateTimeString()).ToList()
             };
 
             item.SecureLink = $"{_digitalCertificatesWebConfiguration?.ServiceBaseUrl}/certificates/{item.LinkCode}";

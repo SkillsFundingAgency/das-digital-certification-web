@@ -1,12 +1,31 @@
 ﻿using System;
+using System.Globalization;
 
 namespace SFA.DAS.DigitalCertificates.Web.Extensions;
 
 public static class DateTimeExtensions
 {
-    private readonly static TimeZoneInfo LocalTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT Standard Time");
-    public static DateTime UtcToLocalTime(this DateTime date) => TimeZoneInfo.ConvertTimeFromUtc(date, LocalTimeZone);
-    public static string ToApiString(this DateOnly date) => date.ToString("yyyy-MM-dd");
-    public static string ToApiString(this DateTime date) => date.ToString("yyyy-MM-dd");
-    public static string ToScreenString(this DateTime date) => date.ToString("dd/MM/yyyy");
+    private static readonly TimeZoneInfo UkTimeZone =
+        TimeZoneInfo.FindSystemTimeZoneById("GMT Standard Time");
+
+    public static DateTime UtcToUkLocalTime(this DateTime date)
+    {
+        return TimeZoneInfo.ConvertTimeFromUtc(date, UkTimeZone);
+    }
+
+    public static string ToUkDateTimeString(this DateTime date)
+    {
+        return date
+            .UtcToUkLocalTime()
+            .ToString("h:mmtt d MMMM yyyy", CultureInfo.GetCultureInfo("en-GB"))
+            .ToLowerInvariant();
+    }
+
+    public static string ToUkExpiryDateTimeString(this DateTime date)
+    {
+        return date
+            .UtcToUkLocalTime()
+            .ToString("h:mmtt 'on' d MMMM yyyy", CultureInfo.GetCultureInfo("en-GB"))
+            .ToLowerInvariant();
+    }
 }
