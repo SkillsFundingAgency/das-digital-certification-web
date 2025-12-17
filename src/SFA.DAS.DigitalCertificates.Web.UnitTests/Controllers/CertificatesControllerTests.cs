@@ -103,5 +103,99 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             result.RouteValues["certificateId"].Should().Be(certificateId);
             _sharingOrchestratorMock.Verify(s => s.CreateSharing(certificateId), Times.Once);
         }
+
+        [Test]
+        public async Task CertificateSharingLink_Returns_View_When_Model_Valid()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+            var sharingId = Guid.NewGuid();
+
+            var model = new CertificateSharingLinkViewModel
+            {
+                CertificateId = certificateId,
+                CourseName = "Course",
+                CertificateType = Domain.Models.CertificateType.Standard,
+                SharingId = sharingId,
+                SharingNumber =1,
+                CreatedAt = DateTime.UtcNow.AddMinutes(-5),
+                ExpiryTime = DateTime.UtcNow.AddMinutes(5),
+                LinkCode = Guid.NewGuid(),
+                FormattedExpiry = DateTime.UtcNow.AddMinutes(5).ToString(),
+                FormattedCreated = DateTime.UtcNow.AddMinutes(-5).ToString(),
+                FormattedAccessTimes = new System.Collections.Generic.List<string>()
+            };
+
+            _sharingOrchestratorMock
+                .Setup(s => s.GetSharingById(certificateId, sharingId))
+                .ReturnsAsync(model);
+
+            // Act
+            var result = await _sut.CertificateSharingLink(certificateId, sharingId) as ViewResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            result!.Model.Should().BeEquivalentTo(model);
+            _sharingOrchestratorMock.Verify(s => s.GetSharingById(certificateId, sharingId), Times.Once);
+        }
+
+        [Test]
+        public async Task CertificateSharingLink_Redirects_To_SharingList_When_Model_Null()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+            var sharingId = Guid.NewGuid();
+
+            _sharingOrchestratorMock
+                .Setup(s => s.GetSharingById(certificateId, sharingId))
+                .ReturnsAsync((CertificateSharingLinkViewModel)null!);
+
+            // Act
+            var result = await _sut.CertificateSharingLink(certificateId, sharingId) as RedirectToRouteResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            result!.RouteName.Should().Be(CertificatesController.CreateCertificateSharingRouteGet);
+            result.RouteValues.Should().ContainKey("certificateId");
+            result.RouteValues["certificateId"].Should().Be(certificateId);
+            _sharingOrchestratorMock.Verify(s => s.GetSharingById(certificateId, sharingId), Times.Once);
+        }
+
+        [Test]
+        public async Task CertificateSharingLink_Redirects_To_SharingList_When_Model_Expired()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+            var sharingId = Guid.NewGuid();
+
+            var model = new CertificateSharingLinkViewModel
+            {
+                CertificateId = certificateId,
+                CourseName = "Course",
+                CertificateType = Domain.Models.CertificateType.Standard,
+                SharingId = sharingId,
+                SharingNumber =1,
+                CreatedAt = DateTime.UtcNow.AddDays(-10),
+                ExpiryTime = DateTime.UtcNow.AddDays(-1), // expired
+                LinkCode = Guid.NewGuid(),
+                FormattedExpiry = DateTime.UtcNow.AddDays(-1).ToString(),
+                FormattedCreated = DateTime.UtcNow.AddDays(-10).ToString(),
+                FormattedAccessTimes = new System.Collections.Generic.List<string>()
+            };
+
+            _sharingOrchestratorMock
+                .Setup(s => s.GetSharingById(certificateId, sharingId))
+                .ReturnsAsync(model);
+
+            // Act
+            var result = await _sut.CertificateSharingLink(certificateId, sharingId) as RedirectToRouteResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            result!.RouteName.Should().Be(CertificatesController.CreateCertificateSharingRouteGet);
+            result.RouteValues.Should().ContainKey("certificateId");
+            result.RouteValues["certificateId"].Should().Be(certificateId);
+            _sharingOrchestratorMock.Verify(s => s.GetSharingById(certificateId, sharingId), Times.Once);
+        }
     }
 }
