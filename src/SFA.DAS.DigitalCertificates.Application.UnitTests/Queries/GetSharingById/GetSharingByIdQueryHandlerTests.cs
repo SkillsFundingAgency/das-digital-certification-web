@@ -38,8 +38,8 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetSharingBy
                 CreatedAt = new DateTime(2024, 1, 1, 10, 0, 0, DateTimeKind.Unspecified),
                 LinkCode = Guid.NewGuid(),
                 ExpiryTime = new DateTime(2024, 2, 1, 10, 0, 0, DateTimeKind.Unspecified),
-                SharingAccess = new System.Collections.Generic.List<DateTime> { new DateTime(2024, 1, 2, 9, 0, 0) },
-                SharingEmails = new System.Collections.Generic.List<SharingEmailItem>
+                SharingAccess = new List<DateTime> { new DateTime(2024, 1, 2, 9, 0, 0) },
+                SharingEmails = new List<SharingEmailItem>
                 {
                     new SharingEmailItem
                     {
@@ -47,7 +47,7 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetSharingBy
                         EmailAddress = "test@example.com",
                         EmailLinkCode = Guid.NewGuid(),
                         SentTime = new DateTime(2024,1,1,11,0,0),
-                        SharingEmailAccess = new System.Collections.Generic.List<DateTime> { new DateTime(2024,1,2,10,0,0) }
+                        SharingEmailAccess = new List<DateTime> { new DateTime(2024,1,2,10,0,0) }
                     }
                 }
             };
