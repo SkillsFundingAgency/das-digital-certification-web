@@ -1,11 +1,13 @@
-﻿using System;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using SFA.DAS.DigitalCertificates.Domain.Models;
 using SFA.DAS.DigitalCertificates.Web.Authentication;
 using SFA.DAS.DigitalCertificates.Web.Orchestrators;
 using SFA.DAS.GovUK.Auth.Authentication;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace SFA.DAS.DigitalCertificates.Web.Controllers
 {
@@ -39,14 +41,30 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         public async Task<IActionResult> CertificatesList()
         {
             var viewModel = await _certificatesOrchestrator.GetCertificatesListViewModel();
+
+            var certificates = viewModel?.Certificates;
+            if (certificates == null || certificates.Count == 0)
+                return View(viewModel);
+
+            var standards = certificates.Where(c => c.CertificateType == CertificateType.Standard).ToList();
+            var frameworks = certificates.Where(c => c.CertificateType == CertificateType.Framework).ToList();
+
+            if (standards.Count == 1 && frameworks.Count == 0)
+                return RedirectToRoute(CertificateStandardRouteGet, new { certificateId = standards[0].CertificateId });
+
+            if (frameworks.Count == 1 && standards.Count == 0)
+                return RedirectToRoute(CertificateFrameworkRouteGet, new { certificateId = frameworks[0].CertificateId });
+
             return View(viewModel);
         }
 
         [HttpGet("{certificateId}/standard", Name = CertificateStandardRouteGet)]
         [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsCertificateOwner))]
-        public IActionResult CertificateStandard(Guid certificateId)
+        public async Task<IActionResult> CertificateStandard(Guid certificateId)
         {
-            return View();
+            var model = await _certificatesOrchestrator.GetCertificateStandardViewModel(certificateId);
+
+            return View(model);
         }
 
         [HttpGet("{certificateId}/framework", Name = CertificateFrameworkRouteGet)]

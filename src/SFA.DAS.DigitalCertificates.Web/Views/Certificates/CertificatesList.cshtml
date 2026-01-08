@@ -1,5 +1,6 @@
 ﻿@using SFA.DAS.DigitalCertificates.Web.Controllers
 @using SFA.DAS.DigitalCertificates.Web.ViewDataKeys
+@using SFA.DAS.DigitalCertificates.Domain.Models
 @model SFA.DAS.DigitalCertificates.Web.Models.Certificates.CertificatesListViewModel
 @{
     ViewData[ViewDataKeys.Title] = "Your apprenticeship courses";
@@ -23,12 +24,18 @@
                     </tr>
                 </thead>
                 <tbody class="govuk-table__body">
-                    @if(Model.Certificates != null)
+                    @if (Model.Certificates != null)
                     {
                         foreach (var certificate in Model.Certificates)
                         {
+                            var routeName = certificate.CertificateType == CertificateType.Framework
+                            ? CertificatesController.CertificateFrameworkRouteGet
+                            : CertificatesController.CertificateStandardRouteGet;
+
                             <tr class="govuk-table__row">
-                                <td class="govuk-table__cell"><a href="">@certificate.CourseName</a></td>
+                                <td class="govuk-table__cell">
+                                    <a href="@Url.RouteUrl(routeName, new { certificateId = certificate.CertificateId })">@certificate.CourseName</a>
+                                </td>
                                 <td class="govuk-table__cell">@certificate.CourseLevel</td>
                                 <td class="govuk-table__cell">@certificate.DateAwarded.ToString("dd MMMM yyyy")</td>
                             </tr>
