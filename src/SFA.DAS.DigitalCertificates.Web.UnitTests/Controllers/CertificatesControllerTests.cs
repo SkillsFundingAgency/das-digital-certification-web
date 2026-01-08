@@ -238,5 +238,36 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             result.RouteValues["certificateId"].Should().Be(certificateId);
             _sharingOrchestratorMock.Verify(s => s.GetSharingById(certificateId, sharingId), Times.Once);
         }
+
+        [Test]
+        public async Task CertificatesList_Returns_View_When_MultipleCertificates()
+        {
+            // Arrange
+            var cert1 = Guid.NewGuid();
+            var cert2 = Guid.NewGuid();
+
+            var certs = new List<Certificate>
+            {
+                new Certificate { CertificateId = cert1, CertificateType = CertificateType.Standard, CourseName = "Course A", CourseLevel = "1" },
+                new Certificate { CertificateId = cert2, CertificateType = CertificateType.Framework, CourseName = "Course B", CourseLevel = "2" }
+            };
+
+            var viewModel = new CertificatesListViewModel
+            {
+                Certificates = certs
+            };
+
+            _certificatesOrchestratorMock
+                .Setup(x => x.GetCertificatesListViewModel())
+                .ReturnsAsync(viewModel);
+
+            // Act
+            var result = await _sut.CertificatesList() as ViewResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            result!.Model.Should().BeEquivalentTo(viewModel);
+            _certificatesOrchestratorMock.Verify(x => x.GetCertificatesListViewModel(), Times.Once);
+        }
     }
 }

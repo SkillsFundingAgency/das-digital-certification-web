@@ -36,32 +36,32 @@
                         @if (!string.IsNullOrEmpty(Model?.GivenNames))
                         {
                             <tr class="govuk-table__row">
-                                <th scope="row" class="govuk-table__header">First name</th>
-                                <td class="govuk-table__cell">@Model.GivenNames</td>
+                                <th scope="row" class="govuk-table__header govuk-!-width-one-third">First name</th>
+                                <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.GivenNames</td>
                             </tr>
                         }
 
                         @if (!string.IsNullOrEmpty(Model?.FamilyName))
                         {
                             <tr class="govuk-table__row">
-                                <th scope="row" class="govuk-table__header">Last name</th>
-                                <td class="govuk-table__cell">@Model.FamilyName</td>
+                                <th scope="row" class="govuk-table__header govuk-!-width-one-third">Last name</th>
+                                <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.FamilyName</td>
                             </tr>
                         }
 
                         @if (!string.IsNullOrEmpty(Model?.Uln))
                         {
                             <tr class="govuk-table__row">
-                                <th scope="row" class="govuk-table__header">Unique learner number</th>
-                                <td class="govuk-table__cell">@Model.Uln</td>
+                                <th scope="row" class="govuk-table__header govuk-!-width-one-third">Unique learner number</th>
+                                <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.Uln</td>
                             </tr>
                         }
 
                         @if (!string.IsNullOrEmpty(Model?.CertificateReference))
                         {
                             <tr class="govuk-table__row">
-                                <th scope="row" class="govuk-table__header">Certificate number</th>
-                                <td class="govuk-table__cell">@Model.CertificateReference</td>
+                                <th scope="row" class="govuk-table__header govuk-!-width-one-third">Certificate number</th>
+                                <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.CertificateReference</td>
                             </tr>
                         }
                     </tbody>
@@ -75,72 +75,72 @@
                             @if (!string.IsNullOrEmpty(Model?.CourseName))
                             {
                                 <tr class="govuk-table__row">
-                                    <th scope="row" class="govuk-table__header">Course</th>
-                                    <td class="govuk-table__cell">@Model.CourseName</td>
+                                    <th scope="row" class="govuk-table__header govuk-!-width-one-third">Course</th>
+                                    <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.CourseName</td>
                                 </tr>
                             }
 
                             @if (!string.IsNullOrEmpty(Model?.CourseLevel))
                             {
                                 <tr class="govuk-table__row">
-                                    <th scope="row" class="govuk-table__header">Level</th>
-                                    <td class="govuk-table__cell">@Model.CourseLevel</td>
+                                    <th scope="row" class="govuk-table__header govuk-!-width-one-third">Level</th>
+                                    <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.CourseLevel</td>
                                 </tr>
                             }
 
                             @if (!string.IsNullOrEmpty(Model?.CourseOption))
                             {
                                 <tr class="govuk-table__row">
-                                    <th scope="row" class="govuk-table__header">Option</th>
-                                    <td class="govuk-table__cell">@Model.CourseOption</td>
+                                    <th scope="row" class="govuk-table__header govuk-!-width-one-third">Option</th>
+                                    <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.CourseOption</td>
                                 </tr>
                             }
 
                             @if (!string.IsNullOrEmpty(Model?.ProviderName))
                             {
                                 <tr class="govuk-table__row">
-                                    <th scope="row" class="govuk-table__header">Training provider</th>
-                                    <td class="govuk-table__cell">@Model.ProviderName</td>
+                                    <th scope="row" class="govuk-table__header govuk-!-width-one-third">Training provider</th>
+                                    <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.ProviderName</td>
                                 </tr>
                             }
 
                             @if (!string.IsNullOrEmpty(Model?.AssessorName))
                             {
                                 <tr class="govuk-table__row">
-                                    <th scope="row" class="govuk-table__header">Assessment organisation</th>
-                                    <td class="govuk-table__cell">@Model.AssessorName</td>
+                                    <th scope="row" class="govuk-table__header govuk-!-width-one-third">Assessment organisation</th>
+                                    <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.AssessorName</td>
                                 </tr>
                             }
 
                             @if (!string.IsNullOrEmpty(Model?.EmployerName))
                             {
                                 <tr class="govuk-table__row">
-                                    <th scope="row" class="govuk-table__header">Employer</th>
-                                    <td class="govuk-table__cell">@Model.EmployerName</td>
+                                    <th scope="row" class="govuk-table__header govuk-!-width-one-third">Employer</th>
+                                    <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.EmployerName</td>
                                 </tr>
                             }
 
                             @if (Model?.StartDate != null)
                             {
                                 <tr class="govuk-table__row">
-                                    <th scope="row" class="govuk-table__header">Start date</th>
-                                    <td class="govuk-table__cell">@Model.StartDate?.ToString("dd MMMM yyyy")</td>
+                                    <th scope="row" class="govuk-table__header govuk-!-width-one-third">Start date</th>
+                                    <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.StartDate?.ToString("dd MMMM yyyy")</td>
                                 </tr>
                             }
 
                             @if (Model?.DateAwarded != null)
                             {
                                 <tr class="govuk-table__row">
-                                    <th scope="row" class="govuk-table__header">Date awarded</th>
-                                    <td class="govuk-table__cell">@Model.DateAwarded?.ToString("dd MMMM yyyy")</td>
+                                    <th scope="row" class="govuk-table__header govuk-!-width-one-third">Date awarded</th>
+                                    <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.DateAwarded?.ToString("dd MMMM yyyy")</td>
                                 </tr>
                             }
 
                             @if (!string.IsNullOrEmpty(Model?.OverallGrade))
                             {
                                 <tr class="govuk-table__row">
-                                    <th scope="row" class="govuk-table__header">Result</th>
-                                    <td class="govuk-table__cell">@Model.OverallGrade</td>
+                                    <th scope="row" class="govuk-table__header govuk-!-width-one-third">Result</th>
+                                    <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.OverallGrade</td>
                                 </tr>
                             }
                         </tbody>
