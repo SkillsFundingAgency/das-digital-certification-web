@@ -20,15 +20,18 @@
 
                 <h1 class="govuk-heading-m">@Model?.CourseName</h1>
 
-                @if (!string.IsNullOrEmpty(Model?.OverallGrade))
-                {
-                    <div class="govuk-panel govuk-panel--confirmation">
-                        <div class="govuk-panel__body">
-                            Your result is<br />
-                            <span class="govuk-panel__title">@Model.OverallGrade</span>
-                        </div>
+                <div class="govuk-panel govuk-panel--confirmation">
+                    <div class="govuk-panel__body">
+                        @if (!string.IsNullOrEmpty(Model?.OverallGrade))
+                        {
+                            <span class="govuk-panel__title">You have passed your apprenticeship with @Model.OverallGrade?.ToLowerInvariant()</span>
+                        }
+                        else
+                        {
+                            <span class="govuk-panel__title">You have passed your apprenticeship</span>
+                        }
                     </div>
-                }
+                </div>
 
                 <table class="govuk-table">
                     <caption class="govuk-table__caption govuk-table__caption--m">Your details</caption>
@@ -136,11 +139,12 @@
                                 </tr>
                             }
 
+                            @* Result row only shown when grade is available *@
                             @if (!string.IsNullOrEmpty(Model?.OverallGrade))
                             {
                                 <tr class="govuk-table__row">
                                     <th scope="row" class="govuk-table__header govuk-!-width-one-third">Result</th>
-                                    <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.OverallGrade</td>
+                                    <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.OverallGrade?.ToLowerInvariant()</td>
                                 </tr>
                             }
                         </tbody>
