@@ -139,12 +139,11 @@
                                 </tr>
                             }
 
-                            @* Result row only shown when grade is available *@
                             @if (!string.IsNullOrEmpty(Model?.OverallGrade))
                             {
                                 <tr class="govuk-table__row">
                                     <th scope="row" class="govuk-table__header govuk-!-width-one-third">Result</th>
-                                    <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.OverallGrade?.ToLowerInvariant()</td>
+                                    <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.OverallGrade</td>
                                 </tr>
                             }
                         </tbody>
