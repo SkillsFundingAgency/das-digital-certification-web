@@ -6,7 +6,7 @@ using FluentAssertions;
 using MediatR;
 using Moq;
 using NUnit.Framework;
-using SFA.DAS.DigitalCertificates.Application.Queries.GetCertificateById;
+using SFA.DAS.DigitalCertificates.Application.Queries.GetStandardCertificate;
 using SFA.DAS.DigitalCertificates.Domain.Models;
 using SFA.DAS.DigitalCertificates.Web.Orchestrators;
 using SFA.DAS.DigitalCertificates.Web.Services;
@@ -114,8 +114,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             var certificateId = Guid.NewGuid();
 
             _mediatorMock
-                .Setup(m => m.Send(It.Is<GetCertificateByIdQuery>(q => q.CertificateId == certificateId), It.IsAny<CancellationToken>()))
-                .ReturnsAsync((GetCertificateByIdQueryResult)null);
+                .Setup(m => m.Send(It.Is<GetStandardCertificateQuery>(q => q.CertificateId == certificateId), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((GetStandardCertificateQueryResult)null);
 
             // Act
             var result = await _sut.GetCertificateStandardViewModel(certificateId);
@@ -131,17 +131,17 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             var certificateId = Guid.NewGuid();
             var govId = "gov-456";
 
-            var mediatorResult = new GetCertificateByIdQueryResult
+            var mediatorResult = new GetStandardCertificateQueryResult
             {
                 FamilyName = "Smith",
                 GivenNames = "John",
-                Uln = "123456",
+                Uln = 123456,
                 CertificateType = "Standard",
                 CertificateReference = "ABC123",
                 CourseCode = "C1",
                 CourseName = "Bricklayer",
                 CourseOption = "Opt",
-                CourseLevel = "2",
+                CourseLevel = 2,
                 DateAwarded = DateTime.UtcNow.Date,
                 OverallGrade = "Pass",
                 ProviderName = "Provider",
@@ -154,7 +154,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             };
 
             _mediatorMock
-                .Setup(m => m.Send(It.Is<GetCertificateByIdQuery>(q => q.CertificateId == certificateId), It.IsAny<CancellationToken>()))
+                .Setup(m => m.Send(It.Is<GetStandardCertificateQuery>(q => q.CertificateId == certificateId), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(mediatorResult);
 
             _userServiceMock
@@ -203,18 +203,18 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             var certificateId = Guid.NewGuid();
             var govId = "gov-789";
 
-            var mediatorResult = new GetCertificateByIdQueryResult
+            var mediatorResult = new GetStandardCertificateQueryResult
             {
                 FamilyName = "Jones",
                 GivenNames = "Amy",
-                Uln = "654321",
+                Uln = 654321,
                 CertificateType = "Standard",
                 CourseName = "Plumber",
-                CourseLevel = "3"
+                CourseLevel = 3
             };
 
             _mediatorMock
-                .Setup(m => m.Send(It.IsAny<GetCertificateByIdQuery>(), It.IsAny<CancellationToken>()))
+                .Setup(m => m.Send(It.IsAny<GetStandardCertificateQuery>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(mediatorResult);
 
             _userServiceMock

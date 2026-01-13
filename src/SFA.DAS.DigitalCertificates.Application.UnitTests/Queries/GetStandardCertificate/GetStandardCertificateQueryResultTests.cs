@@ -1,20 +1,20 @@
 using FluentAssertions;
 using NUnit.Framework;
-using SFA.DAS.DigitalCertificates.Application.Queries.GetCertificateById;
+using SFA.DAS.DigitalCertificates.Application.Queries.GetStandardCertificate;
 using SFA.DAS.DigitalCertificates.Infrastructure.Api.Responses;
 
-namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetCertificate
+namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetStandardCertificate
 {
-    public class GetCertificateByIdQueryResultTests
+    public class GetStandardCertificateQueryResultTests
     {
         [Test]
         public void When_SourceIsNull_Then_ResultIsNull()
         {
             // Arrange
-            GetCertificateByIdResponse? source = null;
+            GetStandardCertificateResponse? source = null;
 
             // Act
-            GetCertificateByIdQueryResult? result = source;
+            GetStandardCertificateQueryResult? result = source;
 
             // Assert
             result.Should().BeNull();
@@ -24,30 +24,30 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetCertifica
         public void When_SourceHasValues_Then_MapsAllFields()
         {
             // Arrange
-            var source = new GetCertificateByIdResponse
+            var source = new GetStandardCertificateResponse
             {
                 FamilyName = "Family",
                 GivenNames = "Given",
-                Uln = "1234567890",
+                Uln = 1234567890,
                 CertificateType = "Standard",
                 CertificateReference = "REF123",
                 CourseCode = "C1",
                 CourseName = "Course",
                 CourseOption = "Opt",
-                CourseLevel = "2",
-                DateAwarded = System.DateTime.UtcNow.Date,
+                CourseLevel = 2,
+                DateAwarded = DateTime.UtcNow.Date,
                 OverallGrade = "Pass",
                 ProviderName = "Provider",
                 Ukprn = "100000",
                 EmployerName = "Employer",
                 AssessorName = "Assessor",
-                StartDate = System.DateTime.UtcNow.AddYears(-1),
-                PrintRequestedAt = System.DateTime.UtcNow.AddDays(-2),
+                StartDate = DateTime.UtcNow.AddYears(-1),
+                PrintRequestedAt = DateTime.UtcNow.AddDays(-2),
                 PrintRequestedBy = "Requester"
             };
 
             // Act
-            GetCertificateByIdQueryResult? result = source;
+            GetStandardCertificateQueryResult? result = source;
 
             // Assert
             result.Should().NotBeNull();

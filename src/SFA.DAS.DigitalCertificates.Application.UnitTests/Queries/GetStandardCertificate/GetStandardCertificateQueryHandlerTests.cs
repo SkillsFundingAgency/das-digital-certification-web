@@ -1,23 +1,23 @@
 using FluentAssertions;
 using Moq;
 using NUnit.Framework;
-using SFA.DAS.DigitalCertificates.Application.Queries.GetCertificateById;
+using SFA.DAS.DigitalCertificates.Application.Queries.GetStandardCertificate;
 using SFA.DAS.DigitalCertificates.Domain.Interfaces;
 using SFA.DAS.DigitalCertificates.Infrastructure.Api.Responses;
 
-namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetCertificate
+namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetStandardCertificate
 {
     [TestFixture]
-    public class GetCertificateByIdQueryHandlerTests
+    public class GetStandardCertificateQueryHandlerTests
     {
         private Mock<IDigitalCertificatesOuterApi> _outerApiMock;
-        private GetCertificateByIdQueryHandler _sut;
+        private GetStandardCertificateQueryHandler _sut;
 
         [SetUp]
         public void SetUp()
         {
             _outerApiMock = new Mock<IDigitalCertificatesOuterApi>();
-            _sut = new GetCertificateByIdQueryHandler(_outerApiMock.Object);
+            _sut = new GetStandardCertificateQueryHandler(_outerApiMock.Object);
         }
 
         [Test]
@@ -26,17 +26,17 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetCertifica
             // Arrange
             var certificateId = Guid.NewGuid();
 
-            var response = new GetCertificateByIdResponse
+            var response = new GetStandardCertificateResponse
             {
                 FamilyName = "Family",
                 GivenNames = "Given",
-                Uln = "1234567890",
+                Uln = 1234567890,
                 CertificateType = "Standard",
                 CertificateReference = "REF123",
                 CourseCode = "C1",
                 CourseName = "Course",
                 CourseOption = "Opt",
-                CourseLevel = "2",
+                CourseLevel = 2,
                 DateAwarded = DateTime.UtcNow.Date,
                 OverallGrade = "Pass",
                 ProviderName = "Provider",
@@ -49,10 +49,10 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetCertifica
             };
 
             _outerApiMock
-                .Setup(x => x.GetCertificateById(certificateId))
+                .Setup(x => x.GetStandardCertificate(certificateId))
                 .ReturnsAsync(response);
 
-            var request = new GetCertificateByIdQuery { CertificateId = certificateId };
+            var request = new GetStandardCertificateQuery { CertificateId = certificateId };
 
             // Act
             var result = await _sut.Handle(request, CancellationToken.None);
@@ -78,7 +78,7 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetCertifica
             result.PrintRequestedAt.Should().Be(response.PrintRequestedAt);
             result.PrintRequestedBy.Should().Be(response.PrintRequestedBy);
 
-            _outerApiMock.Verify(x => x.GetCertificateById(certificateId), Times.Once);
+            _outerApiMock.Verify(x => x.GetStandardCertificate(certificateId), Times.Once);
         }
 
         [Test]
@@ -87,17 +87,17 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetCertifica
             // Arrange
             var certificateId = Guid.NewGuid();
             _outerApiMock
-                .Setup(x => x.GetCertificateById(certificateId))
-                .Returns(() => Task.FromResult<GetCertificateByIdResponse>(null!));
+                .Setup(x => x.GetStandardCertificate(certificateId))
+                .Returns(() => Task.FromResult<GetStandardCertificateResponse>(null!));
 
-            var request = new GetCertificateByIdQuery { CertificateId = certificateId };
+            var request = new GetStandardCertificateQuery { CertificateId = certificateId };
 
             // Act
             var result = await _sut.Handle(request, CancellationToken.None);
 
             // Assert
             result.Should().BeNull();
-            _outerApiMock.Verify(x => x.GetCertificateById(certificateId), Times.Once);
+            _outerApiMock.Verify(x => x.GetStandardCertificate(certificateId), Times.Once);
         }
 
         [Test]
@@ -107,10 +107,10 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetCertifica
             var certificateId = Guid.NewGuid();
 
             _outerApiMock
-                .Setup(x => x.GetCertificateById(It.IsAny<Guid>()))
+                .Setup(x => x.GetStandardCertificate(It.IsAny<Guid>()))
                 .ThrowsAsync(new Exception("API failure"));
 
-            var request = new GetCertificateByIdQuery { CertificateId = certificateId };
+            var request = new GetStandardCertificateQuery { CertificateId = certificateId };
 
             // Act
             Func<Task> act = async () => await _sut.Handle(request, CancellationToken.None);
