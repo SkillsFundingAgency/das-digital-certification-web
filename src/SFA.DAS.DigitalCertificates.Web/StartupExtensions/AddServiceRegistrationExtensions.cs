@@ -14,6 +14,7 @@ using SFA.DAS.DigitalCertificates.Web.Orchestrators;
 using SFA.DAS.DigitalCertificates.Web.Services;
 using SFA.DAS.GovUK.Auth.Authentication;
 using SFA.DAS.Http.Configuration;
+using SFA.DAS.DigitalCertificates.Domain.Extensions;
 
 namespace SFA.DAS.DigitalCertificates.Web.StartupExtensions
 {
@@ -41,6 +42,8 @@ namespace SFA.DAS.DigitalCertificates.Web.StartupExtensions
             services.AddTransient<ISharingOrchestrator, SharingOrchestrator>();
 
             services.AddTransient<IClaimsTransformation, DigitalCertificatesClaimsTransformer>();
+
+            services.AddScoped<IDateTimeHelper, UtcTimeProvider>();
 
             return services;
         }
