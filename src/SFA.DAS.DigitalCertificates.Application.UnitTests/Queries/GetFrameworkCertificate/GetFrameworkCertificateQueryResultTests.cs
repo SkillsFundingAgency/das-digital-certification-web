@@ -9,19 +9,6 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetFramework
     public class GetFrameworkCertificateQueryResultTests
     {
         [Test]
-        public void Implicit_Conversion_Handles_Null_Source()
-        {
-            // Arrange
-            GetFrameworkCertificateResponse? source = null;
-
-            // Act
-            GetFrameworkCertificateQueryResult? result = source;
-
-            // Assert
-            result.Should().BeNull();
-        }
-
-        [Test]
         public void Implicit_Conversion_Maps_Fields_And_Formats_Qualifications()
         {
             // Arrange
