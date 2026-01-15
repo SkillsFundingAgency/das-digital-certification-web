@@ -2,7 +2,7 @@ using SFA.DAS.DigitalCertificates.Infrastructure.Api.Responses;
 
 namespace SFA.DAS.DigitalCertificates.Application.Queries.GetFrameworkCertificate
 {
-    public class GetFrameworkCertificateResult
+    public class GetFrameworkCertificateQueryResult
     {
         public string? FamilyName { get; set; }
         public string? GivenNames { get; set; }
@@ -29,11 +29,11 @@ namespace SFA.DAS.DigitalCertificates.Application.Queries.GetFrameworkCertificat
         public long? Ukprn { get; set; }
         public List<string>? DeliveryInformation { get; set; }
 
-        public static implicit operator GetFrameworkCertificateResult?(GetFrameworkCertificateResponse? source)
+        public static implicit operator GetFrameworkCertificateQueryResult?(GetFrameworkCertificateResponse? source)
         {
             if (source is null) return null;
 
-            return new GetFrameworkCertificateResult
+            return new GetFrameworkCertificateQueryResult
             {
                 FamilyName = source.FamilyName,
                 GivenNames = source.GivenNames,

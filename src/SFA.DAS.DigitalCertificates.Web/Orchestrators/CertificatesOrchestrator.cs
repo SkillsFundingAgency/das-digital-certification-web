@@ -1,5 +1,4 @@
 ﻿using MediatR;
-using SFA.DAS.DigitalCertificates.Application.Queries.GetCertificateById;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetFrameworkCertificate;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetStandardCertificate;
 using SFA.DAS.DigitalCertificates.Domain.Models;

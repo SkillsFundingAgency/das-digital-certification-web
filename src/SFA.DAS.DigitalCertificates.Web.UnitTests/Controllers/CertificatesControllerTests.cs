@@ -99,6 +99,33 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
         }
 
         [Test]
+        public async Task CertificateFramework_Returns_View()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+
+            var model = new CertificateFrameworkViewModel
+            {
+                CertificateId = certificateId,
+                CourseName = "Test Course",
+                CertificateType = Domain.Models.CertificateType.Framework,
+                ShowBackLink = false
+            };
+
+            _certificatesOrchestratorMock
+                .Setup(c => c.GetCertificateFrameworkViewModel(certificateId))
+                .ReturnsAsync(model);
+
+            // Act
+            var result = await _sut.CertificateFramework(certificateId) as ViewResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            result!.Model.Should().BeEquivalentTo(model);
+            _certificatesOrchestratorMock.Verify(c => c.GetCertificateFrameworkViewModel(certificateId), Times.Once);
+        }
+
+        [Test]
         public async Task CreateCertificateSharing_Get_Returns_View_With_Model()
         {
             // Arrange
@@ -158,7 +185,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
                 CourseName = "Course",
                 CertificateType = Domain.Models.CertificateType.Standard,
                 SharingId = sharingId,
-                SharingNumber =1,
+                SharingNumber = 1,
                 CreatedAt = DateTime.UtcNow.AddMinutes(-5),
                 ExpiryTime = DateTime.UtcNow.AddMinutes(5),
                 LinkCode = Guid.NewGuid(),
@@ -215,7 +242,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
                 CourseName = "Course",
                 CertificateType = Domain.Models.CertificateType.Standard,
                 SharingId = sharingId,
-                SharingNumber =1,
+                SharingNumber = 1,
                 CreatedAt = DateTime.UtcNow.AddDays(-10),
                 ExpiryTime = DateTime.UtcNow.AddDays(-1), // expired
                 LinkCode = Guid.NewGuid(),
