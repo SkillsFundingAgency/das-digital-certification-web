@@ -1,18 +1,18 @@
 using SFA.DAS.DigitalCertificates.Infrastructure.Api.Responses;
 
-namespace SFA.DAS.DigitalCertificates.Application.Queries.GetCertificateById
+namespace SFA.DAS.DigitalCertificates.Application.Queries.GetStandardCertificate
 {
-    public class GetCertificateByIdQueryResult
+    public class GetStandardCertificateQueryResult
     {
         public string? FamilyName { get; set; }
         public string? GivenNames { get; set; }
-        public string? Uln { get; set; }
+        public long? Uln { get; set; }
         public required string CertificateType { get; set; }
         public string? CertificateReference { get; set; }
         public string? CourseCode { get; set; }
         public string? CourseName { get; set; }
         public string? CourseOption { get; set; }
-        public string? CourseLevel { get; set; }
+        public int? CourseLevel { get; set; }
         public DateTime? DateAwarded { get; set; }
         public string? OverallGrade { get; set; }
         public string? ProviderName { get; set; }
@@ -23,14 +23,14 @@ namespace SFA.DAS.DigitalCertificates.Application.Queries.GetCertificateById
         public DateTime? PrintRequestedAt { get; set; }
         public string? PrintRequestedBy { get; set; }
 
-        public static implicit operator GetCertificateByIdQueryResult?(GetCertificateByIdResponse? source)
+        public static implicit operator GetStandardCertificateQueryResult?(GetStandardCertificateResponse? source)
         {
             if (source == null)
             {
                 return null;
             }
 
-            return new GetCertificateByIdQueryResult
+            return new GetStandardCertificateQueryResult
             {
                 FamilyName = source.FamilyName,
                 GivenNames = source.GivenNames,

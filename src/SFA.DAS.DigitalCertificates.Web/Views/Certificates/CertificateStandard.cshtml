@@ -52,7 +52,7 @@
                             </tr>
                         }
 
-                        @if (!string.IsNullOrEmpty(Model?.Uln))
+                        @if (Model?.Uln != null)
                         {
                             <tr class="govuk-table__row">
                                 <th scope="row" class="govuk-table__header govuk-!-width-one-third">Unique learner number</th>
@@ -70,7 +70,7 @@
                     </tbody>
                 </table>
 
-                @if (!string.IsNullOrEmpty(Model?.CourseName) || !string.IsNullOrEmpty(Model?.CourseLevel) || !string.IsNullOrEmpty(Model?.CourseOption) || !string.IsNullOrEmpty(Model?.ProviderName) || !string.IsNullOrEmpty(Model?.AssessorName) || !string.IsNullOrEmpty(Model?.EmployerName) || Model?.StartDate != null || Model?.DateAwarded != null || !string.IsNullOrEmpty(Model?.OverallGrade))
+                @if (!string.IsNullOrEmpty(Model?.CourseName) || Model?.CourseLevel != null || !string.IsNullOrEmpty(Model?.CourseOption) || !string.IsNullOrEmpty(Model?.ProviderName) || !string.IsNullOrEmpty(Model?.AssessorName) || !string.IsNullOrEmpty(Model?.EmployerName) || Model?.StartDate != null || Model?.DateAwarded != null || !string.IsNullOrEmpty(Model?.OverallGrade))
                 {
                     <table class="govuk-table">
                         <caption class="govuk-table__caption govuk-table__caption--m">Apprenticeship details</caption>
@@ -83,7 +83,7 @@
                                 </tr>
                             }
 
-                            @if (!string.IsNullOrEmpty(Model?.CourseLevel))
+                            @if (Model?.CourseLevel != null)
                             {
                                 <tr class="govuk-table__row">
                                     <th scope="row" class="govuk-table__header govuk-!-width-one-third">Level</th>

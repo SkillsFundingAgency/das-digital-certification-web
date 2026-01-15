@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetCertificateById;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetFrameworkCertificate;
+using SFA.DAS.DigitalCertificates.Application.Queries.GetStandardCertificate;
 using SFA.DAS.DigitalCertificates.Domain.Models;
 using SFA.DAS.DigitalCertificates.Web.Models.Certificates;
 using SFA.DAS.DigitalCertificates.Web.Services;
@@ -32,7 +33,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 
         public async Task<CertificateStandardViewModel?> GetCertificateStandardViewModel(Guid certificateId)
         {
-            var result = await Mediator.Send(new GetCertificateByIdQuery { CertificateId = certificateId });
+            var result = await Mediator.Send(new GetStandardCertificateQuery { CertificateId = certificateId });
 
             if (result == null)
                 return null;
