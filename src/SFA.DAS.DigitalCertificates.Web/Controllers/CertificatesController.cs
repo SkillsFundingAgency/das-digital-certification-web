@@ -108,11 +108,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
                 return RedirectToRoute(CreateCertificateSharingRouteGet, new { certificateId });
             }
 
-            if (model.ExpiryTime <= DateTime.UtcNow)
-            {
-                return RedirectToRoute(CreateCertificateSharingRouteGet, new { certificateId });
-            }
-
             model.EmailAddress = emailAddress ?? string.Empty;
 
             return View(model);

@@ -16,6 +16,7 @@ using SFA.DAS.DigitalCertificates.Web.Services;
 using SFA.DAS.DigitalCertificates.Web.Extensions;
 using SFA.DAS.DigitalCertificates.Web.Models.Sharing;
 using FluentValidation;
+using SFA.DAS.DigitalCertificates.Domain.Extensions;
 
 namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
 {
@@ -26,6 +27,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         private Mock<IUserService> _userServiceMock;
         private Mock<ISessionStorageService> _sessionStorageServiceMock;
         private Mock<IValidator<ShareByEmailViewModel>> _shareByEmailValidatorMock;
+        private Mock<IDateTimeHelper> _dateTimeHelperMock;
         private DigitalCertificatesWebConfiguration _digitalCertificatesWebConfiguration;
         private SharingOrchestrator _sut;
 
@@ -36,6 +38,9 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             _userServiceMock = new Mock<IUserService>();
             _sessionStorageServiceMock = new Mock<ISessionStorageService>();
             _shareByEmailValidatorMock = new Mock<IValidator<ShareByEmailViewModel>>();
+            _dateTimeHelperMock = new Mock<IDateTimeHelper>();
+            _dateTimeHelperMock.SetupGet(d => d.Now).Returns(DateTime.UtcNow);
+
             _digitalCertificatesWebConfiguration = new DigitalCertificatesWebConfiguration
             {
                 ServiceBaseUrl = "https://test.com",
@@ -44,7 +49,9 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 SharingListLimit = 10,
                 SharingEmailTemplateId = "template-id"
             };
-            _sut = new SharingOrchestrator(_mediatorMock.Object, _userServiceMock.Object, _sessionStorageServiceMock.Object, _digitalCertificatesWebConfiguration, _shareByEmailValidatorMock.Object);
+
+            _sut = new SharingOrchestrator(_mediatorMock.Object, _userServiceMock.Object, _sessionStorageServiceMock.Object, _digitalCertificatesWebConfiguration,_dateTimeHelperMock.Object, _shareByEmailValidatorMock.Object);
+
         }
 
         [TearDown]
@@ -512,6 +519,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             _mediatorMock
                 .Setup(m => m.Send(It.IsAny<GetSharingByIdQuery>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(response);
+
+            _dateTimeHelperMock.SetupGet(d => d.Now).Returns(expiryTime.AddDays(-1));
 
             // Act
             var result = await _sut.GetSharingById(certificateId, sharingId);

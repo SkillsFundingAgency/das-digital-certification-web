@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 using SFA.DAS.DigitalCertificates.Web.Models.Sharing;
 using SFA.DAS.DigitalCertificates.Web.Services;
 using FluentValidation;
+using SFA.DAS.DigitalCertificates.Domain.Extensions;
 
 namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 {
@@ -22,26 +23,29 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         private readonly IUserService _userService;
         private readonly ISessionStorageService _sessionStorageService;
         private readonly DigitalCertificatesWebConfiguration _digitalCertificatesWebConfiguration;
+        private readonly IDateTimeHelper _dateTimeHelper;
         private readonly IValidator<ShareByEmailViewModel> _shareByEmailValidator;
 
         public SharingOrchestrator(IMediator mediator, IUserService userService, ISessionStorageService sessionStorageService,
             DigitalCertificatesWebConfiguration digitalCertificatesWebConfiguration,
-           IValidator<ShareByEmailViewModel> shareByEmailValidator)
+            IDateTimeHelper dateTimeHelper,
+            IValidator<ShareByEmailViewModel> shareByEmailValidator)
             : base(mediator)
         {
             _userService = userService;
             _sessionStorageService = sessionStorageService;
             _digitalCertificatesWebConfiguration = digitalCertificatesWebConfiguration;
             _shareByEmailValidator = shareByEmailValidator;
+            _dateTimeHelper = dateTimeHelper;
         }
 
         public async Task<CreateCertificateSharingViewModel> GetSharings(Guid certificateId)
         {
             var userId = _userService.GetUserId()!.Value;
 
-            var certificateData = await GetCertificateFromSessionAsync(certificateId);
+            var certificate = await GetCertificateFromSessionAsync(certificateId);
 
-            if (certificateData == null)
+            if (certificate == null)
             {
                 throw new InvalidOperationException($"Certificate {certificateId} not found for authenticated user");
             }
@@ -58,8 +62,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 return new CreateCertificateSharingViewModel
                 {
                     CertificateId = certificateId,
-                    CourseName = certificateData.CourseName,
-                    CertificateType = certificateData.CertificateType,
+                    CourseName = certificate.CourseName,
+                    CertificateType = certificate.CertificateType,
                     Sharings = new List<CreateCertificateSharingItemViewModel>()
                 };
             }
@@ -68,7 +72,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             {
                 CertificateId = response.CertificateId,
                 CourseName = response.CourseName,
-                CertificateType = certificateData.CertificateType,
+                CertificateType = certificate.CertificateType,
                 Sharings = response.Sharings?.Select(s => new CreateCertificateSharingItemViewModel
                 {
                     SharingId = s.SharingId,
@@ -117,12 +121,12 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 Limit = _digitalCertificatesWebConfiguration.SharingHistoryLimit
             });
 
-            if (response == null)
+            if (response == null || response.ExpiryTime <= DateTime.UtcNow)
             {
                 return null!;
             }
 
-            var item = new CertificateSharingLinkViewModel
+            var viewModel = new CertificateSharingLinkViewModel
             {
                 CertificateId = response.CertificateId,
                 CourseName = response.CourseName,
@@ -137,9 +141,9 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 FormattedAccessTimes = (response.SharingAccess ?? new List<DateTime>()).Select(a => a.ToUkDateTimeString()).ToList()
             };
 
-            item.SecureLink = $"{_digitalCertificatesWebConfiguration?.ServiceBaseUrl}/certificates/{item.LinkCode}";
+            viewModel.SecureLink = $"{_digitalCertificatesWebConfiguration?.ServiceBaseUrl}/certificates/{viewModel.LinkCode}";
 
-            return item;
+            return viewModel;
         }
 
         public async Task<ConfirmShareByEmailViewModel?> GetConfirmShareByEmail(Guid certificateId, Guid sharingId, string emailAddress)

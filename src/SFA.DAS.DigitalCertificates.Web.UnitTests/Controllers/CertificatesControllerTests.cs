@@ -230,30 +230,16 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
         }
 
         [Test]
+
         public async Task CertificateSharingLink_Redirects_To_SharingList_When_Model_Expired()
         {
             // Arrange
             var certificateId = Guid.NewGuid();
             var sharingId = Guid.NewGuid();
 
-            var model = new CertificateSharingLinkViewModel
-            {
-                CertificateId = certificateId,
-                CourseName = "Course",
-                CertificateType = Domain.Models.CertificateType.Standard,
-                SharingId = sharingId,
-                SharingNumber = 1,
-                CreatedAt = DateTime.UtcNow.AddDays(-10),
-                ExpiryTime = DateTime.UtcNow.AddDays(-1), // expired
-                LinkCode = Guid.NewGuid(),
-                FormattedExpiry = DateTime.UtcNow.AddDays(-1).ToString(),
-                FormattedCreated = DateTime.UtcNow.AddDays(-10).ToString(),
-                FormattedAccessTimes = new System.Collections.Generic.List<string>()
-            };
-
             _sharingOrchestratorMock
                 .Setup(s => s.GetSharingById(certificateId, sharingId))
-                .ReturnsAsync(model);
+                .ReturnsAsync((CertificateSharingLinkViewModel)null!);
 
             // Act
             var result = await _sut.CertificateSharingLink(certificateId, sharingId) as RedirectToRouteResult;
