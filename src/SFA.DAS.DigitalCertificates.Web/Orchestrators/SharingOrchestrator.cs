@@ -7,10 +7,13 @@ using MediatR;
 using SFA.DAS.DigitalCertificates.Application.Commands.CreateSharing;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetSharingById;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetSharings;
+using SFA.DAS.DigitalCertificates.Application.Commands.CreateSharingEmail;
 using SFA.DAS.DigitalCertificates.Domain.Models;
 using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using SFA.DAS.DigitalCertificates.Web.Models.Sharing;
 using SFA.DAS.DigitalCertificates.Web.Services;
+using FluentValidation;
 
 namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 {
@@ -19,13 +22,17 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         private readonly IUserService _userService;
         private readonly ISessionStorageService _sessionStorageService;
         private readonly DigitalCertificatesWebConfiguration _digitalCertificatesWebConfiguration;
+        private readonly IValidator<ShareByEmailViewModel> _shareByEmailValidator;
 
-        public SharingOrchestrator(IMediator mediator, IUserService userService, ISessionStorageService sessionStorageService, DigitalCertificatesWebConfiguration digitalCertificatesWebConfiguration)
-          : base(mediator)
+        public SharingOrchestrator(IMediator mediator, IUserService userService, ISessionStorageService sessionStorageService,
+            DigitalCertificatesWebConfiguration digitalCertificatesWebConfiguration,
+           IValidator<ShareByEmailViewModel> shareByEmailValidator)
+            : base(mediator)
         {
             _userService = userService;
             _sessionStorageService = sessionStorageService;
             _digitalCertificatesWebConfiguration = digitalCertificatesWebConfiguration;
+            _shareByEmailValidator = shareByEmailValidator;
         }
 
         public async Task<CreateCertificateSharingViewModel> GetSharings(Guid certificateId)
@@ -95,17 +102,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             return response?.SharingId ?? Guid.Empty;
         }
 
-        private async Task<Certificate?> GetCertificateFromSessionAsync(Guid certificateId)
-        {
-            var govUkIdentifier = _userService.GetGovUkIdentifier();
-            if (string.IsNullOrEmpty(govUkIdentifier))
-            {
-                return null;
-            }
-
-            var certificates = await _sessionStorageService.GetOwnedCertificatesAsync(govUkIdentifier);
-            return certificates?.FirstOrDefault(c => c.CertificateId == certificateId);
-        }
         public async Task<CertificateSharingLinkViewModel> GetSharingById(Guid certificateId, Guid sharingId)
         {
             var certificateData = await GetCertificateFromSessionAsync(certificateId);
@@ -144,6 +140,153 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             item.SecureLink = $"{_digitalCertificatesWebConfiguration?.ServiceBaseUrl}/certificates/{item.LinkCode}";
 
             return item;
+        }
+
+        public async Task<ConfirmShareByEmailViewModel?> GetConfirmShareByEmail(Guid certificateId, Guid sharingId, string emailAddress)
+        {
+            var certificateData = await GetCertificateFromSessionAsync(certificateId);
+
+            if (certificateData == null)
+            {
+                throw new InvalidOperationException($"Certificate {certificateId} not found for authenticated user");
+            }
+
+            var response = await Mediator.Send(new GetSharingByIdQuery
+            {
+                SharingId = sharingId,
+                Limit = _digitalCertificatesWebConfiguration.SharingHistoryLimit
+            });
+
+            if (response == null || response.ExpiryTime <= DateTime.UtcNow)
+            {
+                return null;
+            }
+
+            return new ConfirmShareByEmailViewModel
+            {
+                CertificateId = response.CertificateId,
+                SharingId = response.SharingId,
+                CourseName = response.CourseName,
+                SharingNumber = response.SharingNumber,
+                EmailAddress = emailAddress,
+                FormattedExpiry = response.ExpiryTime.ToUkExpiryDateTimeString()
+            };
+        }
+
+        public async Task<Guid> CreateSharingEmail(Guid certificateId, Guid sharingId, string emailAddress)
+        {
+            var certificateData = await GetCertificateFromSessionAsync(certificateId);
+
+            if (certificateData == null)
+            {
+                throw new InvalidOperationException($"Certificate {certificateId} not found for authenticated user");
+            }
+
+            var sharingResponse = await Mediator.Send(new GetSharingByIdQuery
+            {
+                SharingId = sharingId,
+                Limit = _digitalCertificatesWebConfiguration.SharingHistoryLimit
+            });
+
+            if (sharingResponse == null)
+            {
+                return Guid.Empty;
+            }
+
+            var messageText = $"This link will stop working at {sharingResponse.ExpiryTime.ToUkExpiryDateTimeString()}.";
+
+            var userName = await GetUserDisplayNameAsync();
+
+            var result = await Mediator.Send(new CreateSharingEmailCommand
+            {
+                SharingId = sharingId,
+                EmailAddress = emailAddress,
+                UserName = userName,
+                LinkDomain = _digitalCertificatesWebConfiguration.ServiceBaseUrl,
+                MessageText = messageText,
+                TemplateId = _digitalCertificatesWebConfiguration.SharingEmailTemplateId
+            });
+
+            return result?.Id ?? Guid.Empty;
+        }
+
+        public async Task<EmailSentViewModel?> GetEmailSent(Guid certificateId, Guid sharingId, Guid sharingEmailId)
+        {
+            var certificateData = await GetCertificateFromSessionAsync(certificateId);
+
+            if (certificateData == null)
+            {
+                throw new InvalidOperationException($"Certificate {certificateId} not found for authenticated user");
+            }
+
+            var response = await Mediator.Send(new GetSharingByIdQuery
+            {
+                SharingId = sharingId,
+                Limit = _digitalCertificatesWebConfiguration.SharingHistoryLimit
+            });
+
+            if (response == null)
+            {
+                return null;
+            }
+
+            var matchingEmail = response.SharingEmails?.FirstOrDefault(e => e.SharingEmailId == sharingEmailId);
+
+            var viewModel = new EmailSentViewModel
+            {
+                CertificateId = response.CertificateId,
+                SharingId = response.SharingId,
+                SharingNumber = response.SharingNumber,
+                EmailAddress = matchingEmail?.EmailAddress ?? string.Empty,
+                FormattedExpiry = response.ExpiryTime.ToUkExpiryDateTimeString(),
+                CourseName = response.CourseName,
+            };
+
+            var ownedCertificate = await _sessionStorageService.GetOwnedCertificatesAsync(_userService.GetGovUkIdentifier());
+
+            viewModel.IsSingleCertificate = (ownedCertificate?.Count ?? 0) == 1;
+
+            return viewModel;
+        }
+
+        private async Task<Certificate?> GetCertificateFromSessionAsync(Guid certificateId)
+        {
+            var govUkIdentifier = _userService.GetGovUkIdentifier();
+            if (string.IsNullOrEmpty(govUkIdentifier))
+            {
+                return null;
+            }
+
+            var certificates = await _sessionStorageService.GetOwnedCertificatesAsync(govUkIdentifier);
+            return certificates?.FirstOrDefault(c => c.CertificateId == certificateId);
+        }
+
+        private async Task<string> GetUserDisplayNameAsync()
+        {
+            var govUkIdentifier = _userService.GetGovUkIdentifier();
+            if (string.IsNullOrEmpty(govUkIdentifier))
+            {
+                return string.Empty;
+            }
+
+            var user = await _sessionStorageService.GetUserAsync(govUkIdentifier);
+            if (user == null)
+            {
+                return string.Empty;
+            }
+
+            var name = user.Names?.FirstOrDefault();
+            if (name != null && !string.IsNullOrEmpty(name.GivenNames) && !string.IsNullOrEmpty(name.FamilyName))
+            {
+                return $"{name.GivenNames} {name.FamilyName}";
+            }
+
+            return string.Empty;
+        }
+
+        public async Task<bool> ValidateShareByEmailViewModel(ShareByEmailViewModel viewModel, ModelStateDictionary modelState)
+        {
+            return await ValidateViewModel(_shareByEmailValidator, viewModel, modelState);
         }
     }
 }

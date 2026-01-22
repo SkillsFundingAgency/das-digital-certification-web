@@ -14,6 +14,8 @@ using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
 using SFA.DAS.DigitalCertificates.Web.Orchestrators;
 using SFA.DAS.DigitalCertificates.Web.Services;
 using SFA.DAS.DigitalCertificates.Web.Extensions;
+using SFA.DAS.DigitalCertificates.Web.Models.Sharing;
+using FluentValidation;
 
 namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
 {
@@ -23,6 +25,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         private Mock<IMediator> _mediatorMock;
         private Mock<IUserService> _userServiceMock;
         private Mock<ISessionStorageService> _sessionStorageServiceMock;
+        private Mock<IValidator<ShareByEmailViewModel>> _shareByEmailValidatorMock;
         private DigitalCertificatesWebConfiguration _digitalCertificatesWebConfiguration;
         private SharingOrchestrator _sut;
 
@@ -32,14 +35,16 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             _mediatorMock = new Mock<IMediator>();
             _userServiceMock = new Mock<IUserService>();
             _sessionStorageServiceMock = new Mock<ISessionStorageService>();
+            _shareByEmailValidatorMock = new Mock<IValidator<ShareByEmailViewModel>>();
             _digitalCertificatesWebConfiguration = new DigitalCertificatesWebConfiguration
             {
                 ServiceBaseUrl = "https://test.com",
                 RedisConnectionString = "test",
                 DataProtectionKeysDatabase = "test",
-                SharingListLimit = 10
+                SharingListLimit = 10,
+                SharingEmailTemplateId = "template-id"
             };
-            _sut = new SharingOrchestrator(_mediatorMock.Object, _userServiceMock.Object, _sessionStorageServiceMock.Object, _digitalCertificatesWebConfiguration);
+            _sut = new SharingOrchestrator(_mediatorMock.Object, _userServiceMock.Object, _sessionStorageServiceMock.Object, _digitalCertificatesWebConfiguration, _shareByEmailValidatorMock.Object);
         }
 
         [TearDown]

@@ -1,0 +1,42 @@
+﻿@using SFA.DAS.DigitalCertificates.Web.Controllers
+@using SFA.DAS.DigitalCertificates.Web.ViewDataKeys
+@using SFA.DAS.DigitalCertificates.Web.Models.Sharing
+
+@model ConfirmShareByEmailViewModel
+@{
+    ViewData[ViewDataKeys.Title] = ViewData[ViewDataKeys.ServiceName] + " Confirm share by email";
+    ViewBag.GaData.Vpv = ViewData[ViewDataKeys.GaDataVpvPrefix] + "confirm-share-by-email";
+}
+
+<div class="govuk-width-container">
+    <a asp-route="@CertificatesController.CertificateSharingLinkRouteGet" asp-route-certificateId="@Model.CertificateId"
+       asp-route-sharingId="@Model.SharingId" asp-route-emailAddress="@Model.EmailAddress" class="govuk-back-link">Back</a>
+
+    <main class="govuk-main-wrapper" id="main-content">
+        <div class="govuk-grid-row">
+            <div class="govuk-grid-column-two-thirds">
+                <h1 class="govuk-heading-l">
+                    <span class="govuk-caption-l">@Model.CourseName, Sharing link @Model.SharingNumber</span>
+                    Confirm share by email
+                </h1>
+                <p class="govuk-body">We’ll send an email with a secure link to your certificate details to:</p>
+                <p class="govuk-body">@Model.EmailAddress</p>
+
+                <p class="govuk-body">This sharing link will automatically be deleted at @Model.FormattedExpiry.</p>
+
+                <form method="post" asp-route="@CertificatesController.ConfirmShareByEmailRoutePost"
+                      asp-route-certificateId="@Model.CertificateId" asp-route-sharingId="@Model.SharingId">
+                    @Html.HiddenFor(m => m.EmailAddress)
+                    <div class="govuk-button-group">
+                        <button type="submit" class="govuk-button govuk-button--primary govuk-!-margin-right-2">
+                            Confirm and send
+                        </button>
+                        <a asp-route="@CertificatesController.CertificateSharingLinkRouteGet"
+                           asp-route-certificateId="@Model.CertificateId" asp-route-emailAddress="@Model.EmailAddress" asp-route-sharingId="@Model.SharingId"
+                           class="govuk-link">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+</div>

@@ -1,4 +1,4 @@
-@using SFA.DAS.DigitalCertificates.Web.Controllers
+﻿@using SFA.DAS.DigitalCertificates.Web.Controllers
 @using SFA.DAS.DigitalCertificates.Web.ViewDataKeys
 @using SFA.DAS.DigitalCertificates.Domain.Models
 @model SFA.DAS.DigitalCertificates.Web.Models.Sharing.CreateCertificateSharingViewModel
@@ -78,10 +78,10 @@ else
                                 <td class="govuk-table__cell"><strong>Sharing link @s.SharingNumber</strong></td>
                                 <td class="govuk-table__cell">@s.ExpiryTime.ToString("dd MMMM yyyy")</td>
                                 <td class="govuk-table__cell govuk-!-text-align-right">
-                                	<a asp-route="@CertificatesController.CertificateSharingLinkRouteGet"
-                                         asp-route-certificateId="@Model.CertificateId"
-                                         asp-route-sharingId="@s.SharingId"
-                                         class="govuk-link">View</a>
+                                    <a asp-route="@CertificatesController.CertificateSharingLinkRouteGet"
+                                       asp-route-certificateId="@Model.CertificateId"
+                                       asp-route-sharingId="@s.SharingId"
+                                       class="govuk-link">View</a>
                                 </td>
                             </tr>
                         }
