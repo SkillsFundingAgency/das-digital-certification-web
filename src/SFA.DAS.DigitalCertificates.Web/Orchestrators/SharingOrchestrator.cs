@@ -11,6 +11,7 @@ using SFA.DAS.DigitalCertificates.Domain.Models;
 using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
 using SFA.DAS.DigitalCertificates.Web.Models.Sharing;
 using SFA.DAS.DigitalCertificates.Web.Services;
+using SFA.DAS.DigitalCertificates.Domain.Extensions;
 
 namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 {
@@ -19,22 +20,24 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         private readonly IUserService _userService;
         private readonly ISessionStorageService _sessionStorageService;
         private readonly DigitalCertificatesWebConfiguration _digitalCertificatesWebConfiguration;
+        private readonly IDateTimeHelper _dateTimeHelper;
 
-        public SharingOrchestrator(IMediator mediator, IUserService userService, ISessionStorageService sessionStorageService, DigitalCertificatesWebConfiguration digitalCertificatesWebConfiguration)
+        public SharingOrchestrator(IMediator mediator, IUserService userService, ISessionStorageService sessionStorageService, DigitalCertificatesWebConfiguration digitalCertificatesWebConfiguration, IDateTimeHelper dateTimeHelper)
           : base(mediator)
         {
             _userService = userService;
             _sessionStorageService = sessionStorageService;
             _digitalCertificatesWebConfiguration = digitalCertificatesWebConfiguration;
+            _dateTimeHelper = dateTimeHelper;
         }
 
         public async Task<CreateCertificateSharingViewModel> GetSharings(Guid certificateId)
         {
             var userId = _userService.GetUserId()!.Value;
 
-            var certificateData = await GetCertificateFromSessionAsync(certificateId);
+            var certificate = await GetCertificateFromSessionAsync(certificateId);
 
-            if (certificateData == null)
+            if (certificate == null)
             {
                 throw new InvalidOperationException($"Certificate {certificateId} not found for authenticated user");
             }
@@ -51,8 +54,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 return new CreateCertificateSharingViewModel
                 {
                     CertificateId = certificateId,
-                    CourseName = certificateData.CourseName,
-                    CertificateType = certificateData.CertificateType,
+                    CourseName = certificate.CourseName,
+                    CertificateType = certificate.CertificateType,
                     Sharings = new List<CreateCertificateSharingItemViewModel>()
                 };
             }
@@ -61,7 +64,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             {
                 CertificateId = response.CertificateId,
                 CourseName = response.CourseName,
-                CertificateType = certificateData.CertificateType,
+                CertificateType = certificate.CertificateType,
                 Sharings = response.Sharings?.Select(s => new CreateCertificateSharingItemViewModel
                 {
                     SharingId = s.SharingId,
@@ -126,7 +129,12 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 return null!;
             }
 
-            var item = new CertificateSharingLinkViewModel
+            if (response.ExpiryTime <= _dateTimeHelper.Now)
+            {
+                return null!;
+            }
+
+            var viewModel = new CertificateSharingLinkViewModel
             {
                 CertificateId = response.CertificateId,
                 CourseName = response.CourseName,
@@ -141,9 +149,9 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 FormattedAccessTimes = (response.SharingAccess ?? new List<DateTime>()).Select(a => a.ToUkDateTimeString()).ToList()
             };
 
-            item.SecureLink = $"{_digitalCertificatesWebConfiguration?.ServiceBaseUrl}/certificates/{item.LinkCode}";
+            viewModel.SecureLink = $"{_digitalCertificatesWebConfiguration?.ServiceBaseUrl}/certificates/{viewModel.LinkCode}";
 
-            return item;
+            return viewModel;
         }
     }
 }
