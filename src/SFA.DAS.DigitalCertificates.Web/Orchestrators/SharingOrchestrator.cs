@@ -121,7 +121,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 Limit = _digitalCertificatesWebConfiguration.SharingHistoryLimit
             });
 
-            if (response == null || response.ExpiryTime <= DateTime.UtcNow)
+            if (response == null || response.ExpiryTime <= _dateTimeHelper.Now)
             {
                 return null!;
             }
@@ -161,7 +161,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 Limit = _digitalCertificatesWebConfiguration.SharingHistoryLimit
             });
 
-            if (response == null || response.ExpiryTime <= DateTime.UtcNow)
+            if (response == null || response.ExpiryTime <= _dateTimeHelper.Now)
             {
                 return null;
             }
