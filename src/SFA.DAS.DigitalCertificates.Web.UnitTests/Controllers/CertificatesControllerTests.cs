@@ -230,13 +230,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
         }
 
         [Test]
-        public async Task CertificateSharingLink_Redirects_To_SharingList_When_Model_Expired()
-        {
-            // Arrange
-            var certificateId = Guid.NewGuid();
-            var sharingId = Guid.NewGuid();
 
-public async Task CertificateSharingLink_Redirects_To_SharingList_When_Model_Expired()
+        public async Task CertificateSharingLink_Redirects_To_SharingList_When_Model_Expired()
         {
             // Arrange
             var certificateId = Guid.NewGuid();
