@@ -1,4 +1,4 @@
-using SFA.DAS.DigitalCertificates.Infrastructure.Api.Responses;
+﻿using SFA.DAS.DigitalCertificates.Infrastructure.Api.Responses;
 using SFA.DAS.DigitalCertificates.Domain.Models;
 
 namespace SFA.DAS.DigitalCertificates.Application.Commands.CreateSharing
