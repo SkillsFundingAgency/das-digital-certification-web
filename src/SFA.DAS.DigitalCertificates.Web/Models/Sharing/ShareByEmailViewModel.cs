@@ -1,4 +1,4 @@
-namespace SFA.DAS.DigitalCertificates.Web.Models.Sharing
+﻿namespace SFA.DAS.DigitalCertificates.Web.Models.Sharing
 {
     public class ShareByEmailViewModel
     {

@@ -1,4 +1,4 @@
-namespace SFA.DAS.DigitalCertificates.Application.Commands.CreateSharingEmail
+﻿namespace SFA.DAS.DigitalCertificates.Application.Commands.CreateSharingEmail
 {
     public class CreateSharingEmailCommandResult
     {

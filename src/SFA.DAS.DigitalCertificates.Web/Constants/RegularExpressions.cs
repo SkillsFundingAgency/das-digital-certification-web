@@ -1,4 +1,4 @@
-namespace SFA.DAS.DigitalCertificates.Web;
+﻿namespace SFA.DAS.DigitalCertificates.Web;
 
 public static class RegularExpressions
 {

@@ -1,4 +1,4 @@
-namespace SFA.DAS.DigitalCertificates.Infrastructure.Api.Requests
+﻿namespace SFA.DAS.DigitalCertificates.Infrastructure.Api.Requests
 {
     public class CreateSharingEmailRequest
     {
