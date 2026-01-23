@@ -141,6 +141,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 FormattedAccessTimes = (response.SharingAccess ?? new List<DateTime>()).Select(a => a.ToUkDateTimeString()).ToList()
             };
 
+            // TODO: This URL and its associated email template may require changes
+            // when the corresponding page is implemented.
             viewModel.SecureLink = $"{_digitalCertificatesWebConfiguration?.ServiceBaseUrl}/certificates/{viewModel.LinkCode}";
 
             return viewModel;
