@@ -15,6 +15,7 @@ using SFA.DAS.DigitalCertificates.Web.Models.Sharing;
 using SFA.DAS.DigitalCertificates.Web.Services;
 using FluentValidation;
 using SFA.DAS.DigitalCertificates.Domain.Extensions;
+using SFA.DAS.DigitalCertificates.Infrastructure.Constants;
 
 namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 {
@@ -203,6 +204,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 
             var userName = await GetUserDisplayNameAsync();
 
+            var templateId = GetTemplateId(_digitalCertificatesWebConfiguration, NotificationTemplateNames.SharingEmail);
+
             var result = await Mediator.Send(new CreateSharingEmailCommand
             {
                 SharingId = sharingId,
@@ -210,7 +213,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 UserName = userName,
                 LinkDomain = _digitalCertificatesWebConfiguration.ServiceBaseUrl,
                 MessageText = messageText,
-                TemplateId = _digitalCertificatesWebConfiguration.SharingEmailTemplateId
+                TemplateId = templateId
             });
 
             return result?.Id ?? Guid.Empty;

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Linq;
 using FluentAssertions;
 using MediatR;
 using Moq;
@@ -47,7 +48,10 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 RedisConnectionString = "test",
                 DataProtectionKeysDatabase = "test",
                 SharingListLimit = 10,
-                SharingEmailTemplateId = "template-id"
+                NotificationTemplates = new List<NotificationTemplate>
+                {
+                    new NotificationTemplate { TemplateName = "SharingEmail", TemplateId = "template-id" }
+                }
             };
 
             _sut = new SharingOrchestrator(_mediatorMock.Object, _userServiceMock.Object, _sessionStorageServiceMock.Object, _digitalCertificatesWebConfiguration,_dateTimeHelperMock.Object, _shareByEmailValidatorMock.Object);
@@ -823,7 +827,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                     c.EmailAddress == "to@example.com" &&
                     c.UserName == "John Doe" &&
                     c.LinkDomain == _digitalCertificatesWebConfiguration.ServiceBaseUrl &&
-                    c.TemplateId == _digitalCertificatesWebConfiguration.SharingEmailTemplateId &&
+                    c.TemplateId == _digitalCertificatesWebConfiguration.NotificationTemplates.First().TemplateId &&
                     c.MessageText.Contains(response.ExpiryTime.ToUkExpiryDateTimeString())
                 ), It.IsAny<CancellationToken>()), Times.Once);
         }
