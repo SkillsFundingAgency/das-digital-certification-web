@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using SFA.DAS.DigitalCertificates.Domain.Interfaces;
 
 namespace SFA.DAS.DigitalCertificates.Application.Queries.GetSharings

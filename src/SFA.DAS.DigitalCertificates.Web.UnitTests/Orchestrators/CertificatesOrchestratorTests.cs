@@ -6,6 +6,7 @@ using FluentAssertions;
 using MediatR;
 using Moq;
 using NUnit.Framework;
+using SFA.DAS.DigitalCertificates.Application.Queries.GetFrameworkCertificate;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetStandardCertificate;
 using SFA.DAS.DigitalCertificates.Domain.Models;
 using SFA.DAS.DigitalCertificates.Web.Orchestrators;
@@ -241,6 +242,93 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
 
             resultNull.Should().NotBeNull();
             resultNull!.ShowBackLink.Should().BeFalse();
+        }
+
+        [Test]
+        public async Task GetCertificateFrameworkViewModel_ReturnsNull_When_MediatorReturnsNull()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+
+            _mediatorMock
+                .Setup(m => m.Send(It.Is<GetFrameworkCertificateQuery>(q => q.CertificateId == certificateId), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((GetFrameworkCertificateQueryResult)null);
+
+            // Act
+            var result = await _sut.GetCertificateFrameworkViewModel(certificateId);
+
+            // Assert
+            result.Should().BeNull();
+        }
+
+        [Test]
+        public async Task GetCertificateFrameworkViewModel_MapsFields_And_ShowBackLinkTrue_When_OwnedMoreThanOne()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+            var govId = "gov-456";
+
+            var mediatorResult = new GetFrameworkCertificateQueryResult
+            {
+                FamilyName = "Smith",
+                GivenNames = "John",
+                Uln = 123456,
+                CertificateType = "Framework",
+                FrameworkCertificateNumber = "FW-1",
+                CourseName = "Bricklayer",
+                CourseOption = "Opt",
+                CourseLevel = "1",
+                DateAwarded = DateTime.UtcNow.Date,
+                ProviderName = "Provider",
+                Ukprn = 10000000,
+                EmployerName = "Employer",
+                StartDate = DateTime.UtcNow.AddYears(-1),
+                PrintRequestedAt = null,
+                PrintRequestedBy = null,
+                QualificationsAndAwardingBodies = new System.Collections.Generic.List<string> { "Q1, A1" },
+                DeliveryInformation = new System.Collections.Generic.List<string> { "D1" }
+            };
+
+            _mediatorMock
+                .Setup(m => m.Send(It.Is<GetFrameworkCertificateQuery>(q => q.CertificateId == certificateId), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(mediatorResult);
+
+            _userServiceMock
+                .Setup(u => u.GetGovUkIdentifier())
+                .Returns(govId);
+
+            var owned = new System.Collections.Generic.List<Certificate>
+            {
+                new Certificate { CertificateId = Guid.NewGuid(), CertificateType = CertificateType.Standard, CourseName = "A", CourseLevel = "1", DateAwarded = DateTime.UtcNow },
+                new Certificate { CertificateId = Guid.NewGuid(), CertificateType = CertificateType.Framework, CourseName = "B", CourseLevel = "1", DateAwarded = DateTime.UtcNow }
+            };
+
+            _sessionMock
+                .Setup(s => s.GetOwnedCertificatesAsync(govId))
+                .ReturnsAsync(owned);
+
+            // Act
+            var result = await _sut.GetCertificateFrameworkViewModel(certificateId);
+
+            // Assert
+            result.Should().NotBeNull();
+            result!.FamilyName.Should().Be(mediatorResult.FamilyName);
+            result.GivenNames.Should().Be(mediatorResult.GivenNames);
+            result.Uln.Should().Be(mediatorResult.Uln);
+            result.CertificateType.Should().Be(CertificateType.Framework);
+            result.FrameworkCertificateNumber.Should().Be(mediatorResult.FrameworkCertificateNumber);
+            result.CourseName.Should().Be(mediatorResult.CourseName);
+            result.CourseOption.Should().Be(mediatorResult.CourseOption);
+            result.CourseLevel.Should().Be(mediatorResult.CourseLevel);
+            result.DateAwarded.Should().Be(mediatorResult.DateAwarded);
+            result.ProviderName.Should().Be(mediatorResult.ProviderName);
+            result.Ukprn.Should().Be(mediatorResult.Ukprn);
+            result.EmployerName.Should().Be(mediatorResult.EmployerName);
+            result.StartDate.Should().Be(mediatorResult.StartDate);
+            result.QualificationsAndAwardingBodies.Should().BeEquivalentTo(mediatorResult.QualificationsAndAwardingBodies);
+            result.DeliveryInformation.Should().BeEquivalentTo(mediatorResult.DeliveryInformation);
+
+            result.ShowBackLink.Should().BeTrue();
         }
     }
 }

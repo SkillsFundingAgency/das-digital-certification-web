@@ -69,9 +69,10 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
 
         [HttpGet("{certificateId}/framework", Name = CertificateFrameworkRouteGet)]
         [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsCertificateOwner))]
-        public IActionResult CertificateFramework(Guid certificateId)
+        public async Task<IActionResult> CertificateFramework(Guid certificateId)
         {
-            return View();
+            var model = await _certificatesOrchestrator.GetCertificateFrameworkViewModel(certificateId);
+            return View(model);
         }
 
         [HttpGet("{certificateId}/sharing", Name = CreateCertificateSharingRouteGet)]
