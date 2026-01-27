@@ -12,6 +12,7 @@ using SFA.DAS.DigitalCertificates.Web.Models.Certificates;
 using SFA.DAS.DigitalCertificates.Domain.Models;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using SFA.DAS.DigitalCertificates.Web.Services;
 
 namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
 {
@@ -21,6 +22,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
         private Mock<IHttpContextAccessor> _contextAccessorMock;
         private Mock<ICertificatesOrchestrator> _certificatesOrchestratorMock;
         private Mock<ISharingOrchestrator> _sharingOrchestratorMock;
+        private Mock<ISessionService> _sessionServiceMock;
         private CertificatesController _sut;
 
         [SetUp]
@@ -29,10 +31,13 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             _contextAccessorMock = new Mock<IHttpContextAccessor>();
             _certificatesOrchestratorMock = new Mock<ICertificatesOrchestrator>();
             _sharingOrchestratorMock = new Mock<ISharingOrchestrator>();
+            _sessionServiceMock = new Mock<ISessionService>();
+
             _sut = new CertificatesController(
                 _contextAccessorMock.Object,
                 _certificatesOrchestratorMock.Object,
-                _sharingOrchestratorMock.Object);
+                _sharingOrchestratorMock.Object,
+                _sessionServiceMock.Object);
         }
 
         [TearDown]
@@ -231,7 +236,6 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
         }
 
         [Test]
-
         public async Task CertificateSharingLink_Redirects_To_SharingList_When_Model_Expired()
         {
             // Arrange
@@ -332,6 +336,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             result.RouteValues["certificateId"].Should().Be(certificateId);
             result.RouteValues["sharingId"].Should().Be(sharingId);
             result.RouteValues["emailAddress"].Should().Be(string.Empty);
+
+            _sessionServiceMock.Verify(s => s.SetShareEmailAsync(string.Empty), Times.Once);
         }
 
         [Test]
@@ -359,7 +365,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             result!.RouteName.Should().Be(CertificatesController.ConfirmShareByEmailRouteGet);
             result.RouteValues["certificateId"].Should().Be(certificateId);
             result.RouteValues["sharingId"].Should().Be(sharingId);
-            result.RouteValues["emailAddress"].Should().Be(model.EmailAddress);
+
+            _sessionServiceMock.Verify(s => s.SetShareEmailAsync(model.EmailAddress), Times.Once);
         }
 
         [Test]
@@ -368,18 +375,25 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             // Arrange
             var certificateId = Guid.NewGuid();
             var sharingId = Guid.NewGuid();
+            var email = "test@example.com";
 
             _sharingOrchestratorMock
                 .Setup(s => s.GetConfirmShareByEmail(certificateId, sharingId, It.IsAny<string>()))
                 .ReturnsAsync((ConfirmShareByEmailViewModel)null!);
 
+            _sessionServiceMock
+                .Setup(s => s.GetShareEmailAsync())
+                .ReturnsAsync(email);
+
             // Act
-            var result = await _sut.ConfirmShareByEmail(certificateId, sharingId, "test@example.com") as RedirectToRouteResult;
+            var result = await _sut.ConfirmShareByEmail(certificateId, sharingId) as RedirectToRouteResult;
 
             // Assert
             result.Should().NotBeNull();
             result!.RouteName.Should().Be(CertificatesController.CreateCertificateSharingRouteGet);
             result.RouteValues["certificateId"].Should().Be(certificateId);
+
+            _sessionServiceMock.Verify(s => s.GetShareEmailAsync(), Times.Once);
         }
 
         [Test]
@@ -388,6 +402,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             // Arrange
             var certificateId = Guid.NewGuid();
             var sharingId = Guid.NewGuid();
+            var email = "user@example.com";
 
             var model = new ConfirmShareByEmailViewModel
             {
@@ -395,19 +410,25 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
                 SharingId = sharingId,
                 CourseName = "Course",
                 SharingNumber = 1,
-                EmailAddress = "user@example.com"
+                EmailAddress = email
             };
 
             _sharingOrchestratorMock
                 .Setup(s => s.GetConfirmShareByEmail(certificateId, sharingId, It.IsAny<string>()))
                 .ReturnsAsync(model);
 
+            _sessionServiceMock
+                .Setup(s => s.GetShareEmailAsync())
+                .ReturnsAsync(email);
+
             // Act
-            var result = await _sut.ConfirmShareByEmail(certificateId, sharingId, model.EmailAddress) as ViewResult;
+            var result = await _sut.ConfirmShareByEmail(certificateId, sharingId) as ViewResult;
 
             // Assert
             result.Should().NotBeNull();
             result!.Model.Should().BeEquivalentTo(model);
+
+            _sessionServiceMock.Verify(s => s.GetShareEmailAsync(), Times.Once);
         }
 
         [Test]
@@ -433,6 +454,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             result.RouteValues["certificateId"].Should().Be(certificateId);
             result.RouteValues["sharingId"].Should().Be(sharingId);
             result.RouteValues["sharingEmailId"].Should().Be(sharingEmailId);
+
+            _sessionServiceMock.Verify(s => s.ClearShareEmailAsync(), Times.Once);
         }
 
         [Test]

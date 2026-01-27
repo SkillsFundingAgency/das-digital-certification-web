@@ -4,7 +4,7 @@ using SFA.DAS.DigitalCertificates.Domain.Models;
 
 namespace SFA.DAS.DigitalCertificates.Web.Services
 {
-    public interface ISessionStorageService
+    public interface ICacheService
     {
         Task<User?> GetUserAsync(string govUkIdentifier);
         Task<List<Certificate>?> GetOwnedCertificatesAsync(string govUkIdentifier);

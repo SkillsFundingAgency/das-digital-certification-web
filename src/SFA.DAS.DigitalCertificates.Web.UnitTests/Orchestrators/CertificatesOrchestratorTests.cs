@@ -17,7 +17,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
     public class CertificatesOrchestratorTests
     {
         private Mock<IMediator> _mediatorMock;
-        private Mock<ISessionStorageService> _sessionMock;
+        private Mock<ICacheService> _sessionMock;
         private Mock<IUserService> _userServiceMock;
 
         private CertificatesOrchestrator _sut;
@@ -26,7 +26,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         public void SetUp()
         {
             _mediatorMock = new Mock<IMediator>();
-            _sessionMock = new Mock<ISessionStorageService>();
+            _sessionMock = new Mock<ICacheService>();
             _userServiceMock = new Mock<IUserService>();
 
             _sut = new CertificatesOrchestrator(

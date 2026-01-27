@@ -13,12 +13,12 @@ namespace SFA.DAS.DigitalCertificates.Web.Authentication
 {
     public class CertificateOwnerAuthorizationHandler : AuthorizationHandler<CertificateOwnerRequirement>
     {
-        private readonly ISessionStorageService _sessionStorageService;
+        private readonly ICacheService _cacheService;
         private readonly IUserService _userService;
 
-        public CertificateOwnerAuthorizationHandler(ISessionStorageService sessionStorageService, IUserService userService)
+        public CertificateOwnerAuthorizationHandler(ICacheService cacheService, IUserService userService)
         {
-            _sessionStorageService = sessionStorageService;
+            _cacheService = cacheService;
             _userService = userService;
         }
 
@@ -43,7 +43,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Authentication
                 _ => null
             };
 
-            var certificates = await _sessionStorageService.GetOwnedCertificatesAsync(_userService.GetGovUkIdentifier()) ?? new List<Certificate>();
+            var certificates = await _cacheService.GetOwnedCertificatesAsync(_userService.GetGovUkIdentifier()) ?? new List<Certificate>();
 
             var match = certificates.FirstOrDefault(p =>
                 p.CertificateId == certificateId &&

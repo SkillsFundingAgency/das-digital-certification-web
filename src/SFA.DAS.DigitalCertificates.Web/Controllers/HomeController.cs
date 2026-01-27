@@ -17,6 +17,7 @@ using SFA.DAS.DigitalCertificates.Web.Orchestrators;
 using SFA.DAS.DigitalCertificates.Web.StartupExtensions;
 using SFA.DAS.GovUK.Auth.Authentication;
 using SFA.DAS.GovUK.Auth.Services;
+using SFA.DAS.DigitalCertificates.Web.Services;
 
 namespace SFA.DAS.DigitalCertificates.Web.Controllers
 {
@@ -27,7 +28,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         private readonly IConfiguration _config;
         private readonly IGovUkAuthenticationService _govUkAuthenticationService;
         private readonly ILogger<HomeController> _logger;
-        
+        private readonly ISessionService _sessionService;
+
         #region Routes
         public const string VerifiedRouteGet = nameof(VerifiedRouteGet);
         public const string CheckRouteGet = nameof(CheckRouteGet);
@@ -40,14 +42,16 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         #endregion Routes
 
         public HomeController(IHomeOrchestrator homeOrchestrator,
-            IConfiguration config, IGovUkAuthenticationService govUkAuthenticationService,  
-            IHttpContextAccessor contextAccessor, ILogger<HomeController> logger)
+            IConfiguration config, IGovUkAuthenticationService govUkAuthenticationService,
+            IHttpContextAccessor contextAccessor, ILogger<HomeController> logger,
+            ISessionService sessionService)
             : base(contextAccessor)
         {
             _homeOrchestrator = homeOrchestrator;
             _config = config;
             _govUkAuthenticationService = govUkAuthenticationService;
             _logger = logger;
+            _sessionService = sessionService;
         }
 
         [Route("start-page")]
@@ -102,6 +106,15 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
                         .First().Value
                         .ParseEnGbDateTime()
             });
+
+            // TODO: This is currently handled temporarily to support testing of the sharing email functionality. It will be updated to align with the agreed requirements as part of an upcoming ticket.
+
+            var first = details.CoreIdentityJwt?.Vc?.CredentialSubject?.GetHistoricalNames()?.FirstOrDefault();
+            var given = first?.GivenNames ?? string.Empty;
+            var family = first?.FamilyNames ?? string.Empty;
+            var displayName = string.IsNullOrWhiteSpace(given) ? family : (string.IsNullOrWhiteSpace(family) ? given : $"{given} {family}");
+
+            await _sessionService.SetUsernameAsync(displayName ?? string.Empty);
 
             return RedirectToRoute(CertificatesController.CertificatesListRouteGet);
         }

@@ -17,7 +17,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authentication
 {
     public class CertificateOwnerAuthorizationHandlerTests
     {
-        private Mock<ISessionStorageService> _sessionMock;
+        private Mock<ICacheService> _cacheServiceMock;
         private Mock<IUserService> _userServiceMock;
         private CertificateOwnerAuthorizationHandler _sut;
         private AuthorizationHandlerContext _authContext;
@@ -30,9 +30,9 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authentication
         [SetUp]
         public void SetUp()
         {
-            _sessionMock = new Mock<ISessionStorageService>();
+            _cacheServiceMock = new Mock<ICacheService>();
             _userServiceMock = new Mock<IUserService>();
-            _sut = new CertificateOwnerAuthorizationHandler(_sessionMock.Object, _userServiceMock.Object);
+            _sut = new CertificateOwnerAuthorizationHandler(_cacheServiceMock.Object, _userServiceMock.Object);
 
             _requirement = new CertificateOwnerRequirement();
             _httpContext = new DefaultHttpContext();
@@ -50,7 +50,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authentication
             SetRoute(_standardCertificateId.ToString(), CertificatesController.CertificateStandardRouteGet);
 
             _userServiceMock.Setup(x => x.GetGovUkIdentifier()).Returns("gov-123");
-            _sessionMock
+            _cacheServiceMock
                 .Setup(x => x.GetOwnedCertificatesAsync("gov-123"))
                 .ReturnsAsync(new List<Certificate>
                 {
@@ -71,7 +71,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authentication
             SetRoute(_frameworkCertificateId.ToString(), CertificatesController.CertificateFrameworkRouteGet);
 
             _userServiceMock.Setup(x => x.GetGovUkIdentifier()).Returns("gov-123");
-            _sessionMock
+            _cacheServiceMock
                 .Setup(x => x.GetOwnedCertificatesAsync("gov-123"))
                 .ReturnsAsync(new List<Certificate>
                 {
@@ -92,7 +92,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authentication
             SetRoute(certId.ToString(), "SomeOtherRoute");
 
             _userServiceMock.Setup(x => x.GetGovUkIdentifier()).Returns("gov-123");
-            _sessionMock
+            _cacheServiceMock
                 .Setup(x => x.GetOwnedCertificatesAsync("gov-123"))
                 .ReturnsAsync(new List<Certificate>
                 {
@@ -114,7 +114,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authentication
             SetRoute(certificateId.ToString(), CertificatesController.CertificateStandardRouteGet);
 
             _userServiceMock.Setup(x => x.GetGovUkIdentifier()).Returns("gov-123");
-            _sessionMock
+            _cacheServiceMock
                 .Setup(x => x.GetOwnedCertificatesAsync("gov-123"))
                 .ReturnsAsync(new List<Certificate>
                 {
@@ -139,7 +139,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authentication
             SetRoute(certificateId.ToString(), CertificatesController.CertificateFrameworkRouteGet);
 
             _userServiceMock.Setup(x => x.GetGovUkIdentifier()).Returns("gov-123");
-            _sessionMock
+            _cacheServiceMock
                 .Setup(x => x.GetOwnedCertificatesAsync("gov-123"))
                 .ReturnsAsync(new List<Certificate>
                 {
@@ -164,7 +164,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authentication
             SetRoute(certificateId.ToString(), CertificatesController.CertificateStandardRouteGet);
 
             _userServiceMock.Setup(x => x.GetGovUkIdentifier()).Returns("gov-123");
-            _sessionMock
+            _cacheServiceMock
                 .Setup(x => x.GetOwnedCertificatesAsync("gov-123"))
                 .ReturnsAsync(new List<Certificate>()); // empty list
 

@@ -19,15 +19,15 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authorization
     public class DigitalCertificateCustomClaimsTests
     {
         private Mock<IMediator> _mediatorMock;
-        private Mock<ISessionStorageService> _sessionStorageServiceMock;
+        private Mock<ICacheService> _cacheServiceMock;
         private DigitalCertificateCustomClaims _sut;
 
         [SetUp]
         public void SetUp()
         {
             _mediatorMock = new Mock<IMediator>();
-            _sessionStorageServiceMock = new Mock<ISessionStorageService>();
-            _sut = new DigitalCertificateCustomClaims(_mediatorMock.Object, _sessionStorageServiceMock.Object);
+            _cacheServiceMock = new Mock<ICacheService>();
+            _sut = new DigitalCertificateCustomClaims(_mediatorMock.Object, _cacheServiceMock.Object);
         }
 
         [TearDown]
@@ -49,7 +49,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authorization
                 LockedAt = null
             };
 
-            _sessionStorageServiceMock
+            _cacheServiceMock
                 .Setup(x => x.GetUserAsync(govUkIdentifier))
                 .ReturnsAsync(user);
 
@@ -79,7 +79,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authorization
                 LockedAt = DateTime.UtcNow
             };
 
-            _sessionStorageServiceMock
+            _cacheServiceMock
                 .Setup(x => x.GetUserAsync(user.GovUkIdentifier))
                 .ReturnsAsync(user);
 
@@ -102,7 +102,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authorization
         {
             // Arrange
             var govUkIdentifier = "gov-123";
-            _sessionStorageServiceMock
+            _cacheServiceMock
                 .Setup(x => x.GetUserAsync(govUkIdentifier))
                 .ReturnsAsync((User)null);
 
@@ -126,7 +126,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authorization
 
             // Assert
             result.Should().BeEmpty();
-            _sessionStorageServiceMock.Verify(x => x.GetUserAsync(It.IsAny<string>()), Times.Never);
+            _cacheServiceMock.Verify(x => x.GetUserAsync(It.IsAny<string>()), Times.Never);
         }
 
         [Test]
@@ -141,7 +141,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authorization
                 LockedAt = null
             };
 
-            _sessionStorageServiceMock
+            _cacheServiceMock
                 .Setup(x => x.GetUserAsync(user.GovUkIdentifier))
                 .ReturnsAsync(user);
 
@@ -175,7 +175,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authorization
 
             // Assert
             result.Should().BeEmpty();
-            _sessionStorageServiceMock.Verify(x => x.GetUserAsync(It.IsAny<string>()), Times.Never);
+            _cacheServiceMock.Verify(x => x.GetUserAsync(It.IsAny<string>()), Times.Never);
         }
     }
 }

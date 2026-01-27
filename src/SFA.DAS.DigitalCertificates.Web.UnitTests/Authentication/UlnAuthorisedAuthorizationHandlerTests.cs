@@ -13,7 +13,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authentication
 {
     public class UlnAuthorisedAuthorizationHandlerTests
     {
-        private Mock<ISessionStorageService> _sessionMock;
+        private Mock<ICacheService> _cacheServiceMock;
         private Mock<IUserService> _userServiceMock;
         private UlnAuthorisedAuthorizationHandler _sut;
 
@@ -23,11 +23,11 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authentication
         [SetUp]
         public void SetUp()
         {
-            _sessionMock = new Mock<ISessionStorageService>();
+            _cacheServiceMock = new Mock<ICacheService>();
             _userServiceMock = new Mock<IUserService>();
 
             _sut = new UlnAuthorisedAuthorizationHandler(
-                _sessionMock.Object,
+                _cacheServiceMock.Object,
                 _userServiceMock.Object);
 
             _requirement = new UlnAuthorisedRequirement();
@@ -45,7 +45,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authentication
             _userServiceMock.Setup(x => x.GetGovUkIdentifier())
                 .Returns(govId);
 
-            _sessionMock.Setup(x => x.GetUlnAuthorisationAsync(govId))
+            _cacheServiceMock.Setup(x => x.GetUlnAuthorisationAsync(govId))
                 .ReturnsAsync(new UlnAuthorisation { AuthorisationId = Guid.NewGuid(), AuthorisedAt = DateTime.Now, Uln = "123456789"}); 
 
             // Act
@@ -64,7 +64,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authentication
             _userServiceMock.Setup(x => x.GetGovUkIdentifier())
                 .Returns(govId);
 
-            _sessionMock.Setup(x => x.GetUlnAuthorisationAsync(govId))
+            _cacheServiceMock.Setup(x => x.GetUlnAuthorisationAsync(govId))
                 .ReturnsAsync((UlnAuthorisation)null);
 
             // Act

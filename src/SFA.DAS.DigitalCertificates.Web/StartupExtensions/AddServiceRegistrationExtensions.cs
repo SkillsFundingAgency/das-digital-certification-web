@@ -15,6 +15,7 @@ using SFA.DAS.DigitalCertificates.Web.Services;
 using SFA.DAS.GovUK.Auth.Authentication;
 using SFA.DAS.Http.Configuration;
 using SFA.DAS.DigitalCertificates.Domain.Extensions;
+using SFA.DAS.DigitalCertificates.Infrastructure.Services.SessionStorage;
 
 namespace SFA.DAS.DigitalCertificates.Web.StartupExtensions
 {
@@ -28,8 +29,11 @@ namespace SFA.DAS.DigitalCertificates.Web.StartupExtensions
             services.AddSingleton<IAuthorizationHandler, AccountActiveAuthorizationHandler>();
 
             services.AddTransient<ICacheStorageService, CacheStorageService>();
-            services.AddTransient<ISessionStorageService, SessionStorageService>();
+            services.AddTransient<ICacheService, CacheService>();
             services.AddTransient<IUserService, UserService>();
+
+            services.AddScoped<ISessionStorageService, SessionStorageService>();
+            services.AddScoped<ISessionService, SessionService>();
 
             services.AddSingleton<IAuthorizationHandler, UlnAuthorisedAuthorizationHandler>();
             services.AddSingleton<IAuthorizationFailureHandler, UlnAuthorisedFailureHandler>();

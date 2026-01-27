@@ -11,7 +11,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         Task<EmailSentViewModel?> GetEmailSent(Guid certificateId, Guid sharingId, Guid sharingEmailId);
         Task<Guid> CreateSharing(Guid certificateId);
         Task<ConfirmShareByEmailViewModel?> GetConfirmShareByEmail(Guid certificateId, Guid sharingId, string emailAddress);
-        Task<Guid> CreateSharingEmail(Guid certificateId, Guid sharingId, string emailAddress);
+        Task<Guid?> CreateSharingEmail(Guid certificateId, Guid sharingId, string emailAddress);
         Task<bool> ValidateShareByEmailViewModel(ShareByEmailViewModel viewModel, Microsoft.AspNetCore.Mvc.ModelBinding.ModelStateDictionary modelState);
     }
 }

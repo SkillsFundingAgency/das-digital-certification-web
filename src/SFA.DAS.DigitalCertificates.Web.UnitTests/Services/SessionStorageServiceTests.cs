@@ -21,7 +21,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
     {
         private Mock<ICacheStorageService> _cacheStorageMock;
         private Mock<IMediator> _mediatorMock;
-        private SessionStorageService _sut;
+        private CacheService _sut;
 
         [SetUp]
         public void Setup()
@@ -29,7 +29,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
             _cacheStorageMock = new Mock<ICacheStorageService>();
             _mediatorMock = new Mock<IMediator>();
 
-            _sut = new SessionStorageService(_cacheStorageMock.Object, _mediatorMock.Object);
+            _sut = new CacheService(_cacheStorageMock.Object, _mediatorMock.Object);
         }
 
         [TearDown]
@@ -45,7 +45,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
 
             _cacheStorageMock
                 .Setup(x => x.GetOrCreateAsync(
-                    SessionStorageService.GetScopedKey(nameof(User), expectedUser.GovUkIdentifier),
+                    CacheService.GetScopedKey(nameof(User), expectedUser.GovUkIdentifier),
                     It.IsAny<Func<DistributedCacheEntryOptions, Task<User>>>(),
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync(expectedUser);
@@ -56,7 +56,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
 
             _cacheStorageMock.Verify(x =>
                 x.GetOrCreateAsync(
-                    SessionStorageService.GetScopedKey(nameof(User), expectedUser.GovUkIdentifier),
+                    CacheService.GetScopedKey(nameof(User), expectedUser.GovUkIdentifier),
                     It.IsAny<Func<DistributedCacheEntryOptions, Task<User>>>(),
                     It.IsAny<CancellationToken>()),
                 Times.Once);
@@ -70,7 +70,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
 
             _cacheStorageMock
                 .Setup(x => x.GetOrCreateAsync(
-                    SessionStorageService.GetScopedKey(nameof(User), expectedUser.GovUkIdentifier),
+                    CacheService.GetScopedKey(nameof(User), expectedUser.GovUkIdentifier),
                     It.IsAny<Func<DistributedCacheEntryOptions, Task<User>>>(),
                     It.IsAny<CancellationToken>()))
                 .Callback<string, Func<DistributedCacheEntryOptions, Task<User>>, CancellationToken>(
@@ -125,7 +125,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
 
             _cacheStorageMock
                 .Setup(x => x.GetOrCreateAsync(
-                    SessionStorageService.GetScopedKey(nameof(CertificatesResponse), govUkIdentifier),
+                    CacheService.GetScopedKey(nameof(CertificatesResponse), govUkIdentifier),
                     It.IsAny<Func<DistributedCacheEntryOptions, Task<GetCertificatesQueryResult>>>(),
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync(response);
@@ -154,7 +154,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
 
             _cacheStorageMock
                 .Setup(x => x.GetOrCreateAsync(
-                    SessionStorageService.GetScopedKey(nameof(CertificatesResponse), govUkIdentifier),
+                    CacheService.GetScopedKey(nameof(CertificatesResponse), govUkIdentifier),
                     It.IsAny<Func<DistributedCacheEntryOptions, Task<GetCertificatesQueryResult>>>(),
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync(response);
@@ -177,7 +177,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
 
             _cacheStorageMock
                 .Setup(x => x.GetOrCreateAsync(
-                    SessionStorageService.GetScopedKey(nameof(User), govUkIdentifier),
+                    CacheService.GetScopedKey(nameof(User), govUkIdentifier),
                     It.IsAny<Func<DistributedCacheEntryOptions, Task<User>>>(),
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync(user);
@@ -186,7 +186,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
 
             _cacheStorageMock
                 .Setup(x => x.GetOrCreateAsync(
-                    SessionStorageService.GetScopedKey(nameof(CertificatesResponse), govUkIdentifier),
+                    CacheService.GetScopedKey(nameof(CertificatesResponse), govUkIdentifier),
                     It.IsAny<Func<DistributedCacheEntryOptions, Task<GetCertificatesQueryResult>>>(),
                     It.IsAny<CancellationToken>()))
                 .Callback<string, Func<DistributedCacheEntryOptions, Task<GetCertificatesQueryResult>>, CancellationToken>(
@@ -223,14 +223,14 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
 
             _cacheStorageMock
                 .Setup(x => x.GetOrCreateAsync(
-                    SessionStorageService.GetScopedKey(nameof(User), govUkIdentifier),
+                    CacheService.GetScopedKey(nameof(User), govUkIdentifier),
                     It.IsAny<Func<DistributedCacheEntryOptions, Task<User>>>(),
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync((User)null);
 
             _cacheStorageMock
                 .Setup(x => x.GetOrCreateAsync(
-                    SessionStorageService.GetScopedKey(nameof(CertificatesResponse), govUkIdentifier),
+                    CacheService.GetScopedKey(nameof(CertificatesResponse), govUkIdentifier),
                     It.IsAny<Func<DistributedCacheEntryOptions, Task<GetCertificatesQueryResult>>>(),
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync((GetCertificatesQueryResult)null);
@@ -249,8 +249,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
         {
             var govUkIdentifier = "gov-999";
 
-            var expectedUserKey = SessionStorageService.GetScopedKey(nameof(User), govUkIdentifier);
-            var expectedCertsKey = SessionStorageService.GetScopedKey(nameof(CertificatesResponse), govUkIdentifier);
+            var expectedUserKey = CacheService.GetScopedKey(nameof(User), govUkIdentifier);
+            var expectedCertsKey = CacheService.GetScopedKey(nameof(CertificatesResponse), govUkIdentifier);
 
             // Act
             await _sut.Clear(govUkIdentifier);
@@ -263,7 +263,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
         [Test]
         public void GetScopedKey_Returns_Correct_Format()
         {
-            var key = SessionStorageService.GetScopedKey("User", "gov-123");
+            var key = CacheService.GetScopedKey("User", "gov-123");
             key.Should().Be("DigitalCertificates:User:gov-123");
         }
     }

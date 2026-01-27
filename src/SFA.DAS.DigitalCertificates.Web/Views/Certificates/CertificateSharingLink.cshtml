@@ -92,7 +92,7 @@
                         </thead>
                         <tbody class="govuk-table__body">
                             <tr class="govuk-table__row">
-                                <td scope="row" class="govuk-table__header">Link created</td>
+                                <td class="govuk-table__cell">Link created</td>
                                 <td class="govuk-table__cell">@Model.FormattedCreated</td>
                             </tr>
 
@@ -103,6 +103,18 @@
                                     <td class="govuk-table__cell">@accessText</td>
                                 </tr>
                             }
+
+                            @if (Model.SharingEmailsHistory != null && Model.SharingEmailsHistory.Any())
+                            {
+                                foreach (var email in Model.SharingEmailsHistory)
+                                {
+                                    <tr class="govuk-table__row">
+                                        <td class="govuk-table__cell">Link emailed to @email.EmailAddress</td>
+                                        <td class="govuk-table__cell">@email.FormattedSentTime</td>
+                                    </tr>
+                                }
+                            }
+
                         </tbody>
                     </table>
                 }

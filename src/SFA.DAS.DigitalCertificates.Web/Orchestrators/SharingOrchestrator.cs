@@ -1,40 +1,43 @@
-﻿using System;
+﻿using FluentValidation;
+using MediatR;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using SFA.DAS.DigitalCertificates.Application.Commands.CreateSharing;
+using SFA.DAS.DigitalCertificates.Application.Commands.CreateSharingEmail;
+using SFA.DAS.DigitalCertificates.Application.Queries.GetSharingById;
+using SFA.DAS.DigitalCertificates.Application.Queries.GetSharings;
+using SFA.DAS.DigitalCertificates.Domain.Extensions;
+using SFA.DAS.DigitalCertificates.Domain.Models;
+using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
+using SFA.DAS.DigitalCertificates.Infrastructure.Constants;
+using SFA.DAS.DigitalCertificates.Web.Extensions;
+using SFA.DAS.DigitalCertificates.Web.Models.Sharing;
+using SFA.DAS.DigitalCertificates.Web.Services;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using SFA.DAS.DigitalCertificates.Web.Extensions;
-using MediatR;
-using SFA.DAS.DigitalCertificates.Application.Commands.CreateSharing;
-using SFA.DAS.DigitalCertificates.Application.Queries.GetSharingById;
-using SFA.DAS.DigitalCertificates.Application.Queries.GetSharings;
-using SFA.DAS.DigitalCertificates.Application.Commands.CreateSharingEmail;
-using SFA.DAS.DigitalCertificates.Domain.Models;
-using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
-using SFA.DAS.DigitalCertificates.Web.Models.Sharing;
-using SFA.DAS.DigitalCertificates.Web.Services;
-using FluentValidation;
-using SFA.DAS.DigitalCertificates.Domain.Extensions;
-using SFA.DAS.DigitalCertificates.Infrastructure.Constants;
 
 namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 {
     public class SharingOrchestrator : BaseOrchestrator, ISharingOrchestrator
     {
         private readonly IUserService _userService;
-        private readonly ISessionStorageService _sessionStorageService;
+        private readonly ICacheService _cacheService;
+        private readonly ISessionService _sessionService;
         private readonly DigitalCertificatesWebConfiguration _digitalCertificatesWebConfiguration;
         private readonly IDateTimeHelper _dateTimeHelper;
         private readonly IValidator<ShareByEmailViewModel> _shareByEmailValidator;
 
-        public SharingOrchestrator(IMediator mediator, IUserService userService, ISessionStorageService sessionStorageService,
+        public SharingOrchestrator(IMediator mediator, IUserService userService, ICacheService cacheService,
+            ISessionService sessionService,
             DigitalCertificatesWebConfiguration digitalCertificatesWebConfiguration,
             IDateTimeHelper dateTimeHelper,
             IValidator<ShareByEmailViewModel> shareByEmailValidator)
             : base(mediator)
         {
             _userService = userService;
-            _sessionStorageService = sessionStorageService;
+            _cacheService = cacheService;
+            _sessionService = sessionService;
             _digitalCertificatesWebConfiguration = digitalCertificatesWebConfiguration;
             _shareByEmailValidator = shareByEmailValidator;
             _dateTimeHelper = dateTimeHelper;
@@ -142,6 +145,17 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 FormattedAccessTimes = (response.SharingAccess ?? new List<DateTime>()).Select(a => a.ToUkDateTimeString()).ToList()
             };
 
+            if (response.SharingEmails != null && response.SharingEmails.Any())
+            {
+                viewModel.SharingEmailsHistory = response.SharingEmails
+                    .Select(e => new SharingEmailItem
+                    {
+                        EmailAddress = e.EmailAddress,
+                        FormattedSentTime = e.SentTime.ToUkDateTimeString()
+                    })
+                    .ToList();
+            }
+
             // TODO: This URL and its associated email template may require changes
             // when the corresponding page is implemented.
             viewModel.SecureLink = $"{_digitalCertificatesWebConfiguration?.ServiceBaseUrl}/certificates/{viewModel.LinkCode}";
@@ -180,7 +194,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             };
         }
 
-        public async Task<Guid> CreateSharingEmail(Guid certificateId, Guid sharingId, string emailAddress)
+        public async Task<Guid?> CreateSharingEmail(Guid certificateId, Guid sharingId, string emailAddress)
         {
             var certificateData = await GetCertificateFromSessionAsync(certificateId);
 
@@ -197,7 +211,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 
             if (sharingResponse == null)
             {
-                return Guid.Empty;
+                return null;
             }
 
             var messageText = $"This link will stop working at {sharingResponse.ExpiryTime.ToUkExpiryDateTimeString()}.";
@@ -216,7 +230,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 TemplateId = templateId
             });
 
-            return result?.Id ?? Guid.Empty;
+            return result?.Id ?? null;
         }
 
         public async Task<EmailSentViewModel?> GetEmailSent(Guid certificateId, Guid sharingId, Guid sharingEmailId)
@@ -251,7 +265,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 CourseName = response.CourseName,
             };
 
-            var ownedCertificate = await _sessionStorageService.GetOwnedCertificatesAsync(_userService.GetGovUkIdentifier());
+            var ownedCertificate = await _cacheService.GetOwnedCertificatesAsync(_userService.GetGovUkIdentifier());
 
             viewModel.IsSingleCertificate = (ownedCertificate?.Count ?? 0) == 1;
 
@@ -266,28 +280,16 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 return null;
             }
 
-            var certificates = await _sessionStorageService.GetOwnedCertificatesAsync(govUkIdentifier);
+            var certificates = await _cacheService.GetOwnedCertificatesAsync(govUkIdentifier);
             return certificates?.FirstOrDefault(c => c.CertificateId == certificateId);
         }
 
         private async Task<string> GetUserDisplayNameAsync()
         {
-            var govUkIdentifier = _userService.GetGovUkIdentifier();
-            if (string.IsNullOrEmpty(govUkIdentifier))
+            var displayName = await _sessionService.GetUserNameAsync();
+            if (!string.IsNullOrWhiteSpace(displayName))
             {
-                return string.Empty;
-            }
-
-            var user = await _sessionStorageService.GetUserAsync(govUkIdentifier);
-            if (user == null)
-            {
-                return string.Empty;
-            }
-
-            var name = user.Names?.FirstOrDefault();
-            if (name != null && !string.IsNullOrEmpty(name.GivenNames) && !string.IsNullOrEmpty(name.FamilyName))
-            {
-                return $"{name.GivenNames} {name.FamilyName}";
+                return displayName;
             }
 
             return string.Empty;
