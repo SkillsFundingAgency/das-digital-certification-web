@@ -12,13 +12,13 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 {
     public class CertificatesOrchestrator : BaseOrchestrator, ICertificatesOrchestrator
     {
-        private readonly ICacheService _cacheService;
+        private readonly ISessionService _sessionService;
         private readonly IUserService _userService;
 
-        public CertificatesOrchestrator(IMediator mediator, ICacheService cacheService, IUserService userService)
+        public CertificatesOrchestrator(IMediator mediator, ISessionService sessionService, IUserService userService)
             : base(mediator)
         {
-            _cacheService = cacheService;
+            _sessionService = sessionService;
             _userService = userService;
         }
 
@@ -26,7 +26,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         {
             return new CertificatesListViewModel
             {
-                Certificates = await _cacheService.GetOwnedCertificatesAsync(_userService.GetGovUkIdentifier())
+                Certificates = await _sessionService.GetOwnedCertificatesAsync(_userService.GetGovUkIdentifier())
             };
         }
 
@@ -60,7 +60,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 PrintRequestedBy = result.PrintRequestedBy
             };
 
-            var owned = await _cacheService.GetOwnedCertificatesAsync(_userService.GetGovUkIdentifier());
+            var owned = await _sessionService.GetOwnedCertificatesAsync(_userService.GetGovUkIdentifier());
 
             viewModel.ShowBackLink = (owned?.Count() ?? 0) > 1;
 
@@ -100,7 +100,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 DeliveryInformation = result.DeliveryInformation
             };
 
-            var owned = await _cacheService.GetOwnedCertificatesAsync(_userService.GetGovUkIdentifier());
+            var owned = await _sessionService.GetOwnedCertificatesAsync(_userService.GetGovUkIdentifier());
 
             viewModel.ShowBackLink = (owned?.Count() ?? 0) > 1;
 

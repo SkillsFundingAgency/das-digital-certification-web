@@ -26,7 +26,7 @@ namespace SFA.DAS.DigitalCertificates.Web.StartupExtensions
         {
             services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(CreateOrUpdateUserCommand).Assembly));
 
-            services.AddSingleton<IAuthorizationHandler, AccountActiveAuthorizationHandler>();
+            services.AddScoped<IAuthorizationHandler, AccountActiveAuthorizationHandler>();
 
             services.AddTransient<ICacheStorageService, CacheStorageService>();
             services.AddTransient<ICacheService, CacheService>();
@@ -35,9 +35,9 @@ namespace SFA.DAS.DigitalCertificates.Web.StartupExtensions
             services.AddScoped<ISessionStorageService, SessionStorageService>();
             services.AddScoped<ISessionService, SessionService>();
 
-            services.AddSingleton<IAuthorizationHandler, UlnAuthorisedAuthorizationHandler>();
+            services.AddScoped<IAuthorizationHandler, UlnAuthorisedAuthorizationHandler>();
             services.AddSingleton<IAuthorizationFailureHandler, UlnAuthorisedFailureHandler>();
-            services.AddSingleton<IAuthorizationHandler, CertificateOwnerAuthorizationHandler>();
+            services.AddScoped<IAuthorizationHandler, CertificateOwnerAuthorizationHandler>();
             services.AddSingleton<IAuthorizationFailureHandler, CertificateOwnerFailureHandler>();
 
             services.AddTransient<ValidateRequiredQueryParametersAttribute>();

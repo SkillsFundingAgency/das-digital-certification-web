@@ -6,18 +6,18 @@ namespace SFA.DAS.DigitalCertificates.Web.Authentication
 {
     public class UlnAuthorisedAuthorizationHandler : AuthorizationHandler<UlnAuthorisedRequirement>
     {
-        private readonly ICacheService _cacheService;
+        private readonly ISessionService _sessionService;
         private readonly IUserService _userService;
 
-        public UlnAuthorisedAuthorizationHandler(ICacheService cacheService, IUserService userService)
+        public UlnAuthorisedAuthorizationHandler(ISessionService sessionService, IUserService userService)
         {
-            _cacheService = cacheService;
+            _sessionService = sessionService;
             _userService = userService;
         }
 
         protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, UlnAuthorisedRequirement requirement)
         {
-            var ulnAuthorised = await _cacheService.GetUlnAuthorisationAsync(_userService.GetGovUkIdentifier());
+            var ulnAuthorised = await _sessionService.GetUlnAuthorisationAsync(_userService.GetGovUkIdentifier());
             if (ulnAuthorised != null)
             {
                 context.Succeed(requirement);

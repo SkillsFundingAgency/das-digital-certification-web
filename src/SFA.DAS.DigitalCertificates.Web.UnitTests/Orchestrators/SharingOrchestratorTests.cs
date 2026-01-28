@@ -90,7 +90,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 CourseLevel = "Level 3",
                 DateAwarded = DateTime.UtcNow
             };
-            _cacheServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
+            _sessionServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
                 .ReturnsAsync(new List<Certificate> { certificate });
 
             var queryResult = new GetSharingsQueryResult
@@ -158,7 +158,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 CourseLevel = "Level 3",
                 DateAwarded = DateTime.UtcNow
             };
-            _cacheServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
+            _sessionServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
                 .ReturnsAsync(new List<Certificate> { certificate });
 
             _mediatorMock
@@ -201,7 +201,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 CourseLevel = "Level 4",
                 DateAwarded = DateTime.UtcNow
             };
-            _cacheServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
+            _sessionServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
                 .ReturnsAsync(new List<Certificate> { certificate });
 
             var queryResult = new GetSharingsQueryResult
@@ -260,7 +260,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             _userServiceMock.Setup(x => x.GetUserId()).Returns(userId);
             _userServiceMock.Setup(x => x.GetGovUkIdentifier()).Returns(govUkIdentifier);
 
-            _cacheServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
+            _sessionServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
                 .ReturnsAsync(new List<Certificate>());
 
             // Act + Assert
@@ -292,7 +292,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 CourseLevel = "Level 3",
                 DateAwarded = DateTime.UtcNow
             };
-            _cacheServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
+            _sessionServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
                 .ReturnsAsync(new List<Certificate> { certificate });
 
             var queryResult = new GetSharingsQueryResult
@@ -342,7 +342,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 CourseLevel = "Level 3",
                 DateAwarded = DateTime.UtcNow
             };
-            _cacheServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
+            _sessionServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
                 .ReturnsAsync(new List<Certificate> { certificate });
 
             var queryResult = new GetSharingsQueryResult
@@ -392,7 +392,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 CourseLevel = "Level 3",
                 DateAwarded = DateTime.UtcNow
             };
-            _cacheServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
+            _sessionServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
                 .ReturnsAsync(new List<Certificate> { certificate });
 
             var commandResult = new CreateSharingCommandResult
@@ -448,7 +448,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 CourseLevel = "Level 3",
                 DateAwarded = DateTime.UtcNow
             };
-            _cacheServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
+            _sessionServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
                 .ReturnsAsync(new List<Certificate> { certificate });
 
             _mediatorMock
@@ -473,7 +473,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             _userServiceMock.Setup(x => x.GetUserId()).Returns(userId);
             _userServiceMock.Setup(x => x.GetGovUkIdentifier()).Returns(govUkIdentifier);
 
-            _cacheServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
+            _sessionServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
                 .ReturnsAsync(new List<Certificate>());
 
             // Act + Assert
@@ -502,7 +502,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 DateAwarded = DateTime.UtcNow
             };
 
-            _cacheServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
+            _sessionServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
                 .ReturnsAsync(new List<Certificate> { certificate });
 
             var createdAt = new DateTime(2024, 1, 1, 10, 0, 0, DateTimeKind.Utc);
@@ -571,7 +571,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 DateAwarded = DateTime.UtcNow
             };
 
-            _cacheServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
+            _sessionServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
                 .ReturnsAsync(new List<Certificate> { certificate });
 
             _mediatorMock
@@ -595,7 +595,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
 
             _userServiceMock.Setup(x => x.GetGovUkIdentifier()).Returns(govUkIdentifier);
 
-            _cacheServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
+            _sessionServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
                 .ReturnsAsync(new List<Certificate>());
 
             // Act + Assert
@@ -624,7 +624,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 DateAwarded = DateTime.UtcNow
             };
 
-            _cacheServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
+            _sessionServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
                 .ReturnsAsync(new List<Certificate> { certificate });
 
             _mediatorMock
@@ -657,7 +657,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 DateAwarded = DateTime.UtcNow
             };
 
-            _cacheServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
+            _sessionServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
                 .ReturnsAsync(new List<Certificate> { certificate });
 
             var now = new DateTime(2024, 01, 01, 12, 0, 0, DateTimeKind.Utc);
@@ -706,7 +706,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 DateAwarded = DateTime.UtcNow
             };
 
-            _cacheServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
+            _sessionServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
                 .ReturnsAsync(new List<Certificate> { certificate });
 
             var now = new DateTime(2024, 01, 01, 12, 0, 0, DateTimeKind.Utc);
@@ -764,7 +764,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 DateAwarded = DateTime.UtcNow
             };
 
-            _cacheServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
+            _sessionServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
                 .ReturnsAsync(new List<Certificate> { certificate });
 
             var now = DateTime.UtcNow;
@@ -855,7 +855,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 DateAwarded = DateTime.UtcNow
             };
 
-            _cacheServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
+            _sessionServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
                 .ReturnsAsync(new List<Certificate> { certificate });
 
             _mediatorMock
@@ -889,7 +889,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 DateAwarded = DateTime.UtcNow
             };
 
-            _cacheServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
+            _sessionServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
                 .ReturnsAsync(new List<Certificate> { certificate });
 
             var now = DateTime.UtcNow;
@@ -954,7 +954,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 DateAwarded = DateTime.UtcNow
             };
 
-            _cacheServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
+            _sessionServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
                 .ReturnsAsync(new List<Certificate> { certificate });
 
             _mediatorMock

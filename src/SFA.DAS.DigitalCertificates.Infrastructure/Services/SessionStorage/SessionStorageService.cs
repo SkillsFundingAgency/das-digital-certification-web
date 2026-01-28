@@ -7,41 +7,25 @@ namespace SFA.DAS.DigitalCertificates.Infrastructure.Services.SessionStorage
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        private const string UsernameKey = "DigitalCertificates:Username";
-        private const string ShareEmailKey = "DigitalCertificates:ShareEmail";
-
         public SessionStorageService(IHttpContextAccessor httpContextAccessor)
         {
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public Task SetUsernameAsync(string username)
+        public Task SetAsync(string key, string value)
         {
-            SetString(UsernameKey, username);
+            SetString(key, value);
             return Task.CompletedTask;
         }
 
-        public Task<string?> GetUsernameAsync() =>
-            Task.FromResult(GetString(UsernameKey));
-
-        public Task ClearUsernameAsync()
+        public Task<string?> GetAsync(string key)
         {
-            Remove(UsernameKey);
-            return Task.CompletedTask;
+            return Task.FromResult(GetString(key));
         }
 
-        public Task SetShareEmailAsync(string email)
+        public Task ClearAsync(string key)
         {
-            SetString(ShareEmailKey, email);
-            return Task.CompletedTask;
-        }
-
-        public Task<string?> GetShareEmailAsync() =>
-            Task.FromResult(GetString(ShareEmailKey));
-
-        public Task ClearShareEmailAsync()
-        {
-            Remove(ShareEmailKey);
+            Remove(key);
             return Task.CompletedTask;
         }
 

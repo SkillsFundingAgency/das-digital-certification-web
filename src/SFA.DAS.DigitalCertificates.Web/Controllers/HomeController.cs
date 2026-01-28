@@ -107,11 +107,29 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
                         .ParseEnGbDateTime()
             });
 
-            // TODO: This is currently handled temporarily to support testing of the sharing email functionality. It will be updated to align with the agreed requirements as part of an upcoming ticket.
+            // TODO: DisplayName is currently handled temporarily to support testing of the sharing email functionality. It will be updated to align with the agreed requirements as part of an upcoming ticket.
 
-            var first = details.CoreIdentityJwt?.Vc?.CredentialSubject?.GetHistoricalNames()?.FirstOrDefault();
-            var given = first?.GivenNames ?? string.Empty;
-            var family = first?.FamilyNames ?? string.Empty;
+            var historicalNames = details.CoreIdentityJwt?.Vc?.CredentialSubject?.GetHistoricalNames();
+            var selectedName = (historicalNames != null)
+                ? historicalNames.FirstOrDefault(n =>
+                {
+                    var now = DateTime.UtcNow;
+                    var validFrom = n.ValidFrom;
+                    var validUntil = n.ValidUntil;
+                    var fromOk = validFrom == null || validFrom <= now;
+                    var untilOk = validUntil == null || validUntil >= now;
+                    return fromOk && untilOk;
+                })
+                : null;
+
+            // fallback to the first historical name if no currently valid one found
+            if (selectedName == null && historicalNames != null)
+            {
+                selectedName = historicalNames.FirstOrDefault();
+            }
+
+            var given = selectedName?.GivenNames ?? string.Empty;
+            var family = selectedName?.FamilyNames ?? string.Empty;
             var displayName = string.IsNullOrWhiteSpace(given) ? family : (string.IsNullOrWhiteSpace(family) ? given : $"{given} {family}");
 
             await _sessionService.SetUsernameAsync(displayName ?? string.Empty);
