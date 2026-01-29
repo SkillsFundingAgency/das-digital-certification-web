@@ -4,10 +4,13 @@ using Microsoft.AspNetCore.Mvc;
 using SFA.DAS.DigitalCertificates.Domain.Models;
 using SFA.DAS.DigitalCertificates.Web.Authentication;
 using SFA.DAS.DigitalCertificates.Web.Orchestrators;
+using SFA.DAS.DigitalCertificates.Web.Models.Sharing;
+using FluentValidation;
 using SFA.DAS.GovUK.Auth.Authentication;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using SFA.DAS.DigitalCertificates.Web.Services;
 
 namespace SFA.DAS.DigitalCertificates.Web.Controllers
 {
@@ -23,17 +26,22 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         public const string CreateCertificateSharingRouteGet = nameof(CreateCertificateSharingRouteGet);
         public const string CreateCertificateSharingRoutePost = nameof(CreateCertificateSharingRoutePost);
         public const string CertificateSharingLinkRouteGet = nameof(CertificateSharingLinkRouteGet);
-        public const string CertificateSharingLinkRoutePost = nameof(CertificateSharingLinkRoutePost);
+        public const string ShareByEmailRoutePost = nameof(ShareByEmailRoutePost);
+        public const string ConfirmShareByEmailRouteGet = nameof(ConfirmShareByEmailRouteGet);
+        public const string ConfirmShareByEmailRoutePost = nameof(ConfirmShareByEmailRoutePost);
+        public const string EmailSentRouteGet = nameof(EmailSentRouteGet);
         #endregion
 
         private readonly ICertificatesOrchestrator _certificatesOrchestrator;
         private readonly ISharingOrchestrator _sharingOrchestrator;
+        private readonly ISessionService _sessionService;
 
-        public CertificatesController(IHttpContextAccessor contextAccessor, ICertificatesOrchestrator certificatesOrchestrator, ISharingOrchestrator sharingOrchestrator)
+        public CertificatesController(IHttpContextAccessor contextAccessor, ICertificatesOrchestrator certificatesOrchestrator, ISharingOrchestrator sharingOrchestrator, ISessionService sessionService)
             : base(contextAccessor)
         {
             _certificatesOrchestrator = certificatesOrchestrator;
             _sharingOrchestrator = sharingOrchestrator;
+            _sessionService = sessionService;
         }
 
         [HttpGet("list", Name = CertificatesListRouteGet)]
@@ -103,14 +111,79 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
                 return RedirectToRoute(CreateCertificateSharingRouteGet, new { certificateId });
             }
 
+            var email = await _sessionService.GetShareEmailAsync();
+
+            model.EmailAddress = email ?? string.Empty;
+
             return View(model);
         }
 
-        [HttpPost("{certificateId}/sharing/{sharingId}", Name = CertificateSharingLinkRoutePost)]
+        [HttpPost("{certificateId}/sharing/{sharingId}/send-email", Name = ShareByEmailRoutePost)]
         [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsCertificateOwner))]
-        public IActionResult CertificateSharingLinkPost(Guid certificateId, Guid sharingId)
+        public async Task<IActionResult> ShareByEmail(Guid certificateId, Guid sharingId, ShareByEmailViewModel model)
         {
-            return RedirectToRoute(CertificateSharingLinkRouteGet, new { certificateId, sharingId });
+            var sharingByIdModel = await _sharingOrchestrator.GetSharingById(certificateId, sharingId);
+
+            if (sharingByIdModel == null)
+            {
+                return RedirectToRoute(CreateCertificateSharingRouteGet, new { certificateId });
+            }
+
+            if (!await _sharingOrchestrator.ValidateShareByEmailViewModel(model, ModelState))
+            {
+                await _sessionService.SetShareEmailAsync(model.EmailAddress ?? string.Empty);
+                return RedirectToRoute(CertificateSharingLinkRouteGet, new { certificateId, sharingId, emailAddress = model.EmailAddress ?? string.Empty });
+            }
+
+            await _sessionService.SetShareEmailAsync(model.EmailAddress ?? string.Empty);
+
+            return RedirectToRoute(ConfirmShareByEmailRouteGet, new { certificateId, sharingId });
+        }
+
+        [HttpGet("{certificateId}/sharing/{sharingId}/confirm-email", Name = ConfirmShareByEmailRouteGet)]
+        [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsCertificateOwner))]
+        public async Task<IActionResult> ConfirmShareByEmail(Guid certificateId, Guid sharingId)
+        {
+            var email = await _sessionService.GetShareEmailAsync() ?? string.Empty;
+
+            var model = await _sharingOrchestrator.GetConfirmShareByEmail(certificateId, sharingId, email);
+
+            if (model == null)
+            {
+                return RedirectToRoute(CreateCertificateSharingRouteGet, new { certificateId });
+            }
+
+            return View(model);
+        }
+
+        [HttpPost("{certificateId}/sharing/{sharingId}/confirm-email", Name = ConfirmShareByEmailRoutePost)]
+        [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsCertificateOwner))]
+        public async Task<IActionResult> ConfirmShareByEmailPost(Guid certificateId, Guid sharingId, ConfirmShareByEmailViewModel model)
+        {
+            var result = await _sharingOrchestrator.CreateSharingEmail(certificateId, sharingId, model.EmailAddress ?? string.Empty);
+
+            await _sessionService.ClearShareEmailAsync();
+
+            if (result == null)
+            {
+                return RedirectToRoute(CreateCertificateSharingRouteGet, new { certificateId });
+            }
+
+            return RedirectToRoute(EmailSentRouteGet, new { certificateId, sharingId, sharingEmailId = result.Value });
+        }
+
+        [HttpGet("{certificateId}/sharing/{sharingId}/email-sent/{sharingEmailId}", Name = EmailSentRouteGet)]
+        [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsCertificateOwner))]
+        public async Task<IActionResult> EmailSent(Guid certificateId, Guid sharingId, Guid sharingEmailId)
+        {
+            var model = await _sharingOrchestrator.GetEmailSent(certificateId, sharingId, sharingEmailId);
+
+            if (model == null)
+            {
+                return RedirectToRoute(CreateCertificateSharingRouteGet, new { certificateId });
+            }
+
+            return View(model);
         }
     }
 }

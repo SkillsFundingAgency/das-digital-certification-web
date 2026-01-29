@@ -1,7 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Linq;
 using FluentAssertions;
 using MediatR;
 using Moq;
@@ -14,6 +15,8 @@ using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
 using SFA.DAS.DigitalCertificates.Web.Orchestrators;
 using SFA.DAS.DigitalCertificates.Web.Services;
 using SFA.DAS.DigitalCertificates.Web.Extensions;
+using SFA.DAS.DigitalCertificates.Web.Models.Sharing;
+using FluentValidation;
 using SFA.DAS.DigitalCertificates.Domain.Extensions;
 
 namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
@@ -23,7 +26,9 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
     {
         private Mock<IMediator> _mediatorMock;
         private Mock<IUserService> _userServiceMock;
-        private Mock<ISessionStorageService> _sessionStorageServiceMock;
+        private Mock<ICacheService> _cacheServiceMock;
+        private Mock<ISessionService> _sessionServiceMock;
+        private Mock<IValidator<ShareByEmailViewModel>> _shareByEmailValidatorMock;
         private Mock<IDateTimeHelper> _dateTimeHelperMock;
         private DigitalCertificatesWebConfiguration _digitalCertificatesWebConfiguration;
         private SharingOrchestrator _sut;
@@ -33,7 +38,9 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         {
             _mediatorMock = new Mock<IMediator>();
             _userServiceMock = new Mock<IUserService>();
-            _sessionStorageServiceMock = new Mock<ISessionStorageService>();
+            _cacheServiceMock = new Mock<ICacheService>();
+            _sessionServiceMock = new Mock<ISessionService>();
+            _shareByEmailValidatorMock = new Mock<IValidator<ShareByEmailViewModel>>();
             _dateTimeHelperMock = new Mock<IDateTimeHelper>();
             _dateTimeHelperMock.SetupGet(d => d.Now).Returns(DateTime.UtcNow);
 
@@ -42,9 +49,16 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 ServiceBaseUrl = "https://test.com",
                 RedisConnectionString = "test",
                 DataProtectionKeysDatabase = "test",
-                SharingListLimit = 10
+                SharingListLimit = 10,
+                NotificationTemplates = new List<NotificationTemplate>
+                {
+                    new NotificationTemplate { TemplateName = "SharingEmail", TemplateId = "template-id" }
+                }
             };
-            _sut = new SharingOrchestrator(_mediatorMock.Object, _userServiceMock.Object, _sessionStorageServiceMock.Object, _digitalCertificatesWebConfiguration, _dateTimeHelperMock.Object);
+
+            _sessionServiceMock.Setup(s => s.GetUserNameAsync()).ReturnsAsync((string)null);
+
+            _sut = new SharingOrchestrator(_mediatorMock.Object, _userServiceMock.Object, _cacheServiceMock.Object, _sessionServiceMock.Object, _digitalCertificatesWebConfiguration, _dateTimeHelperMock.Object, _shareByEmailValidatorMock.Object);
         }
 
         [TearDown]
@@ -76,7 +90,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 CourseLevel = "Level 3",
                 DateAwarded = DateTime.UtcNow
             };
-            _sessionStorageServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
+            _sessionServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
                 .ReturnsAsync(new List<Certificate> { certificate });
 
             var queryResult = new GetSharingsQueryResult
@@ -144,7 +158,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 CourseLevel = "Level 3",
                 DateAwarded = DateTime.UtcNow
             };
-            _sessionStorageServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
+            _sessionServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
                 .ReturnsAsync(new List<Certificate> { certificate });
 
             _mediatorMock
@@ -187,7 +201,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 CourseLevel = "Level 4",
                 DateAwarded = DateTime.UtcNow
             };
-            _sessionStorageServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
+            _sessionServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
                 .ReturnsAsync(new List<Certificate> { certificate });
 
             var queryResult = new GetSharingsQueryResult
@@ -246,7 +260,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             _userServiceMock.Setup(x => x.GetUserId()).Returns(userId);
             _userServiceMock.Setup(x => x.GetGovUkIdentifier()).Returns(govUkIdentifier);
 
-            _sessionStorageServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
+            _sessionServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
                 .ReturnsAsync(new List<Certificate>());
 
             // Act + Assert
@@ -278,7 +292,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 CourseLevel = "Level 3",
                 DateAwarded = DateTime.UtcNow
             };
-            _sessionStorageServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
+            _sessionServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
                 .ReturnsAsync(new List<Certificate> { certificate });
 
             var queryResult = new GetSharingsQueryResult
@@ -328,7 +342,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 CourseLevel = "Level 3",
                 DateAwarded = DateTime.UtcNow
             };
-            _sessionStorageServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
+            _sessionServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
                 .ReturnsAsync(new List<Certificate> { certificate });
 
             var queryResult = new GetSharingsQueryResult
@@ -378,7 +392,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 CourseLevel = "Level 3",
                 DateAwarded = DateTime.UtcNow
             };
-            _sessionStorageServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
+            _sessionServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
                 .ReturnsAsync(new List<Certificate> { certificate });
 
             var commandResult = new CreateSharingCommandResult
@@ -434,7 +448,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 CourseLevel = "Level 3",
                 DateAwarded = DateTime.UtcNow
             };
-            _sessionStorageServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
+            _sessionServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
                 .ReturnsAsync(new List<Certificate> { certificate });
 
             _mediatorMock
@@ -459,7 +473,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             _userServiceMock.Setup(x => x.GetUserId()).Returns(userId);
             _userServiceMock.Setup(x => x.GetGovUkIdentifier()).Returns(govUkIdentifier);
 
-            _sessionStorageServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
+            _sessionServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
                 .ReturnsAsync(new List<Certificate>());
 
             // Act + Assert
@@ -488,7 +502,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 DateAwarded = DateTime.UtcNow
             };
 
-            _sessionStorageServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
+            _sessionServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
                 .ReturnsAsync(new List<Certificate> { certificate });
 
             var createdAt = new DateTime(2024, 1, 1, 10, 0, 0, DateTimeKind.Utc);
@@ -557,7 +571,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 DateAwarded = DateTime.UtcNow
             };
 
-            _sessionStorageServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
+            _sessionServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
                 .ReturnsAsync(new List<Certificate> { certificate });
 
             _mediatorMock
@@ -581,7 +595,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
 
             _userServiceMock.Setup(x => x.GetGovUkIdentifier()).Returns(govUkIdentifier);
 
-            _sessionStorageServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
+            _sessionServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
                 .ReturnsAsync(new List<Certificate>());
 
             // Act + Assert
@@ -589,6 +603,369 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 () => _sut.GetSharingById(certificateId, sharingId));
 
             exception.Message.Should().Be($"Certificate {certificateId} not found for authenticated user");
+        }
+
+        [Test]
+        public async Task GetConfirmShareByEmail_Returns_Null_When_Response_Is_Null()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+            var sharingId = Guid.NewGuid();
+            var govUkIdentifier = "gov-123";
+
+            _userServiceMock.Setup(x => x.GetGovUkIdentifier()).Returns(govUkIdentifier);
+
+            var certificate = new Certificate
+            {
+                CertificateId = certificateId,
+                CertificateType = CertificateType.Standard,
+                CourseName = "Course Name",
+                CourseLevel = "Level1",
+                DateAwarded = DateTime.UtcNow
+            };
+
+            _sessionServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
+                .ReturnsAsync(new List<Certificate> { certificate });
+
+            _mediatorMock
+                .Setup(m => m.Send(It.IsAny<GetSharingByIdQuery>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((GetSharingByIdQueryResult)null);
+
+            // Act
+            var result = await _sut.GetConfirmShareByEmail(certificateId, sharingId, "test@example.com");
+
+            // Assert
+            result.Should().BeNull();
+        }
+
+        [Test]
+        public async Task GetConfirmShareByEmail_Returns_Null_When_Sharing_Expired()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+            var sharingId = Guid.NewGuid();
+            var govUkIdentifier = "gov-123";
+
+            _userServiceMock.Setup(x => x.GetGovUkIdentifier()).Returns(govUkIdentifier);
+
+            var certificate = new Certificate
+            {
+                CertificateId = certificateId,
+                CertificateType = CertificateType.Standard,
+                CourseName = "Course Name",
+                CourseLevel = "Level1",
+                DateAwarded = DateTime.UtcNow
+            };
+
+            _sessionServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
+                .ReturnsAsync(new List<Certificate> { certificate });
+
+            var now = new DateTime(2024, 01, 01, 12, 0, 0, DateTimeKind.Utc);
+            _dateTimeHelperMock.SetupGet(d => d.Now).Returns(now);
+            var createdAt = now.AddDays(-10);
+            var expiryTime = now.AddDays(-1);
+
+            var response = new GetSharingByIdQueryResult
+            {
+                CertificateId = certificateId,
+                CourseName = "Course Name",
+                CertificateType = CertificateType.Standard,
+                SharingId = sharingId,
+                SharingNumber = 1,
+                CreatedAt = createdAt,
+                ExpiryTime = expiryTime
+            };
+
+            _mediatorMock
+                .Setup(m => m.Send(It.IsAny<GetSharingByIdQuery>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(response);
+
+            // Act
+            var result = await _sut.GetConfirmShareByEmail(certificateId, sharingId, "test@example.com");
+
+            // Assert
+            result.Should().BeNull();
+        }
+
+        [Test]
+        public async Task GetConfirmShareByEmail_Returns_ViewModel_When_Sharing_Valid()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+            var sharingId = Guid.NewGuid();
+            var govUkIdentifier = "gov-123";
+
+            _userServiceMock.Setup(x => x.GetGovUkIdentifier()).Returns(govUkIdentifier);
+
+            var certificate = new Certificate
+            {
+                CertificateId = certificateId,
+                CertificateType = CertificateType.Standard,
+                CourseName = "Course Name",
+                CourseLevel = "Level1",
+                DateAwarded = DateTime.UtcNow
+            };
+
+            _sessionServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
+                .ReturnsAsync(new List<Certificate> { certificate });
+
+            var now = new DateTime(2024, 01, 01, 12, 0, 0, DateTimeKind.Utc);
+            _dateTimeHelperMock.SetupGet(d => d.Now).Returns(now);
+            var createdAt = now.AddDays(-1);
+            var expiryTime = now.AddDays(2);
+
+            var response = new GetSharingByIdQueryResult
+            {
+                CertificateId = certificateId,
+                CourseName = "Course Name",
+                CertificateType = CertificateType.Standard,
+                SharingId = sharingId,
+                SharingNumber = 42,
+                CreatedAt = createdAt,
+                ExpiryTime = expiryTime
+            };
+
+            _mediatorMock
+                .Setup(m => m.Send(It.IsAny<GetSharingByIdQuery>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(response);
+
+            var email = "confirm@example.com";
+
+            // Act
+            var result = await _sut.GetConfirmShareByEmail(certificateId, sharingId, email);
+
+            // Assert
+            result.Should().NotBeNull();
+            result!.CertificateId.Should().Be(certificateId);
+            result.SharingId.Should().Be(sharingId);
+            result.CourseName.Should().Be("Course Name");
+            result.SharingNumber.Should().Be(42);
+            result.EmailAddress.Should().Be(email);
+            result.FormattedExpiry.Should().Be(expiryTime.ToUkExpiryDateTimeString());
+        }
+
+        [Test]
+        public async Task CreateSharingEmail_Returns_Id_When_Successful()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+            var sharingId = Guid.NewGuid();
+            var govUkIdentifier = "gov-123";
+            var sharingEmailId = Guid.NewGuid();
+
+            _userServiceMock.Setup(x => x.GetGovUkIdentifier()).Returns(govUkIdentifier);
+
+            var certificate = new Certificate
+            {
+                CertificateId = certificateId,
+                CertificateType = CertificateType.Standard,
+                CourseName = "Course Name",
+                CourseLevel = "Level1",
+                DateAwarded = DateTime.UtcNow
+            };
+
+            _sessionServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
+                .ReturnsAsync(new List<Certificate> { certificate });
+
+            var now = DateTime.UtcNow;
+            var createdAt = now.AddDays(-1);
+            var expiryTime = now.AddDays(5);
+
+            var sharingEmail = new SharingEmail
+            {
+                SharingEmailId = sharingEmailId,
+                EmailAddress = "sent@example.com"
+            };
+
+            var response = new GetSharingByIdQueryResult
+            {
+                CertificateId = certificateId,
+                CourseName = "Course Name",
+                CertificateType = CertificateType.Standard,
+                SharingId = sharingId,
+                SharingNumber = 10,
+                CreatedAt = createdAt,
+                ExpiryTime = expiryTime,
+                SharingEmails = new List<SharingEmail> { sharingEmail }
+            };
+
+            _mediatorMock
+                .Setup(m => m.Send(It.IsAny<GetSharingByIdQuery>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(response);
+
+            var user = new User
+            {
+                Id = Guid.NewGuid(),
+                GovUkIdentifier = govUkIdentifier,
+                EmailAddress = "user@test.com",
+                Names = new List<Name>
+                {
+                    new Name { GivenNames = "John", FamilyName = "Doe" }
+                }
+            };
+
+            _cacheServiceMock.Setup(s => s.GetUserAsync(govUkIdentifier)).ReturnsAsync(user);
+            _sessionServiceMock.Setup(s => s.GetUserNameAsync()).ReturnsAsync("John Doe");
+
+            var commandResult = new Application.Commands.CreateSharingEmail.CreateSharingEmailCommandResult
+            {
+                Id = sharingEmailId,
+                EmailLinkCode = Guid.NewGuid()
+            };
+
+            _mediatorMock
+                .Setup(m => m.Send(It.IsAny<Application.Commands.CreateSharingEmail.CreateSharingEmailCommand>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(commandResult);
+
+            _dateTimeHelperMock.SetupGet(d => d.Now).Returns(now);
+
+            // Act
+            var result = await _sut.CreateSharingEmail(certificateId, sharingId, "to@example.com");
+
+            // Assert
+            result.Should().Be(sharingEmailId);
+
+            _mediatorMock.Verify(m => m.Send(
+                It.Is<Application.Commands.CreateSharingEmail.CreateSharingEmailCommand>(c =>
+                    c.SharingId == sharingId &&
+                    c.EmailAddress == "to@example.com" &&
+                    c.UserName == "John Doe" &&
+                    c.LinkDomain == _digitalCertificatesWebConfiguration.ServiceBaseUrl &&
+                    c.TemplateId == _digitalCertificatesWebConfiguration.NotificationTemplates.First().TemplateId &&
+                    c.MessageText.Contains(response.ExpiryTime.ToUkExpiryDateTimeString())
+                ), It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Test]
+        public async Task CreateSharingEmail_Returns_Null_When_SharingResponse_Null()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+            var sharingId = Guid.NewGuid();
+            var govUkIdentifier = "gov-123";
+
+            _userServiceMock.Setup(x => x.GetGovUkIdentifier()).Returns(govUkIdentifier);
+
+            var certificate = new Certificate
+            {
+                CertificateId = certificateId,
+                CertificateType = CertificateType.Standard,
+                CourseName = "Course Name",
+                CourseLevel = "Level1",
+                DateAwarded = DateTime.UtcNow
+            };
+
+            _sessionServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
+                .ReturnsAsync(new List<Certificate> { certificate });
+
+            _mediatorMock
+                .Setup(m => m.Send(It.IsAny<GetSharingByIdQuery>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((GetSharingByIdQueryResult)null);
+
+            // Act
+            var result = await _sut.CreateSharingEmail(certificateId, sharingId, "to@example.com");
+
+            // Assert
+            result.Should().BeNull();
+        }
+
+        [Test]
+        public async Task GetEmailSent_Returns_ViewModel_With_Matching_Email_And_IsSingleCertificate()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+            var sharingId = Guid.NewGuid();
+            var sharingEmailId = Guid.NewGuid();
+            var govUkIdentifier = "gov-123";
+
+            _userServiceMock.Setup(x => x.GetGovUkIdentifier()).Returns(govUkIdentifier);
+
+            var certificate = new Certificate
+            {
+                CertificateId = certificateId,
+                CertificateType = CertificateType.Standard,
+                CourseName = "Course Name",
+                CourseLevel = "Level1",
+                DateAwarded = DateTime.UtcNow
+            };
+
+            _sessionServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
+                .ReturnsAsync(new List<Certificate> { certificate });
+
+            var now = DateTime.UtcNow;
+            var createdAt = now.AddDays(-1);
+            var expiryTime = now.AddDays(5);
+
+            var sharingEmail = new SharingEmail
+            {
+                SharingEmailId = sharingEmailId,
+                EmailAddress = "sent@example.com"
+            };
+
+            var response = new GetSharingByIdQueryResult
+            {
+                CertificateId = certificateId,
+                CourseName = "Course Name",
+                CertificateType = CertificateType.Standard,
+                SharingId = sharingId,
+                SharingNumber = 10,
+                CreatedAt = createdAt,
+                ExpiryTime = expiryTime,
+                SharingEmails = new List<SharingEmail> { sharingEmail }
+            };
+
+            _mediatorMock
+                .Setup(m => m.Send(It.IsAny<GetSharingByIdQuery>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(response);
+
+            _dateTimeHelperMock.SetupGet(d => d.Now).Returns(now);
+
+            // Act
+            var result = await _sut.GetEmailSent(certificateId, sharingId, sharingEmailId);
+
+            // Assert
+            result.Should().NotBeNull();
+            result!.CertificateId.Should().Be(certificateId);
+            result.SharingId.Should().Be(sharingId);
+            result.SharingNumber.Should().Be(10);
+            result.EmailAddress.Should().Be("sent@example.com");
+            result.FormattedExpiry.Should().Be(expiryTime.ToUkExpiryDateTimeString());
+            result.CourseName.Should().Be("Course Name");
+            result.IsSingleCertificate.Should().BeTrue();
+        }
+
+        [Test]
+        public async Task GetEmailSent_Returns_Null_When_SharingResponse_Null()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+            var sharingId = Guid.NewGuid();
+            var sharingEmailId = Guid.NewGuid();
+            var govUkIdentifier = "gov-123";
+
+            _userServiceMock.Setup(x => x.GetGovUkIdentifier()).Returns(govUkIdentifier);
+
+            var certificate = new Certificate
+            {
+                CertificateId = certificateId,
+                CertificateType = CertificateType.Standard,
+                CourseName = "Course Name",
+                CourseLevel = "Level1",
+                DateAwarded = DateTime.UtcNow
+            };
+
+            _sessionServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
+                .ReturnsAsync(new List<Certificate> { certificate });
+
+            _mediatorMock
+                .Setup(m => m.Send(It.IsAny<GetSharingByIdQuery>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((GetSharingByIdQueryResult)null);
+
+            // Act
+            var result = await _sut.GetEmailSent(certificateId, sharingId, sharingEmailId);
+
+            // Assert
+            result.Should().BeNull();
         }
     }
 }

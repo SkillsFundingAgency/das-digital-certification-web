@@ -9,8 +9,7 @@
 
 <div class="govuk-width-container">
     <a asp-route="@CertificatesController.CreateCertificateSharingRouteGet"
-       asp-route-certificateId="@Model.CertificateId"
-       class="govuk-back-link">Back</a>
+       asp-route-certificateId="@Model.CertificateId" class="govuk-back-link">Back</a>
 
     <main class="govuk-main-wrapper" id="main-content">
         <div class="govuk-grid-row">
@@ -34,7 +33,9 @@
                         <p class="govuk-body">This sharing link will automatically be deleted at @Model.FormattedExpiry.</p>
 
                         <form method="post" asp-route="DeleteSharing" asp-route-certificateId="@Model.CertificateId" asp-route-sharingId="@Model.SharingId">
-                            <button type="submit" class="govuk-button govuk-button--secondary" data-module="govuk-button">Delete link</button>
+                            <button type="submit" class="govuk-button govuk-button--secondary" data-module="govuk-button">
+                                Delete link
+                            </button>
                         </form>
                     </div>
 
@@ -61,14 +62,20 @@
                     </div>
 
                     <div class="extra-margin-bottom">
-                        <form method="post" asp-route="SendSharingEmail" asp-route-certificateId="@Model.CertificateId" asp-route-sharingId="@Model.SharingId">
-                            <div class="govuk-form-group">
-                                <label class="govuk-label govuk-label--m" for="email-address">Share by email</label>
-                                <div id="email-address-hint" class="govuk-hint">Enter an email address</div>
-                                <input class="govuk-input govuk-!-width-two-thirds" id="email-address" name="shareEmailAddress" type="email" aria-describedby="email-address-hint" />
+                        <partial name="_ValidationSummary" />
+
+                        <form method="post" asp-route="@CertificatesController.ShareByEmailRoutePost" asp-route-certificateId="@Model.CertificateId" asp-route-sharingId="@Model.SharingId">
+                            <div class="govuk-form-group" das-highlight-error-for="EmailAddress"
+                                 error-class="govuk-form-group--error">
+                                <label class="govuk-label govuk-label--m" for="emailAddress">Share by email</label>
+                                <div id="emailAddress-hint" class="govuk-hint">Enter an email address</div>
+                                <p das-validation-for="EmailAddress" class="govuk-error-message"></p>
+                                <input class="govuk-input govuk-!-width-two-thirds" id="EmailAddress" asp-for="EmailAddress" type="email" aria-describedby="emailAddress-hint" />
                             </div>
 
-                            <button type="submit" class="govuk-button govuk-button--secondary" data-module="govuk-button">Send email</button>
+                            <button type="submit" class="govuk-button govuk-button--secondary" data-module="govuk-button">
+                                Send email
+                            </button>
                         </form>
                     </div>
 
@@ -85,7 +92,7 @@
                         </thead>
                         <tbody class="govuk-table__body">
                             <tr class="govuk-table__row">
-                                <td scope="row" class="govuk-table__header">Link created</td>
+                                <td class="govuk-table__cell">Link created</td>
                                 <td class="govuk-table__cell">@Model.FormattedCreated</td>
                             </tr>
 
@@ -96,6 +103,18 @@
                                     <td class="govuk-table__cell">@accessText</td>
                                 </tr>
                             }
+
+                            @if (Model.SharingEmailsHistory != null && Model.SharingEmailsHistory.Any())
+                            {
+                                foreach (var email in Model.SharingEmailsHistory)
+                                {
+                                    <tr class="govuk-table__row">
+                                        <td class="govuk-table__cell">Link emailed to @email.EmailAddress</td>
+                                        <td class="govuk-table__cell">@email.FormattedSentTime</td>
+                                    </tr>
+                                }
+                            }
+
                         </tbody>
                     </table>
                 }

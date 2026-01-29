@@ -1,0 +1,49 @@
+﻿@using SFA.DAS.DigitalCertificates.Web.Controllers
+@using SFA.DAS.DigitalCertificates.Web.ViewDataKeys
+@using SFA.DAS.DigitalCertificates.Web.Models.Sharing
+
+@model EmailSentViewModel
+@{
+    ViewData[ViewDataKeys.Title] = ViewData[ViewDataKeys.ServiceName] + " Email sent";
+    ViewBag.GaData.Vpv = ViewData[ViewDataKeys.GaDataVpvPrefix] + "email-sent";
+}
+<div class="govuk-width-container">
+    <main class="govuk-main-wrapper" id="main-content">
+        <div class="govuk-grid-row">
+            <div class="govuk-grid-column-two-thirds">
+
+                <div style="margin-bottom: 2rem;">
+                    <div class="govuk-panel govuk-panel--confirmation">
+                        <h1 class="govuk-panel__title">Email sent</h1>
+                    </div>
+                </div>
+
+                <h2 class="govuk-heading-m">What happens next</h2>
+
+                <p>
+                    Your certificate has been shared with @Model.EmailAddress.
+                </p>
+                <p class="govuk-body">
+                    We’ve sent an email with a secure sharing link to your certificate. This link will automatically stop working at @Model.FormattedExpiry.
+                </p>
+                <p class="govuk-body">
+                    <a asp-route="@CertificatesController.CertificateSharingLinkRouteGet" asp-route-certificateId="@Model.CertificateId" asp-route-sharingId="@Model.SharingId" class="govuk-link">Return to Sharing link @Model.SharingNumber</a>
+                </p>
+
+                @if (Model.IsSingleCertificate)
+                {
+                    <p class="govuk-body">
+                        <a asp-route="@CertificatesController.CertificateStandardRouteGet" asp-route-certificateId="@Model.CertificateId" class="govuk-link">Return to @Model.CourseName</a>
+                    </p>
+                }
+                else
+                {
+                    <p class="govuk-body">
+                        <a asp-route="@CertificatesController.CertificatesListRouteGet" class="govuk-link">Return to your apprenticeship courses</a>
+                    </p>
+                }
+
+            </div>
+        </div>
+    </main>
+</div>

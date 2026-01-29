@@ -22,7 +22,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
         private Mock<IConfiguration> _configMock;
         private Mock<IHttpContextAccessor> _contextAccessorMock;
         private Mock<IUserService> _userServiceMock;
-        private Mock<ISessionStorageService> _sessionStorageServiceMock;
+        private Mock<ICacheService> _cacheServiceMock;
+        private Mock<ISessionService> _sessionServiceMock;
         private ServiceController _sut;
 
         [SetUp]
@@ -31,11 +32,15 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             _configMock = new Mock<IConfiguration>();
             _contextAccessorMock = new Mock<IHttpContextAccessor>();
             _userServiceMock = new Mock<IUserService>();
-            _sessionStorageServiceMock = new Mock<ISessionStorageService>();
+            _cacheServiceMock = new Mock<ICacheService>();
+            _sessionServiceMock = new Mock<ISessionService>();
+
+            _sessionServiceMock.Setup(s => s.ClearSessionDataAsync(It.IsAny<string>())).Returns(Task.CompletedTask);
 
             _sut = new ServiceController(
                 _userServiceMock.Object,
-                _sessionStorageServiceMock.Object,
+                _cacheServiceMock.Object,
+                _sessionServiceMock.Object,
                 _configMock.Object,
                 _contextAccessorMock.Object
             );
@@ -57,7 +62,10 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             _userServiceMock.Setup(x => x.GetGovUkIdentifier())
                 .Returns(govUkIdentifier);
 
-            var http = new DefaultHttpContext();
+            var httpMock = new Mock<HttpContext>();
+
+            var sessionMock = new Mock<ISession>();
+            httpMock.SetupGet(h => h.Session).Returns(sessionMock.Object);
 
             var oidcProps = new AuthenticationProperties();
             oidcProps.StoreTokens(new[]
@@ -76,16 +84,16 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
                 CookieAuthenticationDefaults.AuthenticationScheme);
 
             var auth = new Mock<IAuthenticationService>();
-            auth.Setup(a => a.AuthenticateAsync(http, CookieAuthenticationDefaults.AuthenticationScheme))
+            auth.Setup(a => a.AuthenticateAsync(It.IsAny<HttpContext>(), CookieAuthenticationDefaults.AuthenticationScheme))
                 .ReturnsAsync(AuthenticateResult.Success(cookieTicket));
-            auth.Setup(a => a.AuthenticateAsync(http, OpenIdConnectDefaults.AuthenticationScheme))
+            auth.Setup(a => a.AuthenticateAsync(It.IsAny<HttpContext>(), OpenIdConnectDefaults.AuthenticationScheme))
                 .ReturnsAsync(AuthenticateResult.Success(oidcTicket));
 
             var sp = new Mock<IServiceProvider>();
             sp.Setup(s => s.GetService(typeof(IAuthenticationService))).Returns(auth.Object);
-            http.RequestServices = sp.Object;
+            httpMock.SetupGet(h => h.RequestServices).Returns(sp.Object);
 
-            _contextAccessorMock.Setup(a => a.HttpContext).Returns(http);
+            _contextAccessorMock.Setup(a => a.HttpContext).Returns(httpMock.Object);
             _configMock.Setup(c => c["StubAuth"]).Returns("false");
 
             // Act
@@ -104,10 +112,12 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             signOut.Properties.Parameters.Should().ContainKey(OpenIdConnectParameterNames.IdTokenHint);
             signOut.Properties.Parameters[OpenIdConnectParameterNames.IdTokenHint].Should().Be(idToken);
 
-            _sessionStorageServiceMock.Verify(
+            _cacheServiceMock.Verify(
                 x => x.Clear(govUkIdentifier),
                 Times.Once
             );
+
+            _sessionServiceMock.Verify(s => s.ClearSessionDataAsync(govUkIdentifier), Times.Once);
         }
 
         [Test]

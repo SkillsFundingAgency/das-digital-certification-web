@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using SFA.DAS.DigitalCertificates.Infrastructure.Api.Responses;
 
 namespace SFA.DAS.DigitalCertificates.Domain.Models
@@ -11,6 +13,8 @@ namespace SFA.DAS.DigitalCertificates.Domain.Models
         public string? PhoneNumber { get; set; }
         public DateTime? LastLoginAt { get; set; }
         public DateTime? LockedAt { get; set; }
+
+        public List<Name>? Names { get; set; }
 
         public static implicit operator User?(UserResponse? source)
         {
@@ -26,7 +30,14 @@ namespace SFA.DAS.DigitalCertificates.Domain.Models
                 EmailAddress = source.EmailAddress,
                 PhoneNumber = source.PhoneNumber,
                 LastLoginAt = source.LastLoginAt,
-                LockedAt = source.LockedAt
+                LockedAt = source.LockedAt,
+                Names = source.Names?.Select(n => new Name
+                {
+                    ValidSince = n.ValidSince,
+                    ValidUntil = n.ValidUntil,
+                    FamilyName = n.FamilyName,
+                    GivenNames = n.GivenNames
+                }).ToList()
             };
         }
     }
