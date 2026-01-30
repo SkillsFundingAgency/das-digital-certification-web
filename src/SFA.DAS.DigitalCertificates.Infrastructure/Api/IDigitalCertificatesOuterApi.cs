@@ -19,5 +19,11 @@ namespace SFA.DAS.DigitalCertificates.Domain.Interfaces
 
         [Get("/users/{userId}/certificates")]
         Task<CertificatesResponse> GetCertificates([Path] Guid userId);
+
+        [Get("users/{userId}/sharings")]
+        Task<GetSharingsResponse> GetSharings([Path] string userId, [Query("certificateId")] Guid certificateId, [Query("limit")] int? limit);
+
+        [Post("/sharing")]
+        Task<CreateSharingResponse> CreateSharing([Body] CreateSharingRequest request);
     }
 }

@@ -1,0 +1,97 @@
+@using SFA.DAS.DigitalCertificates.Web.Controllers
+@using SFA.DAS.DigitalCertificates.Web.ViewDataKeys
+@using SFA.DAS.DigitalCertificates.Domain.Models
+@model SFA.DAS.DigitalCertificates.Web.Models.Sharing.CertificateSharingViewModel
+
+@{
+    ViewData[ViewDataKeys.Title] = ViewData[ViewDataKeys.ServiceName] + " Create a sharing link";
+    ViewBag.GaData.Vpv = @ViewData[ViewDataKeys.GaDataVpvPrefix] + "create-a-sharing-link";
+}
+
+@if (Model.CertificateType == CertificateType.Framework)
+{
+    <a asp-route="@CertificatesController.CertificateFrameworkRouteGet"
+       asp-route-certificateId="@Model.CertificateId"
+       class="govuk-back-link">Back</a>
+}
+else
+{
+    <a asp-route="@CertificatesController.CertificateStandardRouteGet"
+       asp-route-certificateId="@Model.CertificateId"
+       class="govuk-back-link">Back</a>
+}
+
+<main class="govuk-main-wrapper govuk-main-wrapper--auto-spacing" id="main-content">
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+            <h1 class="govuk-heading-l">
+                <span class="govuk-caption-l">@Model.CourseName</span>
+                Create a sharing link
+            </h1>
+
+            <p class="govuk-body">
+                You can create secure links to share proof of your certificate.
+            </p>
+
+            <p class="govuk-body">A sharing link includes a secure web URL</p>
+
+            <p class="govuk-body govuk-!-margin-bottom-0">You can:</p>
+            <ul class="govuk-list govuk-list--bullet govuk-!-margin-left-2 govuk-!-margin-top-0">
+                <li>share the link by email</li>
+                <li>see when your link has been used</li>
+                <li>create multiple sharing links to share with different people</li>
+            </ul>
+
+            <p class="govuk-body">
+                Sharing links will automatically be deleted after 28 days.
+            </p>
+
+            <p class="govuk-body">
+                Find out how we collect and use data for this service in <a href="https://www.gov.uk/government/publications/privacy-information-members-of-the-public/privacy-information-members-of-the-public#using-your-data-when-you-make-an-enquiry" class="govuk-link" title="Our privacy notice" target="_blank">our privacy notice.</a>
+            </p>
+
+            <form asp-route="CreateCertificateSharingRoutePost" asp-route-certificateId="@Model.CertificateId" method="post">
+                <button type="submit" class="govuk-button govuk-button--primary" data-module="govuk-button">Create new sharing link</button>
+            </form>
+
+            @if (!Model.HasSharings)
+            {
+                <p class="govuk-body">
+                    You currently have no links to share. When you create a sharing link, it will appear on this page.
+                </p>
+            }
+            else
+            {
+                <h2 class="govuk-heading-m">Your sharing links</h2>
+                <table class="govuk-table">
+                    <thead class="govuk-table__head">
+                        <tr class="govuk-table__row">
+                            <th class="govuk-table__header" scope="col">Name</th>
+                            <th class="govuk-table__header" scope="col">Expiry date</th>
+                            <th class="govuk-table__header govuk-!-text-align-right" scope="col">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="govuk-table__body">
+                        @foreach (var s in Model.Sharings)
+                        {
+                            <tr class="govuk-table__row">
+                                <td class="govuk-table__cell"><strong>Sharing link @s.SharingNumber</strong></td>
+                                <td class="govuk-table__cell">@s.ExpiryTime.ToString("dd MMMM yyyy")</td>
+                                <td class="govuk-table__cell govuk-!-text-align-right"><a class="govuk-link" href="#">View</a></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+</main>
+
+
+
+
+
+
+
+
+

@@ -18,14 +18,20 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         public const string CertificatesListRouteGet = nameof(CertificatesListRouteGet);
         public const string CertificateStandardRouteGet = nameof(CertificateStandardRouteGet);
         public const string CertificateFrameworkRouteGet = nameof(CertificateFrameworkRouteGet);
+        public const string CreateCertificateSharingRouteGet = nameof(CreateCertificateSharingRouteGet);
+        public const string CreateCertificateSharingRoutePost = nameof(CreateCertificateSharingRoutePost);
+        public const string CertificateSharingLinkRouteGet = nameof(CertificateSharingLinkRouteGet);
+        public const string CertificateSharingLinkRoutePost = nameof(CertificateSharingLinkRoutePost);
         #endregion
 
         private readonly ICertificatesOrchestrator _certificatesOrchestrator;
+        private readonly ISharingOrchestrator _sharingOrchestrator;
 
-        public CertificatesController(IHttpContextAccessor contextAccessor, ICertificatesOrchestrator certificatesOrchestrator)
+        public CertificatesController(IHttpContextAccessor contextAccessor, ICertificatesOrchestrator certificatesOrchestrator, ISharingOrchestrator sharingOrchestrator)
             : base(contextAccessor)
         {
             _certificatesOrchestrator = certificatesOrchestrator;
+            _sharingOrchestrator = sharingOrchestrator;
         }
 
         [HttpGet("list", Name = CertificatesListRouteGet)]
@@ -47,6 +53,38 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsCertificateOwner))]
         public IActionResult CertificateFramework(Guid certificateId)
         {
+            return View();
+        }
+
+        [HttpGet("{certificateId}/sharing", Name = CreateCertificateSharingRouteGet)]
+        [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsCertificateOwner))]
+        public async Task<IActionResult> CreateCertificateSharing(Guid certificateId)
+        {
+            var model = await _sharingOrchestrator.GetSharings(certificateId);
+            return View(model);
+        }
+
+        [HttpPost("{certificateId}/sharing", Name = CreateCertificateSharingRoutePost)]
+        [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsCertificateOwner))]
+        public async Task<IActionResult> CreateCertificateSharingPost(Guid certificateId)
+        {
+            var result = await _sharingOrchestrator.CreateSharing(certificateId);
+
+            return RedirectToRoute(CertificateSharingLinkRouteGet, new { certificateId });
+        }
+
+        [HttpGet("{certificateId}/sharingLink", Name = CertificateSharingLinkRouteGet)]
+        [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsCertificateOwner))]
+        public IActionResult CertificateSharingLink(Guid certificateId)
+        {
+            return View();
+        }
+
+        [HttpPost("{certificateId}/sharingLink", Name = CertificateSharingLinkRoutePost)]
+        [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsCertificateOwner))]
+        public IActionResult CertificateSharingLinkPost(Guid certificateId)
+        {
+            // Handle form submission for sharing link
             return View();
         }
     }

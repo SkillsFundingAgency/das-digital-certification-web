@@ -3,14 +3,15 @@
 @{
     ViewData[ViewDataKeys.Title] = ViewData[ViewDataKeys.ServiceName] + " Certificate Standard";
     ViewBag.GaData.Vpv = @ViewData[ViewDataKeys.GaDataVpvPrefix] + "certificate-standard";
+    var certificateId = ViewContext.RouteData.Values["certificateId"]?.ToString() ?? throw new InvalidOperationException("Certificate ID is required");  // TODO: Update to read certificateId from the model instead of RouteData.
 }
 <main class="govuk-main-wrapper govuk-main-wrapper--auto-spacing">
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
             <h1 class="govuk-heading-xl">@ViewData[ViewDataKeys.Title]</h1>
-            <a asp-route="@CertificatesController.CertificatesListRouteGet" class="govuk-button">
-                CertificatesList
-            </a>
+            <h2 class="govuk-heading-m">Create a sharing link</h2>
+            <p class="govuk-body">You can create a secure link to share your apprenticeship certificate. This allows employers, colleges or universities to verify your apprenticeship.</p>
+            <a asp-route="@CertificatesController.CreateCertificateSharingRouteGet" asp-route-certificateId="@certificateId" role="button" draggable="false" class="govuk-button govuk-button--secondary" data-module="govuk-button">Create link</a>
         </div>
     </div>
 </main>
