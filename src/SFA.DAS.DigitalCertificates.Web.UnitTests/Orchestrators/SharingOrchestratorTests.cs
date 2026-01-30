@@ -308,14 +308,14 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         }
 
         [Test]
-        public async Task GetSharings_Uses_Null_Limit_When_Config_Is_Null()
+        public async Task GetSharings_Uses_Null_Limit_When_Config_Is_Zero()
         {
             // Arrange
             var userId = Guid.NewGuid();
             var certificateId = Guid.NewGuid();
             var govUkIdentifier = "test-gov-uk-id";
 
-            _digitalCertificatesWebConfiguration.SharingListLimit = null;
+            _digitalCertificatesWebConfiguration.SharingListLimit = 0;
 
             _userServiceMock.Setup(x => x.GetUserId()).Returns(userId);
             _userServiceMock.Setup(x => x.GetGovUkIdentifier()).Returns(govUkIdentifier);
