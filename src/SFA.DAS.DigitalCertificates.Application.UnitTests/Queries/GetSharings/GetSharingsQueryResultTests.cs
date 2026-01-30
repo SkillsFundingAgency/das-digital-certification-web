@@ -69,24 +69,24 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetSharings
             result.CourseName.Should().Be("Software Developer");
 
             result.Sharings.Should().HaveCount(1);
-            var sharing = result.Sharings[0];
+            var sharing = result.Sharings![0];
             sharing.SharingId.Should().Be(sharingId);
             sharing.SharingNumber.Should().Be(1);
             sharing.CreatedAt.Should().Be(new DateTime(2024, 1, 1, 10, 0, 0, DateTimeKind.Unspecified));
             sharing.LinkCode.Should().Be(linkCode);
             sharing.ExpiryTime.Should().Be(new DateTime(2024, 2, 1, 10, 0, 0, DateTimeKind.Unspecified));
             sharing.SharingAccess.Should().HaveCount(2);
-            sharing.SharingAccess[0].Should().Be(new DateTime(2024, 1, 2, 9, 0, 0, DateTimeKind.Unspecified));
+            sharing.SharingAccess![0].Should().Be(new DateTime(2024, 1, 2, 9, 0, 0, DateTimeKind.Unspecified));
             sharing.SharingAccess[1].Should().Be(new DateTime(2024, 1, 3, 14, 30, 0, DateTimeKind.Unspecified));
 
             sharing.SharingEmails.Should().HaveCount(1);
-            var email = sharing.SharingEmails[0];
+            var email = sharing.SharingEmails![0];
             email.SharingEmailId.Should().Be(sharingEmailId);
             email.EmailAddress.Should().Be("test@example.com");
             email.EmailLinkCode.Should().Be(emailLinkCode);
             email.SentTime.Should().Be(new DateTime(2024, 1, 1, 11, 0, 0, DateTimeKind.Unspecified));
             email.SharingEmailAccess.Should().HaveCount(1);
-            email.SharingEmailAccess[0].Should().Be(new DateTime(2024, 1, 2, 10, 0, 0, DateTimeKind.Unspecified));
+            email.SharingEmailAccess![0].Should().Be(new DateTime(2024, 1, 2, 10, 0, 0, DateTimeKind.Unspecified));
         }
     }
 }

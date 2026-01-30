@@ -78,3 +78,21 @@ if ($input.length > 0) {
         }
     });
 }
+
+// copy-to-clipboard handler for sharing link page
+document.addEventListener('DOMContentLoaded', function () {
+    var copyBtn = document.getElementById('copy-link-btn');
+    var webLinkInput = document.getElementById('web-link');
+    copyBtn.style.display = 'inline-block';
+    copyBtn.addEventListener('click', function () {
+        webLinkInput.select();
+        webLinkInput.setSelectionRange(0, 99999); // For mobile devices
+        navigator.clipboard.writeText(webLinkInput.value)
+            .then(function () {
+                copyBtn.textContent = 'Copied!';
+                setTimeout(function () {
+                    copyBtn.textContent = 'Copy link';
+                }, 1500);
+            });
+    });
+});

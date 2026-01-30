@@ -4,16 +4,16 @@ using SFA.DAS.DigitalCertificates.Domain.Models;
 
 namespace SFA.DAS.DigitalCertificates.Web.Models.Sharing
 {
-    public class CertificateSharingViewModel
+    public class CreateCertificateSharingViewModel
     {
         public Guid CertificateId { get; set; }
         public required string CourseName { get; set; }
         public CertificateType CertificateType { get; set; }
-        public List<CertificateSharingItemViewModel> Sharings { get; set; } = new List<CertificateSharingItemViewModel>();
+        public List<CreateCertificateSharingItemViewModel> Sharings { get; set; } = new List<CreateCertificateSharingItemViewModel>();
         public bool HasSharings => Sharings != null && Sharings.Count > 0;
     }
 
-    public class CertificateSharingItemViewModel
+    public class CreateCertificateSharingItemViewModel
     {
         public Guid SharingId { get; set; }
         public int SharingNumber { get; set; }

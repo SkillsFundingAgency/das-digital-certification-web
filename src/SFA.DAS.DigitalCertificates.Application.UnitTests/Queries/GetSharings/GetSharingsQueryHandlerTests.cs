@@ -88,10 +88,10 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetSharings
             result.CourseName.Should().Be("Software Developer");
             result.Sharings.Should().HaveCount(1);
 
-            var sharing = result.Sharings[0];
+            var sharing = result.Sharings![0];
             sharing.SharingNumber.Should().Be(1);
             sharing.SharingEmails.Should().HaveCount(1);
-            sharing.SharingEmails[0].EmailAddress.Should().Be("test@example.com");
+            sharing.SharingEmails![0].EmailAddress.Should().Be("test@example.com");
 
             _outerApiMock.Verify(x => x.GetSharings(
                 userId.ToString(),

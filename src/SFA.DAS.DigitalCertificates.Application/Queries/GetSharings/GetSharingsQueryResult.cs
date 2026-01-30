@@ -9,7 +9,7 @@ namespace SFA.DAS.DigitalCertificates.Application.Queries.GetSharings
         public Guid CertificateId { get; set; }
         public CertificateType CertificateType { get; set; }
         public required string CourseName { get; set; }
-        public List<Sharing>? Sharings { get; set; } = new();
+        public List<Sharing>? Sharings { get; set; }
 
         public static implicit operator GetSharingsQueryResult?(GetSharingsResponse? source)
         {
