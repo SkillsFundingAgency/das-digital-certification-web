@@ -967,5 +967,58 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             // Assert
             result.Should().BeNull();
         }
+
+        [Test]
+        public void DeleteSharing_When_Certificate_Not_Found_Throws_InvalidOperationException()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+            var sharingId = Guid.NewGuid();
+            var govUkIdentifier = "gov-123";
+
+            _userServiceMock.Setup(x => x.GetGovUkIdentifier()). Returns(govUkIdentifier);
+
+            _sessionServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
+                .ReturnsAsync(new List<Domain.Models.Certificate>());
+
+            // Act + Assert
+            var ex = Assert.ThrowsAsync<InvalidOperationException>(() => _sut.DeleteSharing(certificateId, sharingId));
+            ex.Message.Should().Be($"Certificate {certificateId} not found for authenticated user");
+        }
+
+        [Test]
+        public async Task DeleteSharing_Calls_Mediator_Send_When_Certificate_Found()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+            var sharingId = Guid.NewGuid();
+            var govUkIdentifier = "gov-123";
+
+            _userServiceMock.Setup(x => x.GetGovUkIdentifier()).Returns(govUkIdentifier);
+
+            var certificate = new Certificate
+            {
+                CertificateId = certificateId,
+                CertificateType = CertificateType.Standard,
+                CourseName = "Course",
+                CourseLevel = "Level 1",
+                DateAwarded = DateTime.UtcNow
+            };
+
+            _sessionServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
+                .ReturnsAsync(new List<Domain.Models.Certificate> { certificate });
+
+            _mediatorMock
+                .Setup(m => m.Send(It.IsAny<Application.Commands.DeleteSharing.DeleteSharingCommand>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Unit.Value);
+
+            // Act
+            await _sut.DeleteSharing(certificateId, sharingId);
+
+            // Assert
+            _mediatorMock.Verify(m => m.Send(
+                It.Is<Application.Commands.DeleteSharing.DeleteSharingCommand>(c => c.SharingId == sharingId),
+                It.IsAny<CancellationToken>()), Times.Once);
+        }
     }
 }

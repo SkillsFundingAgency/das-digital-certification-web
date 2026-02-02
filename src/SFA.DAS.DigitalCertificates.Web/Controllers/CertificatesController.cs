@@ -11,6 +11,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using SFA.DAS.DigitalCertificates.Web.Services;
+using SFA.DAS.DigitalCertificates.Web.Extensions;
 
 namespace SFA.DAS.DigitalCertificates.Web.Controllers
 {
@@ -30,6 +31,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         public const string ConfirmShareByEmailRouteGet = nameof(ConfirmShareByEmailRouteGet);
         public const string ConfirmShareByEmailRoutePost = nameof(ConfirmShareByEmailRoutePost);
         public const string EmailSentRouteGet = nameof(EmailSentRouteGet);
+        public const string DeleteSharingRouteGet = nameof(DeleteSharingRouteGet);
+        public const string DeleteSharingRoutePost = nameof(DeleteSharingRoutePost);
         #endregion
 
         private readonly ICertificatesOrchestrator _certificatesOrchestrator;
@@ -116,6 +119,38 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             model.EmailAddress = email ?? string.Empty;
 
             return View(model);
+        }
+
+        [HttpGet("{certificateId}/sharing/{sharingId}/delete", Name = DeleteSharingRouteGet)]
+        [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsCertificateOwner))]
+        public async Task<IActionResult> DeleteSharing(Guid certificateId, Guid sharingId)
+        {
+            var model = await _sharingOrchestrator.GetSharingById(certificateId, sharingId);
+
+            if (model == null)
+            {
+                return RedirectToRoute(CreateCertificateSharingRouteGet, new { certificateId });
+            }
+
+            return View(model);
+        }
+
+        [HttpPost("{certificateId}/sharing/{sharingId}/delete", Name = DeleteSharingRoutePost)]
+        [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsCertificateOwner))]
+        public async Task<IActionResult> DeleteSharingPost(Guid certificateId, Guid sharingId)
+        {
+            var model = await _sharingOrchestrator.GetSharingById(certificateId, sharingId);
+
+            if (model == null)
+            {
+                return RedirectToRoute(CreateCertificateSharingRouteGet, new { certificateId });
+            }
+
+            await _sharingOrchestrator.DeleteSharing(certificateId, sharingId);
+
+            TempData.AddFlashMessage($"Sharing link {model.SharingNumber} deleted", string.Empty, TempDataDictionaryExtensions.FlashMessageLevel.Success);
+
+            return RedirectToRoute(CreateCertificateSharingRouteGet, new { certificateId });
         }
 
         [HttpPost("{certificateId}/sharing/{sharingId}/send-email", Name = ShareByEmailRoutePost)]
