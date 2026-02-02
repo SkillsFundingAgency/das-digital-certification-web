@@ -2,13 +2,18 @@
 
 @if (TempData.ContainsKey(TempDataDictionaryExtensions.FlashMessageBodyTempDataKey))
 {
-    var body = TempData[TempDataDictionaryExtensions.FlashMessageBodyTempDataKey];
-    var detail = TempData[TempDataDictionaryExtensions.FlashMessageTempDetailKey];
-    var title = TempData[TempDataDictionaryExtensions.FlashMessageTitleTempDataKey];
-   
-    var level = TempData[TempDataDictionaryExtensions.FlashMessageLevelTempDataKey]
-        as TempDataDictionaryExtensions.FlashMessageLevel?
-        ?? TempDataDictionaryExtensions.FlashMessageLevel.Info;
+    var body = TempData[TempDataDictionaryExtensions.FlashMessageBodyTempDataKey]?.ToString();
+    var detail = TempData[TempDataDictionaryExtensions.FlashMessageTempDetailKey]?.ToString();
+    var title = TempData[TempDataDictionaryExtensions.FlashMessageTitleTempDataKey]?.ToString();
+
+    var level = TempDataDictionaryExtensions.FlashMessageLevel.Info; 
+
+    if (TempData.TryGetValue(TempDataDictionaryExtensions.FlashMessageLevelTempDataKey, out var levelObj)
+        && Enum.TryParse(levelObj?.ToString(), ignoreCase: true, out TempDataDictionaryExtensions.FlashMessageLevel parsed))
+    {
+        level = parsed;
+    }
+
 
 
     @if (level == TempDataDictionaryExtensions.FlashMessageLevel.Info)
@@ -22,7 +27,7 @@
     }
     @if (level == TempDataDictionaryExtensions.FlashMessageLevel.Success)
     {
-        if (title == null)
+        @if (string.IsNullOrWhiteSpace(title))
         {
             <div class="govuk-grid-row">
                 <div class="govuk-grid-column-full">
@@ -51,7 +56,10 @@
                             <h3 class="govuk-notification-banner__heading">
                                 @title
                             </h3>
-                            <p class="govuk-body">@body</p>
+                            @if (!string.IsNullOrWhiteSpace(body))
+                            {
+                                <p class="govuk-body">@body</p>
+                            }
                         </div>
                     </div>
                 </div>

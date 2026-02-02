@@ -37,5 +37,8 @@ namespace SFA.DAS.DigitalCertificates.Domain.Interfaces
 
         [Post("/sharing/{sharingId}/email")]
         Task<CreateSharingEmailResponse> CreateSharingEmail([Path] Guid sharingId, [Body] CreateSharingEmailRequest request);
+
+        [Delete("/sharing/{sharingId}")]
+        Task DeleteSharing([Path] Guid sharingId);
     }
 }

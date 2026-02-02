@@ -12,6 +12,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         Task<Guid> CreateSharing(Guid certificateId);
         Task<ConfirmShareByEmailViewModel?> GetConfirmShareByEmail(Guid certificateId, Guid sharingId, string emailAddress);
         Task<Guid?> CreateSharingEmail(Guid certificateId, Guid sharingId, string emailAddress);
+        Task DeleteSharing(Guid certificateId, Guid sharingId);
         Task<bool> ValidateShareByEmailViewModel(ShareByEmailViewModel viewModel, Microsoft.AspNetCore.Mvc.ModelBinding.ModelStateDictionary modelState);
     }
 }

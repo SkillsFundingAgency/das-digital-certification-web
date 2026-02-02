@@ -233,6 +233,22 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             return result?.Id ?? null;
         }
 
+        public async Task DeleteSharing(Guid certificateId, Guid sharingId)
+        {
+            var certificateData = await GetCertificateFromSessionAsync(certificateId);
+
+            if (certificateData == null)
+            {
+                throw new InvalidOperationException($"Certificate {certificateId} not found for authenticated user");
+            }
+
+            await Mediator.Send(new Application.Commands.DeleteSharing.DeleteSharingCommand
+            {
+                SharingId = sharingId
+            });
+
+        }
+
         public async Task<EmailSentViewModel?> GetEmailSent(Guid certificateId, Guid sharingId, Guid sharingEmailId)
         {
             var certificateData = await GetCertificateFromSessionAsync(certificateId);
