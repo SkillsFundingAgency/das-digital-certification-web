@@ -1,7 +1,7 @@
-﻿using FluentValidation;
+﻿using System;
+using FluentValidation;
 using SFA.DAS.DigitalCertificates.Web.Models.Stub;
 using SFA.DAS.GovUK.Auth.Configuration;
-using System;
 
 namespace SFA.DAS.DigitalCertificates.Web.Validators
 {

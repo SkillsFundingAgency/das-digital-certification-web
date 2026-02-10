@@ -1,9 +1,9 @@
-﻿using Microsoft.AspNetCore.DataProtection;
+﻿using System.Diagnostics.CodeAnalysis;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
 using StackExchange.Redis;
-using System.Diagnostics.CodeAnalysis;
 
 namespace SFA.DAS.DigitalCertificates.Web.StartupExtensions
 {

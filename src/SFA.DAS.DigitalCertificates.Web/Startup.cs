@@ -66,16 +66,16 @@ namespace SFA.DAS.DigitalCertificates.Web
                 {
                     options.AddValidation();
                     options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
-                    
-                    if(_configuration.TryGetSection<GoogleAnalytics>(out var googleAnalyticsSection))
+
+                    if (_configuration.TryGetSection<GoogleAnalytics>(out var googleAnalyticsSection))
                     {
                         options.Filters.Add(new EnableGoogleAnalyticsAttribute(googleAnalyticsSection!));
                     }
-                    
+
                     options.Filters.Add(new GoogleAnalyticsFilterAttribute());
                 })
                 .AddControllersAsServices();
-           
+
             services
                 .AddValidatorsFromAssemblyContaining<SignInStubViewModelValidator>();
 
@@ -121,7 +121,7 @@ namespace SFA.DAS.DigitalCertificates.Web
                         {
                             context.Response.Redirect(url);
                         }
-                        
+
                         await Task.CompletedTask;
                     });
                 });

@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc.ViewFeatures;
+﻿using System.Diagnostics.CodeAnalysis;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Newtonsoft.Json;
-using System.Diagnostics.CodeAnalysis;
 
 namespace SFA.DAS.DigitalCertificates.Web.Extensions
 {
