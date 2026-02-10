@@ -18,6 +18,8 @@ using SFA.DAS.DigitalCertificates.Web.Extensions;
 using SFA.DAS.DigitalCertificates.Web.Models.Sharing;
 using FluentValidation;
 using SFA.DAS.DigitalCertificates.Domain.Extensions;
+using SFA.DAS.DigitalCertificates.Application.Queries.GetSharingByCode;
+using SFA.DAS.DigitalCertificates.Application.Commands.CreateSharingAccess;
 
 namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
 {
@@ -543,8 +545,6 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             result.ExpiryTime.Should().Be(expiryTime);
             result.LinkCode.Should().Be(linkCode);
             result.FormattedExpiry.Should().Be(expiryTime.ToUkExpiryDateTimeString());
-            result.FormattedCreated.Should().Be(createdAt.ToUkDateTimeString());
-            result.FormattedAccessTimes.Should().HaveCount(1);
             result.SecureLink.Should().Be($"{_digitalCertificatesWebConfiguration.ServiceBaseUrl}/certificates/{linkCode}");
 
             _mediatorMock.Verify(m => m.Send(
@@ -976,7 +976,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             var sharingId = Guid.NewGuid();
             var govUkIdentifier = "gov-123";
 
-            _userServiceMock.Setup(x => x.GetGovUkIdentifier()). Returns(govUkIdentifier);
+            _userServiceMock.Setup(x => x.GetGovUkIdentifier()).Returns(govUkIdentifier);
 
             _sessionServiceMock.Setup(x => x.GetOwnedCertificatesAsync(govUkIdentifier))
                 .ReturnsAsync(new List<Domain.Models.Certificate>());
@@ -1019,6 +1019,110 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             _mediatorMock.Verify(m => m.Send(
                 It.Is<Application.Commands.DeleteSharing.DeleteSharingCommand>(c => c.SharingId == sharingId),
                 It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Test]
+        public async Task GetCheckQualificationViewModelAndRecordAccess_Returns_Null_When_Query_Returns_Null()
+        {
+            // Arrange
+            var code = Guid.NewGuid();
+
+            _mediatorMock
+                .Setup(m => m.Send(It.IsAny<GetSharingByCodeQuery>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((GetSharingByCodeQueryResult)null);
+
+            // Act
+            var result = await _sut.GetCheckQualificationViewModelAndRecordAccess(code);
+
+            // Assert
+            result.Should().BeNull();
+
+            _mediatorMock.Verify(m => m.Send(It.Is<GetSharingByCodeQuery>(q => q.Code == code), It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Test]
+        public async Task GetCheckQualificationViewModelAndRecordAccess_Records_Access_When_Not_Recorded()
+        {
+            // Arrange
+            var code = Guid.NewGuid();
+            var sharingId = Guid.NewGuid();
+            var sharingEmailId = Guid.NewGuid();
+            var expiry = DateTime.UtcNow.AddDays(5);
+
+            var queryResult = new GetSharingByCodeQueryResult
+            {
+                CertificateId = Guid.NewGuid(),
+                CertificateType = CertificateType.Standard,
+                ExpiryTime = expiry,
+                SharingId = sharingId,
+                SharingEmailId = sharingEmailId
+            };
+
+            _mediatorMock
+                .Setup(m => m.Send(It.IsAny<GetSharingByCodeQuery>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(queryResult);
+
+            _sessionServiceMock
+                .Setup(s => s.IsSharingAccessCodeRecordedAsync(code))
+                .ReturnsAsync(false);
+
+            _mediatorMock
+                .Setup(m => m.Send(It.IsAny<CreateSharingAccessCommand>(), It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask);
+
+            _sessionServiceMock
+                .Setup(s => s.AddRecordedSharingAccessCodeAsync(code))
+                .Returns(Task.CompletedTask);
+
+            // Act
+            var result = await _sut.GetCheckQualificationViewModelAndRecordAccess(code);
+
+            // Assert
+            result.Should().NotBeNull();
+            result!.Code.Should().Be(code);
+            result.FormattedExpiry.Should().Be(expiry.ToUkExpiryDateTimeString());
+
+            _mediatorMock.Verify(m => m.Send(It.Is<GetSharingByCodeQuery>(q => q.Code == code), It.IsAny<CancellationToken>()), Times.Once);
+            _mediatorMock.Verify(m => m.Send(It.Is<CreateSharingAccessCommand>(c => c.SharingId == sharingId && c.SharingEmailId == sharingEmailId), It.IsAny<CancellationToken>()), Times.Once);
+            _sessionServiceMock.Verify(s => s.AddRecordedSharingAccessCodeAsync(code), Times.Once);
+        }
+
+        [Test]
+        public async Task GetCheckQualificationViewModelAndRecordAccess_Does_Not_Record_When_Already_Recorded()
+        {
+            // Arrange
+            var code = Guid.NewGuid();
+            var sharingId = Guid.NewGuid();
+            var sharingEmailId = Guid.NewGuid();
+            var expiry = DateTime.UtcNow.AddDays(5);
+
+            var queryResult = new GetSharingByCodeQueryResult
+            {
+                CertificateId = Guid.NewGuid(),
+                CertificateType = CertificateType.Standard,
+                ExpiryTime = expiry,
+                SharingId = sharingId,
+                SharingEmailId = sharingEmailId
+            };
+
+            _mediatorMock
+                .Setup(m => m.Send(It.IsAny<GetSharingByCodeQuery>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(queryResult);
+
+            _sessionServiceMock
+                .Setup(s => s.IsSharingAccessCodeRecordedAsync(code))
+                .ReturnsAsync(true);
+
+            // Act
+            var result = await _sut.GetCheckQualificationViewModelAndRecordAccess(code);
+
+            // Assert
+            result.Should().NotBeNull();
+            result!.Code.Should().Be(code);
+            result.FormattedExpiry.Should().Be(expiry.ToUkExpiryDateTimeString());
+
+            _mediatorMock.Verify(m => m.Send(It.IsAny<CreateSharingAccessCommand>(), It.IsAny<CancellationToken>()), Times.Never);
+            _sessionServiceMock.Verify(s => s.AddRecordedSharingAccessCodeAsync(It.IsAny<Guid>()), Times.Never);
         }
     }
 }

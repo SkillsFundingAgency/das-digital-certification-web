@@ -197,9 +197,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
                 CreatedAt = DateTime.UtcNow.AddMinutes(-5),
                 ExpiryTime = DateTime.UtcNow.AddMinutes(5),
                 LinkCode = Guid.NewGuid(),
-                FormattedExpiry = DateTime.UtcNow.AddMinutes(5).ToString(),
-                FormattedCreated = DateTime.UtcNow.AddMinutes(-5).ToString(),
-                FormattedAccessTimes = new System.Collections.Generic.List<string>()
+                FormattedExpiry = DateTime.UtcNow.AddMinutes(5).ToString()
             };
 
             _sharingOrchestratorMock
@@ -625,6 +623,58 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
 
             _sharingOrchestratorMock.Verify(s => s.GetSharingById(certificateId, sharingId), Times.Once);
             _sharingOrchestratorMock.Verify(s => s.DeleteSharing(It.IsAny<Guid>(), It.IsAny<Guid>()), Times.Never);
+        }
+
+        [Test]
+        public async Task CheckQualification_Redirects_To_Expired_When_SharingInfo_Null()
+        {
+            // Arrange
+            var code = Guid.NewGuid();
+
+            _sharingOrchestratorMock
+                .Setup(s => s.GetCheckQualificationViewModelAndRecordAccess(code))
+                .ReturnsAsync((CheckQualificationViewModel)null!);
+
+            // Act
+            var result = await _sut.CheckQualification(code) as RedirectToRouteResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            result!.RouteName.Should().Be(CertificatesController.CheckQualificationExpiredRouteGet);
+        }
+
+        [Test]
+        public async Task CheckQualification_Returns_View_When_SharingInfo_Found()
+        {
+            // Arrange
+            var code = Guid.NewGuid();
+
+            var model = new CheckQualificationViewModel
+            {
+                Code = code,
+                FormattedExpiry = DateTime.UtcNow.ToString()
+            };
+
+            _sharingOrchestratorMock
+                .Setup(s => s.GetCheckQualificationViewModelAndRecordAccess(code))
+                .ReturnsAsync(model);
+
+            // Act
+            var result = await _sut.CheckQualification(code) as ViewResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            result!.Model.Should().BeEquivalentTo(model);
+        }
+
+        [Test]
+        public void CheckQualificationExpired_Returns_View()
+        {
+            // Act
+            var result = _sut.CheckQualificationExpired() as ViewResult;
+
+            // Assert
+            result.Should().NotBeNull();
         }
     }
 }

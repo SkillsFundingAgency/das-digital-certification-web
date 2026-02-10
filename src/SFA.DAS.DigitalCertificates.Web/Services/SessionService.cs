@@ -6,6 +6,7 @@ using MediatR;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetCertificates;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetUser;
 using System.Text.Json;
+using System;
 
 namespace SFA.DAS.DigitalCertificates.Web.Services
 {
@@ -18,6 +19,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
         private const string ShareEmailKey = "DigitalCertificates:ShareEmail";
         private const string OwnedCertificatesKeyPrefix = "DigitalCertificates:OwnedCertificates:";
         private const string UlnAuthorisationKeyPrefix = "DigitalCertificates:UlnAuthorisation:";
+        private const string RecordedSharingAccessKey = "DigitalCertificates:RecordedSharingAccessCodes";
 
         public SessionService(ISessionStorageService sessionStorageService, IMediator mediator)
         {
@@ -109,6 +111,36 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
                 await _sessionStorageService.ClearAsync(OwnedCertificatesKeyPrefix + govUkIdentifier);
                 await _sessionStorageService.ClearAsync(UlnAuthorisationKeyPrefix + govUkIdentifier);
             }
+
+            await _sessionStorageService.ClearAsync(RecordedSharingAccessKey);
+        }
+
+        public async Task AddRecordedSharingAccessCodeAsync(Guid code)
+        {
+            var list = await GetSessionStringListAsync(RecordedSharingAccessKey);
+            var codeString = code.ToString();
+            if (!list.Contains(codeString))
+            {
+                list.Add(codeString);
+                var json = JsonSerializer.Serialize(list);
+                await _sessionStorageService.SetAsync(RecordedSharingAccessKey, json);
+            }
+        }
+
+        public async Task<bool> IsSharingAccessCodeRecordedAsync(Guid code)
+        {
+            var list = await GetSessionStringListAsync(RecordedSharingAccessKey);
+            return list.Contains(code.ToString());
+        }
+
+        private async Task<List<string>> GetSessionStringListAsync(string key)
+        {
+            var json = await _sessionStorageService.GetAsync(key);
+            if (string.IsNullOrEmpty(json))
+                return new List<string>();
+
+            return JsonSerializer.Deserialize<List<string>>(json) ?? new List<string>();
+
         }
     }
 }
