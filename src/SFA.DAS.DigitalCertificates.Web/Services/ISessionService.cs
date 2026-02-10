@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using System.Collections.Generic;
 using SFA.DAS.DigitalCertificates.Domain.Models;
+using System;
 
 namespace SFA.DAS.DigitalCertificates.Web.Services
 {
@@ -14,5 +15,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
         Task<List<Certificate>?> GetOwnedCertificatesAsync(string govUkIdentifier);
         Task<UlnAuthorisation?> GetUlnAuthorisationAsync(string govUkIdentifier);
         Task ClearSessionDataAsync(string govUkIdentifier);
+        Task AddRecordedSharingAccessCodeAsync(Guid code);
+        Task<bool> IsSharingAccessCodeRecordedAsync(Guid code);
     }
 }

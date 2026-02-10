@@ -1,0 +1,16 @@
+﻿@using SFA.DAS.DigitalCertificates.Web.Controllers
+@using SFA.DAS.DigitalCertificates.Web.ViewDataKeys
+
+@{
+    ViewData[ViewDataKeys.Title] = ViewData[ViewDataKeys.ServiceName] + " Sharing link expired";
+    ViewBag.GaData.Vpv = @ViewData[ViewDataKeys.GaDataVpvPrefix] + "sharing-link-expired";
+}
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+        <h1 class="govuk-heading-l">Sharing link expired</h1>
+
+        <p class="govuk-body">This sharing link has expired.</p>
+
+        <p class="govuk-body">If you still need to view this qualification, ask the person that sent you this link <br /> to send you a new sharing link.</p>
+    </div>
+</div>

@@ -26,6 +26,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
         private const string ShareEmailKey = "DigitalCertificates:ShareEmail";
         private const string OwnedCertificatesKeyPrefix = "DigitalCertificates:OwnedCertificates:";
         private const string UlnAuthorisationKeyPrefix = "DigitalCertificates:UlnAuthorisation:";
+        private const string RecordedSharingAccessKey = "DigitalCertificates:RecordedSharingAccessCodes";
 
         [SetUp]
         public void SetUp()
@@ -198,6 +199,77 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
             storedJson.Should().NotBeNullOrEmpty();
             var des = JsonSerializer.Deserialize<UlnAuthorisation>(storedJson!);
             des.Should().BeEquivalentTo(expectedAuth);
+        }
+
+        [Test]
+        public async Task AddRecordedSharingAccessCodeAsync_Adds_Code_When_Not_Present()
+        {
+            // Arrange
+            var code = Guid.NewGuid();
+            string? storedJson = null;
+
+            _sessionStorageMock.Setup(s => s.GetAsync(RecordedSharingAccessKey)).ReturnsAsync((string?)null);
+            _sessionStorageMock.Setup(s => s.SetAsync(RecordedSharingAccessKey, It.IsAny<string>()))
+                .Callback<string, string>((k, v) => storedJson = v)
+                .Returns(Task.CompletedTask);
+
+            // Act
+            await _sut.AddRecordedSharingAccessCodeAsync(code);
+
+            // Assert
+            storedJson.Should().NotBeNullOrEmpty();
+            var list = JsonSerializer.Deserialize<List<string>>(storedJson!);
+            list.Should().Contain(code.ToString());
+            _sessionStorageMock.Verify(s => s.SetAsync(RecordedSharingAccessKey, It.IsAny<string>()), Times.Once);
+        }
+
+        [Test]
+        public async Task AddRecordedSharingAccessCodeAsync_Does_Not_Add_When_Already_Present()
+        {
+            // Arrange
+            var code = Guid.NewGuid();
+            var existing = new List<string> { code.ToString() };
+            var json = JsonSerializer.Serialize(existing);
+
+            _sessionStorageMock.Setup(s => s.GetAsync(RecordedSharingAccessKey)).ReturnsAsync(json);
+
+            // Act
+            await _sut.AddRecordedSharingAccessCodeAsync(code);
+
+            // Assert
+            _sessionStorageMock.Verify(s => s.SetAsync(RecordedSharingAccessKey, It.IsAny<string>()), Times.Never);
+        }
+
+        [Test]
+        public async Task IsSharingAccessCodeRecordedAsync_Returns_True_When_Present()
+        {
+            // Arrange
+            var code = Guid.NewGuid();
+            var existing = new List<string> { code.ToString() };
+            var json = JsonSerializer.Serialize(existing);
+
+            _sessionStorageMock.Setup(s => s.GetAsync(RecordedSharingAccessKey)).ReturnsAsync(json);
+
+            // Act
+            var result = await _sut.IsSharingAccessCodeRecordedAsync(code);
+
+            // Assert
+            result.Should().BeTrue();
+        }
+
+        [Test]
+        public async Task IsSharingAccessCodeRecordedAsync_Returns_False_When_Not_Present()
+        {
+            // Arrange
+            var code = Guid.NewGuid();
+
+            _sessionStorageMock.Setup(s => s.GetAsync(RecordedSharingAccessKey)).ReturnsAsync((string?)null);
+
+            // Act
+            var result = await _sut.IsSharingAccessCodeRecordedAsync(code);
+
+            // Assert
+            result.Should().BeFalse();
         }
     }
 }
