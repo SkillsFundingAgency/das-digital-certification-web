@@ -1,10 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
-using System;
-using System.Diagnostics.CodeAnalysis;
 
 namespace SFA.DAS.DigitalCertificates.Web.Attributes
 {

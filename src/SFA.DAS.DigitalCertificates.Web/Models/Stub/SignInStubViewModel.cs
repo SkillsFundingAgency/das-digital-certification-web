@@ -1,5 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
+using Microsoft.AspNetCore.Http;
 
 namespace SFA.DAS.DigitalCertificates.Web.Models.Stub
 {
@@ -9,7 +9,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Models.Stub
         public string? Id { get; set; }
         public string? Email { get; set; }
         public string? Phone { get; set; }
-        
+
         public IFormFile? UserFile { get; set; }
         public string? ReturnUrl { get; set; }
     }

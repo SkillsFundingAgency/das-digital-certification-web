@@ -1,4 +1,5 @@
-﻿using FluentValidation;
+﻿using System.Threading.Tasks;
+using FluentValidation;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
@@ -9,7 +10,6 @@ using SFA.DAS.DigitalCertificates.Web.Models.Stub;
 using SFA.DAS.GovUK.Auth.Exceptions;
 using SFA.DAS.GovUK.Auth.Models;
 using SFA.DAS.GovUK.Auth.Services;
-using System.Threading.Tasks;
 
 namespace SFA.DAS.DigitalCertificates.Web.Controllers
 {
