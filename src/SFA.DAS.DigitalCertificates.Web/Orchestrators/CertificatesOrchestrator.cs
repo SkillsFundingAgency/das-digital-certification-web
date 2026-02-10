@@ -1,7 +1,11 @@
-﻿using System.Threading.Tasks;
-using MediatR;
+﻿using MediatR;
+using SFA.DAS.DigitalCertificates.Application.Queries.GetStandardCertificate;
+using SFA.DAS.DigitalCertificates.Domain.Models;
 using SFA.DAS.DigitalCertificates.Web.Models.Certificates;
 using SFA.DAS.DigitalCertificates.Web.Services;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 {
@@ -23,6 +27,43 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             {
                 Certificates = await _sessionStorageService.GetOwnedCertificatesAsync(_userService.GetGovUkIdentifier())
             };
+        }
+
+        public async Task<CertificateStandardViewModel?> GetCertificateStandardViewModel(Guid certificateId)
+        {
+            var result = await Mediator.Send(new GetStandardCertificateQuery { CertificateId = certificateId });
+
+            if (result == null)
+                return null;
+
+            var viewModel = new CertificateStandardViewModel
+            {
+                CertificateId = certificateId,
+                FamilyName = result.FamilyName,
+                GivenNames = result.GivenNames,
+                Uln = result.Uln,
+                CertificateType = Enum.TryParse<CertificateType>(result.CertificateType, out var parsed) ? parsed : CertificateType.Unknown,
+                CertificateReference = result.CertificateReference,
+                CourseCode = result.CourseCode,
+                CourseName = result.CourseName,
+                CourseOption = result.CourseOption,
+                CourseLevel = result.CourseLevel,
+                DateAwarded = result.DateAwarded,
+                OverallGrade = result.OverallGrade,
+                ProviderName = result.ProviderName,
+                Ukprn = result.Ukprn,
+                EmployerName = result.EmployerName,
+                AssessorName = result.AssessorName,
+                StartDate = result.StartDate,
+                PrintRequestedAt = result.PrintRequestedAt,
+                PrintRequestedBy = result.PrintRequestedBy
+            };
+
+            var owned = await _sessionStorageService.GetOwnedCertificatesAsync(_userService.GetGovUkIdentifier());
+
+            viewModel.ShowBackLink = (owned?.Count() ?? 0) > 1;
+
+            return viewModel;
         }
     }
 }

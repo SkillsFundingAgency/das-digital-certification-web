@@ -3,7 +3,7 @@
 @{
     ViewData[ViewDataKeys.Title] = ViewData[ViewDataKeys.ServiceName] + " Certificate Framework";
     ViewBag.GaData.Vpv = @ViewData[ViewDataKeys.GaDataVpvPrefix] + "certificate-framework";
-    var certificateId = ViewContext.RouteData.Values["certificateId"]?.ToString() ?? throw new InvalidOperationException("Certificate ID is required");  // TODO: Update to read certificateId from the model instead of RouteData.
+    var certificateId = ViewContext.RouteData.Values["certificateId"]?.ToString() ?? throw new InvalidOperationException("Certificate ID is required");    // TODO: Update to read certificateId from the model instead of RouteData.
 }
 <main class="govuk-main-wrapper govuk-main-wrapper--auto-spacing">
     <div class="govuk-grid-row">

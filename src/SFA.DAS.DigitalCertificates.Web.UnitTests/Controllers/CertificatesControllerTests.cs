@@ -8,6 +8,9 @@ using NUnit.Framework;
 using SFA.DAS.DigitalCertificates.Web.Controllers;
 using SFA.DAS.DigitalCertificates.Web.Orchestrators;
 using SFA.DAS.DigitalCertificates.Web.Models.Sharing;
+using SFA.DAS.DigitalCertificates.Web.Models.Certificates;
+using SFA.DAS.DigitalCertificates.Domain.Models;
+using System.Collections.Generic;
 
 namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
 {
@@ -40,21 +43,59 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
         [Test]
         public async Task CertificatesList_Returns_View()
         {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+
+            var certs = new List<Certificate>
+            {
+                new Certificate { CertificateId = certificateId, CertificateType = CertificateType.Standard, CourseName = "Test Course", CourseLevel = "1" }
+            };
+
+            var viewModel = new CertificatesListViewModel
+            {
+                Certificates = certs
+            };
+
+            _certificatesOrchestratorMock
+                .Setup(x => x.GetCertificatesListViewModel())
+                .ReturnsAsync(viewModel);
+
             // Act
-            var result = await _sut.CertificatesList() as ViewResult;
+            var result = await _sut.CertificatesList() as RedirectToRouteResult;
 
             // Assert
             result.Should().NotBeNull();
+            result!.RouteName.Should().Be(CertificatesController.CertificateStandardRouteGet);
+            result.RouteValues.Should().ContainKey("certificateId");
+            result.RouteValues["certificateId"].Should().Be(certificateId);
+            _certificatesOrchestratorMock.Verify(x => x.GetCertificatesListViewModel(), Times.Once);
         }
 
         [Test]
-        public void Certificate_Returns_View()
+        public async Task Certificate_Returns_View()
         {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+
+            var model = new CertificateStandardViewModel
+            {
+                CertificateId = certificateId,
+                CourseName = "Test Course",
+                CertificateType = CertificateType.Standard,
+                ShowBackLink = false
+            };
+
+            _certificatesOrchestratorMock
+                .Setup(c => c.GetCertificateStandardViewModel(certificateId))
+                .ReturnsAsync(model);
+
             // Act
-            var result = _sut.CertificateStandard(Guid.NewGuid()) as ViewResult;
+            var result = await _sut.CertificateStandard(certificateId) as ViewResult;
 
             // Assert
             result.Should().NotBeNull();
+            result!.Model.Should().BeEquivalentTo(model);
+            _certificatesOrchestratorMock.Verify(c => c.GetCertificateStandardViewModel(certificateId), Times.Once);
         }
 
         [Test]
@@ -181,6 +222,37 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             result.RouteValues.Should().ContainKey("certificateId");
             result.RouteValues["certificateId"].Should().Be(certificateId);
             _sharingOrchestratorMock.Verify(s => s.GetSharingById(certificateId, sharingId), Times.Once);
+        }
+
+        [Test]
+        public async Task CertificatesList_Returns_View_When_MultipleCertificates()
+        {
+            // Arrange
+            var cert1 = Guid.NewGuid();
+            var cert2 = Guid.NewGuid();
+
+            var certs = new List<Certificate>
+            {
+                new Certificate { CertificateId = cert1, CertificateType = CertificateType.Standard, CourseName = "Course A", CourseLevel = "1" },
+                new Certificate { CertificateId = cert2, CertificateType = CertificateType.Framework, CourseName = "Course B", CourseLevel = "2" }
+            };
+
+            var viewModel = new CertificatesListViewModel
+            {
+                Certificates = certs
+            };
+
+            _certificatesOrchestratorMock
+                .Setup(x => x.GetCertificatesListViewModel())
+                .ReturnsAsync(viewModel);
+
+            // Act
+            var result = await _sut.CertificatesList() as ViewResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            result!.Model.Should().BeEquivalentTo(viewModel);
+            _certificatesOrchestratorMock.Verify(x => x.GetCertificatesListViewModel(), Times.Once);
         }
     }
 }
