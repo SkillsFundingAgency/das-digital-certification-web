@@ -53,13 +53,13 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
             var response = await _sessionCache.GetOrCreateAsync(GetScopedKey(nameof(CertificatesResponse), govUkIdentifier), async e =>
             {
                 e.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(SessionTimeoutMinutes);
-                
+
                 var user = await GetUserAsync(govUkIdentifier);
                 if (user != null)
                 {
                     return await _mediator.Send(new GetCertificatesQuery { UserId = user.Id });
                 }
-                
+
                 return null;
             });
 

@@ -1,7 +1,7 @@
-﻿using FluentValidation;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
+using FluentValidation;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace SFA.DAS.DigitalCertificates.Web.Extensions
 {
