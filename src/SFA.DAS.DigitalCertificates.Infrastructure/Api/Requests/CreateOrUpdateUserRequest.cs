@@ -1,6 +1,6 @@
-﻿using SFA.DAS.DigitalCertificates.Infrastructure.Api.Types;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using SFA.DAS.DigitalCertificates.Infrastructure.Api.Types;
 
 namespace SFA.DAS.DigitalCertificates.Infrastructure.Api.Requests
 {

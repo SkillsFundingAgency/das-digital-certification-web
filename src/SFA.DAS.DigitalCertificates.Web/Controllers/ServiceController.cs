@@ -27,7 +27,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         #endregion Routes
 
         public ServiceController(IUserService userService, ISessionStorageService sessionStorageService, IConfiguration config, IHttpContextAccessor contextAccessor)
-            : base(contextAccessor) 
+            : base(contextAccessor)
         {
             _userService = userService;
             _sessionStorageService = sessionStorageService;
