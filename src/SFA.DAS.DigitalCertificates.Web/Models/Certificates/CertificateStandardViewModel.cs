@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using SFA.DAS.DigitalCertificates.Domain.Models;
 
 namespace SFA.DAS.DigitalCertificates.Web.Models.Certificates

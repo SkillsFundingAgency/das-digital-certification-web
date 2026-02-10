@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using SFA.DAS.DigitalCertificates.Infrastructure.Api.Requests;
 using SFA.DAS.DigitalCertificates.Domain.Models;
 

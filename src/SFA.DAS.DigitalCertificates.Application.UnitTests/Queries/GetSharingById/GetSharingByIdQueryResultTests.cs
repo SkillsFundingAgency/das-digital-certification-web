@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using NUnit.Framework;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetSharingById;
 using SFA.DAS.DigitalCertificates.Infrastructure.Api.Responses;
