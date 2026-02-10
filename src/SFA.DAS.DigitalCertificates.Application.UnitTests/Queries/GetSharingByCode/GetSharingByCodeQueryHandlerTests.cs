@@ -17,7 +17,7 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetSharingBy
         public void SetUp()
         {
             _outerApiMock = new Mock<IDigitalCertificatesOuterApi>();
-            _sut = new GetSharingByCodeQueryHandler(_outerApiMock.Object, Mock.Of<Microsoft.Extensions.Logging.ILogger<GetSharingByCodeQueryHandler>>());
+            _sut = new GetSharingByCodeQueryHandler(_outerApiMock.Object);
         }
 
         [Test]
