@@ -1,15 +1,106 @@
 @using SFA.DAS.DigitalCertificates.Web.Controllers
 @using SFA.DAS.DigitalCertificates.Web.ViewDataKeys
+@using SFA.DAS.DigitalCertificates.Web.Models.Sharing
+@model CertificateSharingLinkViewModel
 @{
-    ViewData[ViewDataKeys.Title] = ViewData[ViewDataKeys.ServiceName] + "Sharing Link";
-    ViewBag.GaData.Vpv = @ViewData[ViewDataKeys.GaDataVpvPrefix] + "sharing-link";
-    var certificateId = ViewContext.RouteData.Values["certificateId"]?.ToString() ?? throw new InvalidOperationException("Certificate ID is required"); // TODO: Update to read certificateId from the model instead of RouteData.
+    ViewData[ViewDataKeys.Title] = ViewData[ViewDataKeys.ServiceName] + " Sharing link";
+    ViewBag.GaData.Vpv = ViewData[ViewDataKeys.GaDataVpvPrefix] + "sharing-link";
 }
-<main class="govuk-main-wrapper govuk-main-wrapper--auto-spacing">
-    <div class="govuk-grid-row">
-        <div class="govuk-grid-column-two-thirds">
-            <h1 class="govuk-heading-xl">@ViewData[ViewDataKeys.Title]</h1>
-            <h2 class="govuk-heading-m">Certificate Sharing Link</h2>
+
+<div class="govuk-width-container">
+    <a asp-route="@CertificatesController.CreateCertificateSharingRouteGet"
+       asp-route-certificateId="@Model.CertificateId"
+       class="govuk-back-link">Back</a>
+
+    <main class="govuk-main-wrapper" id="main-content">
+        <div class="govuk-grid-row">
+            <div class="govuk-grid-column-two-thirds">
+
+                @if (Model == null)
+                {
+                    <h1 class="govuk-heading-l">
+                        <span class="govuk-caption-l">Sharing link</span>
+                    </h1>
+                    <p class="govuk-body">The sharing link could not be found.</p>
+                }
+                else
+                {
+                    <div class="extra-margin-bottom">
+                        <h1 class="govuk-heading-l">
+                            <span class="govuk-caption-l">@Model.CourseName</span>
+                            Sharing link @Model.SharingNumber
+                        </h1>
+
+                        <p class="govuk-body">This sharing link will automatically be deleted at @Model.FormattedExpiry.</p>
+
+                        <form method="post" asp-route="DeleteSharing" asp-route-certificateId="@Model.CertificateId" asp-route-sharingId="@Model.SharingId">
+                            <button type="submit" class="govuk-button govuk-button--secondary" data-module="govuk-button">Delete link</button>
+                        </form>
+                    </div>
+
+                    <div class="extra-margin-bottom">
+                        <div class="govuk-form-group">
+                            <h2 class="govuk-label-wrapper">
+                                <label class="govuk-label govuk-label--m" for="web-link">Secure web link</label>
+                            </h2>
+
+                            <input class="govuk-input" id="web-link" name="secureWebLink" type="text" readonly="true" value="@Model.SecureLink" inputmode="none" />
+
+                            <noscript>
+                                <style>
+                                    .js-only {
+                                        display: none
+                                    }</style>
+                                <p class="govuk-body">Copy the link above manually.</p>
+                            </noscript>
+                        </div>
+
+                        <button type="button" class="govuk-button govuk-button--secondary js-copy-link-btn js-only" id="copy-link-btn" data-copy-target="#web-link" style="display:none;">
+                            Copy link
+                        </button>
+                    </div>
+
+                    <div class="extra-margin-bottom">
+                        <form method="post" asp-route="SendSharingEmail" asp-route-certificateId="@Model.CertificateId" asp-route-sharingId="@Model.SharingId">
+                            <div class="govuk-form-group">
+                                <label class="govuk-label govuk-label--m" for="email-address">Share by email</label>
+                                <div id="email-address-hint" class="govuk-hint">Enter an email address</div>
+                                <input class="govuk-input govuk-!-width-two-thirds" id="email-address" name="shareEmailAddress" type="email" aria-describedby="email-address-hint" />
+                            </div>
+
+                            <button type="submit" class="govuk-button govuk-button--secondary" data-module="govuk-button">Send email</button>
+                        </form>
+                    </div>
+
+                    <table class="govuk-table">
+                        <caption class="govuk-table__caption">
+                            <h2 class="govuk-table__caption--m">Link history</h2>
+                            <p class="govuk-body">When your link has been viewed, you'll see the time and date here.</p>
+                        </caption>
+                        <thead class="govuk-table__head">
+                            <tr class="govuk-table__row">
+                                <th scope="col" class="govuk-table__header">Activity</th>
+                                <th scope="col" class="govuk-table__header">Time and date (UK)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="govuk-table__body">
+                            <tr class="govuk-table__row">
+                                <td scope="row" class="govuk-table__header">Link created</td>
+                                <td class="govuk-table__cell">@Model.FormattedCreated</td>
+                            </tr>
+
+                            @foreach (var accessText in Model.FormattedAccessTimes)
+                            {
+                                <tr class="govuk-table__row">
+                                    <td class="govuk-table__cell">Link viewed</td>
+                                    <td class="govuk-table__cell">@accessText</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+
+            </div>
         </div>
-    </div>
-</main>
+    </main>
+</div>
