@@ -1,4 +1,5 @@
 ﻿using System;
+using SFA.DAS.DigitalCertificates.Web.Enums;
 namespace SFA.DAS.DigitalCertificates.Web.Models.Certificates
 {
     public class SharedCertificateStandardViewModel
@@ -12,6 +13,9 @@ namespace SFA.DAS.DigitalCertificates.Web.Models.Certificates
         public int? CourseLevel { get; set; }
         public DateTime? DateAwarded { get; set; }
         public string? OverallGrade { get; set; }
+        public Grade OverallGradeEnum => OverallGrade.ParseFromApi();
+        public string OverallGradeBannerDisplay => OverallGradeEnum.ToBannerDisplay();
+        public string OverallGradeResultDisplay => OverallGradeEnum.ToResultDisplay();
         public string? ProviderName { get; set; }
         public DateTime? StartDate { get; set; }
         public bool ShowBackLink { get; set; } = false;

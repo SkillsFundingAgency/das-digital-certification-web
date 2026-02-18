@@ -1,4 +1,6 @@
 ﻿@model SFA.DAS.DigitalCertificates.Web.Models.Certificates.SharedCertificateStandardViewModel
+@using SFA.DAS.DigitalCertificates.Web.Models.Certificates
+@using SFA.DAS.DigitalCertificates.Web.Enums
 @using SFA.DAS.DigitalCertificates.Web.ViewDataKeys
 @{
     ViewData[ViewDataKeys.Title] = ViewData[ViewDataKeys.ServiceName] + " Shared Certificate Standard";
@@ -19,12 +21,9 @@
                 <p class="govuk-body">You can view this page until @Model?.FormattedExpiry.</p>
 
                 <div class="govuk-panel govuk-panel--confirmation">
-                    @if (!string.IsNullOrEmpty(Model?.OverallGrade))
-                    {
-                        <div class="govuk-panel__body">
-                            <span class="govuk-panel__title">@Model.OverallGrade</span>
-                        </div>
-                    }
+                    <div class="govuk-panel__body">
+                        <span class="govuk-panel__title">Pass</span>
+                    </div>
                 </div>
 
                 <table class="govuk-table">
@@ -57,8 +56,8 @@
                 </table>
 
                 @if (!string.IsNullOrEmpty(Model?.CourseName) || Model?.CourseLevel != null ||
-                                                                                    !string.IsNullOrEmpty(Model?.CourseOption) || !string.IsNullOrEmpty(Model?.ProviderName) ||
-                                                                                    Model?.StartDate != null || Model?.DateAwarded != null || !string.IsNullOrEmpty(Model?.OverallGrade))
+                                                                !string.IsNullOrEmpty(Model?.CourseOption) || !string.IsNullOrEmpty(Model?.ProviderName) ||
+                                                                Model?.StartDate != null || Model?.DateAwarded != null || !string.IsNullOrEmpty(Model?.OverallGrade))
                 {
                     <table class="govuk-table">
                         <caption class="govuk-table__caption govuk-table__caption--m">Apprenticeship details</caption>
@@ -111,11 +110,11 @@
                                 </tr>
                             }
 
-                            @if (!string.IsNullOrEmpty(Model?.OverallGrade))
+                            @if (Model?.OverallGradeEnum.IsAvailable() == true)
                             {
                                 <tr class="govuk-table__row">
                                     <th scope="row" class="govuk-table__header govuk-!-width-one-third">Result</th>
-                                    <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.OverallGrade</td>
+                                    <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.OverallGradeResultDisplay</td>
                                 </tr>
                             }
                         </tbody>
