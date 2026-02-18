@@ -1307,7 +1307,6 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             var resultNull = await _sut.GetSharedFrameworkCertificateViewModel(code);
             resultNull.Should().BeNull();
 
-            // expired case
             var expiredShare = new GetSharingByCodeQueryResult
             {
                 CertificateId = Guid.NewGuid(),
@@ -1317,7 +1316,10 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
 
             _mediatorMock.Setup(m => m.Send(It.IsAny<GetSharingByCodeQuery>(), It.IsAny<CancellationToken>())).ReturnsAsync(expiredShare);
 
+            // Act
             var resultExpired = await _sut.GetSharedFrameworkCertificateViewModel(code);
+
+            // Assert
             resultExpired.Should().BeNull();
         }
 
