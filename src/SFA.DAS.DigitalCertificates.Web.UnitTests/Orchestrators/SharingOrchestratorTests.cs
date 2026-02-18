@@ -20,6 +20,8 @@ using FluentValidation;
 using SFA.DAS.DigitalCertificates.Domain.Extensions;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetSharingByCode;
 using SFA.DAS.DigitalCertificates.Application.Commands.CreateSharingAccess;
+using SFA.DAS.DigitalCertificates.Application.Queries.GetSharedStandardCertificate;
+using SFA.DAS.DigitalCertificates.Application.Queries.GetSharedFrameworkCertificate;
 
 namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
 {
@@ -1123,6 +1125,298 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
 
             _mediatorMock.Verify(m => m.Send(It.IsAny<CreateSharingAccessCommand>(), It.IsAny<CancellationToken>()), Times.Never);
             _sessionServiceMock.Verify(s => s.AddRecordedSharingAccessCodeAsync(It.IsAny<Guid>()), Times.Never);
+        }
+
+        [Test]
+        public async Task GetCheckQualificationViewModel_Returns_Null_When_Query_Returns_Null()
+        {
+            // Arrange
+            var code = Guid.NewGuid();
+
+            _mediatorMock
+                .Setup(m => m.Send(It.IsAny<GetSharingByCodeQuery>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((GetSharingByCodeQueryResult)null);
+
+            // Act
+            var result = await _sut.GetCheckQualificationViewModel(code);
+
+            // Assert
+            result.Should().BeNull();
+            _mediatorMock.Verify(m => m.Send(It.Is<GetSharingByCodeQuery>(q => q.Code == code), It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Test]
+        public async Task GetCheckQualificationViewModel_Returns_ViewModel_When_Query_Returns_Result()
+        {
+            // Arrange
+            var code = Guid.NewGuid();
+            var expiry = DateTime.UtcNow.AddDays(3);
+
+            var queryResult = new GetSharingByCodeQueryResult
+            {
+                CertificateId = Guid.NewGuid(),
+                CertificateType = CertificateType.Standard,
+                ExpiryTime = expiry
+            };
+
+            _mediatorMock
+                .Setup(m => m.Send(It.IsAny<GetSharingByCodeQuery>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(queryResult);
+
+            // Act
+            var result = await _sut.GetCheckQualificationViewModel(code);
+
+            // Assert
+            result.Should().NotBeNull();
+            result!.Code.Should().Be(code);
+            result.FormattedExpiry.Should().Be(expiry.ToUkExpiryDateTimeString());
+            result.CertificateId.Should().Be(queryResult.CertificateId);
+            result.CertificateType.Should().Be(queryResult.CertificateType);
+        }
+
+        [Test]
+        public async Task GetSharedStandardCertificateViewModel_Returns_Null_When_ShareInfo_Null()
+        {
+            // Arrange
+            var code = Guid.NewGuid();
+
+            _mediatorMock
+                .Setup(m => m.Send(It.IsAny<GetSharingByCodeQuery>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((GetSharingByCodeQueryResult)null);
+
+            // Act
+            var result = await _sut.GetSharedStandardCertificateViewModel(code);
+
+            // Assert
+            result.Should().BeNull();
+        }
+
+        [Test]
+        public async Task GetSharedStandardCertificateViewModel_Returns_Null_When_Share_Is_Not_Standard()
+        {
+            // Arrange
+            var code = Guid.NewGuid();
+
+            var shareInfo = new GetSharingByCodeQueryResult
+            {
+                CertificateId = Guid.NewGuid(),
+                CertificateType = CertificateType.Framework,
+                ExpiryTime = DateTime.UtcNow.AddDays(3)
+            };
+
+            _mediatorMock
+                .Setup(m => m.Send(It.IsAny<GetSharingByCodeQuery>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(shareInfo);
+
+            // Act
+            var result = await _sut.GetSharedStandardCertificateViewModel(code);
+
+            // Assert
+            result.Should().BeNull();
+        }
+
+        [Test]
+        public async Task GetSharedStandardCertificateViewModel_Returns_Null_When_Cert_Not_Found()
+        {
+            // Arrange
+            var code = Guid.NewGuid();
+            var certId = Guid.NewGuid();
+
+            var shareInfo = new GetSharingByCodeQueryResult
+            {
+                CertificateId = certId,
+                CertificateType = CertificateType.Standard,
+                ExpiryTime = DateTime.UtcNow.AddDays(3)
+            };
+
+            _mediatorMock
+                .Setup(m => m.Send(It.IsAny<GetSharingByCodeQuery>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(shareInfo);
+
+            _mediatorMock
+                .Setup(m => m.Send(It.IsAny<GetSharedStandardCertificateQuery>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((GetSharedStandardCertificateQueryResult)null);
+
+            // Act
+            var result = await _sut.GetSharedStandardCertificateViewModel(code);
+
+            // Assert
+            result.Should().BeNull();
+        }
+
+        [Test]
+        public async Task GetSharedStandardCertificateViewModel_Returns_ViewModel_When_Cert_Found()
+        {
+            // Arrange
+            var code = Guid.NewGuid();
+            var certId = Guid.NewGuid();
+            var expiry = DateTime.UtcNow.AddDays(3);
+
+            var shareInfo = new GetSharingByCodeQueryResult
+            {
+                CertificateId = certId,
+                CertificateType = CertificateType.Standard,
+                ExpiryTime = expiry
+            };
+
+            var cert = new GetSharedStandardCertificateQueryResult
+            {
+                FamilyName = "Family",
+                GivenNames = "Given",
+                CertificateReference = "REF123",
+                CourseName = "Course",
+                CourseOption = "Option",
+                CourseLevel = 2,
+                DateAwarded = DateTime.UtcNow.AddYears(-1),
+                OverallGrade = "Pass",
+                ProviderName = "Provider",
+                StartDate = DateTime.UtcNow.AddYears(-3)
+            };
+
+            _mediatorMock.Setup(m => m.Send(It.IsAny<GetSharingByCodeQuery>(), It.IsAny<CancellationToken>())).ReturnsAsync(shareInfo);
+            _mediatorMock.Setup(m => m.Send(It.IsAny<GetSharedStandardCertificateQuery>(), It.IsAny<CancellationToken>())).ReturnsAsync(cert);
+
+            // Act
+            var result = await _sut.GetSharedStandardCertificateViewModel(code);
+
+            // Assert
+            result.Should().NotBeNull();
+            result!.CertificateId.Should().Be(certId);
+            result.FamilyName.Should().Be(cert.FamilyName);
+            result.GivenNames.Should().Be(cert.GivenNames);
+            result.CertificateReference.Should().Be(cert.CertificateReference);
+            result.CourseName.Should().Be(cert.CourseName);
+            result.CourseOption.Should().Be(cert.CourseOption);
+            result.CourseLevel.Should().Be(cert.CourseLevel);
+            result.DateAwarded.Should().Be(cert.DateAwarded);
+            result.OverallGrade.Should().Be(cert.OverallGrade);
+            result.ProviderName.Should().Be(cert.ProviderName);
+            result.StartDate.Should().Be(cert.StartDate);
+            result.FormattedExpiry.Should().Be(expiry.ToUkExpiryDateTimeString());
+        }
+
+        [Test]
+        public async Task GetSharedFrameworkCertificateViewModel_Returns_Null_When_ShareInfo_Null_Or_Expired()
+        {
+            // Arrange
+            var code = Guid.NewGuid();
+
+            _mediatorMock.Setup(m => m.Send(It.IsAny<GetSharingByCodeQuery>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((GetSharingByCodeQueryResult)null);
+
+            var resultNull = await _sut.GetSharedFrameworkCertificateViewModel(code);
+            resultNull.Should().BeNull();
+
+            // expired case
+            var expiredShare = new GetSharingByCodeQueryResult
+            {
+                CertificateId = Guid.NewGuid(),
+                CertificateType = CertificateType.Framework,
+                ExpiryTime = _dateTimeHelperMock.Object.Now.AddMinutes(-5)
+            };
+
+            _mediatorMock.Setup(m => m.Send(It.IsAny<GetSharingByCodeQuery>(), It.IsAny<CancellationToken>())).ReturnsAsync(expiredShare);
+
+            var resultExpired = await _sut.GetSharedFrameworkCertificateViewModel(code);
+            resultExpired.Should().BeNull();
+        }
+
+        [Test]
+        public async Task GetSharedFrameworkCertificateViewModel_Returns_Null_When_Share_Is_Not_Framework()
+        {
+            // Arrange
+            var code = Guid.NewGuid();
+            var shareInfo = new GetSharingByCodeQueryResult
+            {
+                CertificateId = Guid.NewGuid(),
+                CertificateType = CertificateType.Standard,
+                ExpiryTime = DateTime.UtcNow.AddDays(3)
+            };
+
+            _mediatorMock.Setup(m => m.Send(It.IsAny<GetSharingByCodeQuery>(), It.IsAny<CancellationToken>())).ReturnsAsync(shareInfo);
+
+            // Act
+            var result = await _sut.GetSharedFrameworkCertificateViewModel(code);
+
+            // Assert
+            result.Should().BeNull();
+        }
+
+        [Test]
+        public async Task GetSharedFrameworkCertificateViewModel_Returns_Null_When_Cert_Not_Found()
+        {
+            // Arrange
+            var code = Guid.NewGuid();
+            var certId = Guid.NewGuid();
+
+            var shareInfo = new GetSharingByCodeQueryResult
+            {
+                CertificateId = certId,
+                CertificateType = CertificateType.Framework,
+                ExpiryTime = DateTime.UtcNow.AddDays(3)
+            };
+
+            _mediatorMock.Setup(m => m.Send(It.IsAny<GetSharingByCodeQuery>(), It.IsAny<CancellationToken>())).ReturnsAsync(shareInfo);
+            _mediatorMock.Setup(m => m.Send(It.IsAny<GetSharedFrameworkCertificateQuery>(), It.IsAny<CancellationToken>())).ReturnsAsync((GetSharedFrameworkCertificateQueryResult)null);
+
+            // Act
+            var result = await _sut.GetSharedFrameworkCertificateViewModel(code);
+
+            // Assert
+            result.Should().BeNull();
+        }
+
+        [Test]
+        public async Task GetSharedFrameworkCertificateViewModel_Returns_ViewModel_When_Cert_Found()
+        {
+            // Arrange
+            var code = Guid.NewGuid();
+            var certId = Guid.NewGuid();
+            var expiry = DateTime.UtcNow.AddDays(3);
+
+            var shareInfo = new GetSharingByCodeQueryResult
+            {
+                CertificateId = certId,
+                CertificateType = CertificateType.Framework,
+                ExpiryTime = expiry
+            };
+
+            var cert = new GetSharedFrameworkCertificateQueryResult
+            {
+                FamilyName = "Family",
+                GivenNames = "Given",
+                CertificateReference = "REF123",
+                FrameworkCertificateNumber = "FW-1",
+                CourseName = "Course",
+                CourseOption = "Option",
+                CourseLevel = "1",
+                DateAwarded = DateTime.UtcNow.AddYears(-1),
+                ProviderName = "Provider",
+                StartDate = DateTime.UtcNow.AddYears(-3),
+                QualificationsAndAwardingBodies = new List<string> { "Q1, A1" }
+            };
+
+            _mediatorMock.Setup(m => m.Send(It.IsAny<GetSharingByCodeQuery>(), It.IsAny<CancellationToken>())).ReturnsAsync(shareInfo);
+            _mediatorMock.Setup(m => m.Send(It.IsAny<GetSharedFrameworkCertificateQuery>(), It.IsAny<CancellationToken>())).ReturnsAsync(cert);
+
+            // Act
+            var result = await _sut.GetSharedFrameworkCertificateViewModel(code);
+
+            // Assert
+            result.Should().NotBeNull();
+            result!.CertificateId.Should().Be(certId);
+            result.FamilyName.Should().Be(cert.FamilyName);
+            result.GivenNames.Should().Be(cert.GivenNames);
+            result.CertificateReference.Should().Be(cert.CertificateReference);
+            result.FrameworkCertificateNumber.Should().Be(cert.FrameworkCertificateNumber);
+            result.CourseName.Should().Be(cert.CourseName);
+            result.CourseOption.Should().Be(cert.CourseOption);
+            result.CourseLevel.Should().Be(cert.CourseLevel);
+            result.DateAwarded.Should().Be(cert.DateAwarded);
+            result.ProviderName.Should().Be(cert.ProviderName);
+            result.StartDate.Should().Be(cert.StartDate);
+            result.QualificationsAndAwardingBodies.Should().BeEquivalentTo(cert.QualificationsAndAwardingBodies);
+            result.FormattedExpiry.Should().Be(expiry.ToUkExpiryDateTimeString());
         }
     }
 }

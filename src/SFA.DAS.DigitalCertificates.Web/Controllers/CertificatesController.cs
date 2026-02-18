@@ -36,6 +36,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         public const string CheckQualificationRouteGet = nameof(CheckQualificationRouteGet);
         public const string CheckQualificationRoutePost = nameof(CheckQualificationRoutePost);
         public const string CheckQualificationExpiredRouteGet = nameof(CheckQualificationExpiredRouteGet);
+        public const string SharedCertificateStandardRouteGet = nameof(SharedCertificateStandardRouteGet);
+        public const string SharedCertificateFrameworkRouteGet = nameof(SharedCertificateFrameworkRouteGet);
         #endregion
 
         private readonly ICertificatesOrchestrator _certificatesOrchestrator;
@@ -240,11 +242,52 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
 
         [HttpPost("{code}", Name = CheckQualificationRoutePost)]
         [AllowAnonymous]
-        public IActionResult CheckQualificationPost(Guid code)
+        public async Task<IActionResult> CheckQualificationPost(Guid code)
         {
-            // TODO: This is not part of the current ticket and needs to be updated based on the requirements.
+            var sharingInfo = await _sharingOrchestrator.GetCheckQualificationViewModel(code);
 
-            return RedirectToRoute(CertificateStandardRouteGet, null);
+            if (sharingInfo == null)
+            {
+                return RedirectToRoute(CheckQualificationExpiredRouteGet);
+            }
+
+            if (sharingInfo.CertificateType == CertificateType.Standard)
+            {
+                return RedirectToRoute(SharedCertificateStandardRouteGet, new { code });
+            }
+
+            if (sharingInfo.CertificateType == CertificateType.Framework)
+            {
+                return RedirectToRoute(SharedCertificateFrameworkRouteGet, new { code });
+            }
+
+            return RedirectToRoute(CheckQualificationExpiredRouteGet);
+        }
+
+        [HttpGet("shared/{code}/standard", Name = SharedCertificateStandardRouteGet)]
+        [AllowAnonymous]
+        public async Task<IActionResult> SharedCertificateStandard(Guid code)
+        {
+            var model = await _sharingOrchestrator.GetSharedStandardCertificateViewModel(code);
+            if (model == null)
+            {
+                return RedirectToRoute(CheckQualificationExpiredRouteGet);
+            }
+
+            return View(model);
+        }
+
+        [HttpGet("shared/{code}/framework", Name = SharedCertificateFrameworkRouteGet)]
+        [AllowAnonymous]
+        public async Task<IActionResult> SharedCertificateFramework(Guid code)
+        {
+            var model = await _sharingOrchestrator.GetSharedFrameworkCertificateViewModel(code);
+            if (model == null)
+            {
+                return RedirectToRoute(CheckQualificationExpiredRouteGet);
+            }
+
+            return View(model);
         }
 
         [HttpGet("/certificates/expired", Name = CheckQualificationExpiredRouteGet)]
