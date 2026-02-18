@@ -57,7 +57,7 @@
 
                 @if (!string.IsNullOrEmpty(Model?.CourseName) || Model?.CourseLevel != null ||
                                                                 !string.IsNullOrEmpty(Model?.CourseOption) || !string.IsNullOrEmpty(Model?.ProviderName) ||
-                                                                Model?.StartDate != null || Model?.DateAwarded != null || !string.IsNullOrEmpty(Model?.OverallGrade))
+                                                                Model?.StartDate != null || Model?.DateAwarded != null || Model?.OverallGradeEnum.IsAvailable() == true)
                 {
                     <table class="govuk-table">
                         <caption class="govuk-table__caption govuk-table__caption--m">Apprenticeship details</caption>

@@ -13,8 +13,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Enums
             { "OUTSTANDING", Grade.Outstanding },
             { "PASS", Grade.Pass },
             { "PASS WITH EXCELLENCE", Grade.PassWithExcellence },
-            { "NO GRADE AWARDED", Grade.NoGradeAwarded },
-            { "NO GRADE", Grade.NoGradeAwarded }
+            { "NO GRADE AWARDED", Grade.NoGradeAwarded }
         };
 
         public static Grade ParseFromApi(this string? apiValue)
