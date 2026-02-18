@@ -1,4 +1,5 @@
 ﻿using System;
+using SFA.DAS.DigitalCertificates.Domain.Models;
 
 namespace SFA.DAS.DigitalCertificates.Web.Models.Sharing
 {
@@ -6,5 +7,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Models.Sharing
     {
         public required Guid Code { get; set; }
         public string? FormattedExpiry { get; set; }
+        public Guid CertificateId { get; set; }
+        public CertificateType CertificateType { get; set; }
     }
 }
