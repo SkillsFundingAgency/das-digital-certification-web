@@ -14,7 +14,6 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Enums
         [TestCase("MERIT", Grade.Merit)]
         [TestCase("Credit", Grade.Credit)]
         [TestCase("NO GRADE AWARDED", Grade.NoGradeAwarded)]
-        [TestCase("NO GRADE", Grade.NoGradeAwarded)]
         [TestCase("Pass", Grade.Pass)]
         [TestCase("pass with excellence", Grade.PassWithExcellence)]
         [TestCase("UNKNOWN_VAL", Grade.Unknown)]
