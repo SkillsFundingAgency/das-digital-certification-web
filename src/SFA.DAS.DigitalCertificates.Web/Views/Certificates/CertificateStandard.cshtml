@@ -19,7 +19,7 @@
         <div class="govuk-grid-row">
             <div class="govuk-grid-column-two-thirds">
 
-                <h1 class="govuk-heading-m">@Model?.CourseName</h1>
+                <h1 class="govuk-heading-l">@Model?.CourseName</h1>
 
                 <div class="govuk-panel govuk-panel--confirmation">
                     <div class="govuk-panel__body">
@@ -27,139 +27,137 @@
                     </div>
                 </div>
 
-                <table class="govuk-table">
-                    <caption class="govuk-table__caption govuk-table__caption--m">Your details</caption>
-                    <tbody class="govuk-table__body">
-                        @if (!string.IsNullOrEmpty(Model?.GivenNames))
-                        {
-                            <tr class="govuk-table__row">
-                                <th scope="row" class="govuk-table__header govuk-!-width-one-third">First name</th>
-                                <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.GivenNames</td>
-                            </tr>
-                        }
+                <h2 class="govuk-heading-m">Your details</h2>
+                <dl class="govuk-summary-list">
+                    @if (!string.IsNullOrEmpty(Model?.GivenNames))
+                    {
+                        <div class="govuk-summary-list__row">
+                            <dt class="govuk-summary-list__key">First name</dt>
+                            <dd class="govuk-summary-list__value">@Model.GivenNames</dd>
+                        </div>
+                    }
 
-                        @if (!string.IsNullOrEmpty(Model?.FamilyName))
-                        {
-                            <tr class="govuk-table__row">
-                                <th scope="row" class="govuk-table__header govuk-!-width-one-third">Last name</th>
-                                <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.FamilyName</td>
-                            </tr>
-                        }
+                    @if (!string.IsNullOrEmpty(Model?.FamilyName))
+                    {
+                        <div class="govuk-summary-list__row">
+                            <dt class="govuk-summary-list__key">Last name</dt>
+                            <dd class="govuk-summary-list__value">@Model.FamilyName</dd>
+                        </div>
+                    }
 
-                        @if (Model?.Uln != null)
-                        {
-                            <tr class="govuk-table__row">
-                                <th scope="row" class="govuk-table__header govuk-!-width-one-third">Unique learner number</th>
-                                <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.Uln</td>
-                            </tr>
-                        }
+                    @if (Model?.Uln != null)
+                    {
+                        <div class="govuk-summary-list__row">
+                            <dt class="govuk-summary-list__key">Unique learner number</dt>
+                            <dd class="govuk-summary-list__value">@Model.Uln</dd>
+                        </div>
+                    }
 
-                        @if (!string.IsNullOrEmpty(Model?.CertificateReference))
-                        {
-                            <tr class="govuk-table__row">
-                                <th scope="row" class="govuk-table__header govuk-!-width-one-third">Certificate number</th>
-                                <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.CertificateReference</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
+                    @if (!string.IsNullOrEmpty(Model?.CertificateReference))
+                    {
+                        <div class="govuk-summary-list__row">
+                            <dt class="govuk-summary-list__key">Certificate number</dt>
+                            <dd class="govuk-summary-list__value">@Model.CertificateReference</dd>
+                        </div>
+                    }
+                </dl>
 
-                @if (!string.IsNullOrEmpty(Model?.CourseName) || Model?.CourseLevel != null || !string.IsNullOrEmpty(Model?.CourseOption) || !string.IsNullOrEmpty(Model?.ProviderName) || !string.IsNullOrEmpty(Model?.AssessorName) || !string.IsNullOrEmpty(Model?.EmployerName) || Model?.StartDate != null || Model?.DateAwarded != null || Model?.OverallGradeEnum.IsAvailable() == true)
-                {
-                    <table class="govuk-table">
-                        <caption class="govuk-table__caption govuk-table__caption--m">Apprenticeship details</caption>
-                        <tbody class="govuk-table__body">
-                            @if (!string.IsNullOrEmpty(Model?.CourseName))
-                            {
-                                <tr class="govuk-table__row">
-                                    <th scope="row" class="govuk-table__header govuk-!-width-one-third">Course</th>
-                                    <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.CourseName</td>
-                                </tr>
-                            }
+                <h2 class="govuk-heading-m">Apprenticeship details</h2>
+                <dl class="govuk-summary-list">
+                    @if (!string.IsNullOrEmpty(Model?.CourseName))
+                    {
+                        <div class="govuk-summary-list__row">
+                            <dt class="govuk-summary-list__key">Course</dt>
+                            <dd class="govuk-summary-list__value">@Model.CourseName</dd>
+                        </div>
+                    }
 
-                            @if (Model?.CourseLevel != null)
-                            {
-                                <tr class="govuk-table__row">
-                                    <th scope="row" class="govuk-table__header govuk-!-width-one-third">Level</th>
-                                    <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.CourseLevel</td>
-                                </tr>
-                            }
+                    @if (Model?.CourseLevel != null)
+                    {
+                        <div class="govuk-summary-list__row">
+                            <dt class="govuk-summary-list__key">Level</dt>
+                            <dd class="govuk-summary-list__value">@Model.CourseLevel</dd>
+                        </div>
+                    }
 
-                            @if (!string.IsNullOrEmpty(Model?.CourseOption))
-                            {
-                                <tr class="govuk-table__row">
-                                    <th scope="row" class="govuk-table__header govuk-!-width-one-third">Option</th>
-                                    <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.CourseOption</td>
-                                </tr>
-                            }
+                    @if (!string.IsNullOrEmpty(Model?.CourseOption))
+                    {
+                        <div class="govuk-summary-list__row">
+                            <dt class="govuk-summary-list__key">Option</dt>
+                            <dd class="govuk-summary-list__value">@Model.CourseOption</dd>
+                        </div>
+                    }
 
-                            @if (!string.IsNullOrEmpty(Model?.ProviderName))
-                            {
-                                <tr class="govuk-table__row">
-                                    <th scope="row" class="govuk-table__header govuk-!-width-one-third">Training provider</th>
-                                    <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.ProviderName</td>
-                                </tr>
-                            }
+                    @if (!string.IsNullOrEmpty(Model?.ProviderName))
+                    {
+                        <div class="govuk-summary-list__row">
+                            <dt class="govuk-summary-list__key">Training provider</dt>
+                            <dd class="govuk-summary-list__value">@Model.ProviderName</dd>
+                        </div>
+                    }
 
-                            @if (!string.IsNullOrEmpty(Model?.AssessorName))
-                            {
-                                <tr class="govuk-table__row">
-                                    <th scope="row" class="govuk-table__header govuk-!-width-one-third">Assessment organisation</th>
-                                    <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.AssessorName</td>
-                                </tr>
-                            }
+                    @if (!string.IsNullOrEmpty(Model?.AssessorName))
+                    {
+                        <div class="govuk-summary-list__row">
+                            <dt class="govuk-summary-list__key">Assessment organisation</dt>
+                            <dd class="govuk-summary-list__value">@Model.AssessorName</dd>
+                        </div>
+                    }
 
-                            @if (!string.IsNullOrEmpty(Model?.EmployerName))
-                            {
-                                <tr class="govuk-table__row">
-                                    <th scope="row" class="govuk-table__header govuk-!-width-one-third">Employer</th>
-                                    <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.EmployerName</td>
-                                </tr>
-                            }
+                    @if (!string.IsNullOrEmpty(Model?.EmployerName))
+                    {
+                        <div class="govuk-summary-list__row">
+                            <dt class="govuk-summary-list__key">Employer</dt>
+                            <dd class="govuk-summary-list__value">@Model.EmployerName</dd>
+                        </div>
+                    }
 
-                            @if (Model?.StartDate != null)
-                            {
-                                <tr class="govuk-table__row">
-                                    <th scope="row" class="govuk-table__header govuk-!-width-one-third">Start date</th>
-                                    <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.StartDate?.ToString("dd MMMM yyyy")</td>
-                                </tr>
-                            }
+                    @if (Model?.StartDate != null)
+                    {
+                        <div class="govuk-summary-list__row">
+                            <dt class="govuk-summary-list__key">Start date</dt>
+                            <dd class="govuk-summary-list__value">@Model.StartDate?.ToString("dd MMMM yyyy")</dd>
+                        </div>
+                    }
 
-                            @if (Model?.DateAwarded != null)
-                            {
-                                <tr class="govuk-table__row">
-                                    <th scope="row" class="govuk-table__header govuk-!-width-one-third">Date awarded</th>
-                                    <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.DateAwarded?.ToString("dd MMMM yyyy")</td>
-                                </tr>
-                            }
+                    @if (Model?.DateAwarded != null)
+                    {
+                        <div class="govuk-summary-list__row">
+                            <dt class="govuk-summary-list__key">Date awarded</dt>
+                            <dd class="govuk-summary-list__value">@Model.DateAwarded?.ToString("dd MMMM yyyy")</dd>
+                        </div>
+                    }
 
-                            @if (Model?.OverallGradeEnum.IsAvailable() == true)
-                            {
-                                <tr class="govuk-table__row">
-                                    <th scope="row" class="govuk-table__header govuk-!-width-one-third">Result</th>
-                                    <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.OverallGradeResultDisplay</td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                }
+                    @if (Model?.OverallGradeEnum.IsAvailable() == true)
+                    {
+                        <div class="govuk-summary-list__row">
+                            <dt class="govuk-summary-list__key">Result</dt>
+                            <dd class="govuk-summary-list__value">@Model.OverallGradeResultDisplay</dd>
+                        </div>
+                    }
+                </dl>
 
                 @* TODO: contact us. This is not part of the current ticket and will need to be addressed based on the requirements in upcoming tickets. *@
                 <p class="govuk-body">If any of these details are incorrect, <a href="contact-us">contact us</a>.</p>
 
                 <h2 class="govuk-heading-m">Create a sharing link</h2>
-                <p class="govuk-body">You can create a secure link to share your apprenticeship certificate. This allows employers, colleges or universities to verify your apprenticeship.</p>
-                <a asp-route="@CertificatesController.CreateCertificateSharingRouteGet" asp-route-certificateId="@certificateId" role="button" draggable="false" class="govuk-button govuk-button--secondary" data-module="govuk-button">Create link</a>
+                <p class="govuk-body">You can create a secure link to share your apprenticeship certificate. This allows
+                    employers, colleges or universities to verify your apprenticeship.</p>
+                    <a asp-route="@CertificatesController.CreateCertificateSharingRouteGet"
+                       asp-route-certificateId="@certificateId" role="button" draggable="false"
+                       class="govuk-button govuk-button--secondary" data-module="govuk-button">Create link</a>
 
-                @* TODO: Download your certificate. This is not part of the current ticket and will need to be addressed based on the requirements in upcoming tickets.  *@
-                <h2 class="govuk-heading-m">Download your certificate</h2>
-                <a href="#" role="button" draggable="false" class="govuk-button govuk-button--secondary" data-module="govuk-button">Download certificate (PDF)</a>
+                    @* TODO: Download your certificate. This is not part of the current ticket and will need to be addressed based on the requirements in upcoming tickets.  *@
+                    <h2 class="govuk-heading-m">Download your certificate</h2>
+                    <a href="#" role="button" draggable="false" class="govuk-button govuk-button--secondary"
+                       data-module="govuk-button">Download certificate (PDF)</a>
 
-                @* TODO: Request a printed certificate. This is not part of the current ticket and will need to be addressed based on the requirements in upcoming tickets. *@
-                <h2 class="govuk-heading-m">Request a printed certificate</h2>
-                <p class="govuk-body">We can post a certificate to you. You need to <a href="#">request a printed certificate</a>. Certificates can take up to 3 weeks to arrive.</p>
+                    @* TODO: Request a printed certificate. This is not part of the current ticket and will need to be addressed based on the requirements in upcoming tickets. *@
+                    <h2 class="govuk-heading-m">Request a printed certificate</h2>
+                    <p class="govuk-body">We can post a certificate to you. You need to <a href="#">request a printed
+                        certificate</a>. Certificates can take up to 3 weeks to arrive.</p>
 
-            </div>
+                    </div>
+                </div>
+            </main>
         </div>
-    </main>
-</div>
