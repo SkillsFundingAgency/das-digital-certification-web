@@ -34,5 +34,8 @@ namespace SFA.DAS.DigitalCertificates.Domain.Interfaces
 
         [Get("/sharing/{sharingId}")]
         Task<GetSharingByIdResponse> GetSharingById([Path] Guid sharingId, [Query("limit")] int? limit);
+
+        [Post("/sharing/{sharingId}/email")]
+        Task<CreateSharingEmailResponse> CreateSharingEmail([Path] Guid sharingId, [Body] CreateSharingEmailRequest request);
     }
 }

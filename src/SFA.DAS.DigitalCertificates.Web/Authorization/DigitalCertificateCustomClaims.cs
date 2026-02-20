@@ -13,12 +13,12 @@ namespace SFA.DAS.DigitalCertificates.Web.Authorization
     public class DigitalCertificateCustomClaims : ICustomClaims
     {
         private readonly IMediator _mediator;
-        private readonly ISessionStorageService _sessionStorageService;
+        private readonly ICacheService _cacheService;
 
-        public DigitalCertificateCustomClaims(IMediator mediator, ISessionStorageService sessionStorageService)
+        public DigitalCertificateCustomClaims(IMediator mediator, ICacheService cacheService)
         {
             _mediator = mediator;
-            _sessionStorageService = sessionStorageService;
+            _cacheService = cacheService;
         }
 
         public async Task<IEnumerable<Claim>> GetClaims(TokenValidatedContext tokenValidatedContext)
@@ -44,7 +44,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Authorization
                         PhoneNumber = principal.FindFirstValue(ClaimTypes.MobilePhone)
                     });
 
-                    var user = await _sessionStorageService.GetUserAsync(govUkIdentifier);
+                    var user = await _cacheService.GetUserAsync(govUkIdentifier);
                     if (user != null)
                     {
                         claims.Add(new Claim(DigitalCertificateClaimsTypes.UserId,
