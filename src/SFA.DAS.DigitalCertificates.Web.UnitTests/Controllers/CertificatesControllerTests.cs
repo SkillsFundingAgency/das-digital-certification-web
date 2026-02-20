@@ -13,6 +13,8 @@ using SFA.DAS.DigitalCertificates.Domain.Models;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using SFA.DAS.DigitalCertificates.Web.Services;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using SFA.DAS.DigitalCertificates.Web.Extensions;
 
 namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
 {
@@ -508,6 +510,121 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             // Assert
             result.Should().NotBeNull();
             result!.Model.Should().BeEquivalentTo(model);
+        }
+
+        [Test]
+        public async Task DeleteSharing_Returns_View_When_Model_Valid()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+            var sharingId = Guid.NewGuid();
+
+            var model = new CertificateSharingLinkViewModel
+            {
+                CertificateId = certificateId,
+                SharingId = sharingId,
+                SharingNumber = 5,
+                CourseName = "Course",
+                CertificateType = Domain.Models.CertificateType.Standard
+            };
+
+            _sharingOrchestratorMock
+                .Setup(s => s.GetSharingById(certificateId, sharingId))
+                .ReturnsAsync(model);
+
+            // Act
+            var result = await _sut.DeleteSharing(certificateId, sharingId) as ViewResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            result!.Model.Should().BeEquivalentTo(model);
+            _sharingOrchestratorMock.Verify(s => s.GetSharingById(certificateId, sharingId), Times.Once);
+        }
+
+        [Test]
+        public async Task DeleteSharing_Redirects_To_CreateCertificateSharing_When_Model_Null()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+            var sharingId = Guid.NewGuid();
+
+            _sharingOrchestratorMock
+                .Setup(s => s.GetSharingById(certificateId, sharingId))
+                .ReturnsAsync((CertificateSharingLinkViewModel)null!);
+
+            // Act
+            var result = await _sut.DeleteSharing(certificateId, sharingId) as RedirectToRouteResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            result!.RouteName.Should().Be(CertificatesController.CreateCertificateSharingRouteGet);
+            result.RouteValues.Should().ContainKey("certificateId");
+            result.RouteValues["certificateId"].Should().Be(certificateId);
+            _sharingOrchestratorMock.Verify(s => s.GetSharingById(certificateId, sharingId), Times.Once);
+        }
+
+        [Test]
+        public async Task DeleteSharingPost_Deletes_And_Redirects_When_Model_Found()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+            var sharingId = Guid.NewGuid();
+
+            var model = new CertificateSharingLinkViewModel
+            {
+                CertificateId = certificateId,
+                SharingId = sharingId,
+                SharingNumber = 7,
+                CourseName = "Course",
+                CertificateType = Domain.Models.CertificateType.Standard
+            };
+
+            _sharingOrchestratorMock
+                .Setup(s => s.GetSharingById(certificateId, sharingId))
+                .ReturnsAsync(model);
+
+            _sharingOrchestratorMock
+                .Setup(s => s.DeleteSharing(certificateId, sharingId))
+                .Returns(Task.CompletedTask);
+
+            _sut.TempData = new TempDataDictionary(new DefaultHttpContext(), Mock.Of<ITempDataProvider>());
+
+            // Act
+            var result = await _sut.DeleteSharingPost(certificateId, sharingId) as RedirectToRouteResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            result!.RouteName.Should().Be(CertificatesController.CreateCertificateSharingRouteGet);
+            result.RouteValues["certificateId"].Should().Be(certificateId);
+
+            _sharingOrchestratorMock.Verify(s => s.GetSharingById(certificateId, sharingId), Times.Once);
+            _sharingOrchestratorMock.Verify(s => s.DeleteSharing(certificateId, sharingId), Times.Once);
+
+            var title = _sut.TempData[TempDataDictionaryExtensions.FlashMessageTitleTempDataKey]?.ToString();
+            title.Should().Be($"Sharing link {model.SharingNumber} deleted");
+        }
+
+        [Test]
+        public async Task DeleteSharingPost_Redirects_To_CreateCertificateSharing_When_Model_Null()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+            var sharingId = Guid.NewGuid();
+
+            _sharingOrchestratorMock
+                .Setup(s => s.GetSharingById(certificateId, sharingId))
+                .ReturnsAsync((CertificateSharingLinkViewModel)null!);
+
+            // Act
+            var result = await _sut.DeleteSharingPost(certificateId, sharingId) as RedirectToRouteResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            result!.RouteName.Should().Be(CertificatesController.CreateCertificateSharingRouteGet);
+            result.RouteValues["certificateId"].Should().Be(certificateId);
+
+            _sharingOrchestratorMock.Verify(s => s.GetSharingById(certificateId, sharingId), Times.Once);
+            _sharingOrchestratorMock.Verify(s => s.DeleteSharing(It.IsAny<Guid>(), It.IsAny<Guid>()), Times.Never);
         }
     }
 }
