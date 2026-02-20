@@ -11,7 +11,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Attributes
     {
         public const string MissingRequireQueryParameterMessage = "Missing required query parameter: ";
         private readonly ILogger _logger;
-        
+
         public ValidateRequiredQueryParametersAttribute(ILogger<ValidateRequiredQueryParametersAttribute> logger)
         {
             _logger = logger;

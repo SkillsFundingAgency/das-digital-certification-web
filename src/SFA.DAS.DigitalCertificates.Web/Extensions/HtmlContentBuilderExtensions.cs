@@ -1,7 +1,7 @@
-﻿using Microsoft.AspNetCore.Html;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text.Encodings.Web;
+using Microsoft.AspNetCore.Html;
 
 namespace SFA.DAS.DigitalCertificates.Web.Extensions
 {

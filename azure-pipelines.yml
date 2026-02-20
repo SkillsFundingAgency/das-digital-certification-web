@@ -12,7 +12,7 @@ variables:
 - name: BuildPlatform
   value: any cpu
 - group: RELEASE Management Resources
-- group: RELEASE das-digital-certificates-web
+- group: RELEASE das-digital-certification-web
 - name: Deploy
   value: $[or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['Build.Reason'], 'Manual'), eq(variables['Build.Reason'], 'PullRequest'))]
 
@@ -43,7 +43,7 @@ stages:
     parameters:
       SolutionBaseName: $(SolutionBaseName)
       BuildConfiguration: $(BuildConfiguration)
-    
+
 - stage: Deploy_AT
   dependsOn: Build
   displayName: Deploy to AT
@@ -51,6 +51,7 @@ stages:
   variables:
   - group: DevTest Management Resources
   - group: AT DevTest Shared Resources
+  - group: AT das-digital-certification-web
   jobs:
   - template: pipeline-templates/job/deploy.yml
     parameters:
@@ -77,6 +78,7 @@ stages:
   variables:
   - group: DevTest Management Resources
   - group: TEST2 DevTest Shared Resources
+  - group: TEST2 das-digital-certification-web
   jobs:
   - template: pipeline-templates/job/deploy.yml
     parameters:

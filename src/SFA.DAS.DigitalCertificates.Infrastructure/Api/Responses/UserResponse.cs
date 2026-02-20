@@ -13,5 +13,6 @@ namespace SFA.DAS.DigitalCertificates.Infrastructure.Api.Responses
         public DateTime? LastLoginAt { get; set; }
         public DateTime? LockedAt { get; set; }
         public List<Name>? Names { get; set; }
+        public bool IsLocked { get; set; }
     }
 }
