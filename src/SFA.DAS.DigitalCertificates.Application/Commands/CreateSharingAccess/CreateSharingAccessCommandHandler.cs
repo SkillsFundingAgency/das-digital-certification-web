@@ -14,14 +14,7 @@ namespace SFA.DAS.DigitalCertificates.Application.Commands.CreateSharingAccess
 
         public async Task Handle(CreateSharingAccessCommand request, CancellationToken cancellationToken)
         {
-            if (request.SharingId.HasValue)
-            {
-                await _api.CreateSharingAccess(request);
-            }
-            else if (request.SharingEmailId.HasValue)
-            {
-                await _api.CreateSharingEmailAccess(request);
-            }
+            await _api.CreateSharingAccess(request);
         }
     }
 }

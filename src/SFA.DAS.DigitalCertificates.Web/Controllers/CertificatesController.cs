@@ -226,11 +226,11 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             return View(model);
         }
 
-        [HttpGet("{code}", Name = CheckQualificationRouteGet)]
+        [HttpGet("sharing/{sharingLinkCode}/check-code", Name = CheckQualificationRouteGet)]
         [AllowAnonymous]
-        public async Task<IActionResult> CheckQualification(Guid code)
+        public async Task<IActionResult> CheckQualification(Guid sharingLinkCode)
         {
-            var sharingInfo = await _sharingOrchestrator.GetCheckQualificationViewModelAndRecordAccess(code);
+            var sharingInfo = await _sharingOrchestrator.GetCheckQualificationViewModelAndRecordAccess(sharingLinkCode);
 
             if (sharingInfo == null)
             {
@@ -240,7 +240,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             return View(sharingInfo);
         }
 
-        [HttpPost("{code}", Name = CheckQualificationRoutePost)]
+        [HttpPost("sharing/{sharingLinkCode}/check-code", Name = CheckQualificationRoutePost)]
         [AllowAnonymous]
         public async Task<IActionResult> CheckQualificationPost(Guid code)
         {

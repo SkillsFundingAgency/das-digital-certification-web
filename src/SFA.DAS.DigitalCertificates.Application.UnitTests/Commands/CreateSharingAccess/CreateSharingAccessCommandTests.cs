@@ -26,24 +26,5 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Commands.CreateShari
             request.Should().NotBeNull();
             request.SharingId.Should().Be(sharingId);
         }
-
-        [Test]
-        public void Should_Convert_To_CreateSharingEmailAccessRequest_Successfully()
-        {
-            // Arrange
-            var sharingEmailId = Guid.NewGuid();
-
-            var command = new CreateSharingAccessCommand
-            {
-                SharingEmailId = sharingEmailId
-            };
-
-            // Act
-            CreateSharingEmailAccessRequest request = command;
-
-            // Assert
-            request.Should().NotBeNull();
-            request.SharingEmailId.Should().Be(sharingEmailId);
-        }
     }
 }

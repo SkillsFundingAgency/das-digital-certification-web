@@ -7,6 +7,7 @@ using SFA.DAS.DigitalCertificates.Application.Queries.GetSharingById;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetSharings;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetSharingByCode;
 using SFA.DAS.DigitalCertificates.Application.Commands.CreateSharingAccess;
+using SFA.DAS.DigitalCertificates.Application.Commands.CreateSharingEmailAccess;
 using SFA.DAS.DigitalCertificates.Domain.Extensions;
 using SFA.DAS.DigitalCertificates.Domain.Models;
 using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
@@ -151,7 +152,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             var accessHistory = BuildAccessHistory(response.CreatedAt, response.SharingAccess, response.SharingEmails);
             viewModel.AccessHistory = accessHistory.OrderByDescending(h => h.AccessedAt).ToList();
 
-            viewModel.SecureLink = $"{_digitalCertificatesWebConfiguration?.ServiceBaseUrl}/certificates/{viewModel.LinkCode}";
+            viewModel.SecureLink = $"{_digitalCertificatesWebConfiguration?.ServiceBaseUrl}/certificates/sharing/{viewModel.LinkCode}/check-code";
 
             return viewModel;
         }
@@ -326,11 +327,20 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             var recorded = await _sessionService.IsSharingAccessCodeRecordedAsync(code);
             if (!recorded)
             {
-                await Mediator.Send(new CreateSharingAccessCommand
+                if (response.SharingEmailId.HasValue)
                 {
-                    SharingId = response.SharingId,
-                    SharingEmailId = response.SharingEmailId
-                });
+                    await Mediator.Send(new CreateSharingEmailAccessCommand
+                    {
+                        SharingEmailId = response.SharingEmailId.Value
+                    });
+                }
+                else if (response.SharingId.HasValue)
+                {
+                    await Mediator.Send(new CreateSharingAccessCommand
+                    {
+                        SharingId = response.SharingId.Value
+                    });
+                }
 
                 await _sessionService.AddRecordedSharingAccessCodeAsync(code);
             }
