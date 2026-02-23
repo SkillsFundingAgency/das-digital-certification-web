@@ -719,8 +719,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             // Assert
             result.Should().NotBeNull();
             result!.RouteName.Should().Be(CertificatesController.SharedCertificateStandardRouteGet);
-            result.RouteValues.Should().ContainKey("code");
-            result.RouteValues["code"].Should().Be(code);
+            result.RouteValues.Should().ContainKey("sharingLinkCode");
+            result.RouteValues["sharingLinkCode"].Should().Be(code);
         }
 
         [Test]
@@ -745,8 +745,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             // Assert
             result.Should().NotBeNull();
             result!.RouteName.Should().Be(CertificatesController.SharedCertificateFrameworkRouteGet);
-            result.RouteValues.Should().ContainKey("code");
-            result.RouteValues["code"].Should().Be(code);
+            result.RouteValues.Should().ContainKey("sharingLinkCode");
+            result.RouteValues["sharingLinkCode"].Should().Be(code);
         }
 
         [Test]
