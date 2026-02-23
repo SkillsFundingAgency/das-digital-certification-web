@@ -44,10 +44,10 @@ namespace SFA.DAS.DigitalCertificates.Domain.Interfaces
         [Get("/sharing/code/{code}")]
         Task<GetSharingCodeResponse> GetSharingByCode([Path] Guid code);
 
-        [Post("/sharingaccess")]
+        [Post("/sharing/sharingaccess")]
         Task CreateSharingAccess([Body] CreateSharingAccessRequest request);
 
-        [Post("/sharingemailaccess")]
+        [Post("/sharing/sharingemailaccess")]
         Task CreateSharingEmailAccess([Body] CreateSharingEmailAccessRequest request);
     }
 }

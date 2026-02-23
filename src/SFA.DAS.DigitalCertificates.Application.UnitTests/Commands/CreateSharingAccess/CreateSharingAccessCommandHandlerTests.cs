@@ -21,7 +21,7 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Commands.CreateShari
         }
 
         [Test]
-        public async Task Handle_With_SharingId_Calls_CreateSharingAccess()
+        public async Task Handle_Calls_CreateSharingAccess()
         {
             // Arrange
             var sharingId = Guid.NewGuid();
@@ -35,45 +35,10 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Commands.CreateShari
             // Assert
             _outerApiMock.Verify(x => x.CreateSharingAccess(
                 It.Is<CreateSharingAccessRequest>(r => r.SharingId == sharingId)), Times.Once);
-
-            _outerApiMock.Verify(x => x.CreateSharingEmailAccess(It.IsAny<CreateSharingEmailAccessRequest>()), Times.Never);
         }
 
         [Test]
-        public async Task Handle_With_SharingEmailId_Calls_CreateSharingEmailAccess()
-        {
-            // Arrange
-            var sharingEmailId = Guid.NewGuid();
-            var command = new CreateSharingAccessCommand { SharingEmailId = sharingEmailId };
-
-            _outerApiMock.Setup(x => x.CreateSharingEmailAccess(It.IsAny<CreateSharingEmailAccessRequest>())).Returns(Task.CompletedTask);
-
-            // Act
-            await _sut.Handle(command, CancellationToken.None);
-
-            // Assert
-            _outerApiMock.Verify(x => x.CreateSharingEmailAccess(
-                It.Is<CreateSharingEmailAccessRequest>(r => r.SharingEmailId == sharingEmailId)), Times.Once);
-
-            _outerApiMock.Verify(x => x.CreateSharingAccess(It.IsAny<CreateSharingAccessRequest>()), Times.Never);
-        }
-
-        [Test]
-        public async Task Handle_With_Neither_Id_Does_Not_Call_Api()
-        {
-            // Arrange
-            var command = new CreateSharingAccessCommand();
-
-            // Act
-            await _sut.Handle(command, CancellationToken.None);
-
-            // Assert
-            _outerApiMock.Verify(x => x.CreateSharingAccess(It.IsAny<CreateSharingAccessRequest>()), Times.Never);
-            _outerApiMock.Verify(x => x.CreateSharingEmailAccess(It.IsAny<CreateSharingEmailAccessRequest>()), Times.Never);
-        }
-
-        [Test]
-        public void Handle_When_Api_Throws_Propagates_Exception()
+        public async Task Handle_When_Api_Throws_Propagates_Exception()
         {
             // Arrange
             var sharingId = Guid.NewGuid();
@@ -85,7 +50,7 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Commands.CreateShari
             Func<Task> act = async () => await _sut.Handle(command, CancellationToken.None);
 
             // Assert
-            act.Should().ThrowAsync<Exception>().WithMessage("API failure");
+            await act.Should().ThrowAsync<Exception>().WithMessage("API failure");
         }
     }
 }
