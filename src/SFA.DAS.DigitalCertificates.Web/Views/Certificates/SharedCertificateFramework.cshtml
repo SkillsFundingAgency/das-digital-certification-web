@@ -10,12 +10,12 @@
             <div class="govuk-grid-column-two-thirds">
 
                 <h1 class="govuk-heading-l">
-                    <span class="govuk-caption-l">@Model?.GivenNames @Model?.FamilyName</span>
-                    @Model?.CourseName
+                    <span class="govuk-caption-l">@Model.GivenNames @Model.FamilyName</span>
+                    @Model.CourseName
                 </h1>
 
                 <p class="govuk-body">This verifies successful completion of the apprenticeship.</p>
-                <p class="govuk-body">You can view this page until @Model?.FormattedExpiry.</p>
+                <p class="govuk-body">You can view this page until @Model.FormattedExpiry.</p>
 
                 <div class="govuk-panel govuk-panel--confirmation">
                     <div class="govuk-panel__body">
@@ -26,7 +26,7 @@
                 <table class="govuk-table">
                     <caption class="govuk-table__caption govuk-table__caption--m">Apprentice details</caption>
                     <tbody class="govuk-table__body">
-                        @if (!string.IsNullOrEmpty(Model?.GivenNames))
+                        @if (!string.IsNullOrEmpty(Model.GivenNames))
                         {
                             <tr class="govuk-table__row">
                                 <th scope="row" class="govuk-table__header govuk-!-width-one-third">First name</th>
@@ -34,7 +34,7 @@
                             </tr>
                         }
 
-                        @if (!string.IsNullOrEmpty(Model?.FamilyName))
+                        @if (!string.IsNullOrEmpty(Model.FamilyName))
                         {
                             <tr class="govuk-table__row">
                                 <th scope="row" class="govuk-table__header govuk-!-width-one-third">Last name</th>
@@ -42,7 +42,7 @@
                             </tr>
                         }
 
-                        @if (!string.IsNullOrEmpty(Model?.FrameworkCertificateNumber))
+                        @if (!string.IsNullOrEmpty(Model.FrameworkCertificateNumber))
                         {
                             <tr class="govuk-table__row">
                                 <th scope="row" class="govuk-table__header govuk-!-width-one-third">Certificate number</th>
@@ -57,7 +57,7 @@
                 <table class="govuk-table">
                     <caption class="govuk-table__caption govuk-table__caption--m">Apprenticeship details</caption>
                     <tbody class="govuk-table__body">
-                        @if (!string.IsNullOrEmpty(Model?.CourseName))
+                        @if (!string.IsNullOrEmpty(Model.CourseName))
                         {
                             <tr class="govuk-table__row">
                                 <th scope="row" class="govuk-table__header govuk-!-width-one-third">Course</th>
@@ -65,7 +65,7 @@
                             </tr>
                         }
 
-                        @if (!string.IsNullOrEmpty(Model?.CourseOption))
+                        @if (!string.IsNullOrEmpty(Model.CourseOption))
                         {
                             <tr class="govuk-table__row">
                                 <th scope="row" class="govuk-table__header govuk-!-width-one-third">Framework pathway</th>
@@ -73,7 +73,7 @@
                             </tr>
                         }
 
-                        @if (!string.IsNullOrEmpty(Model?.CourseLevel))
+                        @if (!string.IsNullOrEmpty(Model.CourseLevel))
                         {
                             <tr class="govuk-table__row">
                                 <th scope="row" class="govuk-table__header govuk-!-width-one-third">Level</th>
@@ -81,7 +81,7 @@
                             </tr>
                         }
 
-                        @if (Model?.QualificationsAndAwardingBodies != null &&
+                        @if (Model.QualificationsAndAwardingBodies != null &&
                                                 Model.QualificationsAndAwardingBodies.Any())
                         {
                             <tr class="govuk-table__row">
@@ -100,7 +100,7 @@
                             </tr>
                         }
 
-                        @if (!string.IsNullOrEmpty(Model?.ProviderName))
+                        @if (!string.IsNullOrEmpty(Model.ProviderName))
                         {
                             <tr class="govuk-table__row">
                                 <th scope="row" class="govuk-table__header govuk-!-width-one-third">Training provider</th>

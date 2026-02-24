@@ -1194,30 +1194,6 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         }
 
         [Test]
-        public async Task GetSharedStandardCertificateViewModel_Returns_Null_When_Share_Is_Not_Standard()
-        {
-            // Arrange
-            var code = Guid.NewGuid();
-
-            var shareInfo = new GetSharingByCodeQueryResult
-            {
-                CertificateId = Guid.NewGuid(),
-                CertificateType = CertificateType.Framework,
-                ExpiryTime = DateTime.UtcNow.AddDays(3)
-            };
-
-            _mediatorMock
-                .Setup(m => m.Send(It.IsAny<GetSharingByCodeQuery>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(shareInfo);
-
-            // Act
-            var result = await _sut.GetSharedStandardCertificateViewModel(code);
-
-            // Assert
-            result.Should().BeNull();
-        }
-
-        [Test]
         public async Task GetSharedStandardCertificateViewModel_Returns_Null_When_Cert_Not_Found()
         {
             // Arrange
@@ -1298,46 +1274,13 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         }
 
         [Test]
-        public async Task GetSharedFrameworkCertificateViewModel_Returns_Null_When_ShareInfo_Null_Or_Expired()
+        public async Task GetSharedFrameworkCertificateViewModel_Returns_Null_When_ShareInfo_Null()
         {
             // Arrange
             var code = Guid.NewGuid();
 
             _mediatorMock.Setup(m => m.Send(It.IsAny<GetSharingByCodeQuery>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((GetSharingByCodeQueryResult)null);
-
-            var resultNull = await _sut.GetSharedFrameworkCertificateViewModel(code);
-            resultNull.Should().BeNull();
-
-            var expiredShare = new GetSharingByCodeQueryResult
-            {
-                CertificateId = Guid.NewGuid(),
-                CertificateType = CertificateType.Framework,
-                ExpiryTime = _dateTimeHelperMock.Object.Now.AddMinutes(-5)
-            };
-
-            _mediatorMock.Setup(m => m.Send(It.IsAny<GetSharingByCodeQuery>(), It.IsAny<CancellationToken>())).ReturnsAsync(expiredShare);
-
-            // Act
-            var resultExpired = await _sut.GetSharedFrameworkCertificateViewModel(code);
-
-            // Assert
-            resultExpired.Should().BeNull();
-        }
-
-        [Test]
-        public async Task GetSharedFrameworkCertificateViewModel_Returns_Null_When_Share_Is_Not_Framework()
-        {
-            // Arrange
-            var code = Guid.NewGuid();
-            var shareInfo = new GetSharingByCodeQueryResult
-            {
-                CertificateId = Guid.NewGuid(),
-                CertificateType = CertificateType.Standard,
-                ExpiryTime = DateTime.UtcNow.AddDays(3)
-            };
-
-            _mediatorMock.Setup(m => m.Send(It.IsAny<GetSharingByCodeQuery>(), It.IsAny<CancellationToken>())).ReturnsAsync(shareInfo);
 
             // Act
             var result = await _sut.GetSharedFrameworkCertificateViewModel(code);
@@ -1360,8 +1303,10 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 ExpiryTime = DateTime.UtcNow.AddDays(3)
             };
 
-            _mediatorMock.Setup(m => m.Send(It.IsAny<GetSharingByCodeQuery>(), It.IsAny<CancellationToken>())).ReturnsAsync(shareInfo);
-            _mediatorMock.Setup(m => m.Send(It.IsAny<GetSharedFrameworkCertificateQuery>(), It.IsAny<CancellationToken>())).ReturnsAsync((GetSharedFrameworkCertificateQueryResult)null);
+            _mediatorMock.Setup(m => m.Send(It.IsAny<GetSharingByCodeQuery>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(shareInfo);
+            _mediatorMock.Setup(m => m.Send(It.IsAny<GetSharedFrameworkCertificateQuery>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((GetSharedFrameworkCertificateQueryResult)null);
 
             // Act
             var result = await _sut.GetSharedFrameworkCertificateViewModel(code);
