@@ -81,7 +81,7 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetSharedFra
             var id = Guid.NewGuid();
             _outerApiMock
                 .Setup(x => x.GetSharedFrameworkCertificate(id))
-                .Returns(() => Task.FromResult<GetSharedFrameworkCertificateResponse>(null!));
+                .ReturnsAsync((GetSharedFrameworkCertificateResponse)null!);
 
             var request = new GetSharedFrameworkCertificateQuery { Id = id };
 

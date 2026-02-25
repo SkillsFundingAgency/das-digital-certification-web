@@ -371,8 +371,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             if (shareInfo == null)
                 return null;
 
-            if (shareInfo.CertificateType != CertificateType.Standard) return null;
-
             var cert = await Mediator.Send(new GetSharedStandardCertificateQuery { Id = shareInfo.CertificateId });
             if (cert == null) return null;
 
@@ -397,10 +395,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         public async Task<SharedCertificateFrameworkViewModel?> GetSharedFrameworkCertificateViewModel(Guid code)
         {
             var shareInfo = await Mediator.Send(new GetSharingByCodeQuery { Code = code });
-            if (shareInfo == null || shareInfo.ExpiryTime <= _dateTimeHelper.Now)
+            if (shareInfo == null)
                 return null;
-
-            if (shareInfo.CertificateType != CertificateType.Framework) return null;
 
             var cert = await Mediator.Send(new GetSharedFrameworkCertificateQuery { Id = shareInfo.CertificateId });
             if (cert == null) return null;

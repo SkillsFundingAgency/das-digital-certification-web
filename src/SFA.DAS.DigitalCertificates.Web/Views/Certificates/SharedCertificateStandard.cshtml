@@ -13,12 +13,12 @@
             <div class="govuk-grid-column-two-thirds">
 
                 <h1 class="govuk-heading-l">
-                    <span class="govuk-caption-l">@Model?.GivenNames @Model?.FamilyName</span>
-                    @Model?.CourseName
+                    <span class="govuk-caption-l">@Model.GivenNames @Model.FamilyName</span>
+                    @Model.CourseName
                 </h1>
 
                 <p class="govuk-body">This verifies successful completion of the apprenticeship.</p>
-                <p class="govuk-body">You can view this page until @Model?.FormattedExpiry.</p>
+                <p class="govuk-body">You can view this page until @Model.FormattedExpiry.</p>
 
                 <div class="govuk-panel govuk-panel--confirmation">
                     <div class="govuk-panel__body">
@@ -29,7 +29,7 @@
                 <table class="govuk-table">
                     <caption class="govuk-table__caption govuk-table__caption--m">Apprentice details</caption>
                     <tbody class="govuk-table__body">
-                        @if (!string.IsNullOrEmpty(Model?.GivenNames))
+                        @if (!string.IsNullOrEmpty(Model.GivenNames))
                         {
                             <tr class="govuk-table__row">
                                 <th scope="row" class="govuk-table__header govuk-!-width-one-third">First name</th>
@@ -37,7 +37,7 @@
                             </tr>
                         }
 
-                        @if (!string.IsNullOrEmpty(Model?.FamilyName))
+                        @if (!string.IsNullOrEmpty(Model.FamilyName))
                         {
                             <tr class="govuk-table__row">
                                 <th scope="row" class="govuk-table__header govuk-!-width-one-third">Last name</th>
@@ -45,7 +45,7 @@
                             </tr>
                         }
 
-                        @if (!string.IsNullOrEmpty(Model?.CertificateReference))
+                        @if (!string.IsNullOrEmpty(Model.CertificateReference))
                         {
                             <tr class="govuk-table__row">
                                 <th scope="row" class="govuk-table__header govuk-!-width-one-third">Certificate number</th>
@@ -58,7 +58,7 @@
                 <table class="govuk-table">
                     <caption class="govuk-table__caption govuk-table__caption--m">Apprenticeship details</caption>
                     <tbody class="govuk-table__body">
-                        @if (!string.IsNullOrEmpty(Model?.CourseName))
+                        @if (!string.IsNullOrEmpty(Model.CourseName))
                         {
                             <tr class="govuk-table__row">
                                 <th scope="row" class="govuk-table__header govuk-!-width-one-third">Course</th>
@@ -66,7 +66,7 @@
                             </tr>
                         }
 
-                        @if (Model?.CourseLevel != null)
+                        @if (Model.CourseLevel != null)
                         {
                             <tr class="govuk-table__row">
                                 <th scope="row" class="govuk-table__header govuk-!-width-one-third">Level</th>
@@ -74,7 +74,7 @@
                             </tr>
                         }
 
-                        @if (!string.IsNullOrEmpty(Model?.CourseOption))
+                        @if (!string.IsNullOrEmpty(Model.CourseOption))
                         {
                             <tr class="govuk-table__row">
                                 <th scope="row" class="govuk-table__header govuk-!-width-one-third">Option</th>
@@ -82,7 +82,7 @@
                             </tr>
                         }
 
-                        @if (!string.IsNullOrEmpty(Model?.ProviderName))
+                        @if (!string.IsNullOrEmpty(Model.ProviderName))
                         {
                             <tr class="govuk-table__row">
                                 <th scope="row" class="govuk-table__header govuk-!-width-one-third">Training provider</th>
@@ -90,23 +90,23 @@
                             </tr>
                         }
 
-                        @if (Model?.StartDate != null)
+                        @if (Model.StartDate != null)
                         {
                             <tr class="govuk-table__row">
                                 <th scope="row" class="govuk-table__header govuk-!-width-one-third">Start date</th>
-                                <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.StartDate?.ToString("dd MMMM                                yyyy")</td>
+                                <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.StartDate?.ToString("dd MMMM yyyy")</td>
                             </tr>
                         }
 
-                        @if (Model?.DateAwarded != null)
+                        @if (Model.DateAwarded != null)
                         {
                             <tr class="govuk-table__row">
                                 <th scope="row" class="govuk-table__header govuk-!-width-one-third">Date awarded</th>
-                                <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.DateAwarded?.ToString("dd MMMM                                yyyy")</td>
+                                <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.DateAwarded?.ToString("dd MMMM yyyy")</td>
                             </tr>
                         }
 
-                        @if (Model?.OverallGradeEnum.IsAvailable() == true)
+                        @if (Model.OverallGradeEnum.IsAvailable() == true)
                         {
                             <tr class="govuk-table__row">
                                 <th scope="row" class="govuk-table__header govuk-!-width-one-third">Result</th>
