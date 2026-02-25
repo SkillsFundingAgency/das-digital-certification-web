@@ -18,6 +18,7 @@ using SFA.DAS.DigitalCertificates.Web.Orchestrators;
 using SFA.DAS.GovUK.Auth.Models;
 using SFA.DAS.GovUK.Auth.Services;
 using SFA.DAS.DigitalCertificates.Web.Services;
+using SFA.DAS.DigitalCertificates.Domain.Models;
 
 namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
 {
@@ -45,7 +46,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
 
             _httpContext = new DefaultHttpContext();
             _contextAccessorMock.Setup(c => c.HttpContext).Returns(_httpContext);
-            _sessionServiceMock.Setup(s => s.SetUsernameAsync(It.IsAny<string>())).Returns(Task.CompletedTask);
+            _sessionServiceMock.Setup(s => s.SetUserDetailsAsync(It.IsAny<UserDetails>())).Returns(Task.CompletedTask);
 
             _sut = new HomeController(
                 _orchestratorMock.Object,

@@ -29,7 +29,7 @@ namespace SFA.DAS.DigitalCertificates.Infrastructure.UnitTests.Services.SessionS
             _sessionMock.Setup(s => s.Remove(It.IsAny<string>()))
                 .Callback<string>(k => _storage.Remove(k));
             _sessionMock.Setup(s => s.TryGetValue(It.IsAny<string>(), out It.Ref<byte[]>.IsAny))
-                .Returns((string key, out byte[]? value) =>
+                .Returns((string key, out byte[] value) =>
                 {
                     if (_storage.TryGetValue(key, out var bytes))
                     {
