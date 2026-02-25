@@ -296,13 +296,13 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 
         private async Task<string> GetUserDisplayNameAsync()
         {
-            var displayName = await _sessionService.GetUserNameAsync();
-            if (!string.IsNullOrWhiteSpace(displayName))
+            var userDetails = await _sessionService.GetUserDetailsAsync();
+            if (userDetails == null)
             {
-                return displayName;
+                return string.Empty;
             }
 
-            return string.Empty;
+            return string.IsNullOrWhiteSpace(userDetails.FullName) ? string.Empty : userDetails.FullName;
         }
 
         public async Task<bool> ValidateShareByEmailViewModel(ShareByEmailViewModel viewModel, ModelStateDictionary modelState)

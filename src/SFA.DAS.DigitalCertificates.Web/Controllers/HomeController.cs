@@ -18,6 +18,7 @@ using SFA.DAS.DigitalCertificates.Web.StartupExtensions;
 using SFA.DAS.GovUK.Auth.Authentication;
 using SFA.DAS.GovUK.Auth.Services;
 using SFA.DAS.DigitalCertificates.Web.Services;
+using SFA.DAS.DigitalCertificates.Domain.Models;
 
 namespace SFA.DAS.DigitalCertificates.Web.Controllers
 {
@@ -132,7 +133,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             var family = selectedName?.FamilyNames ?? string.Empty;
             var displayName = string.IsNullOrWhiteSpace(given) ? family : (string.IsNullOrWhiteSpace(family) ? given : $"{given} {family}");
 
-            await _sessionService.SetUsernameAsync(displayName ?? string.Empty);
+            await _sessionService.SetUserDetailsAsync(new UserDetails { GivenNames = given, FamilyName = family, FullName = displayName });
 
             return RedirectToRoute(CertificatesController.CertificatesListRouteGet);
         }

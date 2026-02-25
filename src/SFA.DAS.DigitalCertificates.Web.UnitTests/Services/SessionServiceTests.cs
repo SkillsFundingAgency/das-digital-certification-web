@@ -22,7 +22,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
         private Mock<IMediator> _mediatorMock = null!;
         private SessionService _sut = null!;
 
-        private const string UsernameKey = "DigitalCertificates:Username";
+        private const string UserDetailsKey = "DigitalCertificates:UserDetails";
         private const string ShareEmailKey = "DigitalCertificates:ShareEmail";
         private const string OwnedCertificatesKeyPrefix = "DigitalCertificates:OwnedCertificates:";
         private const string UlnAuthorisationKeyPrefix = "DigitalCertificates:UlnAuthorisation:";
@@ -38,21 +38,29 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
         }
 
         [Test]
-        public async Task SetUsernameAsync_Calls_Storage_With_Correct_Key()
+        public async Task SetUserNamePartsAsync_Calls_Storage_With_Correct_Key()
         {
-            await _sut.SetUsernameAsync("bob");
+            var userDetails = new UserDetails { GivenNames = "Bob", FamilyName = "Smith", FullName = "Bob Smith" };
 
-            _sessionStorageMock.Verify(s => s.SetAsync(UsernameKey, "bob"), Times.Once);
+            await _sut.SetUserDetailsAsync(userDetails);
+
+            _sessionStorageMock.Verify(s => s.SetAsync("DigitalCertificates:UserDetails", It.IsAny<string>()), Times.Once);
         }
 
         [Test]
-        public async Task GetUserNameAsync_Returns_Value_From_Storage()
+        public async Task GetUserDetailsAsync_Returns_Value_From_Storage()
         {
-            _sessionStorageMock.Setup(s => s.GetAsync(UsernameKey)).ReturnsAsync("alice");
+            var userDetails = new UserDetails { GivenNames = "Alice", FamilyName = "Jones", FullName = "Alice Jones" };
+            var json = JsonSerializer.Serialize(userDetails);
 
-            var result = await _sut.GetUserNameAsync();
+            _sessionStorageMock.Setup(s => s.GetAsync("DigitalCertificates:UserDetails")).ReturnsAsync(json);
 
-            result.Should().Be("alice");
+            var result = await _sut.GetUserDetailsAsync();
+
+            result.Should().NotBeNull();
+            result!.FullName.Should().Be("Alice Jones");
+            result!.GivenNames.Should().Be("Alice");
+            result!.FamilyName.Should().Be("Jones");
         }
 
         [Test]
@@ -81,7 +89,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
             await _sut.ClearSessionDataAsync(govId);
 
             _sessionStorageMock.Verify(s => s.ClearAsync(ShareEmailKey), Times.Once);
-            _sessionStorageMock.Verify(s => s.ClearAsync(UsernameKey), Times.Once);
+            _sessionStorageMock.Verify(s => s.ClearAsync(UserDetailsKey), Times.Once);
             _sessionStorageMock.Verify(s => s.ClearAsync(It.Is<string>(k => k.StartsWith(OwnedCertificatesKeyPrefix))), Times.Never);
             _sessionStorageMock.Verify(s => s.ClearAsync(It.Is<string>(k => k.StartsWith(UlnAuthorisationKeyPrefix))), Times.Never);
         }
@@ -94,7 +102,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
             await _sut.ClearSessionDataAsync(govId);
 
             _sessionStorageMock.Verify(s => s.ClearAsync(ShareEmailKey), Times.Once);
-            _sessionStorageMock.Verify(s => s.ClearAsync(UsernameKey), Times.Once);
+            _sessionStorageMock.Verify(s => s.ClearAsync(UserDetailsKey), Times.Once);
             _sessionStorageMock.Verify(s => s.ClearAsync(OwnedCertificatesKeyPrefix + govId), Times.Once);
             _sessionStorageMock.Verify(s => s.ClearAsync(UlnAuthorisationKeyPrefix + govId), Times.Once);
         }
@@ -119,9 +127,9 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
         {
             var govId = "gov-2";
 
-            _sessionStorageMock.Setup(s => s.GetAsync(OwnedCertificatesKeyPrefix + govId)).ReturnsAsync((string?)null);
+            _sessionStorageMock.Setup(s => s.GetAsync(OwnedCertificatesKeyPrefix + govId)).ReturnsAsync((string)null);
             _mediatorMock.Setup(m => m.Send(It.Is<GetUserQuery>(q => q.GovUkIdentifier == govId), It.IsAny<CancellationToken>()))
-                .ReturnsAsync((User?)null);
+                .ReturnsAsync((User)null);
 
             var result = await _sut.GetOwnedCertificatesAsync(govId);
 
@@ -136,7 +144,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
             var user = new User { Id = Guid.NewGuid(), GovUkIdentifier = govId, EmailAddress = "user@test.com" };
             var expectedCertificates = new List<Certificate> { new Certificate { CertificateId = Guid.NewGuid(), CertificateType = CertificateType.Standard, CourseName = "Course", CourseLevel = "1" } };
 
-            _sessionStorageMock.Setup(s => s.GetAsync(OwnedCertificatesKeyPrefix + govId)).ReturnsAsync((string?)null);
+            _sessionStorageMock.Setup(s => s.GetAsync(OwnedCertificatesKeyPrefix + govId)).ReturnsAsync((string)null);
             _mediatorMock.Setup(m => m.Send(It.Is<GetUserQuery>(q => q.GovUkIdentifier == govId), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(user);
 
@@ -144,7 +152,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
             _mediatorMock.Setup(m => m.Send(It.Is<GetCertificatesQuery>(q => q.UserId == user.Id), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(response);
 
-            string? storedJson = null;
+            string storedJson = null!;
             _sessionStorageMock.Setup(s => s.SetAsync(OwnedCertificatesKeyPrefix + govId, It.IsAny<string>()))
                 .Callback<string, string>((k, v) => storedJson = v)
                 .Returns(Task.CompletedTask);
@@ -180,7 +188,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
             var user = new User { Id = Guid.NewGuid(), GovUkIdentifier = govId, EmailAddress = "user@test.com" };
             var expectedAuth = new UlnAuthorisation { AuthorisationId = Guid.NewGuid(), Uln = "999", AuthorisedAt = DateTime.UtcNow };
 
-            _sessionStorageMock.Setup(s => s.GetAsync(UlnAuthorisationKeyPrefix + govId)).ReturnsAsync((string?)null);
+            _sessionStorageMock.Setup(s => s.GetAsync(UlnAuthorisationKeyPrefix + govId)).ReturnsAsync((string)null);
             _mediatorMock.Setup(m => m.Send(It.Is<GetUserQuery>(q => q.GovUkIdentifier == govId), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(user);
 
@@ -188,7 +196,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
             _mediatorMock.Setup(m => m.Send(It.Is<GetCertificatesQuery>(q => q.UserId == user.Id), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(response);
 
-            string? storedJson = null;
+            string storedJson = null!;
             _sessionStorageMock.Setup(s => s.SetAsync(UlnAuthorisationKeyPrefix + govId, It.IsAny<string>()))
                 .Callback<string, string>((k, v) => storedJson = v)
                 .Returns(Task.CompletedTask);
@@ -206,9 +214,9 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
         {
             // Arrange
             var code = Guid.NewGuid();
-            string? storedJson = null;
+            string storedJson = null!;
 
-            _sessionStorageMock.Setup(s => s.GetAsync(RecordedSharingAccessKey)).ReturnsAsync((string?)null);
+            _sessionStorageMock.Setup(s => s.GetAsync(RecordedSharingAccessKey)).ReturnsAsync((string)null);
             _sessionStorageMock.Setup(s => s.SetAsync(RecordedSharingAccessKey, It.IsAny<string>()))
                 .Callback<string, string>((k, v) => storedJson = v)
                 .Returns(Task.CompletedTask);
@@ -263,7 +271,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
             // Arrange
             var code = Guid.NewGuid();
 
-            _sessionStorageMock.Setup(s => s.GetAsync(RecordedSharingAccessKey)).ReturnsAsync((string?)null);
+            _sessionStorageMock.Setup(s => s.GetAsync(RecordedSharingAccessKey)).ReturnsAsync((string)null);
 
             // Act
             var result = await _sut.IsSharingAccessCodeRecordedAsync(code);

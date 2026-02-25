@@ -61,7 +61,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 }
             };
 
-            _sessionServiceMock.Setup(s => s.GetUserNameAsync()).ReturnsAsync((string)null);
+            _sessionServiceMock.Setup(s => s.GetUserDetailsAsync()).ReturnsAsync((UserDetails)null);
 
             _sut = new SharingOrchestrator(_mediatorMock.Object, _userServiceMock.Object, _cacheServiceMock.Object, _sessionServiceMock.Object, _digitalCertificatesWebConfiguration, _dateTimeHelperMock.Object, _shareByEmailValidatorMock.Object);
         }
@@ -808,7 +808,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             };
 
             _cacheServiceMock.Setup(s => s.GetUserAsync(govUkIdentifier)).ReturnsAsync(user);
-            _sessionServiceMock.Setup(s => s.GetUserNameAsync()).ReturnsAsync("John Doe");
+            var userDetails = new UserDetails { GivenNames = "John", FamilyName = "Doe", FullName = "John Doe" };
+            _sessionServiceMock.Setup(s => s.GetUserDetailsAsync()).ReturnsAsync(userDetails);
 
             var commandResult = new Application.Commands.CreateSharingEmail.CreateSharingEmailCommandResult
             {

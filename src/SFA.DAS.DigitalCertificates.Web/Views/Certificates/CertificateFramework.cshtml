@@ -142,8 +142,7 @@
                     </table>
                 }
 
-                @* TODO: contact us. This is not part of the current ticket and will need to be addressed based on the requirements in upcoming tickets. *@
-                <p class="govuk-body">If any of these details are incorrect, <a href="contact-us">contact us</a>.</p>
+                <p class="govuk-body">If any of these details are incorrect, <a asp-route="@CertificatesController.ContactUsForCertificateCreateRouteGet" asp-route-certificateId="@certificateId" title="Contact us">contact us</a>.</p>
 
                 <h2 class="govuk-heading-m">Create a sharing link</h2>
                 <p class="govuk-body">You can create a secure link to share your apprenticeship certificate. This allows employers, colleges or universities to verify your apprenticeship.</p>

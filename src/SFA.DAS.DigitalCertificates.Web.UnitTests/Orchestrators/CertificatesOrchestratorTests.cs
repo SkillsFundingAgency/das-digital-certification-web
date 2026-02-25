@@ -11,6 +11,7 @@ using SFA.DAS.DigitalCertificates.Application.Queries.GetStandardCertificate;
 using SFA.DAS.DigitalCertificates.Domain.Models;
 using SFA.DAS.DigitalCertificates.Web.Orchestrators;
 using SFA.DAS.DigitalCertificates.Web.Services;
+using SFA.DAS.DigitalCertificates.Application.Commands.CreateUserAction;
 
 namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
 {
@@ -28,7 +29,6 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             _mediatorMock = new Mock<IMediator>();
             _sessionMock = new Mock<ISessionService>();
             _userServiceMock = new Mock<IUserService>();
-
             _sut = new CertificatesOrchestrator(
                 _mediatorMock.Object,
                 _sessionMock.Object,
@@ -329,6 +329,74 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             result.DeliveryInformation.Should().BeEquivalentTo(mediatorResult.DeliveryInformation);
 
             result.ShowBackLink.Should().BeTrue();
+        }
+
+        [Test]
+        public async Task CreateOrReuseUserActionForNonSpecific_ReturnsReference_When_UserPresent()
+        {
+            var userId = Guid.NewGuid();
+
+            _userServiceMock.Setup(u => u.GetUserId()).Returns(userId);
+            _sessionMock.Setup(s => s.GetUserDetailsAsync()).ReturnsAsync(new UserDetails { FamilyName = "Fam", GivenNames = "Given" });
+
+            _mediatorMock.Setup(m => m.Send(It.IsAny<CreateUserActionCommand>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new CreateUserActionCommandResult { ActionCode = "REF-NON" });
+
+            var result = await _sut.CreateOrReuseUserActionForNonSpecific();
+
+            result.Should().Be("REF-NON");
+
+            _mediatorMock.Verify(m => m.Send(It.Is<CreateUserActionCommand>(c => c.UserId == userId && c.ActionType == ActionType.Contact && c.FamilyName == "Fam" && c.GivenNames == "Given"), It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Test]
+        public async Task CreateOrReuseUserActionForCertificate__ReturnsReference_When_UserPresent()
+        {
+            var userId = Guid.NewGuid();
+            var govId = "gov-1";
+            var certificateId = Guid.NewGuid();
+
+            _userServiceMock.Setup(u => u.GetUserId()).Returns(userId);
+            _userServiceMock.Setup(u => u.GetGovUkIdentifier()).Returns(govId);
+
+            _sessionMock.Setup(s => s.GetUserDetailsAsync()).ReturnsAsync(new Domain.Models.UserDetails { FamilyName = "F", GivenNames = "G" });
+
+            var owned = new List<Certificate> { new Certificate { CertificateId = certificateId, CertificateType = CertificateType.Framework, CourseName = "CourseX", CourseLevel = "1" } };
+            _sessionMock.Setup(s => s.GetOwnedCertificatesAsync(govId)).ReturnsAsync(owned);
+
+            _mediatorMock.Setup(m => m.Send(It.IsAny<CreateUserActionCommand>(), It.IsAny<System.Threading.CancellationToken>()))
+                .ReturnsAsync(new CreateUserActionCommandResult { ActionCode = "REF-CERT" });
+
+            var result = await _sut.CreateOrReuseUserActionForCertificate(certificateId);
+
+            result.Should().Be("REF-CERT");
+
+            _mediatorMock.Verify(m => m.Send(It.Is<CreateUserActionCommand>(c => c.UserId == userId && c.ActionType == ActionType.Help && c.CertificateId == certificateId && c.CertificateType == CertificateType.Framework && c.CourseName == "CourseX"), It.IsAny<System.Threading.CancellationToken>()), Times.Once);
+        }
+
+        [Test]
+        public async Task GetContactUsViewModel_ReturnsNull_When_ReferenceEmpty()
+        {
+            var result = await _sut.GetContactUsViewModel(string.Empty, null);
+            result.Should().BeNull();
+        }
+
+        [Test]
+        public async Task GetContactUsViewModel_SetsCertificateType_When_CertificateProvided()
+        {
+            var govId = "gov-2";
+            var certificateId = Guid.NewGuid();
+
+            _userServiceMock.Setup(u => u.GetGovUkIdentifier()).Returns(govId);
+
+            var owned = new List<Certificate> { new Certificate { CertificateId = certificateId, CertificateType = CertificateType.Standard, CourseName = "Unknown", CourseLevel = "1" } };
+            _sessionMock.Setup(s => s.GetOwnedCertificatesAsync(govId)).ReturnsAsync(owned);
+
+            var model = await _sut.GetContactUsViewModel("REF-1", certificateId);
+
+            model.Should().NotBeNull();
+            model!.ReferenceNumber.Should().Be("REF-1");
+            model.CertificateType.Should().Be(CertificateType.Standard);
         }
     }
 }

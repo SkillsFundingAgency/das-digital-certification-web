@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetFrameworkCertificate;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetStandardCertificate;
+using SFA.DAS.DigitalCertificates.Application.Commands.CreateUserAction;
 using SFA.DAS.DigitalCertificates.Domain.Models;
 using SFA.DAS.DigitalCertificates.Web.Models.Certificates;
 using SFA.DAS.DigitalCertificates.Web.Services;
@@ -105,6 +106,83 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             viewModel.ShowBackLink = (owned?.Count() ?? 0) > 1;
 
             return viewModel;
+        }
+
+        public async Task<string?> CreateOrReuseUserActionForCertificate(Guid certificateId)
+        {
+            var userId = _userService.GetUserId();
+            if (userId == null)
+                return null;
+
+            var userDetails = await _sessionService.GetUserDetailsAsync();
+
+            var familyName = userDetails?.FamilyName ?? string.Empty;
+            var givenNames = userDetails?.GivenNames ?? string.Empty;
+
+            var owned = await _sessionService.GetOwnedCertificatesAsync(_userService.GetGovUkIdentifier());
+            var ownedCertificate = owned?.FirstOrDefault(c => c.CertificateId == certificateId);
+
+            var certificateType = ownedCertificate?.CertificateType;
+            var courseName = ownedCertificate?.CourseName ?? string.Empty;
+
+            var result = await Mediator.Send(new CreateUserActionCommand
+            {
+                UserId = userId.Value,
+                ActionType = ActionType.Help,
+                FamilyName = familyName,
+                GivenNames = givenNames,
+                CertificateId = certificateId,
+                CertificateType = certificateType,
+                CourseName = courseName
+            });
+
+            return result?.ActionCode ?? string.Empty;
+        }
+
+        public async Task<string?> CreateOrReuseUserActionForNonSpecific()
+        {
+            var userId = _userService.GetUserId();
+            if (userId == null)
+                return null;
+
+            var userDetails = await _sessionService.GetUserDetailsAsync();
+
+            var familyName = userDetails?.FamilyName ?? string.Empty;
+            var givenNames = userDetails?.GivenNames ?? string.Empty;
+
+            var result = await Mediator.Send(new CreateUserActionCommand
+            {
+                UserId = userId.Value,
+                ActionType = ActionType.Contact,
+                FamilyName = familyName,
+                GivenNames = givenNames
+            });
+
+            return result?.ActionCode ?? string.Empty;
+        }
+
+        public async Task<ContactUsViewModel?> GetContactUsViewModel(string referenceNumber, Guid? certificateId)
+        {
+            if (string.IsNullOrEmpty(referenceNumber))
+                return null;
+
+            CertificateType certificateType = CertificateType.Unknown;
+
+            if (certificateId != null)
+            {
+                var owned = await _sessionService.GetOwnedCertificatesAsync(_userService.GetGovUkIdentifier());
+                var ownedCertificate = owned?.FirstOrDefault(c => c.CertificateId == certificateId);
+                certificateType = ownedCertificate?.CertificateType ?? CertificateType.Unknown;
+            }
+
+            var model = new ContactUsViewModel
+            {
+                ReferenceNumber = referenceNumber,
+                CertificateId = certificateId,
+                CertificateType = certificateType
+            };
+
+            return model;
         }
     }
 }

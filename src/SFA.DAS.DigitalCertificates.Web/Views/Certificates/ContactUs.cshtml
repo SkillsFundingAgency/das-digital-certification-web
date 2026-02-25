@@ -1,0 +1,56 @@
+﻿@using SFA.DAS.DigitalCertificates.Web.Controllers
+@using SFA.DAS.DigitalCertificates.Web.ViewDataKeys
+@using SFA.DAS.DigitalCertificates.Domain.Models
+@model SFA.DAS.DigitalCertificates.Web.Models.Certificates.ContactUsViewModel
+
+@{
+    ViewData[ViewDataKeys.Title] = ViewData[ViewDataKeys.ServiceName] + " Contact us";
+    ViewBag.GaData.Vpv = @ViewData[ViewDataKeys.GaDataVpvPrefix] + "contact-us";
+}
+
+@if (Model != null && Model.CertificateType == CertificateType.Framework)
+{
+    <a asp-route="@CertificatesController.CertificateFrameworkRouteGet" asp-route-certificateId="@Model.CertificateId"
+       class="govuk-back-link">Back</a>
+}
+else if (Model != null && Model.CertificateType == CertificateType.Standard)
+{
+    <a asp-route="@CertificatesController.CertificateStandardRouteGet" asp-route-certificateId="@Model.CertificateId"
+       class="govuk-back-link">Back</a>
+}
+else
+{
+    <a asp-route="@CertificatesController.CertificatesListRouteGet" class="govuk-back-link">Back</a>
+}
+
+<main class="govuk-main-wrapper govuk-main-wrapper--auto-spacing" id="main-content">
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+
+            <h1 class="govuk-heading-l">Contact us</h1>
+
+            <p class="govuk-body" >You can contact us to:</p>
+            <ul class="govuk-list govuk-list--bullet" style="margin-left:10px;">
+                <li>correct details on your certificate</li>
+                <li>request a printed certificate</li>
+            </ul>
+
+            <p class="govuk-body">Your reference number is <strong>@Model?.ReferenceNumber</strong></p>
+
+            <h2 class="govuk-heading-m">Email</h2>
+            <p class="govuk-body">Include your reference number in the email.</p>
+            <p class="govuk-body">
+                <a href="mailto:helpdesk@manage-apprenticeships.service.gov.uk" title="helpdesk@manage-apprenticeships.service.gov.uk">helpdesk@manage-apprenticeships.service.gov.uk</a>
+            </p>
+
+            <h2 class="govuk-heading-m">Phone</h2>
+            <p class="govuk-body">Have your reference number with you when you call.</p>
+            <p class="govuk-body">
+                Phone: 0800 0150 600<br />
+                Monday to Friday, 9am to 6pm<br />
+                <a href="https://www.gov.uk/call-charges" target="_blank" title="Find out about call charges">Find out about call charges</a>
+            </p>
+
+        </div>
+    </div>
+</main>

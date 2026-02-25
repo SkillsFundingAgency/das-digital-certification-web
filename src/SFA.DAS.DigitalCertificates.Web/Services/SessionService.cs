@@ -15,7 +15,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
         private readonly ISessionStorageService _sessionStorageService;
         private readonly IMediator _mediator;
 
-        private const string UsernameKey = "DigitalCertificates:Username";
+        private const string UserDetailsKey = "DigitalCertificates:UserDetails";
         private const string ShareEmailKey = "DigitalCertificates:ShareEmail";
         private const string OwnedCertificatesKeyPrefix = "DigitalCertificates:OwnedCertificates:";
         private const string UlnAuthorisationKeyPrefix = "DigitalCertificates:UlnAuthorisation:";
@@ -27,14 +27,19 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
             _mediator = mediator;
         }
 
-        public Task SetUsernameAsync(string username)
+        public Task SetUserDetailsAsync(UserDetails userDetails)
         {
-            return _sessionStorageService.SetAsync(UsernameKey, username);
+            var json = JsonSerializer.Serialize(userDetails);
+            return _sessionStorageService.SetAsync(UserDetailsKey, json);
         }
 
-        public Task<string?> GetUserNameAsync()
+        public async Task<UserDetails?> GetUserDetailsAsync()
         {
-            return _sessionStorageService.GetAsync(UsernameKey);
+            var json = await _sessionStorageService.GetAsync(UserDetailsKey);
+            if (string.IsNullOrWhiteSpace(json))
+                return null;
+
+            return JsonSerializer.Deserialize<UserDetails>(json);
         }
 
         public Task SetShareEmailAsync(string email)
@@ -104,7 +109,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
         public async Task ClearSessionDataAsync(string govUkIdentifier)
         {
             await _sessionStorageService.ClearAsync(ShareEmailKey);
-            await _sessionStorageService.ClearAsync(UsernameKey);
+            await _sessionStorageService.ClearAsync(UserDetailsKey);
 
             if (!string.IsNullOrEmpty(govUkIdentifier))
             {
