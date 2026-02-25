@@ -12,13 +12,13 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 {
     public class CertificatesOrchestrator : BaseOrchestrator, ICertificatesOrchestrator
     {
-        private readonly ISessionStorageService _sessionStorageService;
+        private readonly ISessionService _sessionService;
         private readonly IUserService _userService;
 
-        public CertificatesOrchestrator(IMediator mediator, ISessionStorageService sessionStorageService, IUserService userService)
+        public CertificatesOrchestrator(IMediator mediator, ISessionService sessionService, IUserService userService)
             : base(mediator)
         {
-            _sessionStorageService = sessionStorageService;
+            _sessionService = sessionService;
             _userService = userService;
         }
 
@@ -26,7 +26,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         {
             return new CertificatesListViewModel
             {
-                Certificates = await _sessionStorageService.GetOwnedCertificatesAsync(_userService.GetGovUkIdentifier())
+                Certificates = await _sessionService.GetOwnedCertificatesAsync(_userService.GetGovUkIdentifier())
             };
         }
 
@@ -60,7 +60,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 PrintRequestedBy = result.PrintRequestedBy
             };
 
-            var owned = await _sessionStorageService.GetOwnedCertificatesAsync(_userService.GetGovUkIdentifier());
+            var owned = await _sessionService.GetOwnedCertificatesAsync(_userService.GetGovUkIdentifier());
 
             viewModel.ShowBackLink = (owned?.Count() ?? 0) > 1;
 
@@ -100,7 +100,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 DeliveryInformation = result.DeliveryInformation
             };
 
-            var owned = await _sessionStorageService.GetOwnedCertificatesAsync(_userService.GetGovUkIdentifier());
+            var owned = await _sessionService.GetOwnedCertificatesAsync(_userService.GetGovUkIdentifier());
 
             viewModel.ShowBackLink = (owned?.Count() ?? 0) > 1;
 

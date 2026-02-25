@@ -21,5 +21,14 @@ namespace SFA.DAS.DigitalCertificates.Web.Models.Sharing
         public List<string> FormattedAccessTimes { get; set; } = new List<string>();
 
         public string? SecureLink { get; set; }
+        public string EmailAddress { get; set; } = string.Empty;
+
+        public List<SharingEmailItem> SharingEmailsHistory { get; set; } = new List<SharingEmailItem>();
+    }
+
+    public class SharingEmailItem
+    {
+        public string EmailAddress { get; set; } = string.Empty;
+        public string FormattedSentTime { get; set; } = string.Empty;
     }
 }
