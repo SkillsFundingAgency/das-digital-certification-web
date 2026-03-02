@@ -24,6 +24,7 @@ else
 <main class="govuk-main-wrapper govuk-main-wrapper--auto-spacing" id="main-content">
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
+            <partial name="_FlashMessagePartial" />
             <h1 class="govuk-heading-l">
                 <span class="govuk-caption-l">@Model.CourseName</span>
                 Create a sharing link
@@ -78,10 +79,10 @@ else
                                 <td class="govuk-table__cell"><strong>Sharing link @s.SharingNumber</strong></td>
                                 <td class="govuk-table__cell">@s.ExpiryTime.ToString("dd MMMM yyyy")</td>
                                 <td class="govuk-table__cell govuk-!-text-align-right">
-                                	<a asp-route="@CertificatesController.CertificateSharingLinkRouteGet"
-                                         asp-route-certificateId="@Model.CertificateId"
-                                         asp-route-sharingId="@s.SharingId"
-                                         class="govuk-link">View</a>
+                                    <a asp-route="@CertificatesController.CertificateSharingLinkRouteGet"
+                                       asp-route-certificateId="@Model.CertificateId"
+                                       asp-route-sharingId="@s.SharingId"
+                                       class="govuk-link">View</a>
                                 </td>
                             </tr>
                         }

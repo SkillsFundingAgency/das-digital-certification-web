@@ -9,11 +9,11 @@ namespace SFA.DAS.DigitalCertificates.Web.Authorization
 {
     public sealed class DigitalCertificatesClaimsTransformer : IClaimsTransformation
     {
-        private readonly ISessionStorageService _sessionStorageService;
+        private readonly ICacheService _cacheService;
 
-        public DigitalCertificatesClaimsTransformer(ISessionStorageService sessionStorageService)
+        public DigitalCertificatesClaimsTransformer(ICacheService cacheService)
         {
-            _sessionStorageService = sessionStorageService;
+            _cacheService = cacheService;
         }
 
         public async Task<ClaimsPrincipal> TransformAsync(ClaimsPrincipal principal)
@@ -26,7 +26,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Authorization
                 var govUkIdentifier = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(govUkIdentifier)) return principal;
 
-                var user = await _sessionStorageService.GetUserAsync(govUkIdentifier);
+                var user = await _cacheService.GetUserAsync(govUkIdentifier);
                 if (user != null)
                 {
                     var authorizationDecisionClaim = principal.FindFirst(ClaimTypes.AuthorizationDecision);

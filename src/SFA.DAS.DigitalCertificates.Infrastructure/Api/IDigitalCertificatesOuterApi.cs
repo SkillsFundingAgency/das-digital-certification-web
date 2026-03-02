@@ -34,5 +34,26 @@ namespace SFA.DAS.DigitalCertificates.Domain.Interfaces
 
         [Get("/sharing/{sharingId}")]
         Task<GetSharingByIdResponse> GetSharingById([Path] Guid sharingId, [Query("limit")] int? limit);
+
+        [Post("/sharing/{sharingId}/email")]
+        Task<CreateSharingEmailResponse> CreateSharingEmail([Path] Guid sharingId, [Body] CreateSharingEmailRequest request);
+
+        [Delete("/sharing/{sharingId}")]
+        Task DeleteSharing([Path] Guid sharingId);
+
+        [Get("/sharing/code/{code}")]
+        Task<GetSharingCodeResponse> GetSharingByCode([Path] Guid code);
+
+        [Post("/sharing/sharingaccess")]
+        Task CreateSharingAccess([Body] CreateSharingAccessRequest request);
+
+        [Post("/sharing/sharingemailaccess")]
+        Task CreateSharingEmailAccess([Body] CreateSharingEmailAccessRequest request);
+
+        [Get("/sharing/certificates/{id}")]
+        Task<GetSharedStandardCertificateResponse> GetSharedStandardCertificate([Path] Guid id);
+
+        [Get("/sharing/certificates/framework/{id}")]
+        Task<GetSharedFrameworkCertificateResponse> GetSharedFrameworkCertificate([Path] Guid id);
     }
 }

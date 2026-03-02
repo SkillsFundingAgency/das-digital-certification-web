@@ -18,7 +18,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
     public class ServiceController : BaseController
     {
         private readonly IUserService _userService;
-        private readonly ISessionStorageService _sessionStorageService;
+        private readonly ICacheService _cacheService;
+        private readonly ISessionService _sessionService;
         private readonly IConfiguration _config;
 
         #region Routes
@@ -26,11 +27,12 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         public const string SignedOutRouteGet = nameof(SignedOutRouteGet);
         #endregion Routes
 
-        public ServiceController(IUserService userService, ISessionStorageService sessionStorageService, IConfiguration config, IHttpContextAccessor contextAccessor)
+        public ServiceController(IUserService userService, ICacheService cacheService, ISessionService sessionService, IConfiguration config, IHttpContextAccessor contextAccessor)
             : base(contextAccessor)
         {
             _userService = userService;
-            _sessionStorageService = sessionStorageService;
+            _cacheService = cacheService;
+            _sessionService = sessionService;
             _config = config;
         }
 
@@ -57,7 +59,12 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
                     .ToArray();
             }
 
-            await _sessionStorageService.Clear(_userService.GetGovUkIdentifier());
+            var govUkIdentifier = _userService.GetGovUkIdentifier();
+
+            await _cacheService.Clear(govUkIdentifier);
+            await _sessionService.ClearSessionDataAsync(govUkIdentifier);
+
+            HttpContextAccessor.HttpContext?.Session?.Clear();
 
             return SignOut(
                 authenticationProperties,

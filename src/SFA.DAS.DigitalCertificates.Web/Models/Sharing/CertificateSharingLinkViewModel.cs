@@ -17,9 +17,27 @@ namespace SFA.DAS.DigitalCertificates.Web.Models.Sharing
         public Guid LinkCode { get; set; }
 
         public string? FormattedExpiry { get; set; }
-        public string? FormattedCreated { get; set; }
-        public List<string> FormattedAccessTimes { get; set; } = new List<string>();
 
         public string? SecureLink { get; set; }
+        public string EmailAddress { get; set; } = string.Empty;
+
+        public List<SharingAccessHistoryItem> AccessHistory { get; set; } = new List<SharingAccessHistoryItem>();
+    }
+
+    public class SharingAccessHistoryItem
+    {
+        public AccessType AccessType { get; set; }
+        public DateTime AccessedAt { get; set; }
+        public string? EmailAddress { get; set; }
+        public string Activity { get; set; } = string.Empty;
+        public string FormattedTime { get; set; } = string.Empty;
+    }
+
+    public enum AccessType
+    {
+        Created,
+        DirectLink,
+        EmailLink,
+        EmailSent
     }
 }

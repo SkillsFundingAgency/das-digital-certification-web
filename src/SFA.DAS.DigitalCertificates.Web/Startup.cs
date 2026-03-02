@@ -134,10 +134,10 @@ namespace SFA.DAS.DigitalCertificates.Web
             app.UseStaticFiles();
             app.UseDasHealthChecks();
             app.UseRouting();
+            app.UseSession();
             app.UseAuthentication();
             app.UseAuthorization();
             app.UseMiddleware<SecurityHeadersMiddleware>();
-            app.UseSession();
 
             app.UseEndpoints(endpoints =>
             {

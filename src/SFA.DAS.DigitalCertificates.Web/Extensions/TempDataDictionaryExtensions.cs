@@ -29,14 +29,14 @@ namespace SFA.DAS.DigitalCertificates.Web.Extensions
         {
             tempData[FlashMessageBodyTempDataKey] = body;
             tempData[FlashMessageTitleTempDataKey] = null;
-            tempData[FlashMessageLevelTempDataKey] = level;
+            tempData[FlashMessageLevelTempDataKey] = level.ToString();
         }
 
         public static void AddFlashMessage(this ITempDataDictionary tempData, string title, string body, FlashMessageLevel level)
         {
             tempData[FlashMessageBodyTempDataKey] = body;
             tempData[FlashMessageTitleTempDataKey] = title;
-            tempData[FlashMessageLevelTempDataKey] = level;
+            tempData[FlashMessageLevelTempDataKey] = level.ToString();
         }
 
         private static void Put<T>(this ITempDataDictionary tempData, string key, T value) where T : class
