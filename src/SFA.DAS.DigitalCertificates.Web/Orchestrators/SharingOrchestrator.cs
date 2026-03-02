@@ -5,6 +5,9 @@ using SFA.DAS.DigitalCertificates.Application.Commands.CreateSharing;
 using SFA.DAS.DigitalCertificates.Application.Commands.CreateSharingEmail;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetSharingById;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetSharings;
+using SFA.DAS.DigitalCertificates.Application.Queries.GetSharingByCode;
+using SFA.DAS.DigitalCertificates.Application.Commands.CreateSharingAccess;
+using SFA.DAS.DigitalCertificates.Application.Commands.CreateSharingEmailAccess;
 using SFA.DAS.DigitalCertificates.Domain.Extensions;
 using SFA.DAS.DigitalCertificates.Domain.Models;
 using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
@@ -16,6 +19,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using SFA.DAS.DigitalCertificates.Web.Models.Certificates;
+using SFA.DAS.DigitalCertificates.Application.Queries.GetSharedStandardCertificate;
+using SFA.DAS.DigitalCertificates.Application.Queries.GetSharedFrameworkCertificate;
 
 namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 {
@@ -140,25 +146,13 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 CreatedAt = response.CreatedAt,
                 ExpiryTime = response.ExpiryTime,
                 LinkCode = response.LinkCode,
-                FormattedExpiry = response.ExpiryTime.ToUkExpiryDateTimeString(),
-                FormattedCreated = response.CreatedAt.ToUkDateTimeString(),
-                FormattedAccessTimes = (response.SharingAccess ?? new List<DateTime>()).Select(a => a.ToUkDateTimeString()).ToList()
+                FormattedExpiry = response.ExpiryTime.ToUkExpiryDateTimeString()
             };
 
-            if (response.SharingEmails != null && response.SharingEmails.Any())
-            {
-                viewModel.SharingEmailsHistory = response.SharingEmails
-                    .Select(e => new SharingEmailItem
-                    {
-                        EmailAddress = e.EmailAddress,
-                        FormattedSentTime = e.SentTime.ToUkDateTimeString()
-                    })
-                    .ToList();
-            }
+            var accessHistory = BuildAccessHistory(response.CreatedAt, response.SharingAccess, response.SharingEmails);
+            viewModel.AccessHistory = accessHistory.OrderByDescending(h => h.AccessedAt).ToList();
 
-            // TODO: This URL and its associated email template may require changes
-            // when the corresponding page is implemented.
-            viewModel.SecureLink = $"{_digitalCertificatesWebConfiguration?.ServiceBaseUrl}/certificates/{viewModel.LinkCode}";
+            viewModel.SecureLink = $"{_digitalCertificatesWebConfiguration?.ServiceBaseUrl}/certificates/sharing/{viewModel.LinkCode}/check-code";
 
             return viewModel;
         }
@@ -314,6 +308,179 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         public async Task<bool> ValidateShareByEmailViewModel(ShareByEmailViewModel viewModel, ModelStateDictionary modelState)
         {
             return await ValidateViewModel(_shareByEmailValidator, viewModel, modelState);
+        }
+
+        public async Task<CheckQualificationViewModel?> GetCheckQualificationViewModelAndRecordAccess(Guid code)
+        {
+            var response = await Mediator.Send(new GetSharingByCodeQuery { Code = code });
+            if (response == null)
+                return null;
+
+            var viewModel = new CheckQualificationViewModel
+            {
+                Code = code,
+                FormattedExpiry = response.ExpiryTime.ToUkExpiryDateTimeString(),
+                CertificateId = response.CertificateId,
+                CertificateType = response.CertificateType
+            };
+
+            var recorded = await _sessionService.IsSharingAccessCodeRecordedAsync(code);
+            if (!recorded)
+            {
+                if (response.SharingEmailId.HasValue)
+                {
+                    await Mediator.Send(new CreateSharingEmailAccessCommand
+                    {
+                        SharingEmailId = response.SharingEmailId.Value
+                    });
+                }
+                else if (response.SharingId.HasValue)
+                {
+                    await Mediator.Send(new CreateSharingAccessCommand
+                    {
+                        SharingId = response.SharingId.Value
+                    });
+                }
+
+                await _sessionService.AddRecordedSharingAccessCodeAsync(code);
+            }
+
+            return viewModel;
+        }
+
+        public async Task<CheckQualificationViewModel?> GetCheckQualificationViewModel(Guid code)
+        {
+            var response = await Mediator.Send(new GetSharingByCodeQuery { Code = code });
+            if (response == null)
+                return null;
+
+            var viewModel = new CheckQualificationViewModel
+            {
+                Code = code,
+                FormattedExpiry = response.ExpiryTime.ToUkExpiryDateTimeString(),
+                CertificateId = response.CertificateId,
+                CertificateType = response.CertificateType
+            };
+
+            return viewModel;
+        }
+
+        public async Task<SharedCertificateStandardViewModel?> GetSharedStandardCertificateViewModel(Guid code)
+        {
+            var shareInfo = await Mediator.Send(new GetSharingByCodeQuery { Code = code });
+            if (shareInfo == null)
+                return null;
+
+            var cert = await Mediator.Send(new GetSharedStandardCertificateQuery { Id = shareInfo.CertificateId });
+            if (cert == null) return null;
+
+            return new SharedCertificateStandardViewModel
+            {
+                CertificateId = shareInfo.CertificateId,
+                FamilyName = cert.FamilyName,
+                GivenNames = cert.GivenNames,
+                CertificateReference = cert.CertificateReference,
+                CourseName = cert.CourseName,
+                CourseOption = cert.CourseOption,
+                CourseLevel = cert.CourseLevel,
+                DateAwarded = cert.DateAwarded,
+                OverallGrade = cert.OverallGrade,
+                ProviderName = cert.ProviderName,
+                StartDate = cert.StartDate,
+                ShowBackLink = false,
+                FormattedExpiry = shareInfo.ExpiryTime.ToUkExpiryDateTimeString()
+            };
+        }
+
+        public async Task<SharedCertificateFrameworkViewModel?> GetSharedFrameworkCertificateViewModel(Guid code)
+        {
+            var shareInfo = await Mediator.Send(new GetSharingByCodeQuery { Code = code });
+            if (shareInfo == null)
+                return null;
+
+            var cert = await Mediator.Send(new GetSharedFrameworkCertificateQuery { Id = shareInfo.CertificateId });
+            if (cert == null) return null;
+
+            return new SharedCertificateFrameworkViewModel
+            {
+                CertificateId = shareInfo.CertificateId,
+                FamilyName = cert.FamilyName,
+                GivenNames = cert.GivenNames,
+                CertificateReference = cert.CertificateReference,
+                FrameworkCertificateNumber = cert.FrameworkCertificateNumber,
+                CourseName = cert.CourseName,
+                CourseOption = cert.CourseOption,
+                CourseLevel = cert.CourseLevel,
+                DateAwarded = cert.DateAwarded,
+                OverallGrade = string.Empty,
+                ProviderName = cert.ProviderName,
+                StartDate = cert.StartDate,
+                ShowBackLink = false,
+                QualificationsAndAwardingBodies = cert.QualificationsAndAwardingBodies,
+                FormattedExpiry = shareInfo.ExpiryTime.ToUkExpiryDateTimeString()
+            };
+        }
+
+        private List<SharingAccessHistoryItem> BuildAccessHistory(DateTime createdAt, List<DateTime>? sharingAccess, List<SharingEmail>? sharingEmails)
+        {
+            var accessHistory = new List<SharingAccessHistoryItem>();
+
+            // Add an entry for the link creation
+            accessHistory.Add(new SharingAccessHistoryItem
+            {
+                AccessType = AccessType.Created,
+                AccessedAt = createdAt,
+                EmailAddress = null,
+                Activity = "Link created",
+                FormattedTime = createdAt.ToUkDateTimeString()
+            });
+
+            // Direct link accesses
+            if (sharingAccess != null)
+            {
+                accessHistory.AddRange(sharingAccess.Select(a => new SharingAccessHistoryItem
+                {
+                    AccessType = AccessType.DirectLink,
+                    AccessedAt = a,
+                    EmailAddress = null,
+                    Activity = "Link accessed",
+                    FormattedTime = a.ToUkDateTimeString()
+                }));
+            }
+
+            // Accesses via emailed links and email sends
+            if (sharingEmails != null && sharingEmails.Any())
+            {
+                foreach (var email in sharingEmails)
+                {
+                    // Add an entry for the email being sent
+                    accessHistory.Add(new SharingAccessHistoryItem
+                    {
+                        AccessType = AccessType.EmailSent,
+                        AccessedAt = email.SentTime,
+                        EmailAddress = email.EmailAddress,
+                        Activity = $"Link emailed to {email.EmailAddress}",
+                        FormattedTime = email.SentTime.ToUkDateTimeString()
+                    });
+
+                    if (email.SharingEmailAccess != null && email.SharingEmailAccess.Any())
+                    {
+                        foreach (var access in email.SharingEmailAccess)
+                        {
+                            accessHistory.Add(new SharingAccessHistoryItem
+                            {
+                                AccessType = AccessType.EmailLink,
+                                AccessedAt = access,
+                                EmailAddress = email.EmailAddress,
+                                Activity = $"Link accessed by {email.EmailAddress}",
+                                FormattedTime = access.ToUkDateTimeString()
+                            });
+                        }
+                    }
+                }
+            }
+
+            return accessHistory;
         }
     }
 }

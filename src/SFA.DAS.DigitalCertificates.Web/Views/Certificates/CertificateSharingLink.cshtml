@@ -1,6 +1,7 @@
 ﻿@using SFA.DAS.DigitalCertificates.Web.Controllers
 @using SFA.DAS.DigitalCertificates.Web.ViewDataKeys
 @using SFA.DAS.DigitalCertificates.Web.Models.Sharing
+@using SFA.DAS.DigitalCertificates.Web.Extensions
 @model CertificateSharingLinkViewModel
 @{
     ViewData[ViewDataKeys.Title] = ViewData[ViewDataKeys.ServiceName] + " Sharing link";
@@ -89,30 +90,16 @@
                             </tr>
                         </thead>
                         <tbody class="govuk-table__body">
-                            <tr class="govuk-table__row">
-                                <td class="govuk-table__cell">Link created</td>
-                                <td class="govuk-table__cell">@Model.FormattedCreated</td>
-                            </tr>
-
-                            @foreach (var accessText in Model.FormattedAccessTimes)
+                            @if (Model.AccessHistory != null && Model.AccessHistory.Any())
                             {
-                                <tr class="govuk-table__row">
-                                    <td class="govuk-table__cell">Link viewed</td>
-                                    <td class="govuk-table__cell">@accessText</td>
-                                </tr>
-                            }
-
-                            @if (Model.SharingEmailsHistory != null && Model.SharingEmailsHistory.Any())
-                            {
-                                foreach (var email in Model.SharingEmailsHistory)
+                                foreach (var item in Model.AccessHistory)
                                 {
                                     <tr class="govuk-table__row">
-                                        <td class="govuk-table__cell">Link emailed to @email.EmailAddress</td>
-                                        <td class="govuk-table__cell">@email.FormattedSentTime</td>
+                                        <td class="govuk-table__cell">@item.Activity</td>
+                                        <td class="govuk-table__cell">@item.FormattedTime</td>
                                     </tr>
                                 }
                             }
-
                         </tbody>
                     </table>
                 }

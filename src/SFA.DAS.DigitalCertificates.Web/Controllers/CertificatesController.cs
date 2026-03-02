@@ -33,6 +33,11 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         public const string EmailSentRouteGet = nameof(EmailSentRouteGet);
         public const string DeleteSharingRouteGet = nameof(DeleteSharingRouteGet);
         public const string DeleteSharingRoutePost = nameof(DeleteSharingRoutePost);
+        public const string CheckQualificationRouteGet = nameof(CheckQualificationRouteGet);
+        public const string CheckQualificationRoutePost = nameof(CheckQualificationRoutePost);
+        public const string CheckQualificationExpiredRouteGet = nameof(CheckQualificationExpiredRouteGet);
+        public const string SharedCertificateStandardRouteGet = nameof(SharedCertificateStandardRouteGet);
+        public const string SharedCertificateFrameworkRouteGet = nameof(SharedCertificateFrameworkRouteGet);
         #endregion
 
         private readonly ICertificatesOrchestrator _certificatesOrchestrator;
@@ -219,6 +224,77 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             }
 
             return View(model);
+        }
+
+        [HttpGet("sharing/{sharingLinkCode}/check-code", Name = CheckQualificationRouteGet)]
+        [AllowAnonymous]
+        public async Task<IActionResult> CheckQualification(Guid sharingLinkCode)
+        {
+            var sharingInfo = await _sharingOrchestrator.GetCheckQualificationViewModelAndRecordAccess(sharingLinkCode);
+
+            if (sharingInfo == null)
+            {
+                return RedirectToRoute(CheckQualificationExpiredRouteGet);
+            }
+
+            return View(sharingInfo);
+        }
+
+        [HttpPost("sharing/{sharingLinkCode}/check-code", Name = CheckQualificationRoutePost)]
+        [AllowAnonymous]
+        public async Task<IActionResult> CheckQualificationPost(Guid sharingLinkCode)
+        {
+            var sharingInfo = await _sharingOrchestrator.GetCheckQualificationViewModel(sharingLinkCode);
+
+            if (sharingInfo == null)
+            {
+                return RedirectToRoute(CheckQualificationExpiredRouteGet);
+            }
+
+            if (sharingInfo.CertificateType == CertificateType.Standard)
+            {
+                return RedirectToRoute(SharedCertificateStandardRouteGet, new { sharingLinkCode });
+            }
+
+            if (sharingInfo.CertificateType == CertificateType.Framework)
+            {
+                return RedirectToRoute(SharedCertificateFrameworkRouteGet, new { sharingLinkCode });
+            }
+
+            return RedirectToRoute(CheckQualificationExpiredRouteGet);
+        }
+
+        [HttpGet("shared/{sharingLinkCode}/standard", Name = SharedCertificateStandardRouteGet)]
+        [AllowAnonymous]
+        public async Task<IActionResult> SharedCertificateStandard(Guid sharingLinkCode)
+        {
+            var model = await _sharingOrchestrator.GetSharedStandardCertificateViewModel(sharingLinkCode);
+            if (model == null)
+            {
+                return RedirectToRoute(CheckQualificationExpiredRouteGet);
+            }
+
+            return View(model);
+        }
+
+        [HttpGet("shared/{sharingLinkCode}/framework", Name = SharedCertificateFrameworkRouteGet)]
+        [AllowAnonymous]
+        public async Task<IActionResult> SharedCertificateFramework(Guid sharingLinkCode)
+        {
+            var model = await _sharingOrchestrator.GetSharedFrameworkCertificateViewModel(sharingLinkCode);
+            if (model == null)
+            {
+                return RedirectToRoute(CheckQualificationExpiredRouteGet);
+            }
+
+            return View(model);
+        }
+
+        [HttpGet("/certificates/expired", Name = CheckQualificationExpiredRouteGet)]
+        [AllowAnonymous]
+        public IActionResult CheckQualificationExpired()
+        {
+            return View();
         }
     }
 }
