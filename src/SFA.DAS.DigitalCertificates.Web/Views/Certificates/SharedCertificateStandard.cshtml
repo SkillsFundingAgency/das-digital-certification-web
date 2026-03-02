@@ -1,0 +1,125 @@
+﻿@model SFA.DAS.DigitalCertificates.Web.Models.Certificates.SharedCertificateStandardViewModel
+@using SFA.DAS.DigitalCertificates.Web.Models.Certificates
+@using SFA.DAS.DigitalCertificates.Web.Enums
+@using SFA.DAS.DigitalCertificates.Web.ViewDataKeys
+@{
+    ViewData[ViewDataKeys.Title] = ViewData[ViewDataKeys.ServiceName] + " Shared Certificate Standard";
+    ViewBag.GaData.Vpv = @ViewData[ViewDataKeys.GaDataVpvPrefix] + "shared-certificate-standard";
+}
+
+<div class="govuk-width-container">
+    <main class="govuk-main-wrapper" id="main-content">
+        <div class="govuk-grid-row">
+            <div class="govuk-grid-column-two-thirds">
+
+                <h1 class="govuk-heading-l">
+                    <span class="govuk-caption-l">@Model.GivenNames @Model.FamilyName</span>
+                    @Model.CourseName
+                </h1>
+
+                <p class="govuk-body">This verifies successful completion of the apprenticeship.</p>
+                <p class="govuk-body">You can view this page until @Model.FormattedExpiry.</p>
+
+                <div class="govuk-panel govuk-panel--confirmation">
+                    <div class="govuk-panel__body">
+                        <span class="govuk-panel__title">Pass</span>
+                    </div>
+                </div>
+
+                <table class="govuk-table">
+                    <caption class="govuk-table__caption govuk-table__caption--m">Apprentice details</caption>
+                    <tbody class="govuk-table__body">
+                        @if (!string.IsNullOrEmpty(Model.GivenNames))
+                        {
+                            <tr class="govuk-table__row">
+                                <th scope="row" class="govuk-table__header govuk-!-width-one-third">First name</th>
+                                <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.GivenNames</td>
+                            </tr>
+                        }
+
+                        @if (!string.IsNullOrEmpty(Model.FamilyName))
+                        {
+                            <tr class="govuk-table__row">
+                                <th scope="row" class="govuk-table__header govuk-!-width-one-third">Last name</th>
+                                <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.FamilyName</td>
+                            </tr>
+                        }
+
+                        @if (!string.IsNullOrEmpty(Model.CertificateReference))
+                        {
+                            <tr class="govuk-table__row">
+                                <th scope="row" class="govuk-table__header govuk-!-width-one-third">Certificate number</th>
+                                <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.CertificateReference</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+                <table class="govuk-table">
+                    <caption class="govuk-table__caption govuk-table__caption--m">Apprenticeship details</caption>
+                    <tbody class="govuk-table__body">
+                        @if (!string.IsNullOrEmpty(Model.CourseName))
+                        {
+                            <tr class="govuk-table__row">
+                                <th scope="row" class="govuk-table__header govuk-!-width-one-third">Course</th>
+                                <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.CourseName</td>
+                            </tr>
+                        }
+
+                        @if (Model.CourseLevel != null)
+                        {
+                            <tr class="govuk-table__row">
+                                <th scope="row" class="govuk-table__header govuk-!-width-one-third">Level</th>
+                                <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.CourseLevel</td>
+                            </tr>
+                        }
+
+                        @if (!string.IsNullOrEmpty(Model.CourseOption))
+                        {
+                            <tr class="govuk-table__row">
+                                <th scope="row" class="govuk-table__header govuk-!-width-one-third">Option</th>
+                                <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.CourseOption</td>
+                            </tr>
+                        }
+
+                        @if (!string.IsNullOrEmpty(Model.ProviderName))
+                        {
+                            <tr class="govuk-table__row">
+                                <th scope="row" class="govuk-table__header govuk-!-width-one-third">Training provider</th>
+                                <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.ProviderName</td>
+                            </tr>
+                        }
+
+                        @if (Model.StartDate != null)
+                        {
+                            <tr class="govuk-table__row">
+                                <th scope="row" class="govuk-table__header govuk-!-width-one-third">Start date</th>
+                                <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.StartDate?.ToString("dd MMMM yyyy")</td>
+                            </tr>
+                        }
+
+                        @if (Model.DateAwarded != null)
+                        {
+                            <tr class="govuk-table__row">
+                                <th scope="row" class="govuk-table__header govuk-!-width-one-third">Date awarded</th>
+                                <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.DateAwarded?.ToString("dd MMMM yyyy")</td>
+                            </tr>
+                        }
+
+                        @if (Model.OverallGradeEnum.IsAvailable() == true)
+                        {
+                            <tr class="govuk-table__row">
+                                <th scope="row" class="govuk-table__header govuk-!-width-one-third">Result</th>
+                                <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.OverallGradeResultDisplay</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                @* TODO: Download your certificate. This is not part of the current ticket and will need to be addressed based on the requirements in upcoming tickets. *@
+                <h2 class="govuk-heading-m">Download certificate</h2>
+                <a href="#" role="button" draggable="false" class="govuk-button govuk-button--secondary"
+                   data-module="govuk-button">Download certificate (PDF)</a>
+            </div>
+        </div>
+    </main>
+</div>
