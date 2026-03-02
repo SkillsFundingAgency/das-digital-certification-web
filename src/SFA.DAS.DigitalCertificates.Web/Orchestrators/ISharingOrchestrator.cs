@@ -15,5 +15,9 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         Task DeleteSharing(Guid certificateId, Guid sharingId);
         Task<bool> ValidateShareByEmailViewModel(ShareByEmailViewModel viewModel, Microsoft.AspNetCore.Mvc.ModelBinding.ModelStateDictionary modelState);
         Task<CheckQualificationViewModel?> GetCheckQualificationViewModelAndRecordAccess(Guid code);
+        Task<CheckQualificationViewModel?> GetCheckQualificationViewModel(Guid code);
+        Task<Models.Certificates.SharedCertificateStandardViewModel?> GetSharedStandardCertificateViewModel(Guid code);
+        Task<Models.Certificates.SharedCertificateFrameworkViewModel?> GetSharedFrameworkCertificateViewModel(Guid code);
+        
     }
 }

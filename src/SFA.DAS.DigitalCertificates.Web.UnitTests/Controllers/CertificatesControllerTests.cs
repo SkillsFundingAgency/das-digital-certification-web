@@ -652,7 +652,9 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             var model = new CheckQualificationViewModel
             {
                 Code = code,
-                FormattedExpiry = DateTime.UtcNow.ToString()
+                FormattedExpiry = DateTime.UtcNow.ToString(),
+                CertificateId = Guid.NewGuid(),
+                CertificateType = CertificateType.Standard
             };
 
             _sharingOrchestratorMock
@@ -675,6 +677,162 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
 
             // Assert
             result.Should().NotBeNull();
+        }
+
+        [Test]
+        public async Task CheckQualificationPost_Redirects_To_Expired_When_SharingInfo_Null()
+        {
+            // Arrange
+            var code = Guid.NewGuid();
+
+            _sharingOrchestratorMock
+                .Setup(s => s.GetCheckQualificationViewModel(code))
+                .ReturnsAsync((CheckQualificationViewModel)null!);
+
+            // Act
+            var result = await _sut.CheckQualificationPost(code) as RedirectToRouteResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            result!.RouteName.Should().Be(CertificatesController.CheckQualificationExpiredRouteGet);
+        }
+
+        [Test]
+        public async Task CheckQualificationPost_Redirects_To_SharedStandard_When_CertificateType_Standard()
+        {
+            // Arrange
+            var code = Guid.NewGuid();
+
+            var sharingInfo = new CheckQualificationViewModel
+            {
+                Code = code,
+                CertificateType = CertificateType.Standard
+            };
+
+            _sharingOrchestratorMock
+                .Setup(s => s.GetCheckQualificationViewModel(code))
+                .ReturnsAsync(sharingInfo);
+
+            // Act
+            var result = await _sut.CheckQualificationPost(code) as RedirectToRouteResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            result!.RouteName.Should().Be(CertificatesController.SharedCertificateStandardRouteGet);
+            result.RouteValues.Should().ContainKey("sharingLinkCode");
+            result.RouteValues["sharingLinkCode"].Should().Be(code);
+        }
+
+        [Test]
+        public async Task CheckQualificationPost_Redirects_To_SharedFramework_When_CertificateType_Framework()
+        {
+            // Arrange
+            var code = Guid.NewGuid();
+
+            var sharingInfo = new CheckQualificationViewModel
+            {
+                Code = code,
+                CertificateType = CertificateType.Framework
+            };
+
+            _sharingOrchestratorMock
+                .Setup(s => s.GetCheckQualificationViewModel(code))
+                .ReturnsAsync(sharingInfo);
+
+            // Act
+            var result = await _sut.CheckQualificationPost(code) as RedirectToRouteResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            result!.RouteName.Should().Be(CertificatesController.SharedCertificateFrameworkRouteGet);
+            result.RouteValues.Should().ContainKey("sharingLinkCode");
+            result.RouteValues["sharingLinkCode"].Should().Be(code);
+        }
+
+        [Test]
+        public async Task SharedCertificateStandard_Returns_View_When_Model_Found()
+        {
+            // Arrange
+            var code = Guid.NewGuid();
+            var model = new SharedCertificateStandardViewModel
+            {
+                GivenNames = "Given",
+                FamilyName = "Family",
+                CourseName = "Course",
+                FormattedExpiry = DateTime.UtcNow.ToString()
+            };
+
+            _sharingOrchestratorMock
+                .Setup(s => s.GetSharedStandardCertificateViewModel(code))
+                .ReturnsAsync(model);
+
+            // Act
+            var result = await _sut.SharedCertificateStandard(code) as ViewResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            result!.Model.Should().BeEquivalentTo(model);
+        }
+
+        [Test]
+        public async Task SharedCertificateStandard_Redirects_To_Expired_When_Model_Null()
+        {
+            // Arrange
+            var code = Guid.NewGuid();
+
+            _sharingOrchestratorMock
+                .Setup(s => s.GetSharedStandardCertificateViewModel(code))
+                .ReturnsAsync((SharedCertificateStandardViewModel)null!);
+
+            // Act
+            var result = await _sut.SharedCertificateStandard(code) as RedirectToRouteResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            result!.RouteName.Should().Be(CertificatesController.CheckQualificationExpiredRouteGet);
+        }
+
+        [Test]
+        public async Task SharedCertificateFramework_Returns_View_When_Model_Found()
+        {
+            // Arrange
+            var code = Guid.NewGuid();
+            var model = new SharedCertificateFrameworkViewModel
+            {
+                GivenNames = "Given",
+                FamilyName = "Family",
+                CourseName = "Course",
+                FormattedExpiry = DateTime.UtcNow.ToString()
+            };
+
+            _sharingOrchestratorMock
+                .Setup(s => s.GetSharedFrameworkCertificateViewModel(code))
+                .ReturnsAsync(model);
+
+            // Act
+            var result = await _sut.SharedCertificateFramework(code) as ViewResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            result!.Model.Should().BeEquivalentTo(model);
+        }
+
+        [Test]
+        public async Task SharedCertificateFramework_Redirects_To_Expired_When_Model_Null()
+        {
+            // Arrange
+            var code = Guid.NewGuid();
+
+            _sharingOrchestratorMock
+                .Setup(s => s.GetSharedFrameworkCertificateViewModel(code))
+                .ReturnsAsync((SharedCertificateFrameworkViewModel)null!);
+
+            // Act
+            var result = await _sut.SharedCertificateFramework(code) as RedirectToRouteResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            result!.RouteName.Should().Be(CertificatesController.CheckQualificationExpiredRouteGet);
         }
     }
 }

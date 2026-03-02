@@ -19,6 +19,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using SFA.DAS.DigitalCertificates.Web.Models.Certificates;
+using SFA.DAS.DigitalCertificates.Application.Queries.GetSharedStandardCertificate;
+using SFA.DAS.DigitalCertificates.Application.Queries.GetSharedFrameworkCertificate;
 
 namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 {
@@ -316,7 +319,9 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             var viewModel = new CheckQualificationViewModel
             {
                 Code = code,
-                FormattedExpiry = response.ExpiryTime.ToUkExpiryDateTimeString()
+                FormattedExpiry = response.ExpiryTime.ToUkExpiryDateTimeString(),
+                CertificateId = response.CertificateId,
+                CertificateType = response.CertificateType
             };
 
             var recorded = await _sessionService.IsSharingAccessCodeRecordedAsync(code);
@@ -341,6 +346,79 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             }
 
             return viewModel;
+        }
+
+        public async Task<CheckQualificationViewModel?> GetCheckQualificationViewModel(Guid code)
+        {
+            var response = await Mediator.Send(new GetSharingByCodeQuery { Code = code });
+            if (response == null)
+                return null;
+
+            var viewModel = new CheckQualificationViewModel
+            {
+                Code = code,
+                FormattedExpiry = response.ExpiryTime.ToUkExpiryDateTimeString(),
+                CertificateId = response.CertificateId,
+                CertificateType = response.CertificateType
+            };
+
+            return viewModel;
+        }
+
+        public async Task<SharedCertificateStandardViewModel?> GetSharedStandardCertificateViewModel(Guid code)
+        {
+            var shareInfo = await Mediator.Send(new GetSharingByCodeQuery { Code = code });
+            if (shareInfo == null)
+                return null;
+
+            var cert = await Mediator.Send(new GetSharedStandardCertificateQuery { Id = shareInfo.CertificateId });
+            if (cert == null) return null;
+
+            return new SharedCertificateStandardViewModel
+            {
+                CertificateId = shareInfo.CertificateId,
+                FamilyName = cert.FamilyName,
+                GivenNames = cert.GivenNames,
+                CertificateReference = cert.CertificateReference,
+                CourseName = cert.CourseName,
+                CourseOption = cert.CourseOption,
+                CourseLevel = cert.CourseLevel,
+                DateAwarded = cert.DateAwarded,
+                OverallGrade = cert.OverallGrade,
+                ProviderName = cert.ProviderName,
+                StartDate = cert.StartDate,
+                ShowBackLink = false,
+                FormattedExpiry = shareInfo.ExpiryTime.ToUkExpiryDateTimeString()
+            };
+        }
+
+        public async Task<SharedCertificateFrameworkViewModel?> GetSharedFrameworkCertificateViewModel(Guid code)
+        {
+            var shareInfo = await Mediator.Send(new GetSharingByCodeQuery { Code = code });
+            if (shareInfo == null)
+                return null;
+
+            var cert = await Mediator.Send(new GetSharedFrameworkCertificateQuery { Id = shareInfo.CertificateId });
+            if (cert == null) return null;
+
+            return new SharedCertificateFrameworkViewModel
+            {
+                CertificateId = shareInfo.CertificateId,
+                FamilyName = cert.FamilyName,
+                GivenNames = cert.GivenNames,
+                CertificateReference = cert.CertificateReference,
+                FrameworkCertificateNumber = cert.FrameworkCertificateNumber,
+                CourseName = cert.CourseName,
+                CourseOption = cert.CourseOption,
+                CourseLevel = cert.CourseLevel,
+                DateAwarded = cert.DateAwarded,
+                OverallGrade = string.Empty,
+                ProviderName = cert.ProviderName,
+                StartDate = cert.StartDate,
+                ShowBackLink = false,
+                QualificationsAndAwardingBodies = cert.QualificationsAndAwardingBodies,
+                FormattedExpiry = shareInfo.ExpiryTime.ToUkExpiryDateTimeString()
+            };
         }
 
         private List<SharingAccessHistoryItem> BuildAccessHistory(DateTime createdAt, List<DateTime>? sharingAccess, List<SharingEmail>? sharingEmails)

@@ -49,5 +49,11 @@ namespace SFA.DAS.DigitalCertificates.Domain.Interfaces
 
         [Post("/sharing/sharingemailaccess")]
         Task CreateSharingEmailAccess([Body] CreateSharingEmailAccessRequest request);
+
+        [Get("/sharing/certificates/{id}")]
+        Task<GetSharedStandardCertificateResponse> GetSharedStandardCertificate([Path] Guid id);
+
+        [Get("/sharing/certificates/framework/{id}")]
+        Task<GetSharedFrameworkCertificateResponse> GetSharedFrameworkCertificate([Path] Guid id);
     }
 }
