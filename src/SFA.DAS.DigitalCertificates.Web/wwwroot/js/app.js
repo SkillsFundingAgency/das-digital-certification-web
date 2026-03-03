@@ -9,7 +9,7 @@ if ($input.hasClass('govuk-input--error')) {
 }
 
 let $submitOnConfirm = $input.data('submit-on-selection');
-let $defaultValue = $input.data('default-value');
+let $defaultValue = $input.data('default-value') || $input.val();
 let $name = $input.attr('name');
 
 if ($input.length > 0) {
@@ -39,10 +39,27 @@ if ($input.length > 0) {
             currentElement = currentElement.parentElement;
         }
 
-        if (currentElement && currentElement.tagName.toLocaleLowerCase() === 'form' && $submitOnConfirm) {
-            setTimeout(function () {
-                currentElement.submit();
-            }, 200);
+        if (currentElement && currentElement.tagName.toLocaleLowerCase() === 'form') {
+            try {
+                var addressInput = currentElement.querySelector('input[name="SelectedAddress"]');
+
+                var addressValue = '';
+                if (typeof selectedItem === 'string') {
+                    addressValue = selectedItem;
+                } else if (selectedItem && selectedItem.name) {
+                    addressValue = selectedItem.name;
+                }
+
+                if (addressInput) addressInput.value = addressValue;
+            } catch (e) {
+
+            }
+
+            if ($submitOnConfirm) {
+                setTimeout(function () {
+                    currentElement.submit();
+                }, 200);
+            }
         }
     }
 

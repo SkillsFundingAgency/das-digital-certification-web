@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using SFA.DAS.DigitalCertificates.Web.Models.Certificates;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 {
@@ -12,5 +13,9 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         Task<string?> CreateOrReuseUserActionForCertificate(Guid certificateId);
         Task<string?> CreateOrReuseUserActionForNonSpecific();
         Task<ContactUsViewModel?> GetContactUsViewModel(string referenceNumber, Guid? certificateId);
+        Task<bool> ValidateSelectAddressViewModel(SelectAddressViewModel viewModel, ModelStateDictionary modelState);
+        Task<bool> ValidateAddAddressManualViewModel(AddAddressManualViewModel viewModel, ModelStateDictionary modelState);
+        Task<SelectAddressViewModel?> GetSelectAddressViewModel(Guid certificateId, string? searchTerm = null);
+        Task<AddAddressManualViewModel?> GetAddAddressViewModel(Guid certificateId);
     }
 }

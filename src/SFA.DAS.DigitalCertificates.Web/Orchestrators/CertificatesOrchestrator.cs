@@ -8,6 +8,7 @@ using SFA.DAS.DigitalCertificates.Web.Services;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using FluentValidation;
 
 namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 {
@@ -15,12 +16,18 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
     {
         private readonly ISessionService _sessionService;
         private readonly IUserService _userService;
+        private readonly IValidator<SelectAddressViewModel> _selectAddressValidator;
+        private readonly IValidator<AddAddressManualViewModel> _addAddressValidator;
 
-        public CertificatesOrchestrator(IMediator mediator, ISessionService sessionService, IUserService userService)
+        public CertificatesOrchestrator(IMediator mediator, ISessionService sessionService, IUserService userService,
+            IValidator<SelectAddressViewModel> selectAddressValidator,
+            IValidator<AddAddressManualViewModel> addAddressValidator)
             : base(mediator)
         {
             _sessionService = sessionService;
             _userService = userService;
+            _selectAddressValidator = selectAddressValidator;
+            _addAddressValidator = addAddressValidator;
         }
 
         public async Task<CertificatesListViewModel> GetCertificatesListViewModel()
@@ -183,6 +190,61 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             };
 
             return model;
+        }
+
+        public async Task<SelectAddressViewModel?> GetSelectAddressViewModel(Guid certificateId, string? searchTerm = null)
+        {
+            var certificateModel = await GetCertificateStandardViewModel(certificateId);
+
+            if (certificateModel == null)
+            {
+                return null;
+            }
+
+            var userDetails = await _sessionService.GetUserDetailsAsync();
+
+            var viewModel = new SelectAddressViewModel
+            {
+                CertificateId = certificateId,
+                CourseName = certificateModel.CourseName,
+                GivenNames = userDetails?.GivenNames ?? certificateModel.GivenNames,
+                FamilyName = userDetails?.FamilyName ?? certificateModel.FamilyName,
+                SearchTerm = searchTerm ?? string.Empty
+            };
+
+            return viewModel;
+        }
+
+        public async Task<AddAddressManualViewModel?> GetAddAddressViewModel(Guid certificateId)
+        {
+            var certificateModel = await GetCertificateStandardViewModel(certificateId);
+
+            if (certificateModel == null)
+            {
+                return null;
+            }
+
+            var userDetails = await _sessionService.GetUserDetailsAsync();
+
+            var viewModel = new AddAddressManualViewModel
+            {
+                CertificateId = certificateId,
+                CourseName = certificateModel.CourseName,
+                GivenNames = userDetails?.GivenNames ?? certificateModel.GivenNames,
+                FamilyName = userDetails?.FamilyName ?? certificateModel.FamilyName
+            };
+
+            return viewModel;
+        }
+
+        public async Task<bool> ValidateSelectAddressViewModel(SelectAddressViewModel viewModel, Microsoft.AspNetCore.Mvc.ModelBinding.ModelStateDictionary modelState)
+        {
+            return await ValidateViewModel(_selectAddressValidator, viewModel, modelState);
+        }
+
+        public async Task<bool> ValidateAddAddressManualViewModel(AddAddressManualViewModel viewModel, Microsoft.AspNetCore.Mvc.ModelBinding.ModelStateDictionary modelState)
+        {
+            return await ValidateViewModel(_addAddressValidator, viewModel, modelState);
         }
     }
 }

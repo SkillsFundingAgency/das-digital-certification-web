@@ -44,6 +44,7 @@ namespace SFA.DAS.DigitalCertificates.Web.StartupExtensions
             services.AddTransient<IHomeOrchestrator, HomeOrchestrator>();
             services.AddTransient<ICertificatesOrchestrator, CertificatesOrchestrator>();
             services.AddTransient<ISharingOrchestrator, SharingOrchestrator>();
+            services.AddTransient<ILocationsOrchestrator, LocationsOrchestrator>();
 
             services.AddTransient<IClaimsTransformation, DigitalCertificatesClaimsTransformer>();
 

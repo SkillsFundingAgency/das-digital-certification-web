@@ -160,10 +160,23 @@
                 <h2 class="govuk-heading-m">Download your certificate</h2>
                 <a href="#" role="button" draggable="false" class="govuk-button govuk-button--secondary" data-module="govuk-button">Download certificate (PDF)</a>
 
-                @* TODO: Request a printed certificate. This is not part of the current ticket and will need to be addressed based on the requirements in upcoming tickets. *@
                 <h2 class="govuk-heading-m">Request a printed certificate</h2>
-                <p class="govuk-body">We can post a certificate to you. You need to <a href="#">request a printed certificate</a>. Certificates can take up to 3 weeks to arrive.</p>
-
+                <p class="govuk-body">
+                    We can post a certificate to you. You need to
+                    <span class="das-js-show--inline">
+                        <a asp-route="@CertificatesController.SelectAddressRouteGet"
+                           asp-route-certificateId="@certificateId">
+                            request a printed certificate
+                        </a>
+                    </span>
+                    <span class="das-js-hide">
+                        <a asp-route="@CertificatesController.AddAddressRouteGet"
+                           asp-route-certificateId="@certificateId">
+                            request a printed certificate
+                        </a>
+                    </span>.
+                    Certificates can take up to 3 weeks to arrive.
+                </p>
             </div>
         </div>
     </main>

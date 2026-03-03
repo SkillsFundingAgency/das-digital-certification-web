@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
+using FluentValidation;
+using SFA.DAS.DigitalCertificates.Web.Models.Certificates;
 using MediatR;
 using Moq;
 using NUnit.Framework;
@@ -22,6 +24,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         private Mock<IUserService> _userServiceMock;
 
         private CertificatesOrchestrator _sut;
+        private Mock<IValidator<SelectAddressViewModel>> _selectAddressValidatorMock;
+        private Mock<IValidator<AddAddressManualViewModel>> _addAddressValidatorMock;
 
         [SetUp]
         public void SetUp()
@@ -29,10 +33,15 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             _mediatorMock = new Mock<IMediator>();
             _sessionMock = new Mock<ISessionService>();
             _userServiceMock = new Mock<IUserService>();
+            _selectAddressValidatorMock = new Mock<IValidator<SelectAddressViewModel>>();
+            _addAddressValidatorMock = new Mock<IValidator<AddAddressManualViewModel>>();
+
             _sut = new CertificatesOrchestrator(
                 _mediatorMock.Object,
                 _sessionMock.Object,
-                _userServiceMock.Object);
+                _userServiceMock.Object,
+                _selectAddressValidatorMock.Object,
+                _addAddressValidatorMock.Object);
         }
 
         [Test]
@@ -397,6 +406,103 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             model.Should().NotBeNull();
             model!.ReferenceNumber.Should().Be("REF-1");
             model.CertificateType.Should().Be(CertificateType.Standard);
+        }
+
+        [Test]
+        public async Task GetSelectAddressViewModel_ReturnsNull_When_CertificateMissing()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+
+            _mediatorMock
+                .Setup(m => m.Send(It.Is<GetStandardCertificateQuery>(q => q.CertificateId == certificateId), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((GetStandardCertificateQueryResult)null);
+
+            // Act
+            var result = await _sut.GetSelectAddressViewModel(certificateId);
+
+            // Assert
+            result.Should().BeNull();
+        }
+
+        [Test]
+        public async Task GetSelectAddressViewModel_PopulatesFields_When_CertificateFoundAndUserDetailsPresent()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+
+            var mediatorResult = new GetStandardCertificateQueryResult
+            {
+                GivenNames = "CertGiven",
+                FamilyName = "CertFamily",
+                CourseName = "Course X",
+                CertificateType = "Standard"
+            };
+
+            _mediatorMock
+                .Setup(m => m.Send(It.Is<GetStandardCertificateQuery>(q => q.CertificateId == certificateId), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(mediatorResult);
+
+            _sessionMock.Setup(s => s.GetUserDetailsAsync()).ReturnsAsync(new UserDetails { GivenNames = "UserGiven", FamilyName = "UserFamily" });
+
+            // Act
+            var result = await _sut.GetSelectAddressViewModel(certificateId);
+
+            // Assert
+            result.Should().NotBeNull();
+            result!.CertificateId.Should().Be(certificateId);
+            result.CourseName.Should().Be(mediatorResult.CourseName);
+            result.GivenNames.Should().Be("UserGiven");
+            result.FamilyName.Should().Be("UserFamily");
+            result.SearchTerm.Should().BeEmpty();
+        }
+
+        [Test]
+        public async Task GetAddAddressViewModel_ReturnsNull_When_CertificateMissing()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+
+            _mediatorMock
+                .Setup(m => m.Send(It.Is<GetStandardCertificateQuery>(q => q.CertificateId == certificateId), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((GetStandardCertificateQueryResult)null);
+
+            // Act
+            var result = await _sut.GetAddAddressViewModel(certificateId);
+
+            // Assert
+            result.Should().BeNull();
+        }
+
+        [Test]
+        public async Task GetAddAddressViewModel_PopulatesFields_When_CertificateFoundAndUserDetailsPresent()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+
+            var mediatorResult = new GetStandardCertificateQueryResult
+            {
+                GivenNames = "CertGiven",
+                FamilyName = "CertFamily",
+                CourseName = "Course Y",
+                CertificateType = "Standard"
+            };
+
+            _mediatorMock
+                .Setup(m => m.Send(It.Is<GetStandardCertificateQuery>(q => q.CertificateId == certificateId), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(mediatorResult);
+
+            _sessionMock.Setup(s => s.GetUserDetailsAsync()).ReturnsAsync(new UserDetails { GivenNames = "UserGiven", FamilyName = "UserFamily" });
+
+            // Act
+            var result = await _sut.GetAddAddressViewModel(certificateId);
+
+            // Assert
+            result.Should().NotBeNull();
+            result!.CertificateId.Should().Be(certificateId);
+            result.CourseName.Should().Be(mediatorResult.CourseName);
+            result.GivenNames.Should().Be("UserGiven");
+            result.FamilyName.Should().Be("UserFamily");
         }
     }
 }

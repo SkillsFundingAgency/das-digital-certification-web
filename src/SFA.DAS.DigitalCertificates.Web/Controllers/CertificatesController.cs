@@ -12,6 +12,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using SFA.DAS.DigitalCertificates.Web.Services;
 using SFA.DAS.DigitalCertificates.Web.Extensions;
+using SFA.DAS.DigitalCertificates.Web.Models.Certificates;
 
 namespace SFA.DAS.DigitalCertificates.Web.Controllers
 {
@@ -42,6 +43,10 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         public const string ContactUsForCertificateRouteGet = nameof(ContactUsForCertificateRouteGet);
         public const string ContactUsCreateRouteGet = nameof(ContactUsCreateRouteGet);
         public const string ContactUsForCertificateCreateRouteGet = nameof(ContactUsForCertificateCreateRouteGet);
+        public const string SelectAddressRouteGet = nameof(SelectAddressRouteGet);
+        public const string AddAddressRouteGet = nameof(AddAddressRouteGet);
+        public const string SelectAddressRoutePost = nameof(SelectAddressRoutePost);
+        public const string AddAddressRoutePost = nameof(AddAddressRoutePost);
         #endregion
 
         private readonly ICertificatesOrchestrator _certificatesOrchestrator;
@@ -54,6 +59,36 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             _certificatesOrchestrator = certificatesOrchestrator;
             _sharingOrchestrator = sharingOrchestrator;
             _sessionService = sessionService;
+        }
+
+        [HttpPost("{certificateId}/request-printed/select-address", Name = SelectAddressRoutePost)]
+        [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsCertificateOwner))]
+        public async Task<IActionResult> SelectAddressPost(Guid certificateId, SelectAddressViewModel model)
+        {
+            model.CertificateId = certificateId;
+
+            if (!await _certificatesOrchestrator.ValidateSelectAddressViewModel(model, ModelState))
+            {
+                return RedirectToRoute(SelectAddressRouteGet, new { certificateId });
+            }
+
+            // TODO: Success path not implemented 
+            return RedirectToRoute(SelectAddressRouteGet, new { certificateId });
+        }
+
+        [HttpPost("{certificateId}/request-printed/add-address", Name = AddAddressRoutePost)]
+        [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsCertificateOwner))]
+        public async Task<IActionResult> AddAddressPost(Guid certificateId, AddAddressManualViewModel model)
+        {
+            model.CertificateId = certificateId;
+
+            if (!await _certificatesOrchestrator.ValidateAddAddressManualViewModel(model, ModelState))
+            {
+                return RedirectToRoute(AddAddressRouteGet, new { certificateId });
+            }
+
+            // TODO: Success path not implemented 
+            return RedirectToRoute(AddAddressRouteGet, new { certificateId });
         }
 
         [HttpGet("list", Name = CertificatesListRouteGet)]
@@ -92,6 +127,34 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         public async Task<IActionResult> CertificateFramework(Guid certificateId)
         {
             var model = await _certificatesOrchestrator.GetCertificateFrameworkViewModel(certificateId);
+            return View(model);
+        }
+
+        [HttpGet("{certificateId}/request-printed/select-address", Name = SelectAddressRouteGet)]
+        [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsCertificateOwner))]
+        public async Task<IActionResult> SelectAddress(Guid certificateId)
+        {
+            var model = await _certificatesOrchestrator.GetSelectAddressViewModel(certificateId);
+
+            if (model == null)
+            {
+                return RedirectToRoute(CertificateStandardRouteGet, new { certificateId });
+            }
+
+            return View(model);
+        }
+
+        [HttpGet("{certificateId}/request-printed/add-address", Name = AddAddressRouteGet)]
+        [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsCertificateOwner))]
+        public async Task<IActionResult> AddAddress(Guid certificateId)
+        {
+            var model = await _certificatesOrchestrator.GetAddAddressViewModel(certificateId);
+
+            if (model == null)
+            {
+                return RedirectToRoute(CertificateStandardRouteGet, new { certificateId });
+            }
+
             return View(model);
         }
 

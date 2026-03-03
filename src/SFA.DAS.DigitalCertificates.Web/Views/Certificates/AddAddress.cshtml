@@ -1,0 +1,80 @@
+﻿@model SFA.DAS.DigitalCertificates.Web.Models.Certificates.AddAddressManualViewModel
+@using SFA.DAS.DigitalCertificates.Web.Controllers
+@using SFA.DAS.DigitalCertificates.Web.ViewDataKeys
+@{
+    ViewData[ViewDataKeys.Title] = ViewData[ViewDataKeys.ServiceName] + " Add Address";
+    ViewBag.GaData.Vpv = @ViewData[ViewDataKeys.GaDataVpvPrefix] + "add-address";
+}
+<div class="govuk-width-container">
+    <a asp-route="@CertificatesController.CertificateStandardRouteGet" asp-route-certificateId="@Model.CertificateId"
+       class="govuk-back-link">Back</a>
+
+    <main class="govuk-main-wrapper" id="main-content">
+        <div class="govuk-grid-row">
+            <div class="govuk-grid-column-two-thirds">
+                <h1 class="govuk-heading-l">
+                    <span class="govuk-caption-l">@Model.CourseName</span>
+                    Add the address that you’d like us to send your certificate to
+                </h1>
+
+                <div class="govuk-inset-text">It will be addressed to @Model.FullName</div>
+
+                <partial name="_ValidationSummary" />
+
+                <form asp-route="@CertificatesController.AddAddressRoutePost"
+                      asp-route-certificateId="@Model.CertificateId" method="post">
+                    <div class="govuk-form-group govuk-!-margin-top-6" das-highlight-error-for="Organisation"
+                         error-class="govuk-form-group--error">
+                        <label class="govuk-label" for="Organisation">Organisation (optional)</label>
+                        <p das-validation-for="Organisation" class="govuk-error-message"></p>
+                        <input asp-for="Organisation" data-default-value="@Model.Organisation"
+                               aria-describedby="Organisation-error" class="govuk-input govuk-!-width-two-thirds" />
+                    </div>
+
+                    <div class="govuk-form-group" das-highlight-error-for="AddressLine1"
+                         error-class="govuk-form-group--error">
+                        <label class="govuk-label" for="AddressLine1">Address line 1</label>
+                        <p das-validation-for="AddressLine1" class="govuk-error-message"></p>
+                        <input asp-for="AddressLine1" data-default-value="@Model.AddressLine1"
+                               aria-describedby="AddressLine1-error" class="govuk-input govuk-!-width-two-thirds" />
+                    </div>
+
+                    <div class="govuk-form-group" das-highlight-error-for="AddressLine2"
+                         error-class="govuk-form-group--error">
+                        <label class="govuk-label" for="AddressLine2">Address line 2 (optional)</label>
+                        <p das-validation-for="AddressLine2" class="govuk-error-message"></p>
+                        <input asp-for="AddressLine2" data-default-value="@Model.AddressLine2"
+                               aria-describedby="AddressLine2-error" class="govuk-input govuk-!-width-two-thirds" />
+                    </div>
+
+                    <div class="govuk-form-group" das-highlight-error-for="TownOrCity"
+                         error-class="govuk-form-group--error">
+                        <label class="govuk-label" for="TownOrCity">Town or city</label>
+                        <p das-validation-for="TownOrCity" class="govuk-error-message"></p>
+                        <input asp-for="TownOrCity" data-default-value="@Model.TownOrCity"
+                               aria-describedby="TownOrCity-error" class="govuk-input govuk-!-width-one-half" />
+                    </div>
+
+                    <div class="govuk-form-group" das-highlight-error-for="County"
+                         error-class="govuk-form-group--error">
+                        <label class="govuk-label" for="County">County (optional)</label>
+                        <p das-validation-for="County" class="govuk-error-message"></p>
+                        <input asp-for="County" data-default-value="@Model.County" aria-describedby="County-error"
+                               class="govuk-input govuk-!-width-one-half" />
+                    </div>
+
+                    <div class="govuk-form-group" das-highlight-error-for="Postcode"
+                         error-class="govuk-form-group--error">
+                        <label class="govuk-label" for="Postcode">Postcode</label>
+                        <p das-validation-for="Postcode" class="govuk-error-message"></p>
+                        <input asp-for="Postcode" data-default-value="@Model.Postcode" aria-describedby="Postcode-error"
+                               class="govuk-input govuk-!-width-one-quarter" />
+                    </div>
+
+                    <button type="submit" class="govuk-button govuk-!-margin-top-4">Continue</button>
+                </form>
+
+            </div>
+        </div>
+    </main>
+</div>
