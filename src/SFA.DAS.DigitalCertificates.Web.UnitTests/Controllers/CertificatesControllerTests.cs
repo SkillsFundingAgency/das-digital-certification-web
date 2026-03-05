@@ -902,7 +902,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             var certId = Guid.NewGuid();
             var model = new SelectAddressViewModel { SearchTerm = "x" };
 
-            _certificatesOrchestratorMock.Setup(x => x.ValidateSelectAddressViewModel(model, It.IsAny<Microsoft.AspNetCore.Mvc.ModelBinding.ModelStateDictionary>())).ReturnsAsync(false);
+            _certificatesOrchestratorMock.Setup(x => x.ValidateSelectAddressViewModel(model, It.IsAny<ModelStateDictionary>())).ReturnsAsync(false);
 
             var result = await _sut.SelectAddressPost(certId, model);
 
@@ -918,7 +918,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             var certId = Guid.NewGuid();
             var model = new AddAddressManualViewModel { AddressLine1 = "" };
 
-            _certificatesOrchestratorMock.Setup(x => x.ValidateAddAddressManualViewModel(model, It.IsAny<Microsoft.AspNetCore.Mvc.ModelBinding.ModelStateDictionary>())).ReturnsAsync(false);
+            _certificatesOrchestratorMock.Setup(x => x.ValidateAddAddressManualViewModel(model, It.IsAny<ModelStateDictionary>())).ReturnsAsync(false);
 
             var result = await _sut.AddAddressPost(certId, model);
 
@@ -934,7 +934,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             var certId = Guid.NewGuid();
             var model = new SelectAddressViewModel { SearchTerm = "x" };
 
-            _certificatesOrchestratorMock.Setup(x => x.ValidateSelectAddressViewModel(model, It.IsAny<Microsoft.AspNetCore.Mvc.ModelBinding.ModelStateDictionary>())).ReturnsAsync(true);
+            _certificatesOrchestratorMock.Setup(x => x.ValidateSelectAddressViewModel(model, It.IsAny<ModelStateDictionary>())).ReturnsAsync(true);
 
             var result = await _sut.SelectAddressPost(certId, model);
 
@@ -950,7 +950,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             var certId = Guid.NewGuid();
             var model = new AddAddressManualViewModel { AddressLine1 = "1 Test St" };
 
-            _certificatesOrchestratorMock.Setup(x => x.ValidateAddAddressManualViewModel(model, It.IsAny<Microsoft.AspNetCore.Mvc.ModelBinding.ModelStateDictionary>())).ReturnsAsync(true);
+            _certificatesOrchestratorMock.Setup(x => x.ValidateAddAddressManualViewModel(model, It.IsAny<ModelStateDictionary>())).ReturnsAsync(true);
 
             var result = await _sut.AddAddressPost(certId, model);
 
