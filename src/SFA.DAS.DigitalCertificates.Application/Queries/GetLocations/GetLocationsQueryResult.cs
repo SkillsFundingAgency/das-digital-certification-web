@@ -10,5 +10,10 @@ namespace SFA.DAS.DigitalCertificates.Application.Queries.GetLocations
     {
         public string? Name { get; set; }
         public string? Postcode { get; set; }
+        public string? Organisation { get; set; }
+        public string? AddressLine1 { get; set; }
+        public string? AddressLine2 { get; set; }
+        public string? PostTown { get; set; }
+        public string? County { get; set; }
     }
 }

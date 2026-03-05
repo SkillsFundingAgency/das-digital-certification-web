@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using SFA.DAS.DigitalCertificates.Domain.Models;
 using System;
+using SFA.DAS.DigitalCertificates.Web.Models.Certificates;
 
 namespace SFA.DAS.DigitalCertificates.Web.Services
 {
@@ -12,6 +13,9 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
         Task SetShareEmailAsync(string email);
         Task<string?> GetShareEmailAsync();
         Task ClearShareEmailAsync();
+        Task SetDeliveryAddressAsync(CheckAndSubmitViewModel address);
+        Task<CheckAndSubmitViewModel?> GetDeliveryAddressAsync();
+        Task ClearDeliveryAddressAsync();
         Task<List<Certificate>?> GetOwnedCertificatesAsync(string govUkIdentifier);
         Task<UlnAuthorisation?> GetUlnAuthorisationAsync(string govUkIdentifier);
         Task ClearSessionDataAsync(string govUkIdentifier);

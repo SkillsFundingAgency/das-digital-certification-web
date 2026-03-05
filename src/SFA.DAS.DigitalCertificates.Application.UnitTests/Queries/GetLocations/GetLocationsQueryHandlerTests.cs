@@ -47,8 +47,11 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetLocations
 			result.Should().NotBeNull();
 			var locations = result.Locations.ToList();
 			locations.Should().HaveCount(1);
-			locations[0].Name.Should().Contain("Org").And.Contain("Line1");
+			locations[0].Name.Should().Be("Org, Line1, Line2, Town, AB1 2CD");
 			locations[0].Postcode.Should().Be("AB1 2CD");
+			locations[0].AddressLine1.Should().Be("Line1");
+			locations[0].AddressLine2.Should().Be("Line2");
+			locations[0].PostTown.Should().Be("Town");
 		}
 
 		[Test]

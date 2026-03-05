@@ -9,6 +9,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentValidation;
+using SFA.DAS.DigitalCertificates.Application.Queries.GetLocations;
 
 namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 {
@@ -194,9 +195,10 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 
         public async Task<SelectAddressViewModel?> GetSelectAddressViewModel(Guid certificateId, string? searchTerm = null)
         {
-            var certificateModel = await GetCertificateStandardViewModel(certificateId);
+            var owned = await _sessionService.GetOwnedCertificatesAsync(_userService.GetGovUkIdentifier());
+            var ownedCertificate = owned?.FirstOrDefault(c => c.CertificateId == certificateId);
 
-            if (certificateModel == null)
+            if (ownedCertificate == null)
             {
                 return null;
             }
@@ -206,10 +208,10 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             var viewModel = new SelectAddressViewModel
             {
                 CertificateId = certificateId,
-                CourseName = certificateModel.CourseName,
-                GivenNames = userDetails?.GivenNames ?? certificateModel.GivenNames,
-                FamilyName = userDetails?.FamilyName ?? certificateModel.FamilyName,
-                SearchTerm = searchTerm ?? string.Empty
+                CourseName = ownedCertificate.CourseName,
+                GivenNames = userDetails?.GivenNames,
+                FamilyName = userDetails?.FamilyName,
+                SearchTerm = searchTerm
             };
 
             return viewModel;
@@ -217,9 +219,10 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 
         public async Task<AddAddressManualViewModel?> GetAddAddressViewModel(Guid certificateId)
         {
-            var certificateModel = await GetCertificateStandardViewModel(certificateId);
+            var owned = await _sessionService.GetOwnedCertificatesAsync(_userService.GetGovUkIdentifier());
+            var ownedCertificate = owned?.FirstOrDefault(c => c.CertificateId == certificateId);
 
-            if (certificateModel == null)
+            if (ownedCertificate == null)
             {
                 return null;
             }
@@ -229,12 +232,58 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             var viewModel = new AddAddressManualViewModel
             {
                 CertificateId = certificateId,
-                CourseName = certificateModel.CourseName,
-                GivenNames = userDetails?.GivenNames ?? certificateModel.GivenNames,
-                FamilyName = userDetails?.FamilyName ?? certificateModel.FamilyName
+                CourseName = ownedCertificate.CourseName,
+                GivenNames = userDetails?.GivenNames,
+                FamilyName = userDetails?.FamilyName
             };
 
+            var address = await _sessionService.GetDeliveryAddressAsync();
+            if (address != null)
+            {
+                viewModel.Organisation = address.Organisation;
+                viewModel.AddressLine1 = address.AddressLine1;
+                viewModel.AddressLine2 = address.AddressLine2;
+                viewModel.TownOrCity = address.TownOrCity;
+                viewModel.County = address.County;
+                viewModel.Postcode = address.Postcode;
+            }
+
             return viewModel;
+        }
+
+        public async Task<CheckAndSubmitViewModel?> GetCheckAndSubmitViewModel(Guid certificateId)
+        {
+            var owned = await _sessionService.GetOwnedCertificatesAsync(_userService.GetGovUkIdentifier());
+            var ownedCertificate = owned?.FirstOrDefault(c => c.CertificateId == certificateId);
+
+            if (ownedCertificate == null)
+            {
+                return null;
+            }
+
+            var userDetails = await _sessionService.GetUserDetailsAsync();
+
+            var vm = new CheckAndSubmitViewModel
+            {
+                CertificateId = certificateId,
+                CourseName = ownedCertificate.CourseName,
+                GivenNames = userDetails?.GivenNames,
+                FamilyName = userDetails?.FamilyName
+            };
+
+            var address = await _sessionService.GetDeliveryAddressAsync();
+            if (address != null)
+            {
+                vm.BackRoute = address.BackRoute;
+                vm.Organisation = address.Organisation;
+                vm.AddressLine1 = address.AddressLine1;
+                vm.AddressLine2 = address.AddressLine2;
+                vm.TownOrCity = address.TownOrCity;
+                vm.County = address.County;
+                vm.Postcode = address.Postcode;
+            }
+
+            return vm;
         }
 
         public async Task<bool> ValidateSelectAddressViewModel(SelectAddressViewModel viewModel, Microsoft.AspNetCore.Mvc.ModelBinding.ModelStateDictionary modelState)
@@ -245,6 +294,32 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         public async Task<bool> ValidateAddAddressManualViewModel(AddAddressManualViewModel viewModel, Microsoft.AspNetCore.Mvc.ModelBinding.ModelStateDictionary modelState)
         {
             return await ValidateViewModel(_addAddressValidator, viewModel, modelState);
+        }
+
+        public async Task<bool> StoreDeliveryAddressFromLocationAsync(Guid certificateId, string selectedName, string backRoute)
+        {
+            if (string.IsNullOrWhiteSpace(selectedName)) return false;
+
+            var locationsResult = await Mediator.Send(new GetLocationsQuery { SearchTerm = selectedName });
+
+            var matchLocation = locationsResult?.Locations?.FirstOrDefault(location => string.Equals(location.Name?.Trim(), selectedName?.Trim(), StringComparison.OrdinalIgnoreCase));
+
+            if (matchLocation == null) return false;
+            var addr = new CheckAndSubmitViewModel
+            {
+                CertificateId = certificateId,
+                Organisation = matchLocation.Organisation,
+                AddressLine1 = matchLocation.AddressLine1,
+                AddressLine2 = matchLocation.AddressLine2,
+                TownOrCity = matchLocation.PostTown,
+                County = matchLocation.County,
+                Postcode = matchLocation.Postcode,
+                BackRoute = backRoute
+            };
+
+            await _sessionService.SetDeliveryAddressAsync(addr);
+
+            return true;
         }
     }
 }

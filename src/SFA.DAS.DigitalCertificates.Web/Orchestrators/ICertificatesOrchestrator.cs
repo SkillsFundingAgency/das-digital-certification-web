@@ -17,5 +17,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         Task<bool> ValidateAddAddressManualViewModel(AddAddressManualViewModel viewModel, ModelStateDictionary modelState);
         Task<SelectAddressViewModel?> GetSelectAddressViewModel(Guid certificateId, string? searchTerm = null);
         Task<AddAddressManualViewModel?> GetAddAddressViewModel(Guid certificateId);
+        Task<bool> StoreDeliveryAddressFromLocationAsync(Guid certificateId, string selectedName, string backRoute);
+        Task<CheckAndSubmitViewModel?> GetCheckAndSubmitViewModel(Guid certificateId);
     }
 }

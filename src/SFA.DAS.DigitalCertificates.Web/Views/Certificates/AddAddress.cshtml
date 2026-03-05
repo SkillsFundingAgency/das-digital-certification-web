@@ -6,8 +6,14 @@
     ViewBag.GaData.Vpv = @ViewData[ViewDataKeys.GaDataVpvPrefix] + "add-address";
 }
 <div class="govuk-width-container">
-    <a asp-route="@CertificatesController.CertificateStandardRouteGet" asp-route-certificateId="@Model.CertificateId"
-       class="govuk-back-link">Back</a>
+    @if (!string.IsNullOrWhiteSpace(Model.BackRoute))
+    {
+        <a asp-route="@Model.BackRoute" asp-route-certificateId="@Model.CertificateId" class="govuk-back-link">Back</a>
+    }
+    else
+    {
+        <a asp-route="@CertificatesController.CertificateStandardRouteGet" asp-route-certificateId="@Model.CertificateId" class="govuk-back-link">Back</a>
+    }
 
     <main class="govuk-main-wrapper" id="main-content">
         <div class="govuk-grid-row">
@@ -21,8 +27,9 @@
 
                 <partial name="_ValidationSummary" />
 
-                <form asp-route="@CertificatesController.AddAddressRoutePost"
-                      asp-route-certificateId="@Model.CertificateId" method="post">
+                    <form asp-route="@CertificatesController.AddAddressRoutePost"
+                        asp-route-certificateId="@Model.CertificateId" method="post">
+                      @Html.HiddenFor(m => m.BackRoute)
                     <div class="govuk-form-group govuk-!-margin-top-6" das-highlight-error-for="Organisation"
                          error-class="govuk-form-group--error">
                         <label class="govuk-label" for="Organisation">Organisation (optional)</label>

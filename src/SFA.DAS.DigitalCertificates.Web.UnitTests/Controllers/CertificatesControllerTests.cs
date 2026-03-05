@@ -834,5 +834,173 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             result.Should().NotBeNull();
             result!.RouteName.Should().Be(CertificatesController.CheckQualificationExpiredRouteGet);
         }
+
+        [Test]
+        public async Task SelectAddress_Get_ReturnsView_When_ModelExists()
+        {
+            var certId = Guid.NewGuid();
+            var vm = new SelectAddressViewModel { CertificateId = certId };
+
+            _certificatesOrchestratorMock.Setup(x => x.GetSelectAddressViewModel(certId, null)).ReturnsAsync(vm);
+
+            var result = await _sut.SelectAddress(certId);
+
+            result.Should().BeOfType<ViewResult>();
+            var view = (ViewResult)result;
+            view.Model.Should().BeSameAs(vm);
+            _sessionServiceMock.Verify(x => x.ClearDeliveryAddressAsync(), Times.Once);
+        }
+
+        [Test]
+        public async Task SelectAddress_Get_RedirectsToStandard_When_NoModel()
+        {
+            var certId = Guid.NewGuid();
+            _certificatesOrchestratorMock.Setup(x => x.GetSelectAddressViewModel(certId, null)).ReturnsAsync((SelectAddressViewModel)null);
+
+            var result = await _sut.SelectAddress(certId);
+
+            result.Should().BeOfType<RedirectToRouteResult>();
+            var redirect = (RedirectToRouteResult)result;
+            redirect.RouteName.Should().Be(CertificatesController.CertificateStandardRouteGet);
+            redirect.RouteValues.Should().ContainKey("certificateId");
+            _sessionServiceMock.Verify(x => x.ClearDeliveryAddressAsync(), Times.Never);
+        }
+
+        [Test]
+        public async Task AddAddress_Get_ReturnsView_When_ModelExists()
+        {
+            var certId = Guid.NewGuid();
+            var vm = new AddAddressManualViewModel { CertificateId = certId };
+
+            _certificatesOrchestratorMock.Setup(x => x.GetAddAddressViewModel(certId)).ReturnsAsync(vm);
+
+            var result = await _sut.AddAddress(certId);
+
+            result.Should().BeOfType<ViewResult>();
+            var view = (ViewResult)result;
+            view.Model.Should().BeSameAs(vm);
+        }
+
+        [Test]
+        public async Task AddAddress_Get_RedirectsToStandard_When_NoModel()
+        {
+            var certId = Guid.NewGuid();
+            _certificatesOrchestratorMock.Setup(x => x.GetAddAddressViewModel(certId)).ReturnsAsync((AddAddressManualViewModel)null);
+
+            var result = await _sut.AddAddress(certId);
+
+            result.Should().BeOfType<RedirectToRouteResult>();
+            var redirect = (RedirectToRouteResult)result;
+            redirect.RouteName.Should().Be(CertificatesController.CertificateStandardRouteGet);
+            redirect.RouteValues.Should().ContainKey("certificateId");
+            _sessionServiceMock.Verify(x => x.ClearDeliveryAddressAsync(), Times.Never);
+        }
+
+        [Test]
+        public async Task SelectAddressPost_When_ValidationFails_RedirectsToSelectAddressGet_And_SetsCertificateId()
+        {
+            var certId = Guid.NewGuid();
+            var model = new SelectAddressViewModel { SearchTerm = "x" };
+
+            _certificatesOrchestratorMock.Setup(x => x.ValidateSelectAddressViewModel(model, It.IsAny<Microsoft.AspNetCore.Mvc.ModelBinding.ModelStateDictionary>())).ReturnsAsync(false);
+
+            var result = await _sut.SelectAddressPost(certId, model);
+
+            model.CertificateId.Should().Be(certId);
+            result.Should().BeOfType<RedirectToRouteResult>();
+            var redirect = (RedirectToRouteResult)result;
+            redirect.RouteName.Should().Be(CertificatesController.SelectAddressRouteGet);
+        }
+
+        [Test]
+        public async Task AddAddressPost_When_ValidationFails_RedirectsToAddAddressGet_And_SetsCertificateId()
+        {
+            var certId = Guid.NewGuid();
+            var model = new AddAddressManualViewModel { AddressLine1 = "" };
+
+            _certificatesOrchestratorMock.Setup(x => x.ValidateAddAddressManualViewModel(model, It.IsAny<Microsoft.AspNetCore.Mvc.ModelBinding.ModelStateDictionary>())).ReturnsAsync(false);
+
+            var result = await _sut.AddAddressPost(certId, model);
+
+            model.CertificateId.Should().Be(certId);
+            result.Should().BeOfType<RedirectToRouteResult>();
+            var redirect = (RedirectToRouteResult)result;
+            redirect.RouteName.Should().Be(CertificatesController.AddAddressRouteGet);
+        }
+
+        [Test]
+        public async Task SelectAddressPost_When_ValidationSucceeds_RedirectsToCheckAndSubmit_And_SetsCertificateId()
+        {
+            var certId = Guid.NewGuid();
+            var model = new SelectAddressViewModel { SearchTerm = "x" };
+
+            _certificatesOrchestratorMock.Setup(x => x.ValidateSelectAddressViewModel(model, It.IsAny<Microsoft.AspNetCore.Mvc.ModelBinding.ModelStateDictionary>())).ReturnsAsync(true);
+
+            var result = await _sut.SelectAddressPost(certId, model);
+
+            model.CertificateId.Should().Be(certId);
+            result.Should().BeOfType<RedirectToRouteResult>();
+            var redirect = (RedirectToRouteResult)result;
+            redirect.RouteName.Should().Be(CertificatesController.CheckAndSubmitRouteGet);
+        }
+
+        [Test]
+        public async Task AddAddressPost_When_ValidationSucceeds_RedirectsToCheckAndSubmit_And_SetsCertificateId()
+        {
+            var certId = Guid.NewGuid();
+            var model = new AddAddressManualViewModel { AddressLine1 = "1 Test St" };
+
+            _certificatesOrchestratorMock.Setup(x => x.ValidateAddAddressManualViewModel(model, It.IsAny<Microsoft.AspNetCore.Mvc.ModelBinding.ModelStateDictionary>())).ReturnsAsync(true);
+
+            var result = await _sut.AddAddressPost(certId, model);
+
+            model.CertificateId.Should().Be(certId);
+            result.Should().BeOfType<RedirectToRouteResult>();
+            var redirect = (RedirectToRouteResult)result;
+            redirect.RouteName.Should().Be(CertificatesController.CheckAndSubmitRouteGet);
+        }
+
+        [Test]
+        public async Task CheckAndSubmit_Get_ReturnsView_When_ModelExists()
+        {
+            var certId = Guid.NewGuid();
+            var vm = new CheckAndSubmitViewModel { CertificateId = certId };
+
+            _certificatesOrchestratorMock.Setup(x => x.GetCheckAndSubmitViewModel(certId)).ReturnsAsync(vm);
+
+            var result = await _sut.CheckAndSubmit(certId);
+
+            result.Should().BeOfType<ViewResult>();
+            var view = (ViewResult)result;
+            view.Model.Should().BeSameAs(vm);
+        }
+
+        [Test]
+        public async Task CheckAndSubmit_Get_RedirectsToStandard_When_NoModel()
+        {
+            var certId = Guid.NewGuid();
+            _certificatesOrchestratorMock.Setup(x => x.GetCheckAndSubmitViewModel(certId)).ReturnsAsync((CheckAndSubmitViewModel)null);
+
+            var result = await _sut.CheckAndSubmit(certId);
+
+            result.Should().BeOfType<RedirectToRouteResult>();
+            var redirect = (RedirectToRouteResult)result;
+            redirect.RouteName.Should().Be(CertificatesController.CertificateStandardRouteGet);
+            redirect.RouteValues.Should().ContainKey("certificateId");
+        }
+
+        [Test]
+        public async Task CheckAndSubmitPost_RedirectsToStandard()
+        {
+            var certId = Guid.NewGuid();
+            var model = new CheckAndSubmitViewModel { CertificateId = certId };
+
+            var result = await _sut.CheckAndSubmitPost(certId, model);
+
+            result.Should().BeOfType<RedirectToRouteResult>();
+            var redirect = (RedirectToRouteResult)result;
+            redirect.RouteName.Should().Be(CertificatesController.CertificateStandardRouteGet);
+            redirect.RouteValues.Should().ContainKey("certificateId");
+        }
     }
 }

@@ -7,6 +7,7 @@ using SFA.DAS.DigitalCertificates.Application.Queries.GetCertificates;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetUser;
 using System.Text.Json;
 using System;
+using SFA.DAS.DigitalCertificates.Web.Models.Certificates;
 
 namespace SFA.DAS.DigitalCertificates.Web.Services
 {
@@ -20,6 +21,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
         private const string OwnedCertificatesKeyPrefix = "DigitalCertificates:OwnedCertificates:";
         private const string UlnAuthorisationKeyPrefix = "DigitalCertificates:UlnAuthorisation:";
         private const string RecordedSharingAccessKey = "DigitalCertificates:RecordedSharingAccessCodes";
+        private const string DeliveryAddressKeyPrefix = "DigitalCertificates:DeliveryAddress:";
 
         public SessionService(ISessionStorageService sessionStorageService, IMediator mediator)
         {
@@ -118,6 +120,27 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
             }
 
             await _sessionStorageService.ClearAsync(RecordedSharingAccessKey);
+            await _sessionStorageService.ClearAsync(DeliveryAddressKeyPrefix);
+        }
+
+        public Task SetDeliveryAddressAsync(CheckAndSubmitViewModel address)
+        {
+            var json = JsonSerializer.Serialize(address);
+            return _sessionStorageService.SetAsync(DeliveryAddressKeyPrefix, json);
+        }
+
+        public async Task<CheckAndSubmitViewModel?> GetDeliveryAddressAsync()
+        {
+            var json = await _sessionStorageService.GetAsync(DeliveryAddressKeyPrefix);
+            if (string.IsNullOrWhiteSpace(json))
+                return null;
+
+            return JsonSerializer.Deserialize<CheckAndSubmitViewModel>(json);
+        }
+
+        public Task ClearDeliveryAddressAsync()
+        {
+            return _sessionStorageService.ClearAsync(DeliveryAddressKeyPrefix);
         }
 
         public async Task AddRecordedSharingAccessCodeAsync(Guid code)

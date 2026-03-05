@@ -11,6 +11,7 @@ using SFA.DAS.DigitalCertificates.Application.Queries.GetCertificates;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetUser;
 using SFA.DAS.DigitalCertificates.Domain.Models;
 using SFA.DAS.DigitalCertificates.Infrastructure.Services.SessionStorage;
+using SFA.DAS.DigitalCertificates.Web.Models.Certificates;
 using SFA.DAS.DigitalCertificates.Web.Services;
 
 namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
@@ -27,6 +28,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
         private const string OwnedCertificatesKeyPrefix = "DigitalCertificates:OwnedCertificates:";
         private const string UlnAuthorisationKeyPrefix = "DigitalCertificates:UlnAuthorisation:";
         private const string RecordedSharingAccessKey = "DigitalCertificates:RecordedSharingAccessCodes";
+        private const string DeliveryAddressKeyPrefix = "DigitalCertificates:DeliveryAddress:";
 
         [SetUp]
         public void SetUp()
@@ -278,6 +280,52 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
 
             // Assert
             result.Should().BeFalse();
+        }
+
+        [Test]
+        public async Task SetDeliveryAddressAsync_Calls_Storage_With_Correct_Key()
+        {
+            var addr = new CheckAndSubmitViewModel
+            {
+                CertificateId = Guid.NewGuid(),
+                Organisation = "Org",
+                AddressLine1 = "L1",
+                Postcode = "PC1"
+            };
+
+            await _sut.SetDeliveryAddressAsync(addr);
+
+            _sessionStorageMock.Verify(s => s.SetAsync(DeliveryAddressKeyPrefix, It.IsAny<string>()), Times.Once);
+        }
+
+        [Test]
+        public async Task GetDeliveryAddressAsync_Returns_Value_From_Storage()
+        {
+            var addr = new CheckAndSubmitViewModel
+            {
+                CertificateId = Guid.NewGuid(),
+                Organisation = "Org",
+                AddressLine1 = "L1",
+                Postcode = "PC1"
+            };
+            var json = JsonSerializer.Serialize(addr);
+
+            _sessionStorageMock.Setup(s => s.GetAsync(DeliveryAddressKeyPrefix)).ReturnsAsync(json);
+
+            var result = await _sut.GetDeliveryAddressAsync();
+
+            result.Should().NotBeNull();
+            result!.Organisation.Should().Be("Org");
+            result.AddressLine1.Should().Be("L1");
+            result.Postcode.Should().Be("PC1");
+        }
+
+        [Test]
+        public async Task ClearDeliveryAddressAsync_Calls_ClearAsync_With_Correct_Key()
+        {
+            await _sut.ClearDeliveryAddressAsync();
+
+            _sessionStorageMock.Verify(s => s.ClearAsync(DeliveryAddressKeyPrefix), Times.Once);
         }
     }
 }
