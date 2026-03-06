@@ -35,7 +35,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         {
             return new CertificatesListViewModel
             {
-                Certificates = await _sessionService.GetOwnedCertificatesAsync(_userService.GetGovUkIdentifier())
+                Certificates = await _sessionService.GetOwnedCertificatesAsync()
             };
         }
 
@@ -69,7 +69,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 PrintRequestedBy = result.PrintRequestedBy
             };
 
-            var owned = await _sessionService.GetOwnedCertificatesAsync(_userService.GetGovUkIdentifier());
+            var owned = await _sessionService.GetOwnedCertificatesAsync();
 
             viewModel.ShowBackLink = (owned?.Count() ?? 0) > 1;
 
@@ -109,7 +109,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 DeliveryInformation = result.DeliveryInformation
             };
 
-            var owned = await _sessionService.GetOwnedCertificatesAsync(_userService.GetGovUkIdentifier());
+            var owned = await _sessionService.GetOwnedCertificatesAsync();
 
             viewModel.ShowBackLink = (owned?.Count() ?? 0) > 1;
 
@@ -127,7 +127,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             var familyName = userDetails?.FamilyName ?? string.Empty;
             var givenNames = userDetails?.GivenNames ?? string.Empty;
 
-            var owned = await _sessionService.GetOwnedCertificatesAsync(_userService.GetGovUkIdentifier());
+            var owned = await _sessionService.GetOwnedCertificatesAsync();
             var ownedCertificate = owned?.FirstOrDefault(c => c.CertificateId == certificateId);
 
             var certificateType = ownedCertificate?.CertificateType;
@@ -178,7 +178,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 
             if (certificateId != null)
             {
-                var owned = await _sessionService.GetOwnedCertificatesAsync(_userService.GetGovUkIdentifier());
+                var owned = await _sessionService.GetOwnedCertificatesAsync();
                 var ownedCertificate = owned?.FirstOrDefault(c => c.CertificateId == certificateId);
                 certificateType = ownedCertificate?.CertificateType ?? CertificateType.Unknown;
             }
@@ -195,7 +195,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 
         public async Task<SelectAddressViewModel?> GetSelectAddressViewModel(Guid certificateId, string? searchTerm = null)
         {
-            var owned = await _sessionService.GetOwnedCertificatesAsync(_userService.GetGovUkIdentifier());
+            var owned = await _sessionService.GetOwnedCertificatesAsync();
             var ownedCertificate = owned?.FirstOrDefault(c => c.CertificateId == certificateId);
 
             if (ownedCertificate == null)
@@ -219,7 +219,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 
         public async Task<AddAddressManualViewModel?> GetAddAddressViewModel(Guid certificateId)
         {
-            var owned = await _sessionService.GetOwnedCertificatesAsync(_userService.GetGovUkIdentifier());
+            var owned = await _sessionService.GetOwnedCertificatesAsync();
             var ownedCertificate = owned?.FirstOrDefault(c => c.CertificateId == certificateId);
 
             if (ownedCertificate == null)
@@ -253,7 +253,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 
         public async Task<CheckAndSubmitViewModel?> GetCheckAndSubmitViewModel(Guid certificateId)
         {
-            var owned = await _sessionService.GetOwnedCertificatesAsync(_userService.GetGovUkIdentifier());
+            var owned = await _sessionService.GetOwnedCertificatesAsync();
             var ownedCertificate = owned?.FirstOrDefault(c => c.CertificateId == certificateId);
 
             if (ownedCertificate == null)
