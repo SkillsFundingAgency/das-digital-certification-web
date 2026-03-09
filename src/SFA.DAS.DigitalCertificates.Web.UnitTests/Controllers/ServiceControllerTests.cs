@@ -88,6 +88,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
                 .ReturnsAsync(AuthenticateResult.Success(cookieTicket));
             auth.Setup(a => a.AuthenticateAsync(It.IsAny<HttpContext>(), OpenIdConnectDefaults.AuthenticationScheme))
                 .ReturnsAsync(AuthenticateResult.Success(oidcTicket));
+            auth.Setup(a => a.AuthenticateAsync(It.IsAny<HttpContext>(), It.Is<string>(s => s == null)))
+                .ReturnsAsync(AuthenticateResult.Success(oidcTicket));
 
             var sp = new Mock<IServiceProvider>();
             sp.Setup(s => s.GetService(typeof(IAuthenticationService))).Returns(auth.Object);
