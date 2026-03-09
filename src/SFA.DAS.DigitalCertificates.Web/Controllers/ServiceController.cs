@@ -45,8 +45,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
                 throw new InvalidOperationException("No HttpContext available.");
             }
 
-            var idToken = await HttpContextAccessor.HttpContext
-                .GetTokenAsync(OpenIdConnectDefaults.AuthenticationScheme, OpenIdConnectParameterNames.IdToken);
+
+            var idToken = await HttpContextAccessor.HttpContext.GetTokenAsync(OpenIdConnectParameterNames.IdToken);
 
             var authenticationProperties = new AuthenticationProperties();
             authenticationProperties.Parameters[OpenIdConnectParameterNames.IdTokenHint] = idToken;
