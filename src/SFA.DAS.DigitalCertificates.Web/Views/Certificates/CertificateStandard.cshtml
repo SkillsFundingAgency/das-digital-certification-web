@@ -157,13 +157,15 @@
                             We can post a certificate to you. You need to
                             <span class="das-js-show--inline">
                                 <a asp-route="@CertificatesController.SelectAddressRouteGet"
-                                       asp-route-certificateId="@certificateId">
+                                       asp-route-certificateId="@certificateId"
+                                       title="Request a printed certificate">
                                     request a printed certificate
                                 </a>
                             </span>
                             <span class="das-js-hide">
                                 <a asp-route="@CertificatesController.AddAddressRouteGet"
-                                       asp-route-certificateId="@certificateId">
+                                       asp-route-certificateId="@certificateId"
+                                       title="Request a printed certificate">
                                     request a printed certificate
                                 </a>
                             </span>.
