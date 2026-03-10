@@ -12,7 +12,7 @@ namespace SFA.DAS.DigitalCertificates.Domain.Models
         public required string EmailAddress { get; set; }
         public string? PhoneNumber { get; set; }
         public DateTime? LastLoginAt { get; set; }
-        public DateTime? LockedAt { get; set; }
+        public bool IsLocked { get; set; }
 
         public List<Name>? Names { get; set; }
 
@@ -30,14 +30,14 @@ namespace SFA.DAS.DigitalCertificates.Domain.Models
                 EmailAddress = source.EmailAddress,
                 PhoneNumber = source.PhoneNumber,
                 LastLoginAt = source.LastLoginAt,
-                LockedAt = source.LockedAt,
                 Names = source.Names?.Select(n => new Name
                 {
                     ValidSince = n.ValidSince,
                     ValidUntil = n.ValidUntil,
                     FamilyName = n.FamilyName,
                     GivenNames = n.GivenNames
-                }).ToList()
+                }).ToList(),
+                IsLocked = source.IsLocked
             };
         }
     }

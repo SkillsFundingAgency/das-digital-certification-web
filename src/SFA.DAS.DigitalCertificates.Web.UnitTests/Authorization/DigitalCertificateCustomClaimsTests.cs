@@ -46,7 +46,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authorization
                 Id = Guid.NewGuid(),
                 GovUkIdentifier = "gov-123",
                 EmailAddress = "name@domain.com",
-                LockedAt = null
+                IsLocked = false
             };
 
             _cacheServiceMock
@@ -76,7 +76,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authorization
                 Id = Guid.NewGuid(),
                 GovUkIdentifier = "gov-123",
                 EmailAddress = "name@domain.com",
-                LockedAt = DateTime.UtcNow
+                IsLocked = true
             };
 
             _cacheServiceMock
@@ -138,7 +138,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authorization
                 Id = Guid.NewGuid(),
                 GovUkIdentifier = "gov-123",
                 EmailAddress = "name@domain.com",
-                LockedAt = null
+                IsLocked = false
             };
 
             _cacheServiceMock

@@ -64,7 +64,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             {
                 UserId = userId,
                 CertificateId = certificateId,
-                Limit = _digitalCertificatesWebConfiguration.SharingListLimit
+                Limit = _digitalCertificatesWebConfiguration.SharingListLimit == 0 ? null : _digitalCertificatesWebConfiguration.SharingListLimit
             });
 
             if (response == null)
@@ -128,7 +128,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             var response = await Mediator.Send(new GetSharingByIdQuery
             {
                 SharingId = sharingId,
-                Limit = _digitalCertificatesWebConfiguration.SharingHistoryLimit
+                Limit = _digitalCertificatesWebConfiguration.SharingHistoryLimit == 0 ? null : _digitalCertificatesWebConfiguration.SharingHistoryLimit
             });
 
             if (response == null || response.ExpiryTime <= _dateTimeHelper.Now)

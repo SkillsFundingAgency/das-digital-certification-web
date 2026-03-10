@@ -51,7 +51,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Authorization
                             user.Id.ToString()));
 
                         claims.Add(new Claim(ClaimTypes.AuthorizationDecision,
-                            user.LockedAt.HasValue ? AuthorizationDecisions.Suspended : AuthorizationDecisions.Allowed));
+                            user.IsLocked ? AuthorizationDecisions.Suspended : AuthorizationDecisions.Allowed));
                     }
                 }
             }
