@@ -80,8 +80,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 
             return new CreateCertificateSharingViewModel
             {
-                CertificateId = response.CertificateId,
-                CourseName = response.CourseName,
+                CertificateId = certificateId,
+                CourseName = certificate.CourseName,
                 CertificateType = certificate.CertificateType,
                 Sharings = response.Sharings?.Select(s => new CreateCertificateSharingItemViewModel
                 {
