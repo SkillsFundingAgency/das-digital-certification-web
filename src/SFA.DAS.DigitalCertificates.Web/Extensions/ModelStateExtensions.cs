@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
-using System;
+﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace SFA.DAS.DigitalCertificates.Web.Extensions
 {
@@ -14,7 +14,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Extensions
                 return validValue;
             }
 
-            if(entry.AttemptedValue == null)
+            if (entry.AttemptedValue == null)
             {
                 return defaultValue;
             }
