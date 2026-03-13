@@ -275,7 +275,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 CourseName = response.CourseName,
             };
 
-            var ownedCertificate = await _sessionService.GetOwnedCertificatesAsync(_userService.GetGovUkIdentifier());
+            var ownedCertificate = await _sessionService.GetOwnedCertificatesAsync();
 
             viewModel.IsSingleCertificate = (ownedCertificate?.Count ?? 0) == 1;
 
@@ -290,7 +290,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 return null;
             }
 
-            var certificates = await _sessionService.GetOwnedCertificatesAsync(govUkIdentifier);
+                var certificates = await _sessionService.GetOwnedCertificatesAsync();
             return certificates?.FirstOrDefault(c => c.CertificateId == certificateId);
         }
 

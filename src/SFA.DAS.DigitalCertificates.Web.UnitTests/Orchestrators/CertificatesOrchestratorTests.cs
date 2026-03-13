@@ -60,7 +60,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 .Returns(govId);
 
             _sessionMock
-                .Setup(x => x.GetOwnedCertificatesAsync(govId))
+                .Setup(x => x.GetOwnedCertificatesAsync())
                 .ReturnsAsync(certs);
 
             // Act
@@ -70,7 +70,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             result.Should().NotBeNull();
             result.Certificates.Should().BeEquivalentTo(certs);
 
-            _sessionMock.Verify(x => x.GetOwnedCertificatesAsync(govId), Times.Once);
+            _sessionMock.Verify(x => x.GetOwnedCertificatesAsync(), Times.Once);
         }
 
         [Test]
@@ -84,7 +84,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 .Returns(govId);
 
             _sessionMock
-                .Setup(x => x.GetOwnedCertificatesAsync(govId))
+                .Setup(x => x.GetOwnedCertificatesAsync())
                 .ReturnsAsync((List<Certificate>)null);
 
             // Act
@@ -94,7 +94,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             result.Should().NotBeNull();
             result.Certificates.Should().BeNull();
 
-            _sessionMock.Verify(x => x.GetOwnedCertificatesAsync(govId), Times.Once);
+            _sessionMock.Verify(x => x.GetOwnedCertificatesAsync(), Times.Once);
         }
 
         [Test]
@@ -108,7 +108,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 .Returns(govId);
 
             _sessionMock
-                .Setup(x => x.GetOwnedCertificatesAsync(govId))
+                .Setup(x => x.GetOwnedCertificatesAsync())
                 .ReturnsAsync(new List<Certificate>());
 
             // Act
@@ -179,7 +179,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             };
 
             _sessionMock
-                .Setup(s => s.GetOwnedCertificatesAsync(govId))
+                .Setup(s => s.GetOwnedCertificatesAsync())
                 .ReturnsAsync(owned);
 
             // Act
@@ -238,7 +238,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             };
 
             _sessionMock
-                .SetupSequence(s => s.GetOwnedCertificatesAsync(govId))
+                .SetupSequence(s => s.GetOwnedCertificatesAsync())
                 .ReturnsAsync(single)
                 .ReturnsAsync((List<Certificate>)null);
 
@@ -314,7 +314,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             };
 
             _sessionMock
-                .Setup(s => s.GetOwnedCertificatesAsync(govId))
+                .Setup(s => s.GetOwnedCertificatesAsync())
                 .ReturnsAsync(owned);
 
             // Act
@@ -372,7 +372,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             _sessionMock.Setup(s => s.GetUserDetailsAsync()).ReturnsAsync(new Domain.Models.UserDetails { FamilyName = "F", GivenNames = "G" });
 
             var owned = new List<Certificate> { new Certificate { CertificateId = certificateId, CertificateType = CertificateType.Framework, CourseName = "CourseX", CourseLevel = "1" } };
-            _sessionMock.Setup(s => s.GetOwnedCertificatesAsync(govId)).ReturnsAsync(owned);
+            _sessionMock.Setup(s => s.GetOwnedCertificatesAsync()).ReturnsAsync(owned);
 
             _mediatorMock.Setup(m => m.Send(It.IsAny<CreateUserActionCommand>(), It.IsAny<System.Threading.CancellationToken>()))
                 .ReturnsAsync(new CreateUserActionCommandResult { ActionCode = "REF-CERT" });
@@ -400,7 +400,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             _userServiceMock.Setup(u => u.GetGovUkIdentifier()).Returns(govId);
 
             var owned = new List<Certificate> { new Certificate { CertificateId = certificateId, CertificateType = CertificateType.Standard, CourseName = "Unknown", CourseLevel = "1" } };
-            _sessionMock.Setup(s => s.GetOwnedCertificatesAsync(govId)).ReturnsAsync(owned);
+            _sessionMock.Setup(s => s.GetOwnedCertificatesAsync()).ReturnsAsync(owned);
 
             var model = await _sut.GetContactUsViewModel("REF-1", certificateId);
 
@@ -416,7 +416,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             var certificateId = Guid.NewGuid();
 
             _sessionMock
-                .Setup(s => s.GetOwnedCertificatesAsync(It.IsAny<string>()))
+                .Setup(s => s.GetOwnedCertificatesAsync())
                 .ReturnsAsync((List<Certificate>)null);
 
             // Act
@@ -436,7 +436,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
 
             var owned = new List<Certificate> { new Certificate { CertificateId = certificateId, CertificateType = CertificateType.Standard, CourseName = courseName, CourseLevel = "1", DateAwarded = DateTime.UtcNow } };
 
-            _sessionMock.Setup(s => s.GetOwnedCertificatesAsync(It.IsAny<string>())).ReturnsAsync(owned);
+            _sessionMock.Setup(s => s.GetOwnedCertificatesAsync()).ReturnsAsync(owned);
             _sessionMock.Setup(s => s.GetUserDetailsAsync()).ReturnsAsync(new UserDetails { GivenNames = "UserGiven", FamilyName = "UserFamily" });
 
             // Act
@@ -458,7 +458,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             var certificateId = Guid.NewGuid();
 
             _sessionMock
-                .Setup(s => s.GetOwnedCertificatesAsync(It.IsAny<string>()))
+                .Setup(s => s.GetOwnedCertificatesAsync())
                 .ReturnsAsync((List<Certificate>)null);
 
             // Act
@@ -478,7 +478,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
 
             var owned = new List<Certificate> { new Certificate { CertificateId = certificateId, CertificateType = CertificateType.Standard, CourseName = courseName, CourseLevel = "1", DateAwarded = DateTime.UtcNow } };
 
-            _sessionMock.Setup(s => s.GetOwnedCertificatesAsync(It.IsAny<string>())).ReturnsAsync(owned);
+            _sessionMock.Setup(s => s.GetOwnedCertificatesAsync()).ReturnsAsync(owned);
             _sessionMock.Setup(s => s.GetUserDetailsAsync()).ReturnsAsync(new UserDetails { GivenNames = "UserGiven", FamilyName = "UserFamily" });
 
             // Act
@@ -502,7 +502,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
 
             var owned = new List<Certificate> { new Certificate { CertificateId = certificateId, CertificateType = CertificateType.Standard, CourseName = courseName, CourseLevel = "1", DateAwarded = DateTime.UtcNow } };
 
-            _sessionMock.Setup(s => s.GetOwnedCertificatesAsync(It.IsAny<string>())).ReturnsAsync(owned);
+            _sessionMock.Setup(s => s.GetOwnedCertificatesAsync()).ReturnsAsync(owned);
             _sessionMock.Setup(s => s.GetUserDetailsAsync()).ReturnsAsync(new UserDetails { GivenNames = "UserGiven", FamilyName = "UserFamily" });
 
             var addr = new CheckAndSubmitViewModel
