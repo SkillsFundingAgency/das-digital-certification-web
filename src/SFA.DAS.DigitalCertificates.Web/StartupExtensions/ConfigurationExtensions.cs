@@ -1,8 +1,8 @@
-﻿using Microsoft.Extensions.Configuration;
-using SFA.DAS.Configuration.AzureTableStorage;
-using System;
+﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using Microsoft.Extensions.Configuration;
+using SFA.DAS.Configuration.AzureTableStorage;
 
 namespace SFA.DAS.DigitalCertificates.Web.StartupExtensions
 {

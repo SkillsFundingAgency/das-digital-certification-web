@@ -1,7 +1,7 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System.Diagnostics.CodeAnalysis;
+using Microsoft.Extensions.DependencyInjection;
 using SFA.DAS.DigitalCertificates.Web.Authentication;
 using SFA.DAS.GovUK.Auth.Authentication;
-using System.Diagnostics.CodeAnalysis;
 
 namespace SFA.DAS.DigitalCertificates.Web.StartupExtensions
 {
@@ -17,14 +17,14 @@ namespace SFA.DAS.DigitalCertificates.Web.StartupExtensions
                     {
                         policy.RequireAuthenticatedUser();
                     });
-                
+
                 options.AddPolicy(
                     PolicyNames.IsActiveAccount, policy =>
                     {
                         policy.Requirements.Add(new AccountActiveRequirement());
                         policy.RequireAuthenticatedUser();
                     });
-                
+
                 options.AddPolicy(
                     PolicyNames.IsVerified, policy =>
                     {

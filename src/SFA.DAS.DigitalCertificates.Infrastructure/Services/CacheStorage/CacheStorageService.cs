@@ -36,7 +36,7 @@ namespace SFA.DAS.DigitalCertificates.Infrastructure.Services.CacheStorage
             return json == null ? default : JsonConvert.DeserializeObject<T>(json);
         }
 
-        public async Task<T> SetAsync<T>(string key, 
+        public async Task<T> SetAsync<T>(string key,
             Func<DistributedCacheEntryOptions, Task<T>> factory,
             CancellationToken cancellationToken = default)
         {

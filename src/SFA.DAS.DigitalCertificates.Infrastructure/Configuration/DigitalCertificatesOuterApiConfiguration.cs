@@ -1,5 +1,5 @@
-﻿using SFA.DAS.Http.Configuration;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
+using SFA.DAS.Http.Configuration;
 
 namespace SFA.DAS.DigitalCertificates.Infrastructure.Configuration
 {

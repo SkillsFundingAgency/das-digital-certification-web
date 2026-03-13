@@ -1,5 +1,5 @@
-﻿using SFA.DAS.DigitalCertificates.Infrastructure.Api.Responses;
-using SFA.DAS.DigitalCertificates.Domain.Models;
+﻿using SFA.DAS.DigitalCertificates.Domain.Models;
+using SFA.DAS.DigitalCertificates.Infrastructure.Api.Responses;
 
 namespace SFA.DAS.DigitalCertificates.Application.Queries.GetCertificates
 {
