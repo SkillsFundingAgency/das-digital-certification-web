@@ -51,7 +51,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authentication
 
             _userServiceMock.Setup(x => x.GetGovUkIdentifier()).Returns("gov-123");
             _sessionServiceMock
-                .Setup(x => x.GetOwnedCertificatesAsync("gov-123"))
+                .Setup(x => x.GetOwnedCertificatesAsync())
                 .ReturnsAsync(new List<Certificate>
                 {
                     new Certificate { CertificateId = _standardCertificateId, CertificateType = CertificateType.Standard, CourseName = "Bricklayer", CourseLevel = "1" }
@@ -72,7 +72,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authentication
 
             _userServiceMock.Setup(x => x.GetGovUkIdentifier()).Returns("gov-123");
             _sessionServiceMock
-                .Setup(x => x.GetOwnedCertificatesAsync("gov-123"))
+                .Setup(x => x.GetOwnedCertificatesAsync())
                 .ReturnsAsync(new List<Certificate>
                 {
                     new Certificate { CertificateId = _frameworkCertificateId, CertificateType = CertificateType.Framework, CourseName = "Plumber", CourseLevel = "Advanced" }
@@ -93,7 +93,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authentication
 
             _userServiceMock.Setup(x => x.GetGovUkIdentifier()).Returns("gov-123");
             _sessionServiceMock
-                .Setup(x => x.GetOwnedCertificatesAsync("gov-123"))
+                .Setup(x => x.GetOwnedCertificatesAsync())
                 .ReturnsAsync(new List<Certificate>
                 {
                     new Certificate { CertificateId = certId, CertificateType = CertificateType.Framework, CourseName = "Plumber", CourseLevel = "Advanced" }
@@ -115,7 +115,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authentication
 
             _userServiceMock.Setup(x => x.GetGovUkIdentifier()).Returns("gov-123");
             _sessionServiceMock
-                .Setup(x => x.GetOwnedCertificatesAsync("gov-123"))
+                .Setup(x => x.GetOwnedCertificatesAsync())
                 .ReturnsAsync(new List<Certificate>
                 {
                     new Certificate { CertificateId = certificateId, CertificateType = CertificateType.Framework, CourseName = "Plumber", CourseLevel = "Advanced"}
@@ -140,7 +140,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authentication
 
             _userServiceMock.Setup(x => x.GetGovUkIdentifier()).Returns("gov-123");
             _sessionServiceMock
-                .Setup(x => x.GetOwnedCertificatesAsync("gov-123"))
+                .Setup(x => x.GetOwnedCertificatesAsync())
                 .ReturnsAsync(new List<Certificate>
                 {
                     new Certificate { CertificateId = certificateId, CertificateType = CertificateType.Standard, CourseName = "Bricklayer", CourseLevel = "1" }
@@ -165,7 +165,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authentication
 
             _userServiceMock.Setup(x => x.GetGovUkIdentifier()).Returns("gov-123");
             _sessionServiceMock
-                .Setup(x => x.GetOwnedCertificatesAsync("gov-123"))
+                .Setup(x => x.GetOwnedCertificatesAsync())
                 .ReturnsAsync(new List<Certificate>()); // empty list
 
             // Act

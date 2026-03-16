@@ -64,33 +64,25 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             {
                 UserId = userId,
                 CertificateId = certificateId,
-                Limit = _digitalCertificatesWebConfiguration.SharingListLimit
+                Limit = _digitalCertificatesWebConfiguration.SharingListLimit == 0 ? null : _digitalCertificatesWebConfiguration.SharingListLimit
             });
 
-            if (response == null)
-            {
-                return new CreateCertificateSharingViewModel
-                {
-                    CertificateId = certificateId,
-                    CourseName = certificate.CourseName,
-                    CertificateType = certificate.CertificateType,
-                    Sharings = new List<CreateCertificateSharingItemViewModel>()
-                };
-            }
-
-            return new CreateCertificateSharingViewModel
-            {
-                CertificateId = response.CertificateId,
-                CourseName = response.CourseName,
-                CertificateType = certificate.CertificateType,
-                Sharings = response.Sharings?.Select(s => new CreateCertificateSharingItemViewModel
+            var sharings = response?.Sharings?
+                .Select(s => new CreateCertificateSharingItemViewModel
                 {
                     SharingId = s.SharingId,
                     SharingNumber = s.SharingNumber,
                     CreatedAt = s.CreatedAt,
                     ExpiryTime = s.ExpiryTime
-                }).ToList()
-                ?? new List<CreateCertificateSharingItemViewModel>()
+                })
+                .ToList() ?? new List<CreateCertificateSharingItemViewModel>();
+
+            return new CreateCertificateSharingViewModel
+            {
+                CertificateId = certificateId,
+                CourseName = certificate.CourseName,
+                CertificateType = certificate.CertificateType,
+                Sharings = sharings
             };
         }
 
@@ -128,7 +120,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             var response = await Mediator.Send(new GetSharingByIdQuery
             {
                 SharingId = sharingId,
-                Limit = _digitalCertificatesWebConfiguration.SharingHistoryLimit
+                Limit = _digitalCertificatesWebConfiguration.SharingHistoryLimit == 0 ? null : _digitalCertificatesWebConfiguration.SharingHistoryLimit
             });
 
             if (response == null || response.ExpiryTime <= _dateTimeHelper.Now)
@@ -275,7 +267,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 CourseName = response.CourseName,
             };
 
-            var ownedCertificate = await _sessionService.GetOwnedCertificatesAsync(_userService.GetGovUkIdentifier());
+            var ownedCertificate = await _sessionService.GetOwnedCertificatesAsync();
 
             viewModel.IsSingleCertificate = (ownedCertificate?.Count ?? 0) == 1;
 
@@ -290,7 +282,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 return null;
             }
 
-            var certificates = await _sessionService.GetOwnedCertificatesAsync(govUkIdentifier);
+                var certificates = await _sessionService.GetOwnedCertificatesAsync();
             return certificates?.FirstOrDefault(c => c.CertificateId == certificateId);
         }
 

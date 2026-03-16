@@ -1,10 +1,10 @@
-﻿using Microsoft.Extensions.Diagnostics.HealthChecks;
-using SFA.DAS.DigitalCertificates.Domain.Interfaces;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using SFA.DAS.DigitalCertificates.Domain.Interfaces;
 
 namespace SFA.DAS.DigitalCertificates.Web.HealthChecks
 {
