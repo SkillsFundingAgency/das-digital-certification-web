@@ -109,7 +109,12 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
                 return RedirectToRoute(SelectAddressRouteGet, new { certificateId });
             }
 
-            await _certificatesOrchestrator.StoreDeliveryAddressFromLocationAsync(certificateId, model.SelectedAddress ?? string.Empty, SelectAddressRouteGet);
+            var storedAddress = await _certificatesOrchestrator.StoreDeliveryAddressFromLocationAsync(certificateId, model.SelectedAddress ?? string.Empty, SelectAddressRouteGet);
+
+            if (!storedAddress)
+            {
+                return RedirectToRoute(SelectAddressRouteGet, new { certificateId });
+            }
 
             return RedirectToRoute(CheckAndSubmitRouteGet, new { certificateId });
 

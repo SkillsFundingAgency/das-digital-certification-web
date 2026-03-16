@@ -935,6 +935,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             var model = new SelectAddressViewModel { SearchTerm = "x" };
 
             _certificatesOrchestratorMock.Setup(x => x.ValidateSelectAddressViewModel(model, It.IsAny<ModelStateDictionary>())).ReturnsAsync(true);
+            _certificatesOrchestratorMock.Setup(x => x.StoreDeliveryAddressFromLocationAsync(certId, It.IsAny<string>(), CertificatesController.SelectAddressRouteGet)).ReturnsAsync(true);
 
             var result = await _sut.SelectAddressPost(certId, model);
 
@@ -942,6 +943,23 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             result.Should().BeOfType<RedirectToRouteResult>();
             var redirect = (RedirectToRouteResult)result;
             redirect.RouteName.Should().Be(CertificatesController.CheckAndSubmitRouteGet);
+        }
+
+        [Test]
+        public async Task SelectAddressPost_When_StoreFails_RedirectsToSelectAddress_And_SetsCertificateId()
+        {
+            var certId = Guid.NewGuid();
+            var model = new SelectAddressViewModel { SearchTerm = "x" };
+
+            _certificatesOrchestratorMock.Setup(x => x.ValidateSelectAddressViewModel(model, It.IsAny<ModelStateDictionary>())).ReturnsAsync(true);
+            _certificatesOrchestratorMock.Setup(x => x.StoreDeliveryAddressFromLocationAsync(certId, It.IsAny<string>(), CertificatesController.SelectAddressRouteGet)).ReturnsAsync(false);
+
+            var result = await _sut.SelectAddressPost(certId, model);
+
+            model.CertificateId.Should().Be(certId);
+            result.Should().BeOfType<RedirectToRouteResult>();
+            var redirect = (RedirectToRouteResult)result;
+            redirect.RouteName.Should().Be(CertificatesController.SelectAddressRouteGet);
         }
 
         [Test]
