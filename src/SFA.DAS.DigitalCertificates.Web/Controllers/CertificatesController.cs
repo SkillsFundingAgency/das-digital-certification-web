@@ -158,6 +158,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
                 return RedirectToRoute(CertificateStandardRouteGet, new { certificateId });
             }
 
+            vm.BackRoute = string.IsNullOrWhiteSpace(vm.BackRoute) ? CertificateStandardRouteGet : vm.BackRoute;
+
             return View(vm);
         }
 
