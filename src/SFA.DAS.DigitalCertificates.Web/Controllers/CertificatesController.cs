@@ -152,13 +152,11 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsCertificateOwner))]
         public async Task<IActionResult> CheckAndSubmit(Guid certificateId)
         {
-            var vm = await _certificatesOrchestrator.GetCheckAndSubmitViewModel(certificateId);
+            var vm = await _certificatesOrchestrator.GetCheckAndSubmitViewModel(certificateId, CertificateStandardRouteGet);
             if (vm == null)
             {
                 return RedirectToRoute(CertificateStandardRouteGet, new { certificateId });
             }
-
-            vm.BackRoute = string.IsNullOrWhiteSpace(vm.BackRoute) ? CertificateStandardRouteGet : vm.BackRoute;
 
             return View(vm);
         }

@@ -251,7 +251,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             return viewModel;
         }
 
-        public async Task<CheckAndSubmitViewModel?> GetCheckAndSubmitViewModel(Guid certificateId)
+        public async Task<CheckAndSubmitViewModel?> GetCheckAndSubmitViewModel(Guid certificateId, string defaultBackRoute)
         {
             var owned = await _sessionService.GetOwnedCertificatesAsync();
             var ownedCertificate = owned?.FirstOrDefault(c => c.CertificateId == certificateId);
@@ -282,6 +282,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 vm.County = address.County;
                 vm.Postcode = address.Postcode;
             }
+
+            vm.BackRoute = string.IsNullOrWhiteSpace(vm.BackRoute) ? defaultBackRoute : vm.BackRoute;
 
             return vm;
         }

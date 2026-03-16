@@ -519,7 +519,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             _sessionMock.Setup(s => s.GetDeliveryAddressAsync()).ReturnsAsync(addr);
 
             // Act
-            var result = await _sut.GetCheckAndSubmitViewModel(certificateId);
+            var result = await _sut.GetCheckAndSubmitViewModel(certificateId, "CertificateStandardRouteGet");
 
             // Assert
             result.Should().NotBeNull();
@@ -532,6 +532,31 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             result.AddressLine1.Should().Be(addr.AddressLine1);
             result.TownOrCity.Should().Be(addr.TownOrCity);
             result.Postcode.Should().Be(addr.Postcode);
+        }
+
+        [Test]
+        public async Task GetCheckAndSubmitViewModel_UsesDefaultBackRoute_When_NoSessionAddress()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+
+            var courseName = "Course Default";
+
+            var owned = new List<Certificate> { new Certificate { CertificateId = certificateId, CertificateType = CertificateType.Standard, CourseName = courseName, CourseLevel = "1", DateAwarded = DateTime.UtcNow } };
+
+            _sessionMock.Setup(s => s.GetOwnedCertificatesAsync()).ReturnsAsync(owned);
+            _sessionMock.Setup(s => s.GetUserDetailsAsync()).ReturnsAsync(new UserDetails { GivenNames = "UserGiven", FamilyName = "UserFamily" });
+
+            _sessionMock.Setup(s => s.GetDeliveryAddressAsync()).ReturnsAsync((CheckAndSubmitViewModel)null);
+
+            var defaultBack = "defaultRoute";
+
+            // Act
+            var result = await _sut.GetCheckAndSubmitViewModel(certificateId, defaultBack);
+
+            // Assert
+            result.Should().NotBeNull();
+            result!.BackRoute.Should().Be(defaultBack);
         }
 
         [Test]

@@ -984,7 +984,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             var certId = Guid.NewGuid();
             var vm = new CheckAndSubmitViewModel { CertificateId = certId };
 
-            _certificatesOrchestratorMock.Setup(x => x.GetCheckAndSubmitViewModel(certId)).ReturnsAsync(vm);
+            _certificatesOrchestratorMock.Setup(x => x.GetCheckAndSubmitViewModel(certId, It.IsAny<string>())).ReturnsAsync(vm);
 
             var result = await _sut.CheckAndSubmit(certId);
 
@@ -997,7 +997,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
         public async Task CheckAndSubmit_Get_RedirectsToStandard_When_NoModel()
         {
             var certId = Guid.NewGuid();
-            _certificatesOrchestratorMock.Setup(x => x.GetCheckAndSubmitViewModel(certId)).ReturnsAsync((CheckAndSubmitViewModel)null);
+            _certificatesOrchestratorMock.Setup(x => x.GetCheckAndSubmitViewModel(certId, It.IsAny<string>())).ReturnsAsync((CheckAndSubmitViewModel)null);
 
             var result = await _sut.CheckAndSubmit(certId);
 
