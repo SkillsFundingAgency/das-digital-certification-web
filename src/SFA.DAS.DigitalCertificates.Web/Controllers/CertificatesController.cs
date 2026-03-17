@@ -126,11 +126,19 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsCertificateOwner))]
         public async Task<IActionResult> ContactUsForCertificateCreate(Guid certificateId)
         {
-            var referenceNumber = await _certificatesOrchestrator.CreateUserActionForCertificate(certificateId);
-            if (string.IsNullOrEmpty(referenceNumber))
-                return RedirectToRoute(CertificateFrameworkRouteGet, new { certificateId });
+            var result = await _certificatesOrchestrator.CreateUserActionForCertificate(certificateId);
 
-            return RedirectToRoute(ContactUsForCertificateRouteGet, new { certificateId, referenceNumber });
+            if (string.IsNullOrEmpty(result.ReferenceNumber))
+            {
+                return result.CertificateType switch
+                {
+                    CertificateType.Standard  => RedirectToRoute(CertificateStandardRouteGet,  new { certificateId }),
+                    CertificateType.Framework => RedirectToRoute(CertificateFrameworkRouteGet, new { certificateId }),
+                    _                        => RedirectToRoute(CertificatesListRouteGet)
+                };
+            }
+
+            return RedirectToRoute(ContactUsForCertificateRouteGet, new { certificateId, referenceNumber = result.ReferenceNumber });
         }
 
         [HttpGet("{certificateId}/sharing", Name = CreateCertificateSharingRouteGet)]
