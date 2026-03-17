@@ -40,8 +40,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         public const string SharedCertificateFrameworkRouteGet = nameof(SharedCertificateFrameworkRouteGet);
         public const string ContactUsRouteGet = nameof(ContactUsRouteGet);
         public const string ContactUsForCertificateRouteGet = nameof(ContactUsForCertificateRouteGet);
-        public const string ContactUsCreateRouteGet = nameof(ContactUsCreateRouteGet);
-        public const string ContactUsForCertificateCreateRouteGet = nameof(ContactUsForCertificateCreateRouteGet);
+        public const string ContactUsCreateRoutePost = nameof(ContactUsCreateRoutePost);
+        public const string ContactUsForCertificateCreateRoutePost = nameof(ContactUsForCertificateCreateRoutePost);
         #endregion
 
         private readonly ICertificatesOrchestrator _certificatesOrchestrator;
@@ -111,22 +111,22 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             return View("ContactUs", model);
         }
 
-        [HttpGet("contact/create", Name = ContactUsCreateRouteGet)]
+        [HttpPost("contact/create", Name = ContactUsCreateRoutePost)]
         [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsUlnAuthorised))]
         public async Task<IActionResult> ContactUsCreate()
         {
-            var referenceNumber = await _certificatesOrchestrator.CreateOrReuseUserActionForNonSpecific();
+            var referenceNumber = await _certificatesOrchestrator.CreateUserActionForNonSpecific();
             if (string.IsNullOrEmpty(referenceNumber))
                 return RedirectToRoute(CertificatesListRouteGet);
 
             return RedirectToRoute(ContactUsRouteGet, new { referenceNumber });
         }
 
-        [HttpGet("{certificateId}/contact/create", Name = ContactUsForCertificateCreateRouteGet)]
+        [HttpPost("{certificateId}/contact/create", Name = ContactUsForCertificateCreateRoutePost)]
         [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsCertificateOwner))]
         public async Task<IActionResult> ContactUsForCertificateCreate(Guid certificateId)
         {
-            var referenceNumber = await _certificatesOrchestrator.CreateOrReuseUserActionForCertificate(certificateId);
+            var referenceNumber = await _certificatesOrchestrator.CreateUserActionForCertificate(certificateId);
             if (string.IsNullOrEmpty(referenceNumber))
                 return RedirectToRoute(CertificateFrameworkRouteGet, new { certificateId });
 

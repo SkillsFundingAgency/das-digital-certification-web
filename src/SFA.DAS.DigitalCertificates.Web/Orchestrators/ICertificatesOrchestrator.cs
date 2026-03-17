@@ -9,8 +9,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         Task<CertificatesListViewModel> GetCertificatesListViewModel();
         Task<CertificateStandardViewModel?> GetCertificateStandardViewModel(Guid certificateId);
         Task<CertificateFrameworkViewModel?> GetCertificateFrameworkViewModel(Guid certificateId);
-        Task<string?> CreateOrReuseUserActionForCertificate(Guid certificateId);
-        Task<string?> CreateOrReuseUserActionForNonSpecific();
+        Task<string?> CreateUserActionForCertificate(Guid certificateId);
+        Task<string?> CreateUserActionForNonSpecific();
         Task<ContactUsViewModel?> GetContactUsViewModel(string referenceNumber, Guid? certificateId);
     }
 }

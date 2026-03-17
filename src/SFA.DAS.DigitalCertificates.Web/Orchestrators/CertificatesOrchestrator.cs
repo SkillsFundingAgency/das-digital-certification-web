@@ -108,7 +108,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             return viewModel;
         }
 
-        public async Task<string?> CreateOrReuseUserActionForCertificate(Guid certificateId)
+        public async Task<string?> CreateUserActionForCertificate(Guid certificateId)
         {
             var userId = _userService.GetUserId();
             if (userId == null)
@@ -139,7 +139,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             return result?.ActionCode ?? string.Empty;
         }
 
-        public async Task<string?> CreateOrReuseUserActionForNonSpecific()
+        public async Task<string?> CreateUserActionForNonSpecific()
         {
             var userId = _userService.GetUserId();
             if (userId == null)

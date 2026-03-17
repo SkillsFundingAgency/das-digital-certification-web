@@ -142,7 +142,9 @@
                     </table>
                 }
 
-                <p class="govuk-body">If any of these details are incorrect, <a asp-route="@CertificatesController.ContactUsForCertificateCreateRouteGet" asp-route-certificateId="@certificateId" title="Contact us">contact us</a>.</p>
+                <form asp-route="@CertificatesController.ContactUsForCertificateCreateRoutePost" asp-route-certificateId="@certificateId" method="post">
+                    <p class="govuk-body">If any of these details are incorrect, <button type="submit" class="app-link-button govuk-link">contact us</button>.</p>
+                </form>
 
                 <h2 class="govuk-heading-m">Create a sharing link</h2>
                 <p class="govuk-body">You can create a secure link to share your apprenticeship certificate. This allows employers, colleges or universities to verify your apprenticeship.</p>
