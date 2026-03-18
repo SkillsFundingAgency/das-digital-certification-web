@@ -15,7 +15,7 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Commands.RequestPrin
             var request = new CreatePrintRequest
             {
                 Address = new PrintAddressDto { ContactName = "Name", ContactPostCode = "PC1" },
-                Email = new PrintEmailDto { EmailAddress = "email@ex.com", UserName = "User" }
+                Email = new PrintEmailDto { EmailAddress = "email@ex.com", UserName = "User", LinkDomain = "http://localhost", TemplateId = "template-id" }
             };
 
             var command = new CreatePrintRequestCommand

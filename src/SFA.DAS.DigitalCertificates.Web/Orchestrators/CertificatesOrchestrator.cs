@@ -351,14 +351,14 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                     ContactAddLine2 = deliveryAddress?.AddressLine2,
                     ContactAddLine3 = deliveryAddress?.TownOrCity,
                     ContactAddLine4 = deliveryAddress?.County,
-                    ContactPostCode = deliveryAddress?.Postcode
+                    ContactPostCode = deliveryAddress?.Postcode ?? string.Empty
                 },
                 Email = new PrintEmailDto
                 {
                     EmailAddress = email,
                     UserName = userName,
                     LinkDomain = _configuration.ServiceBaseUrl,
-                    TemplateId = templateId
+                    TemplateId = templateId ?? string.Empty
                 }
             };
 
