@@ -14,7 +14,10 @@ using SFA.DAS.DigitalCertificates.Domain.Models;
 using SFA.DAS.DigitalCertificates.Web.Orchestrators;
 using SFA.DAS.DigitalCertificates.Web.Services;
 using SFA.DAS.DigitalCertificates.Application.Commands.CreateUserAction;
+using SFA.DAS.DigitalCertificates.Application.Commands.RequestPrintCertificate;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetLocations;
+using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
+using SFA.DAS.DigitalCertificates.Infrastructure.Constants;
 
 namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
 {
@@ -23,6 +26,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         private Mock<IMediator> _mediatorMock;
         private Mock<ISessionService> _sessionMock;
         private Mock<IUserService> _userServiceMock;
+        private DigitalCertificatesWebConfiguration _configuration;
 
         private CertificatesOrchestrator _sut;
         private Mock<IValidator<SelectAddressViewModel>> _selectAddressValidatorMock;
@@ -36,13 +40,24 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             _userServiceMock = new Mock<IUserService>();
             _selectAddressValidatorMock = new Mock<IValidator<SelectAddressViewModel>>();
             _addAddressValidatorMock = new Mock<IValidator<AddAddressManualViewModel>>();
+            _configuration = new DigitalCertificatesWebConfiguration
+            {
+                ServiceBaseUrl = "http://localhost",
+                RedisConnectionString = "localhost:6379",
+                DataProtectionKeysDatabase = "0",
+                NotificationTemplates = new List<NotificationTemplate>
+                {
+                    new NotificationTemplate { TemplateName = NotificationTemplateNames.PrintRequest, TemplateId = "template-id" }
+                }
+            };
 
             _sut = new CertificatesOrchestrator(
                 _mediatorMock.Object,
                 _sessionMock.Object,
                 _userServiceMock.Object,
                 _selectAddressValidatorMock.Object,
-                _addAddressValidatorMock.Object);
+                _addAddressValidatorMock.Object,
+                _configuration);
         }
 
         [Test]
@@ -392,6 +407,60 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         }
 
         [Test]
+        public async Task CreatePrintRequest_UsesDeliveryAddress_When_DeliveryAddressPresent_AndMediatorCalled()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+
+            var deliveryAddress = new CheckAndSubmitViewModel
+            {
+                Organisation = "DelOrg",
+                AddressLine1 = "Del1",
+                AddressLine2 = "Del2",
+                TownOrCity = "DelTown",
+                County = "DelCounty",
+                Postcode = "DEL123"
+            };
+
+            var userDetails = new UserDetails { Email = "user@ex.com", FullName = "Test User" };
+
+            _sessionMock.Setup(s => s.GetDeliveryAddressAsync()).ReturnsAsync(deliveryAddress);
+            _sessionMock.Setup(s => s.GetUserDetailsAsync()).ReturnsAsync(userDetails);
+
+            CreatePrintRequestCommand sentCommand = null!;
+            _mediatorMock
+                .Setup(m => m.Send(It.IsAny<CreatePrintRequestCommand>(), It.IsAny<CancellationToken>()))
+                .Callback<object, CancellationToken>((c, ct) => sentCommand = (CreatePrintRequestCommand)c)
+                .Returns(Task.CompletedTask);
+
+            var model = new CheckAndSubmitViewModel
+            {
+                CertificateId = certificateId,
+                Organisation = "ModelOrg",
+                AddressLine1 = "Model1",
+                AddressLine2 = "Model2",
+                TownOrCity = "ModelTown",
+                County = "ModelCounty",
+                Postcode = "MOD123"
+            };
+
+            // Act
+            await _sut.CreatePrintRequest(certificateId);
+
+            // Assert
+            _mediatorMock.Verify(m => m.Send(It.IsAny<CreatePrintRequestCommand>(), It.IsAny<CancellationToken>()), Times.Once);
+            sentCommand.Should().NotBeNull();
+            sentCommand!.Request.Address.ContactOrganisation.Should().Be(deliveryAddress.Organisation);
+            sentCommand.Request.Address.ContactAddLine1.Should().Be(deliveryAddress.AddressLine1);
+            sentCommand.Request.Address.ContactAddLine2.Should().Be(deliveryAddress.AddressLine2);
+            sentCommand.Request.Address.ContactAddLine3.Should().Be(deliveryAddress.TownOrCity);
+            sentCommand.Request.Address.ContactAddLine4.Should().Be(deliveryAddress.County);
+            sentCommand.Request.Address.ContactPostCode.Should().Be(deliveryAddress.Postcode);
+            sentCommand.Request.Email.EmailAddress.Should().Be(userDetails.Email);
+            sentCommand.Request.Email.UserName.Should().Be(userDetails.FullName);
+        }
+
+        [Test]
         public async Task GetContactUsViewModel_SetsCertificateType_When_CertificateProvided()
         {
             var govId = "gov-2";
@@ -407,6 +476,22 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             model.Should().NotBeNull();
             model!.ReferenceNumber.Should().Be("REF-1");
             model.CertificateType.Should().Be(CertificateType.Standard);
+        }
+
+        [Test]
+        public async Task GetPrintRequestConfirmationViewModel_SetsCourseName_When_CertificateFound()
+        {
+            var certificateId = Guid.NewGuid();
+            var courseName = "Confirmed Course";
+
+            var owned = new List<Certificate> { new Certificate { CertificateId = certificateId, CertificateType = CertificateType.Standard, CourseName = courseName, CourseLevel = "1" } };
+            _sessionMock.Setup(s => s.GetOwnedCertificatesAsync()).ReturnsAsync(owned);
+
+            var result = await _sut.GetPrintRequestConfirmationViewModel(certificateId);
+
+            result.Should().NotBeNull();
+            result.CertificateId.Should().Be(certificateId);
+            result.CourseName.Should().Be(courseName);
         }
 
         [Test]

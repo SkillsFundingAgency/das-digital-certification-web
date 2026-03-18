@@ -990,16 +990,16 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
         }
 
         [Test]
-        public async Task CheckAndSubmitPost_RedirectsToStandard()
+        public async Task CheckAndSubmitPost_RedirectsToPrintRequestConfirmation()
         {
             var certId = Guid.NewGuid();
-            var model = new CheckAndSubmitViewModel { CertificateId = certId };
+            _certificatesOrchestratorMock.Setup(p => p.CreatePrintRequest(certId)).Returns(Task.CompletedTask);
 
-            var result = await _sut.CheckAndSubmitPost(certId, model);
+            var result = await _sut.CheckAndSubmitPost(certId);
 
             result.Should().BeOfType<RedirectToRouteResult>();
             var redirect = (RedirectToRouteResult)result;
-            redirect.RouteName.Should().Be(CertificatesController.CertificateStandardRouteGet);
+            redirect.RouteName.Should().Be(CertificatesController.PrintRequestConfirmationRouteGet);
             redirect.RouteValues.Should().ContainKey("certificateId");
         }
     }

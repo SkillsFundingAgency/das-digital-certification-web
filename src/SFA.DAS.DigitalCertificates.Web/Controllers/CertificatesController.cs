@@ -49,6 +49,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         public const string CheckAndSubmitRoutePost = nameof(CheckAndSubmitRoutePost);
         public const string SelectAddressRoutePost = nameof(SelectAddressRoutePost);
         public const string AddAddressRoutePost = nameof(AddAddressRoutePost);
+        public const string PrintRequestConfirmationRouteGet = nameof(PrintRequestConfirmationRouteGet);
         #endregion
 
         private readonly ICertificatesOrchestrator _certificatesOrchestrator;
@@ -158,10 +159,20 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
 
         [HttpPost("{certificateId}/delivery-request/check-and-submit", Name = CheckAndSubmitRoutePost)]
         [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsCertificateOwner))]
-        public async Task<IActionResult> CheckAndSubmitPost(Guid certificateId, Models.Certificates.CheckAndSubmitViewModel model)
+        public async Task<IActionResult> CheckAndSubmitPost(Guid certificateId)
         {
-            //TODO: Final submission handling to be implemented; for now redirect back to certificate
-            return RedirectToRoute(CertificateStandardRouteGet, new { certificateId });
+            await _certificatesOrchestrator.CreatePrintRequest(certificateId);
+
+            return RedirectToRoute(PrintRequestConfirmationRouteGet, new { certificateId });
+        }
+
+        [HttpGet("{certificateId}/delivery-request/confirmation", Name = PrintRequestConfirmationRouteGet)]
+        [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsCertificateOwner))]
+        public async Task<IActionResult> PrintRequestConfirmation(Guid certificateId)
+        {
+            var model = await _certificatesOrchestrator.GetPrintRequestConfirmationViewModel(certificateId);
+
+            return View(model);
         }
 
         [HttpGet("list", Name = CertificatesListRouteGet)]

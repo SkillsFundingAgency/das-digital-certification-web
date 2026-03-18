@@ -10,6 +10,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using FluentValidation;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetLocations;
+using SFA.DAS.DigitalCertificates.Infrastructure.Api.Requests;
+using SFA.DAS.DigitalCertificates.Application.Commands.RequestPrintCertificate;
+using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
+using SFA.DAS.DigitalCertificates.Infrastructure.Constants;
 
 namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 {
@@ -17,18 +21,21 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
     {
         private readonly ISessionService _sessionService;
         private readonly IUserService _userService;
+        private readonly DigitalCertificatesWebConfiguration _configuration;
         private readonly IValidator<SelectAddressViewModel> _selectAddressValidator;
         private readonly IValidator<AddAddressManualViewModel> _addAddressValidator;
 
         public CertificatesOrchestrator(IMediator mediator, ISessionService sessionService, IUserService userService,
             IValidator<SelectAddressViewModel> selectAddressValidator,
-            IValidator<AddAddressManualViewModel> addAddressValidator)
+            IValidator<AddAddressManualViewModel> addAddressValidator,
+            DigitalCertificatesWebConfiguration configuration)
             : base(mediator)
         {
             _sessionService = sessionService;
             _userService = userService;
             _selectAddressValidator = selectAddressValidator;
             _addAddressValidator = addAddressValidator;
+            _configuration = configuration;
         }
 
         public async Task<CertificatesListViewModel> GetCertificatesListViewModel()
@@ -321,5 +328,59 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 
             return true;
         }
+
+        public async Task CreatePrintRequest(Guid certificateId)
+        {
+            var userDetails = await _sessionService.GetUserDetailsAsync();
+            string email = userDetails?.Email ?? string.Empty;
+            string userName = userDetails?.FullName ?? string.Empty;
+
+            var templateId = GetTemplateId(_configuration, NotificationTemplateNames.PrintRequest);
+
+            var deliveryAddress = await _sessionService.GetDeliveryAddressAsync();
+
+            var req = new CreatePrintRequest
+            {
+                Address = new PrintAddressDto
+                {
+                    ContactName = userName,
+                    ContactOrganisation = deliveryAddress?.Organisation,
+                    ContactAddLine1 = deliveryAddress?.AddressLine1,
+                    ContactAddLine2 = deliveryAddress?.AddressLine2,
+                    ContactAddLine3 = deliveryAddress?.TownOrCity,
+                    ContactAddLine4 = deliveryAddress?.County,
+                    ContactPostCode = deliveryAddress?.Postcode
+                },
+                Email = new PrintEmailDto
+                {
+                    EmailAddress = email,
+                    UserName = userName,
+                    LinkDomain = _configuration.ServiceBaseUrl,
+                    TemplateId = templateId
+                }
+            };
+
+            await Mediator.Send(new CreatePrintRequestCommand
+            {
+                CertificateId = certificateId,
+                Request = req
+            });
+        }
+
+        public async Task<PrintRequestConfirmationViewModel> GetPrintRequestConfirmationViewModel(Guid certificateId)
+        {
+            var ownedCert = await _sessionService.GetOwnedCertificatesAsync();
+            var cert = ownedCert?.FirstOrDefault(c => c.CertificateId == certificateId);
+            var courseName = cert?.CourseName ?? string.Empty;
+
+            var vm = new PrintRequestConfirmationViewModel
+            {
+                CertificateId = certificateId,
+                CourseName = courseName
+            };
+
+            return vm;
+        }
     }
 }
+

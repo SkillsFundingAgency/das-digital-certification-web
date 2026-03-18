@@ -61,5 +61,8 @@ namespace SFA.DAS.DigitalCertificates.Domain.Interfaces
 
         [Get("/locations")]
         Task<LocationsResponse> GetLocations([Query("query")] string searchTerm);
+
+        [Post("/certificates/{certificateId}/printrequest")]
+        Task CreatePrintRequest([Path] Guid certificateId, [Body] CreatePrintRequest request);
     }
 }

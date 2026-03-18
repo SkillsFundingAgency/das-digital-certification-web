@@ -6,5 +6,6 @@ namespace SFA.DAS.DigitalCertificates.Infrastructure.Constants
     public static class NotificationTemplateNames
     {
         public const string SharingEmail = "SharingEmail";
+        public const string PrintRequest = "PrintRequestConfirmation";
     }
 }
