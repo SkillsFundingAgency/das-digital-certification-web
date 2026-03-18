@@ -632,7 +632,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             var code = Guid.NewGuid();
 
             _sharingOrchestratorMock
-                .Setup(s => s.GetCheckQualificationViewModelAndRecordAccess(code))
+                .Setup(s => s.GetCheckQualificationViewModel(code))
                 .ReturnsAsync((CheckQualificationViewModel)null!);
 
             // Act
@@ -658,7 +658,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             };
 
             _sharingOrchestratorMock
-                .Setup(s => s.GetCheckQualificationViewModelAndRecordAccess(code))
+                .Setup(s => s.GetCheckQualificationViewModel(code))
                 .ReturnsAsync(model);
 
             // Act
@@ -686,7 +686,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             var code = Guid.NewGuid();
 
             _sharingOrchestratorMock
-                .Setup(s => s.GetCheckQualificationViewModel(code))
+                .Setup(s => s.GetCheckQualificationViewModelAndRecordAccess(code))
                 .ReturnsAsync((CheckQualificationViewModel)null!);
 
             // Act
@@ -710,7 +710,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             };
 
             _sharingOrchestratorMock
-                .Setup(s => s.GetCheckQualificationViewModel(code))
+                .Setup(s => s.GetCheckQualificationViewModelAndRecordAccess(code))
                 .ReturnsAsync(sharingInfo);
 
             // Act
@@ -736,7 +736,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             };
 
             _sharingOrchestratorMock
-                .Setup(s => s.GetCheckQualificationViewModel(code))
+                .Setup(s => s.GetCheckQualificationViewModelAndRecordAccess(code))
                 .ReturnsAsync(sharingInfo);
 
             // Act

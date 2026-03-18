@@ -280,7 +280,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> CheckQualification(Guid sharingLinkCode)
         {
-            var sharingInfo = await _sharingOrchestrator.GetCheckQualificationViewModelAndRecordAccess(sharingLinkCode);
+            var sharingInfo = await _sharingOrchestrator.GetCheckQualificationViewModel(sharingLinkCode);
 
             if (sharingInfo == null)
             {
@@ -294,7 +294,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> CheckQualificationPost(Guid sharingLinkCode)
         {
-            var sharingInfo = await _sharingOrchestrator.GetCheckQualificationViewModel(sharingLinkCode);
+            var sharingInfo = await _sharingOrchestrator.GetCheckQualificationViewModelAndRecordAccess(sharingLinkCode);
 
             if (sharingInfo == null)
             {
