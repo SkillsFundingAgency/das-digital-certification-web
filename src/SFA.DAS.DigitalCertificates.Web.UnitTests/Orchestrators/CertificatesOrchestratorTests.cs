@@ -498,7 +498,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         }
 
         [Test]
-        public async Task CreateOrReuseUserActionForNonSpecific_ReturnsReference_When_UserPresent()
+        public async Task CreateUserActionForNonSpecific_ReturnsReference_When_UserPresent()
         {
             var userId = Guid.NewGuid();
 
@@ -508,7 +508,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             _mediatorMock.Setup(m => m.Send(It.IsAny<CreateUserActionCommand>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new CreateUserActionCommandResult { ActionCode = "REF-NON" });
 
-            var result = await _sut.CreateOrReuseUserActionForNonSpecific();
+            var result = await _sut.CreateUserActionForNonSpecific();
 
             result.Should().Be("REF-NON");
 
@@ -516,7 +516,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         }
 
         [Test]
-        public async Task CreateOrReuseUserActionForCertificate__ReturnsReference_When_UserPresent()
+        public async Task CreateUserActionForCertificate_ReturnsReference_And_CertificateType_When_UserPresent()
         {
             var userId = Guid.NewGuid();
             var govId = "gov-1";
@@ -533,11 +533,32 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             _mediatorMock.Setup(m => m.Send(It.IsAny<CreateUserActionCommand>(), It.IsAny<System.Threading.CancellationToken>()))
                 .ReturnsAsync(new CreateUserActionCommandResult { ActionCode = "REF-CERT" });
 
-            var result = await _sut.CreateOrReuseUserActionForCertificate(certificateId);
+            var result = await _sut.CreateUserActionForCertificate(certificateId);
 
-            result.Should().Be("REF-CERT");
+            result.ReferenceNumber.Should().Be("REF-CERT");
+            result.CertificateType.Should().Be(CertificateType.Framework);
 
             _mediatorMock.Verify(m => m.Send(It.Is<CreateUserActionCommand>(c => c.UserId == userId && c.ActionType == ActionType.Help && c.CertificateId == certificateId && c.CertificateType == CertificateType.Framework && c.CourseName == "CourseX"), It.IsAny<System.Threading.CancellationToken>()), Times.Once);
+        }
+
+        [Test]
+        public async Task CreateUserActionForCertificate_ReturnsEmpty_When_CertificateNotOwned()
+        {
+            var userId = Guid.NewGuid();
+            var govId = "gov-1";
+            var certificateId = Guid.NewGuid();
+
+            _userServiceMock.Setup(u => u.GetUserId()).Returns(userId);
+            _userServiceMock.Setup(u => u.GetGovUkIdentifier()).Returns(govId);
+
+            _sessionMock.Setup(s => s.GetOwnedCertificatesAsync()).ReturnsAsync(new List<Certificate>());
+
+            var result = await _sut.CreateUserActionForCertificate(certificateId);
+
+            result.ReferenceNumber.Should().BeNull();
+            result.CertificateType.Should().Be(CertificateType.Unknown);
+
+            _mediatorMock.Verify(m => m.Send(It.IsAny<CreateUserActionCommand>(), It.IsAny<CancellationToken>()), Times.Never);
         }
 
         [Test]

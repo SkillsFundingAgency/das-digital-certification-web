@@ -41,8 +41,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         public const string SharedCertificateFrameworkRouteGet = nameof(SharedCertificateFrameworkRouteGet);
         public const string ContactUsRouteGet = nameof(ContactUsRouteGet);
         public const string ContactUsForCertificateRouteGet = nameof(ContactUsForCertificateRouteGet);
-        public const string ContactUsCreateRouteGet = nameof(ContactUsCreateRouteGet);
-        public const string ContactUsForCertificateCreateRouteGet = nameof(ContactUsForCertificateCreateRouteGet);
+        public const string ContactUsCreateRoutePost = nameof(ContactUsCreateRoutePost);
+        public const string ContactUsForCertificateCreateRoutePost = nameof(ContactUsForCertificateCreateRoutePost);
         public const string SelectAddressRouteGet = nameof(SelectAddressRouteGet);
         public const string AddAddressRouteGet = nameof(AddAddressRouteGet);
         public const string CheckAndSubmitRouteGet = nameof(CheckAndSubmitRouteGet);
@@ -236,26 +236,34 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             return View("ContactUs", model);
         }
 
-        [HttpGet("contact/create", Name = ContactUsCreateRouteGet)]
+        [HttpPost("contact/create", Name = ContactUsCreateRoutePost)]
         [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsUlnAuthorised))]
         public async Task<IActionResult> ContactUsCreate()
         {
-            var referenceNumber = await _certificatesOrchestrator.CreateOrReuseUserActionForNonSpecific();
+            var referenceNumber = await _certificatesOrchestrator.CreateUserActionForNonSpecific();
             if (string.IsNullOrEmpty(referenceNumber))
                 return RedirectToRoute(CertificatesListRouteGet);
 
             return RedirectToRoute(ContactUsRouteGet, new { referenceNumber });
         }
 
-        [HttpGet("{certificateId}/contact/create", Name = ContactUsForCertificateCreateRouteGet)]
+        [HttpPost("{certificateId}/contact/create", Name = ContactUsForCertificateCreateRoutePost)]
         [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsCertificateOwner))]
         public async Task<IActionResult> ContactUsForCertificateCreate(Guid certificateId)
         {
-            var referenceNumber = await _certificatesOrchestrator.CreateOrReuseUserActionForCertificate(certificateId);
-            if (string.IsNullOrEmpty(referenceNumber))
-                return RedirectToRoute(CertificateFrameworkRouteGet, new { certificateId });
+            var result = await _certificatesOrchestrator.CreateUserActionForCertificate(certificateId);
 
-            return RedirectToRoute(ContactUsForCertificateRouteGet, new { certificateId, referenceNumber });
+            if (string.IsNullOrEmpty(result.ReferenceNumber))
+            {
+                return result.CertificateType switch
+                {
+                    CertificateType.Standard  => RedirectToRoute(CertificateStandardRouteGet,  new { certificateId }),
+                    CertificateType.Framework => RedirectToRoute(CertificateFrameworkRouteGet, new { certificateId }),
+                    _                        => RedirectToRoute(CertificatesListRouteGet)
+                };
+            }
+
+            return RedirectToRoute(ContactUsForCertificateRouteGet, new { certificateId, referenceNumber = result.ReferenceNumber });
         }
 
         [HttpGet("{certificateId}/sharing", Name = CreateCertificateSharingRouteGet)]
@@ -397,7 +405,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> CheckQualification(Guid sharingLinkCode)
         {
-            var sharingInfo = await _sharingOrchestrator.GetCheckQualificationViewModelAndRecordAccess(sharingLinkCode);
+            var sharingInfo = await _sharingOrchestrator.GetCheckQualificationViewModel(sharingLinkCode);
 
             if (sharingInfo == null)
             {
@@ -411,7 +419,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> CheckQualificationPost(Guid sharingLinkCode)
         {
-            var sharingInfo = await _sharingOrchestrator.GetCheckQualificationViewModel(sharingLinkCode);
+            var sharingInfo = await _sharingOrchestrator.GetCheckQualificationViewModelAndRecordAccess(sharingLinkCode);
 
             if (sharingInfo == null)
             {

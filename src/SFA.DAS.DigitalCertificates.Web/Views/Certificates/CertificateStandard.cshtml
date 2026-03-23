@@ -139,10 +139,11 @@
 
                 @if (Model?.ShowPrintHeader == false)
                 {
-                    <p class="govuk-body">If any of these details are incorrect, <a
-                        asp-route="@CertificatesController.ContactUsForCertificateCreateRouteGet"
-                        asp-route-certificateId="@certificateId" title="Contact us">contact us</a>.</p>
+                <form asp-route="@CertificatesController.ContactUsForCertificateCreateRoutePost" asp-route-certificateId="@certificateId" method="post">
+                    <p class="govuk-body">If any of these details are incorrect, <button type="submit" class="das-button--inline-link" data-prevent-double-click="true" data-module="govuk-button">contact us</button>.</p>
+                </form>
                     }
+
 
                     <h2 class="govuk-heading-m">Create a sharing link</h2>
                     <p class="govuk-body">You can create a secure link to share your apprenticeship certificate. This allows
@@ -190,7 +191,7 @@
 
                             <p class="govuk-body">@Model?.PrintStatusMessage</p>
                             <p class="govuk-body">If you have lost your certificate and need a reprint, <a
-                                asp-route="@CertificatesController.ContactUsForCertificateCreateRouteGet"
+                                asp-route="@CertificatesController.ContactUsForCertificateCreateRoutePost"
                                 asp-route-certificateId="@certificateId">contact us</a>.</p>
                         }
 

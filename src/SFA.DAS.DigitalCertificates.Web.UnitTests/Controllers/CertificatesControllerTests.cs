@@ -632,7 +632,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             var code = Guid.NewGuid();
 
             _sharingOrchestratorMock
-                .Setup(s => s.GetCheckQualificationViewModelAndRecordAccess(code))
+                .Setup(s => s.GetCheckQualificationViewModel(code))
                 .ReturnsAsync((CheckQualificationViewModel)null!);
 
             // Act
@@ -658,7 +658,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             };
 
             _sharingOrchestratorMock
-                .Setup(s => s.GetCheckQualificationViewModelAndRecordAccess(code))
+                .Setup(s => s.GetCheckQualificationViewModel(code))
                 .ReturnsAsync(model);
 
             // Act
@@ -686,7 +686,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             var code = Guid.NewGuid();
 
             _sharingOrchestratorMock
-                .Setup(s => s.GetCheckQualificationViewModel(code))
+                .Setup(s => s.GetCheckQualificationViewModelAndRecordAccess(code))
                 .ReturnsAsync((CheckQualificationViewModel)null!);
 
             // Act
@@ -710,7 +710,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             };
 
             _sharingOrchestratorMock
-                .Setup(s => s.GetCheckQualificationViewModel(code))
+                .Setup(s => s.GetCheckQualificationViewModelAndRecordAccess(code))
                 .ReturnsAsync(sharingInfo);
 
             // Act
@@ -736,7 +736,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             };
 
             _sharingOrchestratorMock
-                .Setup(s => s.GetCheckQualificationViewModel(code))
+                .Setup(s => s.GetCheckQualificationViewModelAndRecordAccess(code))
                 .ReturnsAsync(sharingInfo);
 
             // Act
@@ -1019,6 +1019,99 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             var redirect = (RedirectToRouteResult)result;
             redirect.RouteName.Should().Be(CertificatesController.PrintRequestConfirmationRouteGet);
             redirect.RouteValues.Should().ContainKey("certificateId");
+	}
+
+        [Test]
+        public async Task ContactUsForCertificateCreate_Redirects_To_ContactUs_When_ReferenceNumber_Returned()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+            var referenceNumber = "REF-123";
+
+            _certificatesOrchestratorMock
+                .Setup(o => o.CreateUserActionForCertificate(certificateId))
+                .ReturnsAsync(new CreateUserActionForCertificateResult
+                {
+                    ReferenceNumber = referenceNumber,
+                    CertificateType = CertificateType.Standard
+                });
+
+            // Act
+            var result = await _sut.ContactUsForCertificateCreate(certificateId) as RedirectToRouteResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            result!.RouteName.Should().Be(CertificatesController.ContactUsForCertificateRouteGet);
+            result.RouteValues["certificateId"].Should().Be(certificateId);
+            result.RouteValues["referenceNumber"].Should().Be(referenceNumber);
+        }
+
+        [Test]
+        public async Task ContactUsForCertificateCreate_Redirects_To_Standard_When_ReferenceNumber_Empty_And_Type_Standard()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+
+            _certificatesOrchestratorMock
+                .Setup(o => o.CreateUserActionForCertificate(certificateId))
+                .ReturnsAsync(new CreateUserActionForCertificateResult
+                {
+                    ReferenceNumber = null,
+                    CertificateType = CertificateType.Standard
+                });
+
+            // Act
+            var result = await _sut.ContactUsForCertificateCreate(certificateId) as RedirectToRouteResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            result!.RouteName.Should().Be(CertificatesController.CertificateStandardRouteGet);
+            result.RouteValues["certificateId"].Should().Be(certificateId);
+        }
+
+        [Test]
+        public async Task ContactUsForCertificateCreate_Redirects_To_Framework_When_ReferenceNumber_Empty_And_Type_Framework()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+
+            _certificatesOrchestratorMock
+                .Setup(o => o.CreateUserActionForCertificate(certificateId))
+                .ReturnsAsync(new CreateUserActionForCertificateResult
+                {
+                    ReferenceNumber = null,
+                    CertificateType = CertificateType.Framework
+                });
+
+            // Act
+            var result = await _sut.ContactUsForCertificateCreate(certificateId) as RedirectToRouteResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            result!.RouteName.Should().Be(CertificatesController.CertificateFrameworkRouteGet);
+            result.RouteValues["certificateId"].Should().Be(certificateId);
+        }
+
+        [Test]
+        public async Task ContactUsForCertificateCreate_Redirects_To_CertificatesList_When_ReferenceNumber_Empty_And_Type_Unknown()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+
+            _certificatesOrchestratorMock
+                .Setup(o => o.CreateUserActionForCertificate(certificateId))
+                .ReturnsAsync(new CreateUserActionForCertificateResult
+                {
+                    ReferenceNumber = null,
+                    CertificateType = CertificateType.Unknown
+                });
+
+            // Act
+            var result = await _sut.ContactUsForCertificateCreate(certificateId) as RedirectToRouteResult;
+
+            // Assert
+            result.Should().NotBeNull();
+            result!.RouteName.Should().Be(CertificatesController.CertificatesListRouteGet);
         }
     }
 }
