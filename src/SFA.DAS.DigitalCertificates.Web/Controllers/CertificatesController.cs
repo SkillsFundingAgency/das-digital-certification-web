@@ -249,9 +249,9 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
 
         [HttpPost("{certificateId}/contact/create", Name = ContactUsForCertificateCreateRoutePost)]
         [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsCertificateOwner))]
-        public async Task<IActionResult> ContactUsForCertificateCreate(Guid certificateId)
+        public async Task<IActionResult> ContactUsForCertificateCreate(Guid certificateId, ActionType actionType = ActionType.Help)
         {
-            var result = await _certificatesOrchestrator.CreateUserActionForCertificate(certificateId);
+            var result = await _certificatesOrchestrator.CreateUserActionForCertificate(certificateId, actionType);
 
             if (string.IsNullOrEmpty(result.ReferenceNumber))
             {

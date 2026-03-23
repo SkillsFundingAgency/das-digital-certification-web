@@ -178,7 +178,7 @@
                         }
                         @if (Model?.ShowPrintHeader == true)
                         {
-                            <h2 class="govuk-heading-s">Certificate print status</h2>
+                            <h2 class="govuk-heading-m">Certificate print status</h2>
 
                             <dl class="govuk-summary-list">
                                 <div class="govuk-summary-list__row">
@@ -190,9 +190,9 @@
                             </dl>
 
                             <p class="govuk-body">@Model?.PrintStatusMessage</p>
-                            <p class="govuk-body">If you have lost your certificate and need a reprint, <a
-                                asp-route="@CertificatesController.ContactUsForCertificateCreateRoutePost"
-                                asp-route-certificateId="@certificateId">contact us</a>.</p>
+                            <form asp-route="@CertificatesController.ContactUsForCertificateCreateRoutePost" asp-route-certificateId="@certificateId" method="post">
+                                <p class="govuk-body">If you have lost your certificate and need a reprint, <button type="submit" name="actionType" value="Reprint" class="das-button--inline-link" data-prevent-double-click="true" data-module="govuk-button">contact us</button>.</p>
+                            </form>
                         }
 
                         </div>

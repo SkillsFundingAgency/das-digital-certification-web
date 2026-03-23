@@ -1029,7 +1029,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             var referenceNumber = "REF-123";
 
             _certificatesOrchestratorMock
-                .Setup(o => o.CreateUserActionForCertificate(certificateId))
+                .Setup(o => o.CreateUserActionForCertificate(certificateId, It.IsAny<ActionType>()))
                 .ReturnsAsync(new CreateUserActionForCertificateResult
                 {
                     ReferenceNumber = referenceNumber,
@@ -1053,7 +1053,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             var certificateId = Guid.NewGuid();
 
             _certificatesOrchestratorMock
-                .Setup(o => o.CreateUserActionForCertificate(certificateId))
+                .Setup(o => o.CreateUserActionForCertificate(certificateId, It.IsAny<ActionType>()))
                 .ReturnsAsync(new CreateUserActionForCertificateResult
                 {
                     ReferenceNumber = null,
@@ -1076,7 +1076,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             var certificateId = Guid.NewGuid();
 
             _certificatesOrchestratorMock
-                .Setup(o => o.CreateUserActionForCertificate(certificateId))
+                .Setup(o => o.CreateUserActionForCertificate(certificateId, It.IsAny<ActionType>()))
                 .ReturnsAsync(new CreateUserActionForCertificateResult
                 {
                     ReferenceNumber = null,
@@ -1099,7 +1099,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             var certificateId = Guid.NewGuid();
 
             _certificatesOrchestratorMock
-                .Setup(o => o.CreateUserActionForCertificate(certificateId))
+                .Setup(o => o.CreateUserActionForCertificate(certificateId, It.IsAny<ActionType>()))
                 .ReturnsAsync(new CreateUserActionForCertificateResult
                 {
                     ReferenceNumber = null,

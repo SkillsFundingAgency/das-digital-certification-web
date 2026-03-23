@@ -139,7 +139,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             return viewModel;
         }
 
-        public async Task<CreateUserActionForCertificateResult> CreateUserActionForCertificate(Guid certificateId)
+        public async Task<CreateUserActionForCertificateResult> CreateUserActionForCertificate(Guid certificateId, ActionType actionType)
         {
             var userId = _userService.GetUserId();
             if (userId == null)
@@ -162,7 +162,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             var result = await Mediator.Send(new CreateUserActionCommand
             {
                 UserId = userId.Value,
-                ActionType = ActionType.Help,
+                ActionType = actionType,
                 FamilyName = familyName,
                 GivenNames = givenNames,
                 CertificateId = certificateId,

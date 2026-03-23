@@ -533,7 +533,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             _mediatorMock.Setup(m => m.Send(It.IsAny<CreateUserActionCommand>(), It.IsAny<System.Threading.CancellationToken>()))
                 .ReturnsAsync(new CreateUserActionCommandResult { ActionCode = "REF-CERT" });
 
-            var result = await _sut.CreateUserActionForCertificate(certificateId);
+            var result = await _sut.CreateUserActionForCertificate(certificateId, ActionType.Help);
 
             result.ReferenceNumber.Should().Be("REF-CERT");
             result.CertificateType.Should().Be(CertificateType.Framework);
@@ -553,7 +553,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
 
             _sessionMock.Setup(s => s.GetOwnedCertificatesAsync()).ReturnsAsync(new List<Certificate>());
 
-            var result = await _sut.CreateUserActionForCertificate(certificateId);
+            var result = await _sut.CreateUserActionForCertificate(certificateId, ActionType.Help);
 
             result.ReferenceNumber.Should().BeNull();
             result.CertificateType.Should().Be(CertificateType.Unknown);
