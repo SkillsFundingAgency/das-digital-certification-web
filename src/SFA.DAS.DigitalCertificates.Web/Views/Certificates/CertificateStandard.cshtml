@@ -137,9 +137,12 @@
                     }
                 </dl>
 
-                <p class="govuk-body">If any of these details are incorrect, <a
-                    asp-route="@CertificatesController.ContactUsForCertificateCreateRouteGet"
-                    asp-route-certificateId="@certificateId" title="Contact us">contact us</a>.</p>
+                @if (Model?.ShowPrintHeader == false)
+                {
+                    <p class="govuk-body">If any of these details are incorrect, <a
+                        asp-route="@CertificatesController.ContactUsForCertificateCreateRouteGet"
+                        asp-route-certificateId="@certificateId" title="Contact us">contact us</a>.</p>
+                    }
 
                     <h2 class="govuk-heading-m">Create a sharing link</h2>
                     <p class="govuk-body">You can create a secure link to share your apprenticeship certificate. This allows
@@ -152,26 +155,46 @@
                         <h2 class="govuk-heading-m">Download your certificate</h2>
                         <a href="#" role="button" draggable="false" class="govuk-button govuk-button--secondary"
                            data-module="govuk-button">Download certificate (PDF)</a>
-                        <h2 class="govuk-heading-m">Request a printed certificate</h2>
-                        <p class="govuk-body">
-                            We can post a certificate to you. You need to
-                            <span class="das-js-show--inline">
-                                <a asp-route="@CertificatesController.SelectAddressRouteGet"
-                                       asp-route-certificateId="@certificateId"
-                                       title="Request a printed certificate">
-                                    request a printed certificate
-                                </a>
-                            </span>
-                            <span class="das-js-hide">
-                                <a asp-route="@CertificatesController.AddAddressRouteGet"
-                                       asp-route-certificateId="@certificateId"
-                                       title="Request a printed certificate">
-                                    request a printed certificate
-                                </a>
-                            </span>.
-                            Certificates can take up to 3 weeks to arrive.
-                        </p>
+                        @if (Model?.ShowRequestPrint == true)
+                        {
+                            <h2 class="govuk-heading-m">Request a printed certificate</h2>
+                            <p class="govuk-body">
+                                We can post a certificate to you. You need to
+                                <span class="das-js-show--inline">
+                                    <a asp-route="@CertificatesController.SelectAddressRouteGet"
+                                           asp-route-certificateId="@certificateId" title="Request a printed certificate">
+                                        request a printed certificate
+                                    </a>
+                                </span>
+                                <span class="das-js-hide">
+                                    <a asp-route="@CertificatesController.AddAddressRouteGet"
+                                           asp-route-certificateId="@certificateId" title="Request a printed certificate">
+                                        request a printed certificate
+                                    </a>
+                                </span>.
+                                Certificates can take up to 3 weeks to arrive.
+                            </p>
+                        }
+                        @if (Model?.ShowPrintHeader == true)
+                        {
+                            <h2 class="govuk-heading-s">Certificate print status</h2>
+
+                            <dl class="govuk-summary-list">
+                                <div class="govuk-summary-list__row">
+                                    <dt class="govuk-summary-list__key"><span class="govuk-body">Your certificate is</span></dt>
+                                    <dd class="govuk-summary-list__value">
+                                        <span class="govuk-tag">@Model.PrintStatus</span>
+                                    </dd>
+                                </div>
+                            </dl>
+
+                            <p class="govuk-body">@Model?.PrintStatusMessage</p>
+                            <p class="govuk-body">If you have lost your certificate and need a reprint, <a
+                                asp-route="@CertificatesController.ContactUsForCertificateCreateRouteGet"
+                                asp-route-certificateId="@certificateId">contact us</a>.</p>
+                        }
+
+                        </div>
                     </div>
-                </div>
-            </main>
-        </div>
+                </main>
+            </div>

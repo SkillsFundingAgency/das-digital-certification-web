@@ -34,7 +34,7 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetFramework
                     new QualificationDetailsResponse { Name = "", AwardingBody = "OnlyBody" },
                     new QualificationDetailsResponse { Name = "OnlyName", AwardingBody = "" }
                 },
-                DeliveryInformation = new List<string> { "D1", "D2" }
+                DeliveryInformation = new List<DeliveryInformationResponse> { new DeliveryInformationResponse { Id = "D1" }, new DeliveryInformationResponse { Id = "D2" } }
             };
 
             // Act

@@ -14,6 +14,8 @@ using SFA.DAS.DigitalCertificates.Infrastructure.Api.Requests;
 using SFA.DAS.DigitalCertificates.Application.Commands.RequestPrintCertificate;
 using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
 using SFA.DAS.DigitalCertificates.Infrastructure.Constants;
+using System.Collections.Generic;
+using SFA.DAS.DigitalCertificates.Infrastructure.Api.Responses;
 
 namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 {
@@ -76,6 +78,13 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 PrintRequestedBy = result.PrintRequestedBy
             };
 
+            var (printStatus, printDate, printMessage) = MapPrintStatus(null);
+            viewModel.PrintStatus = printStatus;
+            viewModel.PrintStatusDate = printDate;
+            viewModel.PrintStatusMessage = printMessage;
+            viewModel.ShowPrintHeader = printStatus != Enums.PrintStatus.None && printStatus != Enums.PrintStatus.Submitted;
+            viewModel.ShowRequestPrint = printStatus == Enums.PrintStatus.Submitted && viewModel.PrintRequestedAt == null;
+
             var owned = await _sessionService.GetOwnedCertificatesAsync();
 
             viewModel.ShowBackLink = (owned?.Count() ?? 0) > 1;
@@ -115,6 +124,13 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 QualificationsAndAwardingBodies = result.QualificationsAndAwardingBodies,
                 DeliveryInformation = result.DeliveryInformation
             };
+
+            var (printStatus, printDate, printMessage) = MapPrintStatus(result.DeliveryInformation);
+            viewModel.PrintStatus = printStatus;
+            viewModel.PrintStatusDate = printDate;
+            viewModel.PrintStatusMessage = printMessage;
+            viewModel.ShowPrintHeader = printStatus != Enums.PrintStatus.None && printStatus != Enums.PrintStatus.Submitted;
+            viewModel.ShowRequestPrint = printStatus == Enums.PrintStatus.Submitted && viewModel.PrintRequestedAt == null;
 
             var owned = await _sessionService.GetOwnedCertificatesAsync();
 
@@ -382,6 +398,57 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             };
 
             return vm;
+        }
+
+        private (Enums.PrintStatus status, DateTime? date, string? message) MapPrintStatus(List<DeliveryInformationResponse>? deliveryInformation)
+        {
+            if (deliveryInformation == null || !deliveryInformation.Any())
+            {
+                return (Enums.PrintStatus.None, null, null);
+            }
+
+            var ordered = deliveryInformation
+                .OrderByDescending(e => e.EventTime ?? DateTime.MinValue)
+                .ToList();
+
+            // Determine status from the latest event first
+            var latest = ordered.First();
+            var dt = latest.EventTime;
+
+            if (latest.Status?.Equals(DeliveryInformationStatuses.Delivered, StringComparison.OrdinalIgnoreCase) == true)
+            {
+                var msg = dt != null
+                    ? $"A certificate was delivered on {dt:dd MMMM yyyy}."
+                    : "A certificate was delivered.";
+
+                return (Enums.PrintStatus.Delivered, dt, msg);
+            }
+
+            if (latest.Status?.Equals(DeliveryInformationStatuses.Printed, StringComparison.OrdinalIgnoreCase) == true)
+            {
+                var msg = dt != null
+                    ? $"You requested a certificate on {dt:dd MMMM yyyy}. It can take up to 3 weeks to be delivered."
+                    : "You requested a certificate. It can take up to 3 weeks to be delivered.";
+
+                return (Enums.PrintStatus.Printed, dt, msg);
+            }
+
+            if (latest.Status?.Equals(DeliveryInformationStatuses.SentToPrinter, StringComparison.OrdinalIgnoreCase) == true
+                || latest.Status?.Equals(DeliveryInformationStatuses.Reprint, StringComparison.OrdinalIgnoreCase) == true)
+            {
+                var msg = dt != null
+                    ? $"You requested a certificate on {dt:dd MMMM yyyy}. It can take up to 3 weeks to be delivered."
+                    : "You requested a certificate. It can take up to 3 weeks to be delivered.";
+
+                return (Enums.PrintStatus.Requested, dt, msg);
+            }
+
+            if (latest.Status?.Equals(DeliveryInformationStatuses.Submitted, StringComparison.OrdinalIgnoreCase) == true)
+            {
+                return (Enums.PrintStatus.Submitted, null, null);
+            }
+
+            return (Enums.PrintStatus.None, null, null);
         }
     }
 }

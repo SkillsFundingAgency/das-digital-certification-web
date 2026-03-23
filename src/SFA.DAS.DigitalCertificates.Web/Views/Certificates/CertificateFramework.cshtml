@@ -135,9 +135,12 @@
                     }
                 </dl>
 
-                <p class="govuk-body">If any of these details are incorrect, <a
-                    asp-route="@CertificatesController.ContactUsForCertificateCreateRouteGet"
-                    asp-route-certificateId="@certificateId" title="Contact us">contact us</a>.</p>
+                @if (Model?.ShowPrintHeader == false)
+                {
+                    <p class="govuk-body">If any of these details are incorrect, <a
+                        asp-route="@CertificatesController.ContactUsForCertificateCreateRouteGet"
+                        asp-route-certificateId="@certificateId" title="Contact us">contact us</a>.</p>
+                    }
 
                     <h2 class="govuk-heading-m">Create a sharing link</h2>
                     <p class="govuk-body">You can create a secure link to share your apprenticeship certificate. This allows
@@ -150,13 +153,33 @@
                         <h2 class="govuk-heading-m">Download your certificate</h2>
                         <a href="#" role="button" draggable="false" class="govuk-button govuk-button--secondary"
                            data-module="govuk-button">Download certificate (PDF)</a>
+                        @if (Model?.ShowRequestPrint == true)
+                        {
+                            @* TODO: Request a printed certificate. This is not part of the current ticket and will need to be addressed based on the requirements in upcoming tickets. *@
+                            <h2 class="govuk-heading-m">Request a printed certificate</h2>
+                            <p class="govuk-body">We can post a certificate to you. You need to <a href="#">request a printed
+                                certificate</a>. Certificates can take up to 3 weeks to arrive.</p>
+                            }
 
-                        @* TODO: Request a printed certificate. This is not part of the current ticket and will need to be addressed based on the requirements in upcoming tickets. *@
-                        <h2 class="govuk-heading-m">Request a printed certificate</h2>
-                        <p class="govuk-body">We can post a certificate to you. You need to <a href="#">request a printed
-                            certificate</a>. Certificates can take up to 3 weeks to arrive.</p>
+                            @if (Model?.ShowPrintHeader == true)
+                            {
+                                <h2 class="govuk-heading-s">Certificate print status</h2>
 
+                                <dl class="govuk-summary-list">
+                                    <div class="govuk-summary-list__row">
+                                        <dt class="govuk-summary-list__key"><span class="govuk-body">Your certificate is</span></dt>
+                                        <dd class="govuk-summary-list__value">
+                                            <span class="govuk-tag">@Model.PrintStatus</span>
+                                        </dd>
+                                    </div>
+                                </dl>
+
+                                <p class="govuk-body">@Model?.PrintStatusMessage</p>
+                                <p class="govuk-body">If you have lost your certificate and need a reprint, <a
+                                    asp-route="@CertificatesController.ContactUsForCertificateCreateRouteGet"
+                                    asp-route-certificateId="@certificateId">contact us</a>.</p>
+                            }
+                            </div>
                         </div>
-                    </div>
-                </main>
-            </div>
+                    </main>
+                </div>

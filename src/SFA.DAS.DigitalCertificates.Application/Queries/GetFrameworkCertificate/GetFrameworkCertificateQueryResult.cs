@@ -27,7 +27,7 @@ namespace SFA.DAS.DigitalCertificates.Application.Queries.GetFrameworkCertificat
         public string? CourseCode { get; set; }
         public string? AssessorName { get; set; }
         public long? Ukprn { get; set; }
-        public List<string>? DeliveryInformation { get; set; }
+        public List<DeliveryInformationResponse>? DeliveryInformation { get; set; }
 
         public static implicit operator GetFrameworkCertificateQueryResult?(GetFrameworkCertificateResponse? source)
         {
