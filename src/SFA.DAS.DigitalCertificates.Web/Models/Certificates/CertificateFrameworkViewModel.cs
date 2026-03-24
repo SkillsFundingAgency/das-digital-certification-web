@@ -33,7 +33,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Models.Certificates
         public Enums.PrintStatus PrintStatus { get; set; } = Enums.PrintStatus.None;
         public DateTime? PrintStatusDate { get; set; }
         public string? PrintStatusMessage { get; set; }
+        public string? PrintStatusDisplay { get; set; }
         public bool ShowPrintHeader { get; set; }
-        public bool ShowRequestPrint { get; set; }
+        
     }
 }

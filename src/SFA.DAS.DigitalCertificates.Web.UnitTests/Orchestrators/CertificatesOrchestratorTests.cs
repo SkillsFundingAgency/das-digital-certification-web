@@ -312,7 +312,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 PrintRequestedAt = null,
                 PrintRequestedBy = null,
                 QualificationsAndAwardingBodies = new List<string> { "Q1, A1" },
-                DeliveryInformation = new List<DeliveryInformationResponse> { new DeliveryInformationResponse { Id = "D1" } }
+                DeliveryInformation = new List<DeliveryInformationResponse> { new DeliveryInformationResponse { Id = "D1", Action = "Requested", Status = DeliveryInformationStatuses.Submitted, EventTime = DateTime.UtcNow } }
             };
 
             _mediatorMock
@@ -357,75 +357,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             result.ShowBackLink.Should().BeTrue();
         }
 
-        [Test]
-        public async Task GetCertificateFrameworkViewModel_Sets_ShowRequestPrintTrue_When_StatusSubmitted_And_NoPrintRequestedAt()
-        {
-            // Arrange
-            var certificateId = Guid.NewGuid();
-
-            var mediatorResult = new GetFrameworkCertificateQueryResult
-            {
-                FamilyName = "Test",
-                GivenNames = "T",
-                Uln = 1,
-                CertificateType = "Framework",
-                CourseName = "Course",
-                CourseLevel = "1",
-                DateAwarded = DateTime.UtcNow.Date,
-                PrintRequestedAt = null,
-                PrintRequestedBy = null,
-                DeliveryInformation = new List<DeliveryInformationResponse>
-                {
-                    new DeliveryInformationResponse { Id = "E1", Status = DeliveryInformationStatuses.Submitted, EventTime = DateTime.UtcNow }
-                }
-            };
-
-            _mediatorMock
-                .Setup(m => m.Send(It.Is<GetFrameworkCertificateQuery>(q => q.CertificateId == certificateId), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(mediatorResult);
-
-            // Act
-            var result = await _sut.GetCertificateFrameworkViewModel(certificateId);
-
-            // Assert
-            result.Should().NotBeNull();
-            result!.ShowRequestPrint.Should().BeTrue();
-        }
-
-        [Test]
-        public async Task GetCertificateFrameworkViewModel_Sets_ShowRequestPrintFalse_When_StatusSubmitted_But_PrintRequestedAtPresent()
-        {
-            // Arrange
-            var certificateId = Guid.NewGuid();
-
-            var mediatorResult = new GetFrameworkCertificateQueryResult
-            {
-                FamilyName = "Test",
-                GivenNames = "T",
-                Uln = 1,
-                CertificateType = "Framework",
-                CourseName = "Course",
-                CourseLevel = "1",
-                DateAwarded = DateTime.UtcNow.Date,
-                PrintRequestedAt = DateTime.UtcNow.AddDays(-1),
-                PrintRequestedBy = "user",
-                DeliveryInformation = new List<DeliveryInformationResponse>
-                {
-                    new DeliveryInformationResponse { Id = "E1", Status = DeliveryInformationStatuses.Submitted, EventTime = DateTime.UtcNow }
-                }
-            };
-
-            _mediatorMock
-                .Setup(m => m.Send(It.Is<GetFrameworkCertificateQuery>(q => q.CertificateId == certificateId), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(mediatorResult);
-
-            // Act
-            var result = await _sut.GetCertificateFrameworkViewModel(certificateId);
-
-            // Assert
-            result.Should().NotBeNull();
-            result!.ShowRequestPrint.Should().BeFalse();
-        }
+        
 
         [Test]
         public async Task GetCertificateFrameworkViewModel_Sets_ShowPrintHeaderTrue_When_StatusDelivered()
@@ -446,7 +378,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 PrintRequestedBy = null,
                 DeliveryInformation = new List<DeliveryInformationResponse>
                 {
-                    new DeliveryInformationResponse { Id = "E1", Status = DeliveryInformationStatuses.Delivered, EventTime = DateTime.UtcNow }
+                    new DeliveryInformationResponse { Id = "E1", Action = "Requested", Status = DeliveryInformationStatuses.Delivered, EventTime = DateTime.UtcNow }
                 }
             };
 
@@ -481,7 +413,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 PrintRequestedBy = null,
                 DeliveryInformation = new List<DeliveryInformationResponse>
                 {
-                    new DeliveryInformationResponse { Id = "E1", Status = DeliveryInformationStatuses.Submitted, EventTime = DateTime.UtcNow }
+                    new DeliveryInformationResponse { Id = "E1", Action = "Requested", Status = DeliveryInformationStatuses.Submitted, EventTime = DateTime.UtcNow }
                 }
             };
 

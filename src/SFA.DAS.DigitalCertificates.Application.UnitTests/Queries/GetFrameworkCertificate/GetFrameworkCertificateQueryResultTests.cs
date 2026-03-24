@@ -2,6 +2,7 @@
 using NUnit.Framework;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetFrameworkCertificate;
 using SFA.DAS.DigitalCertificates.Infrastructure.Api.Responses;
+using SFA.DAS.DigitalCertificates.Infrastructure.Constants;
 
 namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetFrameworkCertificate
 {
@@ -34,7 +35,7 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetFramework
                     new QualificationDetailsResponse { Name = "", AwardingBody = "OnlyBody" },
                     new QualificationDetailsResponse { Name = "OnlyName", AwardingBody = "" }
                 },
-                DeliveryInformation = new List<DeliveryInformationResponse> { new DeliveryInformationResponse { Id = "D1" }, new DeliveryInformationResponse { Id = "D2" } }
+                DeliveryInformation = new List<DeliveryInformationResponse> { new DeliveryInformationResponse { Id = "D1", Action = "Requested", Status = DeliveryInformationStatuses.Submitted, EventTime = DateTime.UtcNow }, new DeliveryInformationResponse { Id = "D2", Action = "Requested", Status = DeliveryInformationStatuses.Submitted, EventTime = DateTime.UtcNow } }
             };
 
             // Act

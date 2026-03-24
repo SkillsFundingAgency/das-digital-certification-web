@@ -78,10 +78,11 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 PrintRequestedBy = result.PrintRequestedBy
             };
 
-            var (printStatus, printDate, printMessage) = MapPrintStatus(null);
+            var (printStatus, printDate, printMessage) = MapPrintStatus(result.DeliveryInformation);
             viewModel.PrintStatus = printStatus;
             viewModel.PrintStatusDate = printDate;
             viewModel.PrintStatusMessage = printMessage;
+            viewModel.PrintStatusDisplay = printStatus == Enums.PrintStatus.Requested ? "Print requested" : printStatus.ToString();
             viewModel.ShowPrintHeader = printStatus != Enums.PrintStatus.None && printStatus != Enums.PrintStatus.Submitted;
             viewModel.ShowRequestPrint = printStatus == Enums.PrintStatus.Submitted && viewModel.PrintRequestedAt == null;
 
@@ -129,8 +130,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             viewModel.PrintStatus = printStatus;
             viewModel.PrintStatusDate = printDate;
             viewModel.PrintStatusMessage = printMessage;
+            viewModel.PrintStatusDisplay = printStatus == Enums.PrintStatus.Requested ? "Print requested" : printStatus.ToString();
             viewModel.ShowPrintHeader = printStatus != Enums.PrintStatus.None && printStatus != Enums.PrintStatus.Submitted;
-            viewModel.ShowRequestPrint = printStatus == Enums.PrintStatus.Submitted && viewModel.PrintRequestedAt == null;
 
             var owned = await _sessionService.GetOwnedCertificatesAsync();
 
@@ -415,47 +416,38 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             }
 
             var ordered = deliveryInformation
-                .OrderByDescending(e => e.EventTime ?? DateTime.MinValue)
+                .OrderByDescending(e => e.EventTime)
                 .ToList();
 
             // Determine status from the latest event first
             var latest = ordered.First();
             var dt = latest.EventTime;
 
-            if (latest.Status?.Equals(DeliveryInformationStatuses.Delivered, StringComparison.OrdinalIgnoreCase) == true)
+            switch (latest.Status)
             {
-                var msg = dt != null
-                    ? $"A certificate was delivered on {dt:dd MMMM yyyy}."
-                    : "A certificate was delivered.";
-
-                return (Enums.PrintStatus.Delivered, dt, msg);
+                case var s when s.Equals(DeliveryInformationStatuses.Delivered, StringComparison.OrdinalIgnoreCase):
+                {
+                    var msg = $"A certificate was delivered on {dt:dd MMMM yyyy}.";
+                    return (Enums.PrintStatus.Delivered, dt, msg);
+                }
+                case var s when s.Equals(DeliveryInformationStatuses.Printed, StringComparison.OrdinalIgnoreCase):
+                {
+                    var msg = $"A certificate was printed on {dt:dd MMMM yyyy}. It can take up to 3 weeks to be delivered.";
+                    return (Enums.PrintStatus.Printed, dt, msg);
+                }
+                case var s when s.Equals(DeliveryInformationStatuses.SentToPrinter, StringComparison.OrdinalIgnoreCase)
+                              || s.Equals(DeliveryInformationStatuses.Reprint, StringComparison.OrdinalIgnoreCase):
+                {
+                    var msg = $"A certificate was requested on {dt:dd MMMM yyyy}. It can take up to 3 weeks to be delivered.";
+                    return (Enums.PrintStatus.Requested, dt, msg);
+                }
+                case var s when s.Equals(DeliveryInformationStatuses.Submitted, StringComparison.OrdinalIgnoreCase):
+                {
+                    return (Enums.PrintStatus.Submitted, null, null);
+                }
+                default:
+                    return (Enums.PrintStatus.None, null, null);
             }
-
-            if (latest.Status?.Equals(DeliveryInformationStatuses.Printed, StringComparison.OrdinalIgnoreCase) == true)
-            {
-                var msg = dt != null
-                    ? $"You requested a certificate on {dt:dd MMMM yyyy}. It can take up to 3 weeks to be delivered."
-                    : "You requested a certificate. It can take up to 3 weeks to be delivered.";
-
-                return (Enums.PrintStatus.Printed, dt, msg);
-            }
-
-            if (latest.Status?.Equals(DeliveryInformationStatuses.SentToPrinter, StringComparison.OrdinalIgnoreCase) == true
-                || latest.Status?.Equals(DeliveryInformationStatuses.Reprint, StringComparison.OrdinalIgnoreCase) == true)
-            {
-                var msg = dt != null
-                    ? $"You requested a certificate on {dt:dd MMMM yyyy}. It can take up to 3 weeks to be delivered."
-                    : "You requested a certificate. It can take up to 3 weeks to be delivered.";
-
-                return (Enums.PrintStatus.Requested, dt, msg);
-            }
-
-            if (latest.Status?.Equals(DeliveryInformationStatuses.Submitted, StringComparison.OrdinalIgnoreCase) == true)
-            {
-                return (Enums.PrintStatus.Submitted, null, null);
-            }
-
-            return (Enums.PrintStatus.None, null, null);
         }
     }
 }
