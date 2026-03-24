@@ -137,8 +137,13 @@
                     }
                 </dl>
 
-                    <form asp-route="@CertificatesController.ContactUsForCertificateCreateRoutePost" asp-route-certificateId="@certificateId" method="post">
-                        <p class="govuk-body">If these details are wrong, <button type="submit" class="das-button--inline-link" data-prevent-double-click="true" data-module="govuk-button">contact us to correct your details</button>.</p>
+                    <form asp-route="@CertificatesController.ContactUsForCertificateCreateRoutePost"
+                          asp-route-certificateId="@certificateId"
+                          method="post">
+                        <p class="govuk-body">
+                            If these details are wrong, 
+                            <button type="submit" class="das-button--inline-link" data-prevent-double-click="true" data-module="govuk-button">contact us to correct your details</button>.
+                        </p>
                     </form>
 
                 <h2 class="govuk-heading-m">Create a sharing link</h2>
@@ -188,8 +193,13 @@
                     </dl>
 
                     <p class="govuk-body">@Model?.PrintStatusMessage</p>
-                    <form asp-route="@CertificatesController.ContactUsForCertificateCreateRoutePost" asp-route-certificateId="@certificateId" method="post">
-                        <p class="govuk-body">If your certificate has been lost, <button type="submit" name="actionType" value="Reprint" class="das-button--inline-link" data-prevent-double-click="true" data-module="govuk-button">contact us for a replacement printed certificate</button>.</p>
+                    <form asp-route="@CertificatesController.ContactUsForCertificateCreateRoutePost"
+                          asp-route-certificateId="@certificateId"
+                          method="post">
+                        <p class="govuk-body">
+                            If your certificate has been lost, 
+                            <button type="submit" name="actionType" value="Reprint" class="das-button--inline-link" data-prevent-double-click="true" data-module="govuk-button">contact us for a replacement printed certificate</button>.
+                        </p>
                     </form>
                 }
 
