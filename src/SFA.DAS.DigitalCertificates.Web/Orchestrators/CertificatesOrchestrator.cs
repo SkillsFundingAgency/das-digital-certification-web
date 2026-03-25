@@ -83,8 +83,15 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             viewModel.PrintStatusDate = printDate;
             viewModel.PrintStatusMessage = printMessage;
             viewModel.PrintStatusDisplay = printStatus == Enums.PrintStatus.Requested ? "Print requested" : printStatus.ToString();
-            viewModel.ShowPrintHeader = printStatus != Enums.PrintStatus.None && printStatus != Enums.PrintStatus.Submitted;
-            viewModel.ShowRequestPrint = printStatus == Enums.PrintStatus.Submitted && viewModel.PrintRequestedAt == null;
+            viewModel.ShowPrintHeader = printStatus != Enums.PrintStatus.None;
+            var isLatestSubmitted = false;
+            if (result.DeliveryInformation != null && result.DeliveryInformation.Any())
+            {
+                var latestEvent = result.DeliveryInformation.OrderByDescending(d => d.EventTime).First();
+                isLatestSubmitted = latestEvent.Status.Equals(DeliveryInformationStatuses.Submitted, StringComparison.OrdinalIgnoreCase);
+            }
+
+            viewModel.ShowRequestPrint = isLatestSubmitted && viewModel.PrintRequestedAt == null;
 
             var owned = await _sessionService.GetOwnedCertificatesAsync();
 
@@ -131,7 +138,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             viewModel.PrintStatusDate = printDate;
             viewModel.PrintStatusMessage = printMessage;
             viewModel.PrintStatusDisplay = printStatus == Enums.PrintStatus.Requested ? "Print requested" : printStatus.ToString();
-            viewModel.ShowPrintHeader = printStatus != Enums.PrintStatus.None && printStatus != Enums.PrintStatus.Submitted;
+            viewModel.ShowPrintHeader = printStatus != Enums.PrintStatus.None;
 
             var owned = await _sessionService.GetOwnedCertificatesAsync();
 
@@ -410,12 +417,20 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 
         private (Enums.PrintStatus status, DateTime? date, string? message) MapPrintStatus(List<DeliveryInformationResponse>? deliveryInformation)
         {
-            if (deliveryInformation == null || !deliveryInformation.Any())
+            // If a release date is configured, only consider delivery events after the release date
+            var filtered = deliveryInformation;
+            var releaseDate = _configuration.ReleaseDate;
+            if (releaseDate.HasValue && filtered != null)
+            {
+                filtered = filtered.Where(d => d.EventTime > releaseDate.Value).ToList();
+            }
+
+            if (filtered == null || !filtered.Any())
             {
                 return (Enums.PrintStatus.None, null, null);
             }
 
-            var ordered = deliveryInformation
+            var ordered = filtered
                 .OrderByDescending(e => e.EventTime)
                 .ToList();
 
@@ -440,10 +455,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 {
                     var msg = $"A certificate was requested on {dt:dd MMMM yyyy}. It can take up to 3 weeks to be delivered.";
                     return (Enums.PrintStatus.Requested, dt, msg);
-                }
-                case var s when s.Equals(DeliveryInformationStatuses.Submitted, StringComparison.OrdinalIgnoreCase):
-                {
-                    return (Enums.PrintStatus.Submitted, null, null);
                 }
                 default:
                     return (Enums.PrintStatus.None, null, null);

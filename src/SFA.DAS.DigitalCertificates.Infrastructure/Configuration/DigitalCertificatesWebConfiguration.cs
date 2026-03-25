@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Collections.Generic;
 
 namespace SFA.DAS.DigitalCertificates.Infrastructure.Configuration
@@ -13,6 +14,7 @@ namespace SFA.DAS.DigitalCertificates.Infrastructure.Configuration
         public int? SharingHistoryLimit { get; set; }
 
         public List<NotificationTemplate>? NotificationTemplates { get; set; }
+        public DateTime? ReleaseDate { get; set; }
     }
 
     [ExcludeFromCodeCoverage]
