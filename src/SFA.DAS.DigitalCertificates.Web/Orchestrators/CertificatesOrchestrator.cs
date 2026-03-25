@@ -440,9 +440,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             var latest = ordered.First();
             var dt = latest.EventTime;
 
-            var status = latest.Status ?? string.Empty;
-
-            switch (status)
+            switch (latest.Status)
             {
                 case var s when string.Equals(s, DeliveryInformationStatuses.Delivered, StringComparison.OrdinalIgnoreCase):
                     {
