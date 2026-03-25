@@ -53,7 +53,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
         }
 
         [Test]
-        public async Task SigningOut_ReturnsSignOutResult_WithOidcHint_AndSchemes_AndClearsSession()
+        public async Task SigningOut_ReturnsSignOutResult_WithOidcHint_AndSchemes()
         {
             // Arrange
             var idToken = "some_id_token";
@@ -113,13 +113,6 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
 
             signOut.Properties.Parameters.Should().ContainKey(OpenIdConnectParameterNames.IdTokenHint);
             signOut.Properties.Parameters[OpenIdConnectParameterNames.IdTokenHint].Should().Be(idToken);
-
-            _cacheServiceMock.Verify(
-                x => x.Clear(govUkIdentifier),
-                Times.Once
-            );
-
-            _sessionServiceMock.Verify(s => s.ClearSessionDataAsync(govUkIdentifier), Times.Once);
         }
 
         [Test]

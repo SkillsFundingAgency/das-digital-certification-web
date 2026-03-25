@@ -59,12 +59,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
                     .ToArray();
             }
 
-            var govUkIdentifier = _userService.GetGovUkIdentifier();
-
-            await _cacheService.Clear(govUkIdentifier);
-            await _sessionService.ClearSessionDataAsync(govUkIdentifier);
-
-            HttpContextAccessor.HttpContext?.Session?.Clear();
 
             return SignOut(
                 authenticationProperties,
