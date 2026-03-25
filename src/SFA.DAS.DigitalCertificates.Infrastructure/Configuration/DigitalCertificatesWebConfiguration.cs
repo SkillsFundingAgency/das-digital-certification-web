@@ -14,7 +14,7 @@ namespace SFA.DAS.DigitalCertificates.Infrastructure.Configuration
         public int? SharingHistoryLimit { get; set; }
 
         public List<NotificationTemplate>? NotificationTemplates { get; set; }
-        public DateTime? ReleaseDate { get; set; }
+        public DateTime? CutoverDate { get; set; }
     }
 
     [ExcludeFromCodeCoverage]

@@ -83,15 +83,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             viewModel.PrintStatusDate = printDate;
             viewModel.PrintStatusMessage = printMessage;
             viewModel.PrintStatusDisplay = printStatus == Enums.PrintStatus.Requested ? "Print requested" : printStatus.ToString();
-            viewModel.ShowPrintHeader = printStatus != Enums.PrintStatus.None;
-            var isLatestSubmitted = false;
-            if (result.DeliveryInformation != null && result.DeliveryInformation.Any())
-            {
-                var latestEvent = result.DeliveryInformation.OrderByDescending(d => d.EventTime).First();
-                isLatestSubmitted = latestEvent.Status.Equals(DeliveryInformationStatuses.Submitted, StringComparison.OrdinalIgnoreCase);
-            }
-
-            viewModel.ShowRequestPrint = isLatestSubmitted && viewModel.PrintRequestedAt == null;
+            viewModel.ShowPrintHeader = printStatus != Enums.PrintStatus.None && printStatus != Enums.PrintStatus.Submitted;
+            viewModel.ShowRequestPrint = printStatus == Enums.PrintStatus.Submitted && viewModel.PrintRequestedAt == null;
 
             var owned = await _sessionService.GetOwnedCertificatesAsync();
 
@@ -138,7 +131,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             viewModel.PrintStatusDate = printDate;
             viewModel.PrintStatusMessage = printMessage;
             viewModel.PrintStatusDisplay = printStatus == Enums.PrintStatus.Requested ? "Print requested" : printStatus.ToString();
-            viewModel.ShowPrintHeader = printStatus != Enums.PrintStatus.None;
+            viewModel.ShowPrintHeader = printStatus != Enums.PrintStatus.None && printStatus != Enums.PrintStatus.Submitted;
 
             var owned = await _sessionService.GetOwnedCertificatesAsync();
 
@@ -417,45 +410,65 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 
         private (Enums.PrintStatus status, DateTime? date, string? message) MapPrintStatus(List<DeliveryInformationResponse>? deliveryInformation)
         {
-            // If a release date is configured, only consider delivery events after the release date
-            var filtered = deliveryInformation;
-            var releaseDate = _configuration.ReleaseDate;
-            if (releaseDate.HasValue && filtered != null)
-            {
-                filtered = filtered.Where(d => d.EventTime > releaseDate.Value).ToList();
-            }
+            var cutoverDate = _configuration.CutoverDate;
 
-            if (filtered == null || !filtered.Any())
+            if (deliveryInformation == null || !deliveryInformation.Any())
             {
                 return (Enums.PrintStatus.None, null, null);
             }
 
-            var ordered = filtered
+            // If a cutover date is configured, ensure we have relevant events after it
+            if (cutoverDate.HasValue)
+            {
+                var relevantEvents = deliveryInformation.Where(d =>
+                    string.Equals(d.Status, DeliveryInformationStatuses.Submitted, StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(d.Status, DeliveryInformationStatuses.Reprint, StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(d.Status, DeliveryInformationStatuses.Printed, StringComparison.OrdinalIgnoreCase));
+
+                var hasRelevantAfterCutover = relevantEvents.Any() && relevantEvents.All(d => d.EventTime > cutoverDate.Value);
+
+                if (!hasRelevantAfterCutover)
+                {
+                    return (Enums.PrintStatus.None, null, null);
+                }
+            }
+
+            var ordered = deliveryInformation
                 .OrderByDescending(e => e.EventTime)
                 .ToList();
 
-            // Determine status from the latest event first
             var latest = ordered.First();
             var dt = latest.EventTime;
 
-            switch (latest.Status)
+            var status = latest.Status ?? string.Empty;
+
+            switch (status)
             {
-                case var s when s.Equals(DeliveryInformationStatuses.Delivered, StringComparison.OrdinalIgnoreCase):
-                {
-                    var msg = $"A certificate was delivered on {dt:dd MMMM yyyy}.";
-                    return (Enums.PrintStatus.Delivered, dt, msg);
-                }
-                case var s when s.Equals(DeliveryInformationStatuses.Printed, StringComparison.OrdinalIgnoreCase):
-                {
-                    var msg = $"A certificate was printed on {dt:dd MMMM yyyy}. It can take up to 3 weeks to be delivered.";
-                    return (Enums.PrintStatus.Printed, dt, msg);
-                }
-                case var s when s.Equals(DeliveryInformationStatuses.SentToPrinter, StringComparison.OrdinalIgnoreCase)
-                              || s.Equals(DeliveryInformationStatuses.Reprint, StringComparison.OrdinalIgnoreCase):
-                {
-                    var msg = $"A certificate was requested on {dt:dd MMMM yyyy}. It can take up to 3 weeks to be delivered.";
-                    return (Enums.PrintStatus.Requested, dt, msg);
-                }
+                case var s when string.Equals(s, DeliveryInformationStatuses.Delivered, StringComparison.OrdinalIgnoreCase):
+                    {
+                        var msg = $"A certificate was delivered on {dt:dd MMMM yyyy}.";
+                        return (Enums.PrintStatus.Delivered, dt, msg);
+                    }
+
+                case var s when string.Equals(s, DeliveryInformationStatuses.Printed, StringComparison.OrdinalIgnoreCase):
+                    {
+                        var msg = $"A certificate was printed on {dt:dd MMMM yyyy}. It can take up to 3 weeks to be delivered.";
+                        return (Enums.PrintStatus.Printed, dt, msg);
+                    }
+
+                case var s when string.Equals(s, DeliveryInformationStatuses.Submitted, StringComparison.OrdinalIgnoreCase):
+                    {
+                        return (Enums.PrintStatus.Submitted, null, null);
+                    }
+
+                case var s when string.Equals(s, DeliveryInformationStatuses.SentToPrinter, StringComparison.OrdinalIgnoreCase)
+                           || string.Equals(s, DeliveryInformationStatuses.Reprint, StringComparison.OrdinalIgnoreCase)
+                           || string.Equals(s, DeliveryInformationStatuses.PrintRequested, StringComparison.OrdinalIgnoreCase):
+                    {
+                        var msg = $"A certificate was requested on {dt:dd MMMM yyyy}. It can take up to 3 weeks to be delivered.";
+                        return (Enums.PrintStatus.Requested, dt, msg);
+                    }
+
                 default:
                     return (Enums.PrintStatus.None, null, null);
             }
