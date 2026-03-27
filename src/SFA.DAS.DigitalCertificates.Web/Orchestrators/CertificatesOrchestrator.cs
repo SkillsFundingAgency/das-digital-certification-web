@@ -84,6 +84,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             viewModel.PrintStatusMessage = printMessage;
             viewModel.PrintStatusDisplay = printStatus == Enums.PrintStatus.Requested ? "Print requested" : printStatus.ToString();
             viewModel.ShowPrintHeader = printStatus != Enums.PrintStatus.None && printStatus != Enums.PrintStatus.Submitted;
+            viewModel.PrintStatusCssClass = CssClassForStatus(printStatus);
             viewModel.ShowRequestPrint = printStatus == Enums.PrintStatus.Submitted && viewModel.PrintRequestedAt == null;
 
             var owned = await _sessionService.GetOwnedCertificatesAsync();
@@ -131,6 +132,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             viewModel.PrintStatusDate = printDate;
             viewModel.PrintStatusMessage = printMessage;
             viewModel.PrintStatusDisplay = printStatus == Enums.PrintStatus.Requested ? "Print requested" : printStatus.ToString();
+            viewModel.PrintStatusCssClass = CssClassForStatus(printStatus);
             viewModel.ShowPrintHeader = printStatus != Enums.PrintStatus.None && printStatus != Enums.PrintStatus.Submitted;
 
             var owned = await _sessionService.GetOwnedCertificatesAsync();
@@ -470,6 +472,17 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 default:
                     return (Enums.PrintStatus.None, null, null);
             }
+        }
+
+        private string CssClassForStatus(Enums.PrintStatus status)
+        {
+            return status switch
+            {
+                Enums.PrintStatus.Delivered => "status-tag status-tag--delivered",
+                Enums.PrintStatus.Printed => "status-tag status-tag--requested",
+                Enums.PrintStatus.Requested => "status-tag status-tag--requested",
+                _ => "status-tag status-tag--neutral",
+            };
         }
     }
 }

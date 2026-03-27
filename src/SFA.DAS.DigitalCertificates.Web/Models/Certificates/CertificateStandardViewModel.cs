@@ -31,6 +31,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Models.Certificates
         public PrintStatus PrintStatus { get; set; } = PrintStatus.None;
         public DateTime? PrintStatusDate { get; set; }
         public string? PrintStatusMessage { get; set; }
+        public string? PrintStatusCssClass { get; set; }
         public string? PrintStatusDisplay { get; set; }
         public bool ShowBackLink { get; set; } = true;
         public bool ShowPrintHeader { get; set; }
