@@ -139,6 +139,11 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 CourseName = courseName
             });
 
+            if (result != null && !string.IsNullOrEmpty(result.ActionCode))
+            {
+                await _sessionService.SetContactReferenceAsync(result.ActionCode);
+            }
+
             return new CreateUserActionForCertificateResult
             {
                 ReferenceNumber = result?.ActionCode ?? string.Empty,
@@ -164,6 +169,11 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 FamilyName = familyName,
                 GivenNames = givenNames
             });
+
+            if (result != null && !string.IsNullOrEmpty(result.ActionCode))
+            {
+                await _sessionService.SetContactReferenceAsync(result.ActionCode);
+            }
 
             return result?.ActionCode ?? string.Empty;
         }

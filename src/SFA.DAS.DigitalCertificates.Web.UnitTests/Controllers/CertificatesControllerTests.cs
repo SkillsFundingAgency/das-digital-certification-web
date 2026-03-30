@@ -77,6 +77,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             result.RouteValues.Should().ContainKey("certificateId");
             result.RouteValues["certificateId"].Should().Be(certificateId);
             _certificatesOrchestratorMock.Verify(x => x.GetCertificatesListViewModel(), Times.Once);
+            _sessionServiceMock.Verify(s => s.ClearContactReferenceAsync(), Times.Once);
         }
 
         [Test]
@@ -104,6 +105,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             result.Should().NotBeNull();
             result!.Model.Should().BeEquivalentTo(model);
             _certificatesOrchestratorMock.Verify(c => c.GetCertificateStandardViewModel(certificateId), Times.Once);
+            _sessionServiceMock.Verify(s => s.ClearContactReferenceAsync(), Times.Once);
         }
 
         [Test]
@@ -131,6 +133,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             result.Should().NotBeNull();
             result!.Model.Should().BeEquivalentTo(model);
             _certificatesOrchestratorMock.Verify(c => c.GetCertificateFrameworkViewModel(certificateId), Times.Once);
+            _sessionServiceMock.Verify(s => s.ClearContactReferenceAsync(), Times.Once);
         }
 
         [Test]
@@ -857,7 +860,6 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             result.Should().NotBeNull();
             result!.RouteName.Should().Be(CertificatesController.ContactUsForCertificateRouteGet);
             result.RouteValues["certificateId"].Should().Be(certificateId);
-            result.RouteValues["referenceNumber"].Should().Be(referenceNumber);
         }
 
         [Test]

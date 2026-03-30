@@ -15,6 +15,9 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
         Task<List<Certificate>?> GetOwnedCertificatesAsync(string govUkIdentifier);
         Task<UlnAuthorisation?> GetUlnAuthorisationAsync(string govUkIdentifier);
         Task ClearSessionDataAsync(string govUkIdentifier);
+        Task SetContactReferenceAsync(string referenceNumber);
+        Task<string?> GetContactReferenceAsync();
+        Task ClearContactReferenceAsync();
         Task AddRecordedSharingAccessCodeAsync(Guid code);
         Task<bool> IsSharingAccessCodeRecordedAsync(Guid code);
     }
