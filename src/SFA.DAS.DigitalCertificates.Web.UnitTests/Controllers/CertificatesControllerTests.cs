@@ -105,6 +105,81 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             result!.Model.Should().BeEquivalentTo(model);
             _certificatesOrchestratorMock.Verify(c => c.GetCertificateStandardViewModel(certificateId), Times.Once);
         }
+        [Test]
+        public async Task DownloadCertificateStandardPdf_Returns_NotFound_When_Model_Is_Null()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+
+            _certificatesOrchestratorMock
+                .Setup(x => x.GetDownloadCertificateViewModelAsync(certificateId))
+                .ReturnsAsync((DownloadCertificateViewModel)null!);
+
+            // Act
+            var result = await _sut.DownloadCertificateStandardPdf(certificateId);
+
+            // Assert
+            result.Should().BeOfType<NotFoundResult>();
+
+            _certificatesOrchestratorMock.Verify(
+                x => x.GetDownloadCertificateViewModelAsync(certificateId),
+                Times.Once);
+
+            _certificatesOrchestratorMock.Verify(
+                x => x.GenerateCertificateAsync(It.IsAny<DownloadCertificateViewModel>()),
+                Times.Never);
+        }
+
+        [Test]
+        public async Task DownloadCertificateStandardPdf_Returns_Pdf_File_When_Model_Found()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+            var pdfBytes = new byte[] { 1, 2, 3, 4 };
+
+            var model = new DownloadCertificateViewModel
+            {
+                CertificationNumber = "678123",
+                FamilyName = "Test",
+                GivenNames = "Test Given Name",
+                OptionName = "Software developer",
+                Level = "3",
+                Result = "Pass",
+                StandardName = "Test",
+                CoronationEmblem = false,
+                DateAwarded = DateTime.UtcNow,
+
+
+            };
+
+            _certificatesOrchestratorMock
+                .Setup(x => x.GetDownloadCertificateViewModelAsync(certificateId))
+                .ReturnsAsync(model);
+
+            _certificatesOrchestratorMock
+                .Setup(x => x.GenerateCertificateAsync(model))
+                .ReturnsAsync(pdfBytes);
+
+            // Act
+            var result = await _sut.DownloadCertificateStandardPdf(certificateId);
+
+            // Assert
+            result.Should().BeOfType<FileContentResult>();
+
+            var fileResult = result as FileContentResult;
+            fileResult.Should().NotBeNull();
+            fileResult!.ContentType.Should().Be("application/pdf");
+            fileResult.FileDownloadName.Should().Be("678123.pdf");
+            fileResult.FileContents.Should().BeEquivalentTo(pdfBytes);
+
+            _certificatesOrchestratorMock.Verify(
+                x => x.GetDownloadCertificateViewModelAsync(certificateId),
+                Times.Once);
+
+            _certificatesOrchestratorMock.Verify(
+                x => x.GenerateCertificateAsync(model),
+                Times.Once);
+        }
 
         [Test]
         public async Task CertificateFramework_Returns_View()

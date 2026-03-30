@@ -22,5 +22,6 @@ namespace SFA.DAS.DigitalCertificates.Infrastructure.Api.Responses
         public DateTime? StartDate { get; set; }
         public DateTime? PrintRequestedAt { get; set; }
         public string? PrintRequestedBy { get; set; }
+        public bool CoronationEmblem { get; set; }
     }
 }

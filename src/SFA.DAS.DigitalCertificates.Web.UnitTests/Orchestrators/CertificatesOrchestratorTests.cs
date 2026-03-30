@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using Aspose.Pdf;
+using Aspose.Pdf.Forms;
 using FluentAssertions;
 using MediatR;
 using Moq;
@@ -9,8 +7,15 @@ using NUnit.Framework;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetFrameworkCertificate;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetStandardCertificate;
 using SFA.DAS.DigitalCertificates.Domain.Models;
+using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
+using SFA.DAS.DigitalCertificates.Web.Models.Certificates;
 using SFA.DAS.DigitalCertificates.Web.Orchestrators;
 using SFA.DAS.DigitalCertificates.Web.Services;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
 {
@@ -19,6 +24,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         private Mock<IMediator> _mediatorMock;
         private Mock<ISessionService> _sessionMock;
         private Mock<IUserService> _userServiceMock;
+        private Mock<IBlobService> _blobServiceMock;
+        private DigitalCertificatesWebConfiguration _digitalCertificatesWebConfig;
 
         private CertificatesOrchestrator _sut;
 
@@ -28,11 +35,25 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             _mediatorMock = new Mock<IMediator>();
             _sessionMock = new Mock<ISessionService>();
             _userServiceMock = new Mock<IUserService>();
+            _blobServiceMock = new Mock<IBlobService>();
+            _digitalCertificatesWebConfig = new DigitalCertificatesWebConfiguration
+            {
+                ServiceBaseUrl = "https://test.local",
+                RedisConnectionString = "UseDevelopmentStorage=true",
+                DataProtectionKeysDatabase = "TestDb",
+
+                StandardTemplateBlobName = "standard-template",
+                GreenStandardTemplateBlobName = "green-standard-template",
+                Flatten = false,
+                MasterPassword = "master-password"
+            };           
 
             _sut = new CertificatesOrchestrator(
                 _mediatorMock.Object,
                 _sessionMock.Object,
-                _userServiceMock.Object);
+                _userServiceMock.Object,
+                _blobServiceMock.Object,
+                _digitalCertificatesWebConfig);
         }
 
         [Test]
@@ -107,6 +128,429 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             // Assert
             _mediatorMock.Verify(m => m.Send(It.IsAny<object>(), default), Times.Never);
         }
+
+        [Test]
+        public async Task GetDownloadCertificateViewModelAsync_ReturnsNull_When_MediatorReturnsNull()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+
+            _mediatorMock
+                .Setup(m => m.Send(
+                    It.Is<GetStandardCertificateQuery>(q => q.CertificateId == certificateId),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync((GetStandardCertificateQueryResult)null);
+
+            // Act
+            var result = await _sut.GetDownloadCertificateViewModelAsync(certificateId);
+
+            // Assert
+            result.Should().BeNull();
+        }
+
+        [Test]
+        public async Task GetDownloadCertificateViewModelAsync_ReturnsMappedViewModel_When_MediatorReturnsResult()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+            var dateAwarded = new DateTime(2025, 3, 24);
+
+            var queryResult = new GetStandardCertificateQueryResult
+            {
+                CertificateType = "Standard",
+                FamilyName = "Smith",
+                GivenNames = "John Andrew",
+                CourseName = "Software Developer",
+                CourseOption = "Frontend",
+                CourseLevel = 3,
+                OverallGrade = "Distinction",
+                DateAwarded = dateAwarded,
+                CertificateReference = "CERT-12345",
+                CoronationEmblem = true
+            };
+
+            _mediatorMock
+                .Setup(m => m.Send(
+                    It.Is<GetStandardCertificateQuery>(q => q.CertificateId == certificateId),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(queryResult);
+
+            // Act
+            var result = await _sut.GetDownloadCertificateViewModelAsync(certificateId);
+
+            // Assert
+            result.Should().NotBeNull();
+            result.FamilyName.Should().Be(queryResult.FamilyName);
+            result.GivenNames.Should().Be(queryResult.GivenNames);
+            result.StandardName.Should().Be(queryResult.CourseName);
+            result.OptionName.Should().Be(queryResult.CourseOption);
+            result.Level.Should().Be(queryResult.CourseLevel.ToString());
+            result.Result.Should().Be(queryResult.OverallGrade);
+            result.DateAwarded.Should().Be(queryResult.DateAwarded);
+            result.CertificationNumber.Should().Be(queryResult.CertificateReference);
+            result.CoronationEmblem.Should().Be(queryResult.CoronationEmblem);
+        }
+
+        [Test]
+        public async Task GenerateCertificateAsync_UsesStandardTemplate_WhenCoronationEmblemIsFalse()
+        {
+            // Arrange
+            var templateBytes = CreatePdfTemplateBytes();
+            var model = CreateModel(coronationEmblem: false);
+
+            _blobServiceMock
+                .Setup(x => x.GetBlobBytesAsync("standard-template"))
+                .ReturnsAsync(templateBytes);
+
+            // Act
+            var result = await _sut.GenerateCertificateAsync(model);
+
+            // Assert
+            result.Should().NotBeNull();
+            result.Should().NotBeEmpty();
+
+            _blobServiceMock.Verify(x => x.GetBlobBytesAsync("standard-template"), Times.Once);
+            _blobServiceMock.Verify(x => x.GetBlobBytesAsync("green-standard-template"), Times.Never);
+        }
+
+        [Test]
+        public async Task GenerateCertificateAsync_UsesGreenTemplate_WhenCoronationEmblemIsTrue()
+        {
+            // Arrange
+            var templateBytes = CreatePdfTemplateBytes();
+            var model = CreateModel(coronationEmblem: true);
+
+            _blobServiceMock
+                .Setup(x => x.GetBlobBytesAsync("green-standard-template"))
+                .ReturnsAsync(templateBytes);
+
+            // Act
+            var result = await _sut.GenerateCertificateAsync(model);
+
+            // Assert
+            result.Should().NotBeNull();
+            result.Should().NotBeEmpty();
+
+            _blobServiceMock.Verify(x => x.GetBlobBytesAsync("green-standard-template"), Times.Once);
+            _blobServiceMock.Verify(x => x.GetBlobBytesAsync("standard-template"), Times.Never);
+        }
+
+        [Test]
+        public async Task GenerateCertificateAsync_PopulatesPdfFields_FromModel()
+        {
+            // Arrange
+            var templateBytes = CreatePdfTemplateBytes();
+            var model = new DownloadCertificateViewModel
+            {
+                FamilyName = "Smith",
+                GivenNames = "John Andrew",
+                StandardName = "Software Developer",
+                OptionName = "Frontend",
+                Level = "3",
+                Result = "Distinction",
+                DateAwarded = new DateTime(2025, 3, 24),
+                CoronationEmblem = false,
+                CertificationNumber = "1234567"
+
+            };
+
+            _blobServiceMock
+                .Setup(x => x.GetBlobBytesAsync("standard-template"))
+                .ReturnsAsync(templateBytes);
+
+            // Act
+            var result = await _sut.GenerateCertificateAsync(model);
+
+            // Assert
+            result.Should().NotBeNull();
+            result.Should().NotBeEmpty();
+
+            using var stream = new MemoryStream(result);
+            using var document = new Document(stream);
+
+            var fullName = ((TextBoxField)document.Form["Full Name"]).Value;
+            var passedInfo = ((TextBoxField)document.Form["Passed info"]).Value;
+            var achievedGrade = ((TextBoxField)document.Form["Achieved grade"]).Value;
+            var awardedOn = ((TextBoxField)document.Form["Awarded on"]).Value;
+
+            fullName.Should().Be(model.FullName);
+            passedInfo.Should().Be("Software Developer\nFrontend\n3");
+            achievedGrade.Should().Be("Distinction");
+            awardedOn.Should().Be("24 March 2025");
+        }
+
+        [Test]
+        public async Task GenerateCertificateAsync_OmitsBlankPassedInfoLines()
+        {
+            // Arrange
+            var templateBytes = CreatePdfTemplateBytes();
+            var model = new DownloadCertificateViewModel
+            {
+                FamilyName = "Smith",
+                GivenNames = "John",
+                StandardName = "Software Developer",
+                OptionName = "",
+                Level = null,
+                Result = "Pass",
+                DateAwarded = new DateTime(2025, 3, 24),
+                CoronationEmblem = false,
+                CertificationNumber = "78787878"
+            };
+
+            _blobServiceMock
+                .Setup(x => x.GetBlobBytesAsync("standard-template"))
+                .ReturnsAsync(templateBytes);
+
+            // Act
+            var result = await _sut.GenerateCertificateAsync(model);
+
+            // Assert
+            using var stream = new MemoryStream(result);
+            using var document = new Document(stream);
+
+            var passedInfo = ((TextBoxField)document.Form["Passed info"]).Value;
+            passedInfo.Should().Be("Software Developer");
+        }
+
+        [Test]
+        public async Task GenerateCertificateAsync_SetsAwardedOnToEmpty_WhenDateAwardedIsNull()
+        {
+            // Arrange
+            var templateBytes = CreatePdfTemplateBytes();
+            var model = CreateModel();
+            model.DateAwarded = null;
+
+            _blobServiceMock
+                .Setup(x => x.GetBlobBytesAsync("standard-template"))
+                .ReturnsAsync(templateBytes);
+
+            // Act
+            var result = await _sut.GenerateCertificateAsync(model);
+
+            // Assert
+            using var stream = new MemoryStream(result);
+            using var document = new Document(stream);
+
+            var awardedOn = ((TextBoxField)document.Form["Awarded on"]).Value;
+            awardedOn.Should().BeEmpty();
+        }
+
+        [Test]
+        public async Task GenerateCertificateAsync_FlattensForm_WhenFlattenIsTrue()
+        {
+            // Arrange
+            var templateBytes = CreatePdfTemplateBytes();
+            var model = CreateModel();
+
+            _digitalCertificatesWebConfig.Flatten = true;
+
+            _blobServiceMock
+                .Setup(x => x.GetBlobBytesAsync("standard-template"))
+                .ReturnsAsync(templateBytes);
+
+            // Act
+            var result = await _sut.GenerateCertificateAsync(model);
+
+            // Assert
+            using var stream = new MemoryStream(result);
+            using var document = new Document(stream);
+
+            document.Form.Count.Should().Be(0);
+        }
+
+        [Test]
+        public async Task GenerateCertificateAsync_EncryptsPdf_WhenMasterPasswordIsConfigured()
+        {
+            // Arrange
+            var templateBytes = CreatePdfTemplateBytes();
+            var model = CreateModel();
+            model.CoronationEmblem = false;
+
+            _digitalCertificatesWebConfig.MasterPassword = "super-secret";
+
+            templateBytes.Should().NotBeNull();
+            templateBytes.Should().NotBeEmpty();
+
+            _blobServiceMock
+                .Setup(x => x.GetBlobBytesAsync(It.IsAny<string>()))
+                .ReturnsAsync((string blobName) =>
+                {
+                    blobName.Should().Be("standard-template");
+                    return templateBytes;
+                });
+
+            // Act
+            var result = await _sut.GenerateCertificateAsync(model);
+
+            // Assert
+            result.Should().NotBeNull();
+            result.Should().NotBeEmpty();
+        }
+        [Test]
+        public async Task GenerateCertificateAsync_ThrowsException_WhenTemplateFieldIsMissing()
+        {
+            // Arrange
+            var templateBytes = CreatePdfTemplateBytesWithoutAwardedOn();
+            var model = CreateModel();
+
+            _blobServiceMock
+                .Setup(x => x.GetBlobBytesAsync(_digitalCertificatesWebConfig.StandardTemplateBlobName))
+                .ReturnsAsync(templateBytes);
+
+            // Act
+            Func<Task> act = async () => await _sut.GenerateCertificateAsync(model);
+
+            // Assert
+            var exception = await act.Should().ThrowAsync<InvalidOperationException>();
+            exception.Which.Message.Should().Be(
+                "The PDF template is missing required field(s): Awarded on");
+        }
+
+        [Test]
+        public async Task GenerateCertificateAsync_ThrowsException_WhenRequiredFieldNamesDoNotMatchTemplate()
+        {
+            // Arrange
+            var templateBytes = CreatePdfTemplateBytesWithOnlyFullName();
+            var model = CreateModel();
+
+            _blobServiceMock
+                .Setup(x => x.GetBlobBytesAsync(_digitalCertificatesWebConfig.StandardTemplateBlobName))
+                .ReturnsAsync(templateBytes);
+
+            // Act
+            Func<Task> act = async () => await _sut.GenerateCertificateAsync(model);
+
+            // Assert
+            var exception = await act.Should().ThrowAsync<InvalidOperationException>();
+            exception.Which.Message.Should().Be(
+                "The PDF template is missing required field(s): Passed info, Achieved grade, Awarded on");
+        }
+
+        private byte[] CreatePdfTemplateBytesWithOnlyFullName()
+        {
+            using var document = new Aspose.Pdf.Document();
+            var page = document.Pages.Add();
+
+            AddTextBoxField(document, page, "Full Name", 100, 700, 300, 730);
+
+            using var stream = new MemoryStream();
+            document.Save(stream);
+            return stream.ToArray();
+        }
+
+        private DownloadCertificateViewModel CreateModel(bool coronationEmblem = false)
+        {
+            return new DownloadCertificateViewModel
+            {
+                FamilyName = "Smith",
+                GivenNames = "John Andrew",
+                StandardName = "Software Developer",
+                OptionName = "Frontend",
+                Level = "3",
+                Result = "Distinction",
+                DateAwarded = new DateTime(2025, 3, 24),
+                CertificationNumber = "CERT-12345",
+                CoronationEmblem = coronationEmblem
+            };
+        }
+
+        [Test]
+        public async Task GenerateCertificateAsync_ThrowsException_WhenTemplateFieldIsMissing_ForGreenTemplate()
+        {
+            // Arrange
+            var templateBytes = CreatePdfTemplateBytesWithoutAwardedOn();
+            var model = CreateModel(coronationEmblem: true);
+
+            _blobServiceMock
+                .Setup(x => x.GetBlobBytesAsync(_digitalCertificatesWebConfig.GreenStandardTemplateBlobName))
+                .ReturnsAsync(templateBytes);
+
+            // Act
+            Func<Task> act = async () => await _sut.GenerateCertificateAsync(model);
+
+            // Assert
+            var exception = await act.Should().ThrowAsync<InvalidOperationException>();
+
+            exception.Which.Message.Should().Be(
+                "The PDF template is missing required field(s): Awarded on");
+
+            _blobServiceMock.Verify(
+                x => x.GetBlobBytesAsync(_digitalCertificatesWebConfig.GreenStandardTemplateBlobName),
+                Times.Once);
+
+            _blobServiceMock.Verify(
+                x => x.GetBlobBytesAsync(_digitalCertificatesWebConfig.StandardTemplateBlobName),
+                Times.Never);
+        }
+
+        [Test]
+        public async Task GenerateCertificateAsync_ThrowsException_WhenRequiredFieldNamesDoNotMatchTemplate_ForGreenTemplate()
+        {
+            // Arrange
+            var templateBytes = CreatePdfTemplateBytesWithOnlyFullName();
+            var model = CreateModel(coronationEmblem: true);
+
+            _blobServiceMock
+                .Setup(x => x.GetBlobBytesAsync(_digitalCertificatesWebConfig.GreenStandardTemplateBlobName))
+                .ReturnsAsync(templateBytes);
+
+            // Act
+            Func<Task> act = async () => await _sut.GenerateCertificateAsync(model);
+
+            // Assert
+            var exception = await act.Should().ThrowAsync<InvalidOperationException>();
+
+            exception.Which.Message.Should().Be(
+                "The PDF template is missing required field(s): Passed info, Achieved grade, Awarded on");
+
+            _blobServiceMock.Verify(
+                x => x.GetBlobBytesAsync(_digitalCertificatesWebConfig.GreenStandardTemplateBlobName),
+                Times.Once);
+
+            _blobServiceMock.Verify(
+                x => x.GetBlobBytesAsync(_digitalCertificatesWebConfig.StandardTemplateBlobName),
+                Times.Never);
+        }
+
+        private byte[] CreatePdfTemplateBytes()
+        {
+            var document = new Document();
+            var page = document.Pages.Add();
+
+            AddTextBoxField(document, page, "Full Name", 100, 700, 300, 730);
+            AddTextBoxField(document, page, "Passed info", 100, 650, 300, 690);
+            AddTextBoxField(document, page, "Achieved grade", 100, 600, 300, 630);
+            AddTextBoxField(document, page, "Awarded on", 100, 550, 300, 580);
+
+            using var stream = new MemoryStream();
+            document.Save(stream);
+            return stream.ToArray();
+        }
+
+        private byte[] CreatePdfTemplateBytesWithoutAwardedOn()
+        {
+            using var document = new Aspose.Pdf.Document();
+            var page = document.Pages.Add();
+
+            AddTextBoxField(document, page, "Full Name", 100, 700, 300, 730);
+            AddTextBoxField(document, page, "Passed info", 100, 650, 300, 690);
+            AddTextBoxField(document, page, "Achieved grade", 100, 600, 300, 630);
+
+            using var stream = new MemoryStream();
+            document.Save(stream);
+            return stream.ToArray();
+        }
+
+        private static void AddTextBoxField(Aspose.Pdf.Document document, Aspose.Pdf.Page page, string fieldName, int llx, int lly, int urx, int ury)
+        {
+            var field = new Aspose.Pdf.Forms.TextBoxField(page, new Aspose.Pdf.Rectangle(llx, lly, urx, ury))
+            {
+                PartialName = fieldName
+            };
+
+            document.Form.Add(field);
+        }
+
 
         [Test]
         public async Task GetCertificateStandardViewModel_ReturnsNull_When_MediatorReturnsNull()

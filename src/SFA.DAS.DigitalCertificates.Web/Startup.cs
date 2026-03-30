@@ -52,7 +52,7 @@ namespace SFA.DAS.DigitalCertificates.Web
 
             if (!_configuration.TryGetSection<GovUkOidcConfiguration>(out var govUkOidcConfiguration))
                 throw new InvalidOperationException("Missing GovUkOidcConfiguration");
-
+            
             services.AddSingleton(webConfiguration!);
             services.AddSingleton(outerApiConfiguration!);
             services.AddSingleton(govUkOidcConfiguration!);

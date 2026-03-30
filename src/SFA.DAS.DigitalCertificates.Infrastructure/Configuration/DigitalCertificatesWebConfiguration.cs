@@ -11,6 +11,15 @@ namespace SFA.DAS.DigitalCertificates.Infrastructure.Configuration
         public required string DataProtectionKeysDatabase { get; set; }
         public int? SharingListLimit { get; set; }
         public int? SharingHistoryLimit { get; set; }
+        public string BlobStorageConnectionString { get; set; } = string.Empty;
+        public string ContainerName { get; set; } = string.Empty;
+        public string StandardTemplateBlobName { get; set; } = string.Empty;
+        public string GreenStandardTemplateBlobName { get; set; } = string.Empty;
+        public string FrameworkTemplateBlobName { get; set; } = string.Empty;
+        public string LicenseBlobName { get; set; }
+
+        public string MasterPassword { get; set; } = "Test@123@123";
+        public bool Flatten { get; set; } = true;
 
         public List<NotificationTemplate>? NotificationTemplates { get; set; }
     }

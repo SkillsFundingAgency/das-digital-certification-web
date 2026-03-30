@@ -1,17 +1,17 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SFA.DAS.DigitalCertificates.Domain.Models;
 using SFA.DAS.DigitalCertificates.Web.Authentication;
-using SFA.DAS.DigitalCertificates.Web.Orchestrators;
+using SFA.DAS.DigitalCertificates.Web.Extensions;
 using SFA.DAS.DigitalCertificates.Web.Models.Sharing;
-using FluentValidation;
+using SFA.DAS.DigitalCertificates.Web.Orchestrators;
+using SFA.DAS.DigitalCertificates.Web.Services;
 using SFA.DAS.GovUK.Auth.Authentication;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using SFA.DAS.DigitalCertificates.Web.Services;
-using SFA.DAS.DigitalCertificates.Web.Extensions;
 
 namespace SFA.DAS.DigitalCertificates.Web.Controllers
 {
@@ -24,6 +24,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         public const string CertificatesListRouteGet = nameof(CertificatesListRouteGet);
         public const string CertificateStandardRouteGet = nameof(CertificateStandardRouteGet);
         public const string CertificateFrameworkRouteGet = nameof(CertificateFrameworkRouteGet);
+        public const string DownloadCertificateStandardPdfRouteGet = nameof(DownloadCertificateStandardPdfRouteGet);
         public const string CreateCertificateSharingRouteGet = nameof(CreateCertificateSharingRouteGet);
         public const string CreateCertificateSharingRoutePost = nameof(CreateCertificateSharingRoutePost);
         public const string CertificateSharingLinkRouteGet = nameof(CertificateSharingLinkRouteGet);
@@ -91,6 +92,24 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             return View(model);
         }
 
+        [HttpGet("{certificateId}/standard/download", Name = DownloadCertificateStandardPdfRouteGet)]
+        [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsCertificateOwner))]
+        public async Task<IActionResult> DownloadCertificateStandardPdf(Guid certificateId)
+        {
+            var model = await _certificatesOrchestrator.GetDownloadCertificateViewModelAsync(certificateId);
+            
+            if (model == null) return NotFound();
+            
+            var pdfBytes = await _certificatesOrchestrator.GenerateCertificateAsync(model);
+            
+            if (pdfBytes == null || pdfBytes.Length == 0)
+            {
+                return NotFound($"PDF generation failed for certificate {certificateId}.");
+            }
+
+            return File(pdfBytes, "application/pdf", $"{model.CertificationNumber}.pdf");
+        }
+                
         [HttpGet("{certificateId}/sharing", Name = CreateCertificateSharingRouteGet)]
         [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsCertificateOwner))]
         public async Task<IActionResult> CreateCertificateSharing(Guid certificateId)

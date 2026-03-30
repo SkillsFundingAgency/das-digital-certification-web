@@ -31,6 +31,8 @@ namespace SFA.DAS.DigitalCertificates.Web.StartupExtensions
             services.AddTransient<ICacheStorageService, CacheStorageService>();
             services.AddTransient<ICacheService, CacheService>();
             services.AddTransient<IUserService, UserService>();
+            services.AddTransient<IBlobService, BlobService>();
+            services.AddTransient<IAsposeLicenseService, AsposeLicenseService>();
 
             services.AddScoped<ISessionStorageService, SessionStorageService>();
             services.AddScoped<ISessionService, SessionService>();

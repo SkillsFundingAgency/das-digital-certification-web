@@ -18,7 +18,7 @@ namespace SFA.DAS.DigitalCertificates.Web.StartupExtensions
 
             services.Configure<DigitalCertificatesOuterApiConfiguration>(configuration.GetSection(nameof(DigitalCertificatesOuterApiConfiguration)));
             services.AddSingleton(cfg => cfg.GetRequiredService<IOptions<DigitalCertificatesOuterApiConfiguration>>().Value);
-
+            
             services.Configure<EncodingConfig>(configuration.GetSection(nameof(EncodingConfig)));
             services.AddSingleton(cfg => cfg.GetRequiredService<IOptions<EncodingConfig>>().Value);
         }
