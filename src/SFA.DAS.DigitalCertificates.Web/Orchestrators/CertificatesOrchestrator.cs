@@ -1,10 +1,10 @@
-﻿using MediatR;
-using SFA.DAS.DigitalCertificates.Application.Queries.GetFrameworkCertificate;
+﻿using SFA.DAS.DigitalCertificates.Application.Queries.GetFrameworkCertificate;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetStandardCertificate;
 using SFA.DAS.DigitalCertificates.Application.Commands.CreateUserAction;
 using SFA.DAS.DigitalCertificates.Domain.Models;
 using SFA.DAS.DigitalCertificates.Web.Models.Certificates;
 using SFA.DAS.DigitalCertificates.Web.Services;
+using MediatR;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -116,22 +116,25 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             return viewModel;
         }
 
-        public async Task<string?> CreateOrReuseUserActionForCertificate(Guid certificateId)
+        public async Task<CreateUserActionForCertificateResult> CreateUserActionForCertificate(Guid certificateId)
         {
             var userId = _userService.GetUserId();
             if (userId == null)
-                return null;
+                return new CreateUserActionForCertificateResult();
+
+            var owned = await _sessionService.GetOwnedCertificatesAsync();
+            var ownedCertificate = owned?.FirstOrDefault(c => c.CertificateId == certificateId);
+
+            if (ownedCertificate == null)
+                return new CreateUserActionForCertificateResult();
 
             var userDetails = await _sessionService.GetUserDetailsAsync();
 
             var familyName = userDetails?.FamilyName ?? string.Empty;
             var givenNames = userDetails?.GivenNames ?? string.Empty;
 
-            var owned = await _sessionService.GetOwnedCertificatesAsync();
-            var ownedCertificate = owned?.FirstOrDefault(c => c.CertificateId == certificateId);
-
-            var certificateType = ownedCertificate?.CertificateType;
-            var courseName = ownedCertificate?.CourseName ?? string.Empty;
+            var certificateType = ownedCertificate.CertificateType;
+            var courseName = ownedCertificate.CourseName ?? string.Empty;
 
             var result = await Mediator.Send(new CreateUserActionCommand
             {
@@ -144,10 +147,19 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 CourseName = courseName
             });
 
-            return result?.ActionCode ?? string.Empty;
+            if (result != null && !string.IsNullOrEmpty(result.ActionCode))
+            {
+                await _sessionService.SetContactReferenceAsync(result.ActionCode);
+            }
+
+            return new CreateUserActionForCertificateResult
+            {
+                ReferenceNumber = result?.ActionCode ?? string.Empty,
+                CertificateType = certificateType
+            };
         }
 
-        public async Task<string?> CreateOrReuseUserActionForNonSpecific()
+        public async Task<string?> CreateUserActionForNonSpecific()
         {
             var userId = _userService.GetUserId();
             if (userId == null)
@@ -165,6 +177,11 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 FamilyName = familyName,
                 GivenNames = givenNames
             });
+
+            if (result != null && !string.IsNullOrEmpty(result.ActionCode))
+            {
+                await _sessionService.SetContactReferenceAsync(result.ActionCode);
+            }
 
             return result?.ActionCode ?? string.Empty;
         }
