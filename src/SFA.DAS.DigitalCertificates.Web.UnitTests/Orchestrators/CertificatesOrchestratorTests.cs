@@ -395,7 +395,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             _userServiceMock.Setup(u => u.GetUserId()).Returns(userId);
             _userServiceMock.Setup(u => u.GetGovUkIdentifier()).Returns(govId);
 
-            _sessionMock.Setup(s => s.GetOwnedCertificatesAsync(govId)).ReturnsAsync(new List<Certificate>());
+            _sessionMock.Setup(s => s.GetOwnedCertificatesAsync()).ReturnsAsync(new List<Certificate>());
 
             var result = await _sut.CreateUserActionForCertificate(certificateId);
 
