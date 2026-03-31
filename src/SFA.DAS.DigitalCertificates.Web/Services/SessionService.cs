@@ -23,6 +23,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
         private const string UlnAuthorisationKeyPrefix = "DigitalCertificates:UlnAuthorisation:";
         private const string RecordedSharingAccessKey = "DigitalCertificates:RecordedSharingAccessCodes";
         private const string DeliveryAddressKeyPrefix = "DigitalCertificates:DeliveryAddress:";
+        private const string ContactReferenceKey = "DigitalCertificates:ContactReference";
 
         public SessionService(ISessionStorageService sessionStorageService, IMediator mediator, IUserService userService)
         {
@@ -134,6 +135,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
 
             await _sessionStorageService.ClearAsync(RecordedSharingAccessKey);
             await _sessionStorageService.ClearAsync(DeliveryAddressKeyPrefix);
+
+            await _sessionStorageService.ClearAsync(ContactReferenceKey);
         }
 
         public Task SetDeliveryAddressAsync(CheckAndSubmitViewModel address)
@@ -154,6 +157,21 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
         public Task ClearDeliveryAddressAsync()
         {
             return _sessionStorageService.ClearAsync(DeliveryAddressKeyPrefix);
+        }
+
+        public Task SetContactReferenceAsync(string referenceNumber)
+        {
+            return _sessionStorageService.SetAsync(ContactReferenceKey, referenceNumber);
+        }
+
+        public Task<string?> GetContactReferenceAsync()
+        {
+            return _sessionStorageService.GetAsync(ContactReferenceKey);
+        }
+
+        public Task ClearContactReferenceAsync()
+        {
+            return _sessionStorageService.ClearAsync(ContactReferenceKey);
         }
 
         public async Task AddRecordedSharingAccessCodeAsync(Guid code)
