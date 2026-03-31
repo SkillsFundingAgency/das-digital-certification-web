@@ -1,4 +1,5 @@
 ﻿using Azure.Storage.Blobs;
+using Microsoft.Extensions.Logging;
 using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
 using System;
 using System.IO;
@@ -8,20 +9,22 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
 {
     public class BlobService : IBlobService
     {
+        private readonly ILogger<BlobService> _logger;
         private readonly BlobContainerClient _blobContainerClient;
 
-        public BlobService(DigitalCertificatesWebConfiguration digitalCertificatesWebConfiguration)
+        public BlobService(DigitalCertificatesWebConfiguration digitalCertificatesWebConfiguration, ILogger<BlobService> logger)
         {
             if (string.IsNullOrWhiteSpace(digitalCertificatesWebConfiguration.BlobStorageConnectionString))
-                throw new ArgumentException("AzureBlob:ConnectionString is missing.");
+                throw new ArgumentException("DigitalCertificatesWebConfiguration:BlobStorageConnectionString is missing.");
             if (string.IsNullOrWhiteSpace(digitalCertificatesWebConfiguration.ContainerName))
-                throw new ArgumentException("AzureBlob:ContainerName is missing.");
+                throw new ArgumentException("DigitalCertificatesWebConfiguration:ContainerName is missing.");
 
             var clientOptions = new BlobClientOptions();
 
-
             _blobContainerClient = new BlobContainerClient(digitalCertificatesWebConfiguration.BlobStorageConnectionString,
                 digitalCertificatesWebConfiguration.ContainerName, clientOptions);
+
+            _logger = logger;
         }
 
         public async Task<byte[]> GetBlobBytesAsync(string blobName)
@@ -37,13 +40,23 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
             if (string.IsNullOrWhiteSpace(blobName))
                 throw new ArgumentException("blobName is required.", nameof(blobName));
 
-            var blob = _blobContainerClient.GetBlobClient(blobName);
+            try
+            {
+                var blobClient = _blobContainerClient.GetBlobClient(blobName);
+                if (!await blobClient.ExistsAsync())
+                    throw new FileNotFoundException($"Blob not found: {blobName}");
 
-            if (!await blob.ExistsAsync())
-                throw new FileNotFoundException($"Blob not found: {blobName}");
+                var resp = await blobClient.DownloadStreamingAsync();
 
-            var resp = await blob.DownloadStreamingAsync();
-            return resp.Value.Content;
+                return resp.Value.Content;
+
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex, "Unable to get blob from azure storage.");
+            }
+
+            return null;        
         }
     }
 }

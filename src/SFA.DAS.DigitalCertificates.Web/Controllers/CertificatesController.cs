@@ -107,7 +107,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
                 return NotFound($"PDF generation failed for certificate {certificateId}.");
             }
 
-            return File(pdfBytes, "application/pdf", $"{model.CertificationNumber}.pdf");
+            return File(pdfBytes, "application/pdf", $"{model.CertificateNumber}.pdf");
         }
                 
         [HttpGet("{certificateId}/sharing", Name = CreateCertificateSharingRouteGet)]

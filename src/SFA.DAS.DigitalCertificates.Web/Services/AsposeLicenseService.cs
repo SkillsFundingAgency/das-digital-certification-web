@@ -30,7 +30,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
             }
             catch (Exception ex)
             {
-                throw;
+                _logger.LogError(ex,"error occured retrieving the aspose license"); ;
             }
         }
     }

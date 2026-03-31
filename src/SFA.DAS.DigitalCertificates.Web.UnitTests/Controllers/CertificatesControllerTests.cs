@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 using SFA.DAS.DigitalCertificates.Web.Services;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using SFA.DAS.DigitalCertificates.Web.Extensions;
+using System.IO;
 
 namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
 {
@@ -135,11 +136,12 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
         {
             // Arrange
             var certificateId = Guid.NewGuid();
-            var pdfBytes = new byte[] { 1, 2, 3, 4 };
+            
+            var pdfBytes = new byte[] { 1, 2, 3, 4 };            
 
             var model = new DownloadCertificateViewModel
             {
-                CertificationNumber = "678123",
+                CertificateNumber = "678123",
                 FamilyName = "Test",
                 GivenNames = "Test Given Name",
                 OptionName = "Software developer",
@@ -148,8 +150,6 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
                 StandardName = "Test",
                 CoronationEmblem = false,
                 DateAwarded = DateTime.UtcNow,
-
-
             };
 
             _certificatesOrchestratorMock
@@ -170,7 +170,9 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             fileResult.Should().NotBeNull();
             fileResult!.ContentType.Should().Be("application/pdf");
             fileResult.FileDownloadName.Should().Be("678123.pdf");
+            using var msResult = new MemoryStream();
             fileResult.FileContents.Should().BeEquivalentTo(pdfBytes);
+           
 
             _certificatesOrchestratorMock.Verify(
                 x => x.GetDownloadCertificateViewModelAsync(certificateId),

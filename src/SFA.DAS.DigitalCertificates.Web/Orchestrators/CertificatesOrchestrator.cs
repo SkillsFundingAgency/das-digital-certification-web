@@ -21,12 +21,20 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         private readonly ISessionService _sessionService;
         private readonly IUserService _userService;
         private readonly IBlobService _blob;
+        private readonly IAsposeLicenseService _asposeLicenseService;
         private readonly DigitalCertificatesWebConfiguration _digitalCertificatesWebConfiguration;
+        private const string Level = "Level";
+        private const string FullName = "Full Name";
+        private const string PasssedInfo = "Passed info";
+        private const string AchievedGrade = "Achieved grade";
+        private const string AwardedOn = "Awarded on";
+        private const string DateFormat = "d MMMM yyyy";
 
         public CertificatesOrchestrator(IMediator mediator, 
             ISessionService sessionService, 
             IUserService userService, 
             IBlobService blob,
+            IAsposeLicenseService apposeLicenseService,
             DigitalCertificatesWebConfiguration digitalCertificatesPdfConfiguration
             )
             : base(mediator)
@@ -34,6 +42,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             _sessionService = sessionService;
             _userService = userService;
             _blob = blob;
+            _asposeLicenseService = apposeLicenseService;
             _digitalCertificatesWebConfiguration = digitalCertificatesPdfConfiguration;
         }
 
@@ -60,8 +69,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 OptionName = result.CourseOption,
                 Level = result.CourseLevel.ToString(),
                 Result = result.OverallGrade,
-                DateAwarded = result.DateAwarded,
-                CertificationNumber = result.CertificateReference,
+                DateAwarded = result.DateAwarded.Value,
+                CertificateNumber = result.CertificateReference,
                 CoronationEmblem = result.CoronationEmblem
             };
 
@@ -147,30 +156,24 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 
         public async Task<byte[]> GenerateCertificateAsync(DownloadCertificateViewModel model)
         {
+            var templateBytes = model.CoronationEmblem ? await _blob.GetBlobBytesAsync(_digitalCertificatesWebConfiguration.GreenStandardTemplateBlobName)
+                                                        : await _blob.GetBlobBytesAsync(_digitalCertificatesWebConfiguration.StandardTemplateBlobName);
+
+            await _asposeLicenseService.GetAsposeLicense();
+
             var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
-                ["Full Name"] = model.FullName,
-                ["Passed info"] = string.Join("\n",
+                [FullName] = model.FullName,
+                [PasssedInfo] = string.Join(Environment.NewLine,
                     new[]
                     {
                 model.StandardName,
                 model.OptionName,
-                model.Level
+                $"{Level} {model.Level}"
                     }.Where(x => !string.IsNullOrWhiteSpace(x))),
-                ["Achieved grade"] = model.Result,
-                ["Awarded on"] = model.DateAwarded?.ToString("d MMMM yyyy", CultureInfo.InvariantCulture) ?? string.Empty,
+                [AchievedGrade] = model.Result,
+                [AwardedOn] = model.DateAwarded.ToString(DateFormat, CultureInfo.InvariantCulture) ?? string.Empty,
             };
-
-            byte[] templateBytes;
-
-            if (model.CoronationEmblem)
-            {
-                templateBytes = await _blob.GetBlobBytesAsync(_digitalCertificatesWebConfiguration.GreenStandardTemplateBlobName);
-            }
-            else
-            {
-                templateBytes = await _blob.GetBlobBytesAsync(_digitalCertificatesWebConfiguration.StandardTemplateBlobName);
-            }
 
             using var templateStream = new MemoryStream(templateBytes);
             using var document = new Document(templateStream);
@@ -192,21 +195,18 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                     field.Value = kv.Value ?? string.Empty;
                 }
             }
-
-            if (_digitalCertificatesWebConfiguration.Flatten == true)
-            {
-                document.Form.Flatten();
-            }
-
-            using var output = new MemoryStream();
+            
+            document.Form.Flatten();
+            
+            var output = new MemoryStream();
 
             if (!string.IsNullOrWhiteSpace(_digitalCertificatesWebConfiguration.MasterPassword))
             {
                 document.Encrypt(
                     userPassword: "",
                     ownerPassword: _digitalCertificatesWebConfiguration.MasterPassword,
-                    permissions: Aspose.Pdf.Permissions.PrintDocument,
-                    cryptoAlgorithm: Aspose.Pdf.CryptoAlgorithm.AESx128);
+                    permissions: Permissions.PrintDocument,
+                    cryptoAlgorithm: CryptoAlgorithm.AESx128);
             }
 
             document.Save(output);
@@ -237,6 +237,5 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 string.Equals(f.PartialName, key, StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(f.FullName, key, StringComparison.OrdinalIgnoreCase));
         }
-
     }
 }

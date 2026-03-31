@@ -17,10 +17,7 @@ namespace SFA.DAS.DigitalCertificates.Infrastructure.Configuration
         public string GreenStandardTemplateBlobName { get; set; } = string.Empty;
         public string FrameworkTemplateBlobName { get; set; } = string.Empty;
         public string LicenseBlobName { get; set; }
-
-        public string MasterPassword { get; set; } = "Test@123@123";
-        public bool Flatten { get; set; } = true;
-
+        public string MasterPassword { get; set; }
         public List<NotificationTemplate>? NotificationTemplates { get; set; }
     }
 
