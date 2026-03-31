@@ -343,7 +343,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 
             var req = new CreatePrintRequest
             {
-                Address = new PrintAddressDto
+                Address = new CreatePrintAddressRequest
                 {
                     ContactName = userName,
                     ContactOrganisation = deliveryAddress?.Organisation,
@@ -353,7 +353,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                     ContactAddLine4 = deliveryAddress?.County,
                     ContactPostCode = deliveryAddress?.Postcode ?? string.Empty
                 },
-                Email = new PrintEmailDto
+                Email = new CreatePrintEmailRequest
                 {
                     EmailAddress = email,
                     UserName = userName,
