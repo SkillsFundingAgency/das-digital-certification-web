@@ -1,7 +1,7 @@
 ﻿@using SFA.DAS.DigitalCertificates.Web.Controllers
 @using SFA.DAS.DigitalCertificates.Web.ViewDataKeys
 @{
-    ViewData[ViewDataKeys.Title] = ViewData[ViewDataKeys.ServiceName];
+    ViewData[ViewDataKeys.Title] = ViewData[ViewDataKeys.ServiceName] + " Check you’ve proved your identity";
     ViewBag.GaData.Vpv = @ViewData[ViewDataKeys.GaDataVpvPrefix] + "check";
 }
 <main class="govuk-main-wrapper govuk-main-wrapper--auto-spacing">
@@ -32,7 +32,7 @@
             </p>
 
             <p class="govuk-body">
-                You can learn more about <a target="_blank" href="https://www.sign-in.service.gov.uk/about/checking-users-identities/evidence-types">how users can prove their identity (opens in a new tab)</a>
+                You can learn more about <a rel="noreferrer noopener" target="_blank" href="https://www.sign-in.service.gov.uk/about/checking-users-identities/evidence-types">how users can prove their identity (opens in a new tab)</a>
             </p>
 
 
