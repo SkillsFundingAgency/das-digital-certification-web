@@ -41,7 +41,10 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
                 DataProtectionKeysDatabase = "TestDb",
                 StandardTemplateBlobName = "standard-template",
                 GreenStandardTemplateBlobName = "green-standard-template",
-                MasterPassword = "master-password"
+                MasterPassword = "master-password",
+                BlobStorageConnectionString = "UseDevelopmentStorage=true",
+                ContainerName = "test-container",
+                LicenseBlobName = "license-blob"
             };           
 
             _sut = new CertificatesOrchestrator(

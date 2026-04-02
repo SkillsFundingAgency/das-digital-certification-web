@@ -54,23 +54,34 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             };
         }
 
-        public async Task<DownloadCertificateViewModel> GetDownloadCertificateViewModelAsync(Guid certificateId)
+        public async Task<DownloadCertificateViewModel?> GetDownloadCertificateViewModelAsync(Guid certificateId)
         {
             var result = await Mediator.Send(new GetStandardCertificateQuery { CertificateId = certificateId });
 
             if (result == null)
                 return null;
 
+            if (string.IsNullOrWhiteSpace(result.FamilyName)
+                || string.IsNullOrWhiteSpace(result.GivenNames)
+                || string.IsNullOrWhiteSpace(result.CourseName)
+                || result.CourseLevel == null
+                || result.DateAwarded == null
+                || string.IsNullOrWhiteSpace(result.OverallGrade)
+                || string.IsNullOrWhiteSpace(result.CertificateReference))
+            {
+                throw new InvalidOperationException($"Certificate {certificateId} is missing required data.");
+            }
+
             var viewModel = new DownloadCertificateViewModel
             {
-                FamilyName = result.FamilyName,
-                GivenNames = result.GivenNames,
-                StandardName = result.CourseName,
+                FamilyName = result.FamilyName!,
+                GivenNames = result.GivenNames!,
+                StandardName = result.CourseName!,
                 OptionName = result.CourseOption,
-                Level = result.CourseLevel.ToString(),
-                Result = result.OverallGrade,
+                Level = result.CourseLevel.Value.ToString(),
+                Result = result.OverallGrade!,
                 DateAwarded = result.DateAwarded.Value,
-                CertificateNumber = result.CertificateReference,
+                CertificateNumber = result.CertificateReference!,
                 CoronationEmblem = result.CoronationEmblem
             };
 
@@ -219,7 +230,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 .Where(required => FindField(fields, required) is null)
                 .ToList();
 
-            if (missingFields.Any())
+            if (missingFields.Count != 0)
             {
                 throw new InvalidOperationException(
                     $"The PDF template is missing required field(s): {string.Join(", ", missingFields)}");

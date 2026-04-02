@@ -41,7 +41,10 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
                 DataProtectionKeysDatabase = "TestDb",
                 StandardTemplateBlobName = "standard-template",
                 GreenStandardTemplateBlobName = "green-standard-template",
-                MasterPassword = "master-password"
+                MasterPassword = "master-password",
+                BlobStorageConnectionString = "UseDevelopmentStorage=true",
+                ContainerName = "test-container",
+                LicenseBlobName = "license-blob"
             };
 
             _sut = new CertificatesOrchestrator(
@@ -106,6 +109,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
             result.Should().NotBeNull();
             result.FamilyName.Should().Be(queryResult.FamilyName);
             result.GivenNames.Should().Be(queryResult.GivenNames);
+            result.FullName.Should().Be($"{queryResult.GivenNames} {queryResult.FamilyName}");
             result.StandardName.Should().Be(queryResult.CourseName);
             result.OptionName.Should().Be(queryResult.CourseOption);
             result.Level.Should().Be(queryResult.CourseLevel.ToString());
@@ -294,7 +298,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
                 Times.Never);
         }
 
-        private byte[] CreatePdfTemplateBytesWithOnlyFullName()
+        private static byte[] CreatePdfTemplateBytesWithOnlyFullName()
         {
             using var document = new Document();
             var page = document.Pages.Add();
@@ -306,7 +310,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
             return stream.ToArray();
         }
 
-        private DownloadCertificateViewModel CreateModel(bool coronationEmblem = false)
+        private static DownloadCertificateViewModel CreateModel(bool coronationEmblem = false)
         {
             return new DownloadCertificateViewModel
             {
@@ -337,7 +341,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
             return stream.ToArray();
         }
 
-        private byte[] CreatePdfTemplateBytesWithoutAwardedOn()
+        private static byte[] CreatePdfTemplateBytesWithoutAwardedOn()
         {
             using var document = new Document();
             var page = document.Pages.Add();

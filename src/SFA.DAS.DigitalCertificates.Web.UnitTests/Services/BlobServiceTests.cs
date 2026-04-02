@@ -43,7 +43,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
         private BlobService CreateServiceAndReplaceContainer(Mock<BlobContainerClient> mockContainer)
         {           
             var field = typeof(BlobService).GetField("_blobContainerClient", BindingFlags.Instance | BindingFlags.NonPublic);
-            Assert.IsNotNull(field, "_blobContainerClient field not found via reflection");
+            Assert.That(field, Is.Not.Null, "_blobContainerClient field not found via reflection");
             field.SetValue(_sut, mockContainer.Object);
 
             return _sut;
@@ -76,7 +76,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
             var result = await _sut.GetBlobBytesAsync(blobName);
 
             // Assert
-            Assert.IsNotNull(result);
+            Assert.That(result, Is.Not.Null);
             Assert.AreEqual(contentBytes, result);
         }
 
@@ -138,7 +138,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
             using var resultStream = await _sut.OpenBlobReadAsync(blobName);
 
             // Assert
-            Assert.IsNotNull(resultStream);
+            Assert.That(resultStream, Is.Not.Null);
             using var ms = new MemoryStream();
             await resultStream.CopyToAsync(ms);
             Assert.AreEqual(contentBytes, ms.ToArray());

@@ -4,8 +4,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Models.Certificates
 {
     public class DownloadCertificateViewModel
     {
-        public string FamilyName { get; set; }
-        public string GivenNames { get; set; }
+        public required string FamilyName { get; set; }
+        public required string GivenNames { get; set; }
         public string FullName => $"{GivenNames} {FamilyName}";
         public required string StandardName { get; set; }
         public string? OptionName { get; set; }

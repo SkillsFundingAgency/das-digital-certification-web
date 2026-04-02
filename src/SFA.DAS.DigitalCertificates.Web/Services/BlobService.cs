@@ -9,6 +9,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
 {
     public class BlobService : IBlobService
     {
+        private const string Message = "Unable to get blob from azure storage.";
         private readonly ILogger<BlobService> _logger;
         private readonly BlobContainerClient _blobContainerClient;
 
@@ -53,7 +54,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
             }
             catch(Exception ex)
             {
-                _logger.LogError(ex, "Unable to get blob from azure storage.");
+                _logger.LogError(ex, Message);
                 throw;
             }
         }

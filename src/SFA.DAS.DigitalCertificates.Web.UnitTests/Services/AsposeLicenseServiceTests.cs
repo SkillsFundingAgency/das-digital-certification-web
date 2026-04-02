@@ -24,8 +24,9 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
                 StandardTemplateBlobName = "standard-template",
                 GreenStandardTemplateBlobName = "green-standard-template",
                 MasterPassword = "master-password",
-                LicenseBlobName = "license.xml"
-
+                LicenseBlobName = "license.xml",
+                BlobStorageConnectionString = "UseDevelopmentStorage=true",
+                ContainerName = "test-container"
             };
 
             var loggerMock = new Mock<ILogger<AsposeLicenseService>>();
@@ -67,7 +68,9 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
                 StandardTemplateBlobName = "standard-template",
                 GreenStandardTemplateBlobName = "green-standard-template",
                 MasterPassword = "master-password",
-                LicenseBlobName = "license.xml"
+                LicenseBlobName = "license.xml",
+                BlobStorageConnectionString = "UseDevelopmentStorage=true",
+                ContainerName = "test-container"                
             };
             var loggerMock = new Mock<ILogger<AsposeLicenseService>>();
 

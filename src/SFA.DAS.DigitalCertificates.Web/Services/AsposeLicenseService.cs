@@ -1,5 +1,4 @@
-﻿using Aspose.Pdf;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
 using System;
 using System.Threading.Tasks;
@@ -8,6 +7,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
 {
     public class AsposeLicenseService : IAsposeLicenseService
     {
+        private const string LicenseLoaddedMessage = "Aspose license loaded successfully.";
+        private const string LicenseRetrieveError = "error occured retrieving the aspose license";
         private readonly ILogger<AsposeLicenseService> _logger;
         private readonly DigitalCertificatesWebConfiguration _digitalCertificatesWebConfiguration;
         private readonly IBlobService _blob;
@@ -28,11 +29,11 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
             {
                 await using var licenseStream = await _blob.OpenBlobReadAsync(_digitalCertificatesWebConfiguration.LicenseBlobName);
                 _licenseWrapper.SetLicense(licenseStream);
-                _logger.LogInformation("Aspose license loaded successfully.");
+                _logger.LogInformation(LicenseLoaddedMessage);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex,"error occured retrieving the aspose license"); ;
+                _logger.LogError(ex, LicenseRetrieveError);
             }
         }
     }

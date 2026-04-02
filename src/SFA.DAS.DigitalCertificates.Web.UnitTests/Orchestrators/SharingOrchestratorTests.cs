@@ -58,7 +58,10 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 NotificationTemplates = new List<NotificationTemplate>
                 {
                     new NotificationTemplate { TemplateName = "SharingEmail", TemplateId = "template-id" }
-                }
+                },
+                BlobStorageConnectionString = "UseDevelopmentStorage=true",
+                ContainerName = "test-container",
+                LicenseBlobName = "license-blob"
             };
 
             _sessionServiceMock.Setup(s => s.GetUserNameAsync()).ReturnsAsync((string)null);

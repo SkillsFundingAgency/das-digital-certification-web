@@ -104,10 +104,10 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             
             if (pdfBytes == null || pdfBytes.Length == 0)
             {
-               throw new Exception("PDF certificate cannot be produced");
+               throw new InvalidOperationException("PDF certificate cannot be produced");
             }
 
-            return File(pdfBytes, "application/pdf", $"{model.CertificateNumber}.pdf");
+            return File(pdfBytes, "application/pdf", $"CertificateNumber{model.CertificateNumber}.pdf");
         }
                 
         [HttpGet("{certificateId}/sharing", Name = CreateCertificateSharingRouteGet)]

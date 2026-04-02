@@ -169,7 +169,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             var fileResult = result as FileContentResult;
             fileResult.Should().NotBeNull();
             fileResult!.ContentType.Should().Be("application/pdf");
-            fileResult.FileDownloadName.Should().Be("678123.pdf");
+            fileResult.FileDownloadName.Should().Be("CertificateNumber678123.pdf");
             using var msResult = new MemoryStream();
             fileResult.FileContents.Should().BeEquivalentTo(pdfBytes);
            
@@ -181,6 +181,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             _certificatesOrchestratorMock.Verify(
                 x => x.GenerateCertificateAsync(model),
                 Times.Once);
+
+            Assert.AreEqual($"{model.GivenNames} {model.FamilyName}", "Test Given Name Test");
         }
 
         [Test]
