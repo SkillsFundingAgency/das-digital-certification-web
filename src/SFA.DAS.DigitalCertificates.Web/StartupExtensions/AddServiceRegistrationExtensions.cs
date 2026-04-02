@@ -33,6 +33,7 @@ namespace SFA.DAS.DigitalCertificates.Web.StartupExtensions
             services.AddTransient<IUserService, UserService>();
             services.AddTransient<IBlobService, BlobService>();
             services.AddTransient<IAsposeLicenseService, AsposeLicenseService>();
+            services.AddTransient<IAsposeLicenseWrapper, AsposeLicenseWrapper>();
 
             services.AddScoped<ISessionStorageService, SessionStorageService>();
             services.AddScoped<ISessionService, SessionService>();

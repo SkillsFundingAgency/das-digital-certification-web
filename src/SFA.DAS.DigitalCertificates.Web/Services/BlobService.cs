@@ -54,9 +54,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
             catch(Exception ex)
             {
                 _logger.LogError(ex, "Unable to get blob from azure storage.");
+                throw;
             }
-
-            return null;        
         }
     }
 }

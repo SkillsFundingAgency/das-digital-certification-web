@@ -104,7 +104,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             
             if (pdfBytes == null || pdfBytes.Length == 0)
             {
-                return NotFound($"PDF generation failed for certificate {certificateId}.");
+               throw new Exception("PDF certificate cannot be produced");
             }
 
             return File(pdfBytes, "application/pdf", $"{model.CertificateNumber}.pdf");

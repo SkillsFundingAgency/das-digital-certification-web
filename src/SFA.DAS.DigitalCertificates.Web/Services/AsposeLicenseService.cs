@@ -12,11 +12,14 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
         private readonly DigitalCertificatesWebConfiguration _digitalCertificatesWebConfiguration;
         private readonly IBlobService _blob;
 
-        public AsposeLicenseService(IBlobService blob, DigitalCertificatesWebConfiguration digitalCertificatesWebConfiguration, ILogger<AsposeLicenseService> logger)
+        private readonly IAsposeLicenseWrapper _licenseWrapper;
+
+        public AsposeLicenseService(IBlobService blob, DigitalCertificatesWebConfiguration digitalCertificatesWebConfiguration, ILogger<AsposeLicenseService> logger, IAsposeLicenseWrapper licenseWrapper)
         {
             _logger = logger;
             _blob = blob;
             _digitalCertificatesWebConfiguration = digitalCertificatesWebConfiguration;
+            _licenseWrapper = licenseWrapper;
         }
 
         public async Task GetAsposeLicense()
@@ -24,8 +27,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
             try
             {
                 await using var licenseStream = await _blob.OpenBlobReadAsync(_digitalCertificatesWebConfiguration.LicenseBlobName);
-                var license = new License();
-                license.SetLicense(licenseStream);
+                _licenseWrapper.SetLicense(licenseStream);
                 _logger.LogInformation("Aspose license loaded successfully.");
             }
             catch (Exception ex)
