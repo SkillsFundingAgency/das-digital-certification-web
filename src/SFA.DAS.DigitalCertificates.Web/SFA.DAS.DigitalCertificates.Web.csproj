@@ -13,7 +13,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="AspNetCore.HealthChecks.Redis" Version="8.0.0" />
-		<PackageReference Include="Aspose.PDF" Version="26.3.0" />
+		<PackageReference Include="Aspose.PDF" Version="23.5.0" />
 		<PackageReference Include="Azure.Monitor.OpenTelemetry.AspNetCore" Version="1.2.0" />
 		<PackageReference Include="Azure.Storage.Blobs" Version="12.27.0" />
 		<PackageReference Include="FluentValidation" Version="12.1.0" />
