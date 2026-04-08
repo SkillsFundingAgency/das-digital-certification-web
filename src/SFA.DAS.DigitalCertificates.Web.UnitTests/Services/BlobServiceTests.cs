@@ -85,7 +85,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
 
             // Assert
             Assert.That(result, Is.Not.Null);
-            Assert.AreEqual(contentBytes, result);
+            Assert.That(result, Is.EqualTo(contentBytes));
         }
 
         [Test]
@@ -151,7 +151,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
             Assert.That(resultStream, Is.Not.Null);
             using var ms = new MemoryStream();
             await resultStream.CopyToAsync(ms);
-            Assert.AreEqual(contentBytes, ms.ToArray());
+            Assert.That(ms.ToArray(), Is.EqualTo(contentBytes));
         }
 
         [Test]

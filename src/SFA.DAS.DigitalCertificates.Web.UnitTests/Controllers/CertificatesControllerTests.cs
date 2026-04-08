@@ -182,7 +182,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
                 x => x.GenerateCertificateAsync(model),
                 Times.Once);
 
-            Assert.AreEqual($"{model.GivenNames} {model.FamilyName}", "Test Given Name Test");
+            Assert.That($"{model.GivenNames} {model.FamilyName}", Is.EqualTo("Test Given Name Test"));
         }
 
         [Test]

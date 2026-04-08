@@ -323,7 +323,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
             };
         }
 
-        private byte[] CreatePdfTemplateBytes()
+        private static byte[] CreatePdfTemplateBytes()
         {
             var document = new Document();
             var page = document.Pages.Add();

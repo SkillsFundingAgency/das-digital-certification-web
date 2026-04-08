@@ -28,7 +28,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Models.Certificates
         public DateTime? StartDate { get; set; }
         public DateTime? PrintRequestedAt { get; set; }
         public string? PrintRequestedBy { get; set; }
-        public bool ShowBackLink { get; set; } = true;
-        public bool CoronationEmblem { get; set; }
+        public bool ShowBackLink { get; set; } = true;       
     }
 }
