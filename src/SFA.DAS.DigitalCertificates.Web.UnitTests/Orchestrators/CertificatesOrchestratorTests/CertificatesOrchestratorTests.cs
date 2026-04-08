@@ -42,8 +42,9 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
                 StandardTemplateBlobName = "standard-template",
                 GreenStandardTemplateBlobName = "green-standard-template",
                 MasterPassword = "master-password",
-                BlobStorageConnectionString = "UseDevelopmentStorage=true",
+                StorageConnectionString = "UseDevelopmentStorage=true",
                 ContainerName = "test-container",
+                AsposeLicenseContainerName = "test-aspose-container",
                 LicenseBlobName = "license-blob"
             };           
 

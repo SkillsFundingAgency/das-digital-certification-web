@@ -12,8 +12,13 @@ namespace SFA.DAS.DigitalCertificates.Web.StartupExtensions
     {
         public static void AddConfigurationOptions(this IServiceCollection services, IConfiguration configuration)
         {
-            services.AddOptions();
-            services.Configure<DigitalCertificatesWebConfiguration>(configuration.GetSection(nameof(DigitalCertificatesWebConfiguration)));
+            services.AddOptions();            
+            services.Configure<DigitalCertificatesWebConfiguration>(options =>
+            {
+                configuration.GetSection(nameof(DigitalCertificatesWebConfiguration)).Bind(options);
+                options.StorageConnectionString = configuration["StorageConnectionString"];
+            });
+
             services.AddSingleton(cfg => cfg.GetRequiredService<IOptions<DigitalCertificatesWebConfiguration>>().Value);
             services.Configure<DigitalCertificatesOuterApiConfiguration>(configuration.GetSection(nameof(DigitalCertificatesOuterApiConfiguration)));
             services.AddSingleton(cfg => cfg.GetRequiredService<IOptions<DigitalCertificatesOuterApiConfiguration>>().Value);            

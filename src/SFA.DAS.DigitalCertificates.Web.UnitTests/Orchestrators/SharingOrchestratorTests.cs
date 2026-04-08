@@ -59,8 +59,9 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 {
                     new NotificationTemplate { TemplateName = "SharingEmail", TemplateId = "template-id" }
                 },
-                BlobStorageConnectionString = "UseDevelopmentStorage=true",
+                StorageConnectionString = "UseDevelopmentStorage=true",
                 ContainerName = "test-container",
+                AsposeLicenseContainerName = "test-license-container",
                 LicenseBlobName = "license-blob"
             };
 

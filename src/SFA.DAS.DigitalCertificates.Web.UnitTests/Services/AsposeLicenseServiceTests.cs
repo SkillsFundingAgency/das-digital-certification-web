@@ -25,15 +25,16 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
                 GreenStandardTemplateBlobName = "green-standard-template",
                 MasterPassword = "master-password",
                 LicenseBlobName = "license.xml",
-                BlobStorageConnectionString = "UseDevelopmentStorage=true",
-                ContainerName = "test-container"
+                StorageConnectionString = "UseDevelopmentStorage=true",
+                ContainerName = "test-container",
+                AsposeLicenseContainerName = "aspose-license-container"
             };
 
             var loggerMock = new Mock<ILogger<AsposeLicenseService>>();
 
             var exception = new InvalidOperationException("blob failed");
             blobMock
-                .Setup(b => b.OpenBlobReadAsync(It.IsAny<string>()))
+                .Setup(b => b.OpenBlobReadAsync(It.IsAny<string>(), It.IsAny<string>()))
                 .ThrowsAsync(exception);
             var licenseWrapperMock = new Mock<IAsposeLicenseWrapper>();
 
@@ -43,7 +44,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
             await service.GetAsposeLicense();
 
             // Assert
-            blobMock.Verify(b => b.OpenBlobReadAsync("license.xml"), Times.Once);
+            blobMock.Verify(b => b.OpenBlobReadAsync("aspose-license-container", "license.xml"), Times.Once);
 
             loggerMock.Verify(
                 x => x.Log(
@@ -69,8 +70,9 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
                 GreenStandardTemplateBlobName = "green-standard-template",
                 MasterPassword = "master-password",
                 LicenseBlobName = "license.xml",
-                BlobStorageConnectionString = "UseDevelopmentStorage=true",
-                ContainerName = "test-container"                
+                StorageConnectionString = "UseDevelopmentStorage=true",
+                ContainerName = "test-container",
+                AsposeLicenseContainerName = "aspose-license-container"
             };
             var loggerMock = new Mock<ILogger<AsposeLicenseService>>();
 
@@ -78,7 +80,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
 
             var sampleStream = new MemoryStream(new byte[] { 1, 2, 3 });
             blobMock
-                .Setup(b => b.OpenBlobReadAsync(It.IsAny<string>()))
+                .Setup(b => b.OpenBlobReadAsync(It.IsAny<string>(),It.IsAny<string>()))
                 .ReturnsAsync(sampleStream);
 
             var service = new AsposeLicenseService(blobMock.Object, config, loggerMock.Object, licenseWrapperMock.Object);
@@ -87,7 +89,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
             await service.GetAsposeLicense();
 
             // Assert
-            blobMock.Verify(b => b.OpenBlobReadAsync("license.xml"), Times.Once);
+            blobMock.Verify(b => b.OpenBlobReadAsync("aspose-license-container", "license.xml"), Times.Once);
 
             loggerMock.Verify(
                 x => x.Log(

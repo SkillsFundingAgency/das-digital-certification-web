@@ -27,7 +27,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
         {
             try
             {
-                await using var licenseStream = await _blob.OpenBlobReadAsync(_digitalCertificatesWebConfiguration.LicenseBlobName);
+                await using var licenseStream = await _blob.OpenBlobReadAsync(_digitalCertificatesWebConfiguration.AsposeLicenseContainerName, _digitalCertificatesWebConfiguration.LicenseBlobName);
                 _licenseWrapper.SetLicense(licenseStream);
                 _logger.LogInformation(LicenseLoaddedMessage);
             }

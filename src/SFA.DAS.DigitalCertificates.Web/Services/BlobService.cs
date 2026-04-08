@@ -1,5 +1,6 @@
 ﻿using Azure.Storage.Blobs;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
 using System;
 using System.IO;
@@ -10,40 +11,39 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
     public class BlobService : IBlobService
     {
         private const string Message = "Unable to get blob from azure storage.";
-        private readonly ILogger<BlobService> _logger;
-        private readonly BlobContainerClient _blobContainerClient;
+        private readonly ILogger<BlobService> _logger;       
+        private readonly DigitalCertificatesWebConfiguration _config;
+        private readonly BlobServiceClient _blobServiceClient;
 
-        public BlobService(DigitalCertificatesWebConfiguration digitalCertificatesWebConfiguration, ILogger<BlobService> logger)
+        public BlobService(BlobServiceClient blobServiceClient, IOptions<DigitalCertificatesWebConfiguration> options, ILogger<BlobService> logger)
         {
-            if (string.IsNullOrWhiteSpace(digitalCertificatesWebConfiguration.BlobStorageConnectionString))
-                throw new ArgumentException("DigitalCertificatesWebConfiguration:BlobStorageConnectionString is missing.");
-            if (string.IsNullOrWhiteSpace(digitalCertificatesWebConfiguration.ContainerName))
-                throw new ArgumentException("DigitalCertificatesWebConfiguration:ContainerName is missing.");
-
-            var clientOptions = new BlobClientOptions();
-
-            _blobContainerClient = new BlobContainerClient(digitalCertificatesWebConfiguration.BlobStorageConnectionString,
-                digitalCertificatesWebConfiguration.ContainerName, clientOptions);
-
+            _blobServiceClient = blobServiceClient;
+            _config = options.Value;
             _logger = logger;
         }
 
-        public async Task<byte[]> GetBlobBytesAsync(string blobName)
+        public async Task<byte[]> GetBlobBytesAsync(string containerName, string blobName)
         {
-            await using var stream = await OpenBlobReadAsync(blobName);
+            await using var stream = await OpenBlobReadAsync(containerName, blobName);
             using var ms = new MemoryStream();
             await stream.CopyToAsync(ms);
             return ms.ToArray();
         }
 
-        public async Task<Stream> OpenBlobReadAsync(string blobName)
-        {
+        public async Task<Stream> OpenBlobReadAsync(string containerName, string blobName)
+        {           
+            if (string.IsNullOrWhiteSpace(containerName))
+                throw new ArgumentException("Container Name is required.", nameof(containerName));
+
             if (string.IsNullOrWhiteSpace(blobName))
-                throw new ArgumentException("blobName is required.", nameof(blobName));
+                throw new ArgumentException("Blob Name is required.", nameof(blobName));
 
             try
             {
-                var blobClient = _blobContainerClient.GetBlobClient(blobName);
+                var clientOptions = new BlobClientOptions();
+                var blobContainerClient = _blobServiceClient.GetBlobContainerClient(containerName);
+                var blobClient = blobContainerClient.GetBlobClient(blobName);
+
                 if (!await blobClient.ExistsAsync())
                     throw new FileNotFoundException($"Blob not found: {blobName}");
 

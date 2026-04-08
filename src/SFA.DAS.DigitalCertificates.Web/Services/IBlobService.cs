@@ -5,7 +5,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
 {
     public interface IBlobService
     {
-        Task<byte[]> GetBlobBytesAsync(string blobName);
-        Task<Stream> OpenBlobReadAsync(string blobName);
+        Task<byte[]> GetBlobBytesAsync(string containerName, string blobName);
+        Task<Stream> OpenBlobReadAsync(string containerName, string blobName);
     }
 }

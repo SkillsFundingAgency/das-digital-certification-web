@@ -2,6 +2,7 @@
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Moq;
 using NUnit.Framework;
 using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
@@ -17,15 +18,17 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
     [TestFixture]
     public class BlobServiceTests
     {
+        private Mock<BlobServiceClient> _blobServiceClient;
         private Mock<ILogger<BlobService>> _logger;
-        private DigitalCertificatesWebConfiguration _config;
+        private IOptions<DigitalCertificatesWebConfiguration> _config;
         private BlobService _sut;
 
         [SetUp]
         public void SetUp()
         {
+            _blobServiceClient = new Mock<BlobServiceClient>();
             _logger = new Mock<ILogger<BlobService>>();
-            _config = new DigitalCertificatesWebConfiguration
+            _config = Options.Create(new DigitalCertificatesWebConfiguration
             {
                 ServiceBaseUrl = "https://test.local",
                 RedisConnectionString = "UseDevelopmentStorage=true",
@@ -34,25 +37,30 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
                 GreenStandardTemplateBlobName = "green-standard-template",
                 MasterPassword = "master-password",
                 LicenseBlobName = "license.xml",
-                BlobStorageConnectionString = "UseDevelopmentStorage=true",
-                ContainerName = "container"
-            };
-            _sut = new BlobService(_config, _logger.Object);
+                StorageConnectionString = "UseDevelopmentStorage=true",
+                ContainerName = "container",
+                AsposeLicenseContainerName = "aspose-container"
+            });
+            _sut = new BlobService(_blobServiceClient.Object, _config, _logger.Object);
         }        
        
         private BlobService CreateServiceAndReplaceContainer(Mock<BlobContainerClient> mockContainer)
-        {           
-            var field = typeof(BlobService).GetField("_blobContainerClient", BindingFlags.Instance | BindingFlags.NonPublic);
-            Assert.That(field, Is.Not.Null, "_blobContainerClient field not found via reflection");
-            field.SetValue(_sut, mockContainer.Object);
+        {
+            // Create a BlobServiceClient mock that returns the provided container for any container name
+            var mockBlobServiceClient = new Mock<BlobServiceClient>();
+            mockBlobServiceClient
+                .Setup(b => b.GetBlobContainerClient(It.IsAny<string>()))
+                .Returns(mockContainer.Object);
 
-            return _sut;
+            // Construct a new BlobService instance using the mocked BlobServiceClient
+            return new BlobService(mockBlobServiceClient.Object, _config, _logger.Object);
         }
 
         [Test]
         public async Task GetBlobBytesAsync_ReturnsBytes_WhenBlobExists()
         {
             // Arrange
+            var blobContainerName = "aspose-license";
             var blobName = "test.txt";
             var contentBytes = System.Text.Encoding.UTF8.GetBytes("hello world");
             var stream = new MemoryStream(contentBytes);
@@ -73,7 +81,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
             var _sut = CreateServiceAndReplaceContainer(mockContainer);
 
             // Act
-            var result = await _sut.GetBlobBytesAsync(blobName);
+            var result = await _sut.GetBlobBytesAsync(blobContainerName, blobName);
 
             // Assert
             Assert.That(result, Is.Not.Null);
@@ -89,13 +97,14 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
             var mockContainer = new Mock<BlobContainerClient>();
             var _sut = CreateServiceAndReplaceContainer(mockContainer);
 
-            Assert.ThrowsAsync<ArgumentException>(async () => await _sut.OpenBlobReadAsync(blobName));
+            Assert.ThrowsAsync<ArgumentException>(async () => await _sut.OpenBlobReadAsync("aspose-license", blobName));
         }
 
         [Test]
         public void OpenBlobReadAsync_ThrowsFileNotFoundException_WhenBlobDoesNotExist()
         {
             // Arrange
+            var blobContainerName = "aspose-license";
             var blobName = "missing.txt";
             var mockBlobClient = new Mock<BlobClient>();
             mockBlobClient
@@ -108,13 +117,14 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
             var _sut = CreateServiceAndReplaceContainer(mockContainer);
 
             // Act & Assert
-            Assert.ThrowsAsync<FileNotFoundException>(async () => await _sut.OpenBlobReadAsync(blobName));
+            Assert.ThrowsAsync<FileNotFoundException>(async () => await _sut.OpenBlobReadAsync(blobContainerName, blobName));
         }
 
         [Test]
         public async Task OpenBlobReadAsync_ReturnsStream_WhenBlobExists()
         {
             // Arrange
+            var containerName = "aspose-license";
             var blobName = "file.bin";
             var contentBytes = new byte[] { 1, 2, 3, 4 };
             var stream = new MemoryStream(contentBytes);
@@ -135,7 +145,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
             var _sut = CreateServiceAndReplaceContainer(mockContainer);
 
             // Act
-            using var resultStream = await _sut.OpenBlobReadAsync(blobName);
+            using var resultStream = await _sut.OpenBlobReadAsync(containerName, blobName);
 
             // Assert
             Assert.That(resultStream, Is.Not.Null);
@@ -148,6 +158,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
         public void OpenBlobReadAsync_ThrowsRequestFailedException_WhenDownloadStreamingThrows()
         {
             // Arrange
+            var blobContainerName = "aspose-license";
             var blobName = "file.bin";
             var mockBlobClient = new Mock<BlobClient>();
             mockBlobClient
@@ -164,7 +175,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
             var _sut = CreateServiceAndReplaceContainer(mockContainer);
 
             // Act & Assert
-            Assert.ThrowsAsync<RequestFailedException>(async () => await _sut.OpenBlobReadAsync(blobName));
+            Assert.ThrowsAsync<RequestFailedException>(async () => await _sut.OpenBlobReadAsync(blobContainerName, blobName));
            
             _logger.Verify(
                 x => x.Log(

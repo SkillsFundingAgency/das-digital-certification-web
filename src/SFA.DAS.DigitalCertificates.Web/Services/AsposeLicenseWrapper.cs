@@ -7,6 +7,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
     {
         public void SetLicense(Stream stream)
         {
+            // This will set the license for Aspose.Pdf to avoid evaluation limitations. The license file is expected to be provided as a stream.
             var license = new License();
             license.SetLicense(stream);
         }

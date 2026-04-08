@@ -42,8 +42,9 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
                 StandardTemplateBlobName = "standard-template",
                 GreenStandardTemplateBlobName = "green-standard-template",
                 MasterPassword = "master-password",
-                BlobStorageConnectionString = "UseDevelopmentStorage=true",
+                StorageConnectionString = "UseDevelopmentStorage=true",
                 ContainerName = "test-container",
+                AsposeLicenseContainerName = "aspose-license-container",
                 LicenseBlobName = "license-blob"
             };
 
@@ -127,7 +128,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
             var model = CreateModel(coronationEmblem: false);
 
             _blobServiceMock
-                .Setup(x => x.GetBlobBytesAsync("standard-template"))
+                .Setup(x => x.GetBlobBytesAsync("test-container", "standard-template"))
                 .ReturnsAsync(templateBytes);
 
             // Act
@@ -136,8 +137,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
             // Assert
             result.Should().NotBeNull();
 
-            _blobServiceMock.Verify(x => x.GetBlobBytesAsync("standard-template"), Times.Once);
-            _blobServiceMock.Verify(x => x.GetBlobBytesAsync("green-standard-template"), Times.Never);
+            _blobServiceMock.Verify(x => x.GetBlobBytesAsync("test-container", "standard-template"), Times.Once);
+            _blobServiceMock.Verify(x => x.GetBlobBytesAsync("test-container", "green-standard-template"), Times.Never);
         }
 
         [Test]
@@ -148,7 +149,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
             var model = CreateModel(coronationEmblem: true);
 
             _blobServiceMock
-                .Setup(x => x.GetBlobBytesAsync("green-standard-template"))
+                .Setup(x => x.GetBlobBytesAsync("test-container", "green-standard-template"))
                 .ReturnsAsync(templateBytes);
 
             // Act
@@ -158,8 +159,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
             result.Should().NotBeNull();
             result.Should().NotBeEmpty();
 
-            _blobServiceMock.Verify(x => x.GetBlobBytesAsync("green-standard-template"), Times.Once);
-            _blobServiceMock.Verify(x => x.GetBlobBytesAsync("standard-template"), Times.Never);
+            _blobServiceMock.Verify(x => x.GetBlobBytesAsync("test-container", "green-standard-template"), Times.Once);
+            _blobServiceMock.Verify(x => x.GetBlobBytesAsync("test-container", "standard-template"), Times.Never);
         }
 
         [Test]
@@ -170,7 +171,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
             var model = CreateModel();
 
             _blobServiceMock
-                .Setup(x => x.GetBlobBytesAsync("standard-template"))
+                .Setup(x => x.GetBlobBytesAsync(It.IsAny<string>(), It.IsAny<string>()))
                 .ReturnsAsync(templateBytes);
 
             // Act
@@ -201,12 +202,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
             templateBytes.Length.Should().BeGreaterThan(0);
 
             _blobServiceMock
-                .Setup(x => x.GetBlobBytesAsync(It.IsAny<string>()))
-                .ReturnsAsync((string blobName) =>
-                {
-                    blobName.Should().Be("standard-template");
-                    return templateBytes;
-                });
+                .Setup(x => x.GetBlobBytesAsync(It.IsAny<string>(), "standard-template"))
+                .ReturnsAsync(templateBytes);            
 
             // Act
             var result = await _sut.GenerateCertificateAsync(model);
@@ -228,7 +225,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
             var model = CreateModel();
 
             _blobServiceMock
-                .Setup(x => x.GetBlobBytesAsync(_digitalCertificatesWebConfig.StandardTemplateBlobName))
+                .Setup(x => x.GetBlobBytesAsync(_digitalCertificatesWebConfig.ContainerName, _digitalCertificatesWebConfig.StandardTemplateBlobName))
                 .ReturnsAsync(templateBytes);
 
             // Act
@@ -248,7 +245,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
             var model = CreateModel(coronationEmblem: true);
 
             _blobServiceMock
-                .Setup(x => x.GetBlobBytesAsync(_digitalCertificatesWebConfig.GreenStandardTemplateBlobName))
+                .Setup(x => x.GetBlobBytesAsync(_digitalCertificatesWebConfig.ContainerName, _digitalCertificatesWebConfig.GreenStandardTemplateBlobName))
                 .ReturnsAsync(templateBytes);
 
             // Act
@@ -261,11 +258,11 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
                 "The PDF template is missing required field(s): Awarded on");
 
             _blobServiceMock.Verify(
-                x => x.GetBlobBytesAsync(_digitalCertificatesWebConfig.GreenStandardTemplateBlobName),
+                x => x.GetBlobBytesAsync(_digitalCertificatesWebConfig.ContainerName, _digitalCertificatesWebConfig.GreenStandardTemplateBlobName),
                 Times.Once);
 
             _blobServiceMock.Verify(
-                x => x.GetBlobBytesAsync(_digitalCertificatesWebConfig.StandardTemplateBlobName),
+                x => x.GetBlobBytesAsync(_digitalCertificatesWebConfig.ContainerName, _digitalCertificatesWebConfig.StandardTemplateBlobName),
                 Times.Never);
         }
 
@@ -277,7 +274,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
             var model = CreateModel(coronationEmblem: true);
 
             _blobServiceMock
-                .Setup(x => x.GetBlobBytesAsync(_digitalCertificatesWebConfig.GreenStandardTemplateBlobName))
+                .Setup(x => x.GetBlobBytesAsync(_digitalCertificatesWebConfig.ContainerName, _digitalCertificatesWebConfig.GreenStandardTemplateBlobName))
                 .ReturnsAsync(templateBytes);
 
             // Act
@@ -290,11 +287,11 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
                 "The PDF template is missing required field(s): Passed info, Achieved grade, Awarded on");
 
             _blobServiceMock.Verify(
-                x => x.GetBlobBytesAsync(_digitalCertificatesWebConfig.GreenStandardTemplateBlobName),
+                x => x.GetBlobBytesAsync(_digitalCertificatesWebConfig.ContainerName, _digitalCertificatesWebConfig.GreenStandardTemplateBlobName),
                 Times.Once);
 
             _blobServiceMock.Verify(
-                x => x.GetBlobBytesAsync(_digitalCertificatesWebConfig.StandardTemplateBlobName),
+                x => x.GetBlobBytesAsync(_digitalCertificatesWebConfig.ContainerName, _digitalCertificatesWebConfig.StandardTemplateBlobName),
                 Times.Never);
         }
 

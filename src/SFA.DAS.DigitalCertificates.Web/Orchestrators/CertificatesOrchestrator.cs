@@ -167,8 +167,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 
         public async Task<byte[]> GenerateCertificateAsync(DownloadCertificateViewModel model)
         {
-            var templateBytes = model.CoronationEmblem ? await _blob.GetBlobBytesAsync(_digitalCertificatesWebConfiguration.GreenStandardTemplateBlobName)
-                                                        : await _blob.GetBlobBytesAsync(_digitalCertificatesWebConfiguration.StandardTemplateBlobName);
+            var templateBytes = model.CoronationEmblem ? await _blob.GetBlobBytesAsync(_digitalCertificatesWebConfiguration.ContainerName, _digitalCertificatesWebConfiguration.GreenStandardTemplateBlobName)
+                                                        : await _blob.GetBlobBytesAsync(_digitalCertificatesWebConfiguration.ContainerName, _digitalCertificatesWebConfiguration.StandardTemplateBlobName);
 
             await _asposeLicenseService.GetAsposeLicense();
 
