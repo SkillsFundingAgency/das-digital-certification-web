@@ -30,9 +30,9 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         private const string AwardedOn = "Awarded on";
         private const string DateFormat = "d MMMM yyyy";
 
-        public CertificatesOrchestrator(IMediator mediator, 
-            ISessionService sessionService, 
-            IUserService userService, 
+        public CertificatesOrchestrator(IMediator mediator,
+            ISessionService sessionService,
+            IUserService userService,
             IBlobService blob,
             IAsposeLicenseService apposeLicenseService,
             DigitalCertificatesWebConfiguration digitalCertificatesPdfConfiguration
@@ -206,19 +206,16 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                     field.Value = kv.Value ?? string.Empty;
                 }
             }
-            
-            document.Form.Flatten();
-            
-            var output = new MemoryStream();
 
-            if (!string.IsNullOrWhiteSpace(_digitalCertificatesWebConfiguration.MasterPassword))
-            {
-                document.Encrypt(
-                    userPassword: "",
-                    ownerPassword: _digitalCertificatesWebConfiguration.MasterPassword,
-                    permissions: Permissions.PrintDocument,
-                    cryptoAlgorithm: CryptoAlgorithm.AESx128);
-            }
+            document.Form.Flatten();
+
+            using var output = new MemoryStream();
+
+            document.Encrypt(
+                userPassword: "",
+                ownerPassword: _digitalCertificatesWebConfiguration.MasterPassword,
+                permissions: Permissions.PrintDocument,
+                cryptoAlgorithm: CryptoAlgorithm.AESx128);
 
             document.Save(output);
             return output.ToArray();

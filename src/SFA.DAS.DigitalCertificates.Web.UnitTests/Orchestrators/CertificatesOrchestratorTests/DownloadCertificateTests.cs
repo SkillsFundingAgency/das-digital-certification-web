@@ -185,10 +185,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
             document.Form.Count.Should().Be(0);
         }
 
-        [Test]
-        [TestCase(null, false)]
-        [TestCase("", false)]
-        [TestCase("  ", false)]
+        [Test]        
         [TestCase("super-secret", true)]
         public async Task GenerateCertificateAsync_EncryptsPdf_WhenMasterPasswordIsConfigured(string masterPassword, bool isEncrypted)
         {

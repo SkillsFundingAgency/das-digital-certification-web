@@ -18,7 +18,7 @@ namespace SFA.DAS.DigitalCertificates.Infrastructure.Configuration
         public required string FrameworkTemplateBlobName { get; set; }
         public required string LicenseBlobName { get; set; }
         public required string MasterPassword { get; set; }
-        public string StorageConnectionString { get; set; }
+        public required string StorageConnectionString { get; set; }
         public List<NotificationTemplate>? NotificationTemplates { get; set; }
     }
 
