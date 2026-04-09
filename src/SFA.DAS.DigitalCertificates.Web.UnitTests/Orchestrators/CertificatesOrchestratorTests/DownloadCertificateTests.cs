@@ -111,7 +111,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
             result.Should().NotBeNull();
             result.FamilyName.Should().Be(queryResult.FamilyName);
             result.GivenNames.Should().Be(queryResult.GivenNames);
-            result.FullName.Should().Be($"{queryResult.GivenNames} {queryResult.FamilyName}");
+            result.FullName.Should().Be($"{queryResult.GivenNames} \n {queryResult.FamilyName}");
             result.StandardName.Should().Be(queryResult.CourseName);
             result.OptionName.Should().Be(queryResult.CourseOption);
             result.Level.Should().Be(queryResult.CourseLevel.ToString());

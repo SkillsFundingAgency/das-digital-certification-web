@@ -6,7 +6,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Models.Certificates
     {
         public required string FamilyName { get; set; }
         public required string GivenNames { get; set; }
-        public string FullName => $"{GivenNames} {FamilyName}";
+        public string FullName => $"{GivenNames} \n {FamilyName}";
         public required string StandardName { get; set; }
         public string? OptionName { get; set; }
         public required string Level { get; set; }
