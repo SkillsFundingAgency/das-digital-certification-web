@@ -25,7 +25,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         private readonly DigitalCertificatesWebConfiguration _digitalCertificatesWebConfiguration;
         private const string Level = "Level";
         private const string FullName = "Full Name";
-        private const string PasssedInfo = "Passed info";
+        private const string PassedInfo = "Passed info";
         private const string AchievedGrade = "Achieved grade";
         private const string AwardedOn = "Awarded on";
         private const string DateFormat = "d MMMM yyyy";
@@ -175,7 +175,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
                 [FullName] = model.FullName,
-                [PasssedInfo] = string.Join(Environment.NewLine,
+                [PassedInfo] = string.Join(Environment.NewLine,
                     new[]
                     {
                 model.StandardName,

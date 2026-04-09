@@ -21,6 +21,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
     {
         #region Routes
         public const string BaseRoute = "certificates";
+        public const string PdfCertificateCannotBeProduced = "PDF certificate cannot be produced";
         public const string CertificatesListRouteGet = nameof(CertificatesListRouteGet);
         public const string CertificateStandardRouteGet = nameof(CertificateStandardRouteGet);
         public const string CertificateFrameworkRouteGet = nameof(CertificateFrameworkRouteGet);
@@ -97,14 +98,17 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         public async Task<IActionResult> DownloadCertificateStandardPdf(Guid certificateId)
         {
             var model = await _certificatesOrchestrator.GetDownloadCertificateViewModelAsync(certificateId);
-            
-            if (model == null) return NotFound();
+
+            if (model == null)
+            {
+                throw new InvalidOperationException(PdfCertificateCannotBeProduced);
+            }
             
             var pdfBytes = await _certificatesOrchestrator.GenerateCertificateAsync(model);
             
             if (pdfBytes == null || pdfBytes.Length == 0)
             {
-               throw new InvalidOperationException("PDF certificate cannot be produced");
+               throw new InvalidOperationException(PdfCertificateCannotBeProduced);
             }
 
             return File(pdfBytes, "application/pdf", $"CertificateNumber{model.CertificateNumber}.pdf");

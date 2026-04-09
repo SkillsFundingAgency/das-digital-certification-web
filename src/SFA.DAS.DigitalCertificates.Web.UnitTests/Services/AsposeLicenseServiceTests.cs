@@ -1,11 +1,12 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using Moq;
+using NUnit.Framework;
 using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
 using SFA.DAS.DigitalCertificates.Web.Services;
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using NUnit.Framework;
 
 namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
 {
@@ -13,8 +14,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
     {
         [Test]
         public async Task GetAsposeLicense_WhenBlobThrows_LogsError()
-        {
-            // Arrange
+        {           
             var blobMock = new Mock<IBlobService>();
             var config = new DigitalCertificatesWebConfiguration
             {
@@ -23,6 +23,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
                 DataProtectionKeysDatabase = "TestDb",
                 StandardTemplateBlobName = "standard-template",
                 GreenStandardTemplateBlobName = "green-standard-template",
+                FrameworkTemplateBlobName = "framework-template",
                 MasterPassword = "master-password",
                 LicenseBlobName = "license.xml",
                 StorageConnectionString = "UseDevelopmentStorage=true",
@@ -39,27 +40,24 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
             var licenseWrapperMock = new Mock<IAsposeLicenseWrapper>();
 
             var service = new AsposeLicenseService(blobMock.Object, config, loggerMock.Object, licenseWrapperMock.Object);
-
-            // Act
-            await service.GetAsposeLicense();
-
-            // Assert
-            blobMock.Verify(b => b.OpenBlobReadAsync("aspose-license-container", "license.xml"), Times.Once);
+                  
+            Func<Task> act = async () => await service.GetAsposeLicense();
+        
+            await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("An error occurred while retrieving the Aspose license.");
 
             loggerMock.Verify(
                 x => x.Log(
                     LogLevel.Error,
                     It.IsAny<EventId>(),
-                    It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("error occured retrieving the aspose license")),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("An error occurred while retrieving the Aspose license.")),
                     exception,
                     It.IsAny<Func<It.IsAnyType, Exception, string>>()),
                 Times.Once);
         }
 
         [Test]
-        public async Task GetAsposeLicense_WhenBlobReturnsStream_LogsInformation()
-        {
-            // Arrange
+        public async Task GetAsposeLicense_WhenBlobReturnsStream_SetsLicense()
+        {            
             var blobMock = new Mock<IBlobService>();
             var config = new DigitalCertificatesWebConfiguration
             {
@@ -68,6 +66,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
                 DataProtectionKeysDatabase = "TestDb",
                 StandardTemplateBlobName = "standard-template",
                 GreenStandardTemplateBlobName = "green-standard-template",
+                FrameworkTemplateBlobName = "framework-template",
                 MasterPassword = "master-password",
                 LicenseBlobName = "license.xml",
                 StorageConnectionString = "UseDevelopmentStorage=true",
@@ -80,25 +79,16 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
 
             var sampleStream = new MemoryStream(new byte[] { 1, 2, 3 });
             blobMock
-                .Setup(b => b.OpenBlobReadAsync(It.IsAny<string>(),It.IsAny<string>()))
+                .Setup(b => b.OpenBlobReadAsync(It.IsAny<string>(), It.IsAny<string>()))
                 .ReturnsAsync(sampleStream);
 
             var service = new AsposeLicenseService(blobMock.Object, config, loggerMock.Object, licenseWrapperMock.Object);
-
-            // Act
+            
             await service.GetAsposeLicense();
 
-            // Assert
             blobMock.Verify(b => b.OpenBlobReadAsync("aspose-license-container", "license.xml"), Times.Once);
 
-            loggerMock.Verify(
-                x => x.Log(
-                    LogLevel.Information,
-                    It.IsAny<EventId>(),
-                    It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("Aspose license loaded successfully.")),
-                    It.IsAny<Exception>(),
-                    It.IsAny<Func<It.IsAnyType, Exception, string>>()),
-                Times.Once);
+            licenseWrapperMock.Verify(x => x.SetLicense(sampleStream), Times.Once);            
         }
     }
 }

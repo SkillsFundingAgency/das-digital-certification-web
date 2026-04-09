@@ -41,11 +41,12 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
                 DataProtectionKeysDatabase = "TestDb",
                 StandardTemplateBlobName = "standard-template",
                 GreenStandardTemplateBlobName = "green-standard-template",
+                FrameworkTemplateBlobName = "framework-template",
                 MasterPassword = "master-password",
                 StorageConnectionString = "UseDevelopmentStorage=true",
                 ContainerName = "test-container",
                 AsposeLicenseContainerName = "test-aspose-container",
-                LicenseBlobName = "license-blob"
+                LicenseBlobName = "license-blob",                              
             };           
 
             _sut = new CertificatesOrchestrator(
@@ -307,8 +308,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
                 StartDate = DateTime.UtcNow.AddYears(-1),
                 PrintRequestedAt = null,
                 PrintRequestedBy = null,
-                QualificationsAndAwardingBodies = new System.Collections.Generic.List<string> { "Q1, A1" },
-                DeliveryInformation = new System.Collections.Generic.List<string> { "D1" }
+                QualificationsAndAwardingBodies = new List<string> { "Q1, A1" },
+                DeliveryInformation = new List<string> { "D1" }
             };
 
             _mediatorMock
@@ -319,7 +320,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
                 .Setup(u => u.GetGovUkIdentifier())
                 .Returns(govId);
 
-            var owned = new System.Collections.Generic.List<Certificate>
+            var owned = new List<Certificate>
             {
                 new Certificate { CertificateId = Guid.NewGuid(), CertificateType = CertificateType.Standard, CourseName = "A", CourseLevel = "1", DateAwarded = DateTime.UtcNow },
                 new Certificate { CertificateId = Guid.NewGuid(), CertificateType = CertificateType.Framework, CourseName = "B", CourseLevel = "1", DateAwarded = DateTime.UtcNow }

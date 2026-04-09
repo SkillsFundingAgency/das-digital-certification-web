@@ -7,12 +7,10 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
 {
     public class AsposeLicenseService : IAsposeLicenseService
     {
-        private const string LicenseLoaddedMessage = "Aspose license loaded successfully.";
-        private const string LicenseRetrieveError = "error occured retrieving the aspose license";
+        private const string LicenseRetrieveErrorMessage = "An error occurred while retrieving the Aspose license.";
         private readonly ILogger<AsposeLicenseService> _logger;
         private readonly DigitalCertificatesWebConfiguration _digitalCertificatesWebConfiguration;
         private readonly IBlobService _blob;
-
         private readonly IAsposeLicenseWrapper _licenseWrapper;
 
         public AsposeLicenseService(IBlobService blob, DigitalCertificatesWebConfiguration digitalCertificatesWebConfiguration, ILogger<AsposeLicenseService> logger, IAsposeLicenseWrapper licenseWrapper)
@@ -28,12 +26,12 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
             try
             {
                 await using var licenseStream = await _blob.OpenBlobReadAsync(_digitalCertificatesWebConfiguration.AsposeLicenseContainerName, _digitalCertificatesWebConfiguration.LicenseBlobName);
-                _licenseWrapper.SetLicense(licenseStream);
-                _logger.LogInformation(LicenseLoaddedMessage);
+                _licenseWrapper.SetLicense(licenseStream);              
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, LicenseRetrieveError);
+                _logger.LogError(ex, LicenseRetrieveErrorMessage);
+                throw new InvalidOperationException(LicenseRetrieveErrorMessage, ex);
             }
         }
     }

@@ -15,7 +15,6 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 using SFA.DAS.DigitalCertificates.Web.Services;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using SFA.DAS.DigitalCertificates.Web.Extensions;
-using System.IO;
 
 namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
 {
@@ -107,7 +106,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             _certificatesOrchestratorMock.Verify(c => c.GetCertificateStandardViewModel(certificateId), Times.Once);
         }
         [Test]
-        public async Task DownloadCertificateStandardPdf_Returns_NotFound_When_Model_Is_Null()
+        public async Task DownloadCertificateStandardPdf_Throws_InvalidOperationException_When_Model_Is_Null()
         {
             // Arrange
             var certificateId = Guid.NewGuid();
@@ -117,10 +116,12 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
                 .ReturnsAsync((DownloadCertificateViewModel)null!);
 
             // Act
-            var result = await _sut.DownloadCertificateStandardPdf(certificateId);
+            Func<Task> act = async () => await _sut.DownloadCertificateStandardPdf(certificateId);
 
             // Assert
-            result.Should().BeOfType<NotFoundResult>();
+            await act.Should()
+                .ThrowAsync<InvalidOperationException>()
+                .WithMessage(CertificatesController.PdfCertificateCannotBeProduced);
 
             _certificatesOrchestratorMock.Verify(
                 x => x.GetDownloadCertificateViewModelAsync(certificateId),
@@ -169,20 +170,55 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             var fileResult = result as FileContentResult;
             fileResult.Should().NotBeNull();
             fileResult!.ContentType.Should().Be("application/pdf");
-            fileResult.FileDownloadName.Should().Be("CertificateNumber678123.pdf");
-            using var msResult = new MemoryStream();
+            fileResult.FileDownloadName.Should().Be("CertificateNumber678123.pdf");            
             fileResult.FileContents.Should().BeEquivalentTo(pdfBytes);
            
-
             _certificatesOrchestratorMock.Verify(
                 x => x.GetDownloadCertificateViewModelAsync(certificateId),
                 Times.Once);
 
             _certificatesOrchestratorMock.Verify(
                 x => x.GenerateCertificateAsync(model),
-                Times.Once);
+                Times.Once);           
+        }
 
-            Assert.That($"{model.GivenNames} {model.FamilyName}", Is.EqualTo("Test Given Name Test"));
+        [Test]
+        public void DownloadCertificateStandardPdf_Throws_InvalidOperationException_When_Pdf_Cannot_Be_Produced()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+
+            var model = new DownloadCertificateViewModel
+            {
+                CertificateNumber = "678123",
+                FamilyName = "Test",
+                GivenNames = "Test Given Name",
+                OptionName = "Software developer",
+                Level = "3",
+                Result = "Pass",
+                StandardName = "Test",
+                CoronationEmblem = false,
+                DateAwarded = DateTime.UtcNow,
+            };
+
+            _certificatesOrchestratorMock
+                .Setup(x => x.GetDownloadCertificateViewModelAsync(certificateId))
+                .ReturnsAsync(model);
+
+            _certificatesOrchestratorMock
+                .Setup(x => x.GenerateCertificateAsync(model))
+                .ReturnsAsync((byte[])null!);
+
+            // Act
+            var result = async () => await _sut.DownloadCertificateStandardPdf(certificateId);
+
+            // Assert
+            Assert.That(result, Throws.TypeOf<InvalidOperationException>()
+                .With.Message.EqualTo("PDF certificate cannot be produced"));
+
+            _certificatesOrchestratorMock.Verify(x => x.GetDownloadCertificateViewModelAsync(certificateId), Times.Once);
+
+            _certificatesOrchestratorMock.Verify(x => x.GenerateCertificateAsync(model), Times.Once);
         }
 
         [Test]

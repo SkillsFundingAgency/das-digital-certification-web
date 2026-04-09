@@ -41,6 +41,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
                 DataProtectionKeysDatabase = "TestDb",
                 StandardTemplateBlobName = "standard-template",
                 GreenStandardTemplateBlobName = "green-standard-template",
+                FrameworkTemplateBlobName = "framework-template",
                 MasterPassword = "master-password",
                 StorageConnectionString = "UseDevelopmentStorage=true",
                 ContainerName = "test-container",
@@ -214,7 +215,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
             // Assert
             result.Should().NotBeNull();
             result.Should().NotBeEmpty();
-            document.IsEncrypted.Equals(isEncrypted);
+            document.IsEncrypted.Should().Be(isEncrypted);
         }
       
         [Test]

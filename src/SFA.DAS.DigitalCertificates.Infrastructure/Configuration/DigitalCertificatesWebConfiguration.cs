@@ -13,11 +13,11 @@ namespace SFA.DAS.DigitalCertificates.Infrastructure.Configuration
         public int? SharingHistoryLimit { get; set; }       
         public required string ContainerName { get; set; }
         public required string AsposeLicenseContainerName { get; set; }
-        public string StandardTemplateBlobName { get; set; } = string.Empty;
-        public string GreenStandardTemplateBlobName { get; set; } = string.Empty;
-        public string FrameworkTemplateBlobName { get; set; } = string.Empty;
+        public required string StandardTemplateBlobName { get; set; }
+        public required string GreenStandardTemplateBlobName { get; set; }
+        public required string FrameworkTemplateBlobName { get; set; }
         public required string LicenseBlobName { get; set; }
-        public string MasterPassword { get; set; }
+        public required string MasterPassword { get; set; }
         public string StorageConnectionString { get; set; }
         public List<NotificationTemplate>? NotificationTemplates { get; set; }
     }
