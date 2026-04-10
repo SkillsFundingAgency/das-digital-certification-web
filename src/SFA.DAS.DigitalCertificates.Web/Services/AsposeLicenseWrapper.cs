@@ -1,8 +1,10 @@
-using System.IO;
 using Aspose.Pdf;
+using System.Diagnostics.CodeAnalysis;
+using System.IO;
 
 namespace SFA.DAS.DigitalCertificates.Web.Services
 {
+    [ExcludeFromCodeCoverage]
     public class AsposeLicenseWrapper : IAsposeLicenseWrapper
     {
         public void SetLicense(Stream stream)

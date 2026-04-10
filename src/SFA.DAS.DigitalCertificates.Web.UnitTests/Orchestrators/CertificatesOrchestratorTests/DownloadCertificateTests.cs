@@ -75,6 +75,37 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
         }
 
         [Test]
+        public async Task GetDownloadCertificateViewModelAsync_ThrowsException_When_RequiredFileds_AreNotPresent()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();            
+
+            var queryResult = new GetStandardCertificateQueryResult
+            {
+                CertificateType = "Standard",
+                FamilyName = "",
+                GivenNames = "",
+                CourseName = "",
+                CourseOption = "Frontend",
+                CourseLevel = null,
+                OverallGrade = null,
+                DateAwarded = null,
+                CertificateReference = null
+            };
+
+            _mediatorMock
+                .Setup(m => m.Send(
+                    It.Is<GetStandardCertificateQuery>(q => q.CertificateId == certificateId),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(queryResult);
+
+            // Act & Assert
+            Func<Task> act = async () => await _sut.GetDownloadCertificateViewModelAsync(certificateId);
+            await act.Should().ThrowAsync<InvalidOperationException>()
+                .WithMessage($"Certificate {certificateId} is missing required data.");
+        }
+
+        [Test]
         public async Task GetDownloadCertificateViewModelAsync_ReturnsMappedViewModel_When_MediatorReturnsResult()
         {
             // Arrange
