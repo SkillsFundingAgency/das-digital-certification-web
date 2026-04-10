@@ -184,6 +184,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsUlnAuthorised))]
         public async Task<IActionResult> CertificatesList()
         {
+            await _sessionService.ClearContactReferenceAsync();
+
             var viewModel = await _certificatesOrchestrator.GetCertificatesListViewModel();
 
             var certificates = viewModel?.Certificates;
@@ -206,6 +208,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsCertificateOwner))]
         public async Task<IActionResult> CertificateStandard(Guid certificateId)
         {
+            await _sessionService.ClearContactReferenceAsync();
+
             var model = await _certificatesOrchestrator.GetCertificateStandardViewModel(certificateId);
 
             return View(model);
@@ -215,24 +219,48 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsCertificateOwner))]
         public async Task<IActionResult> CertificateFramework(Guid certificateId)
         {
+            await _sessionService.ClearContactReferenceAsync();
+
             var model = await _certificatesOrchestrator.GetCertificateFrameworkViewModel(certificateId);
             return View(model);
         }
 
 
-        [HttpGet("contact/{referenceNumber}", Name = ContactUsRouteGet)]
+        [HttpGet("contact", Name = ContactUsRouteGet)]
         [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsUlnAuthorised))]
-        public async Task<IActionResult> ContactUs(string referenceNumber)
+        public async Task<IActionResult> ContactUs()
         {
+            var referenceNumber = await _sessionService.GetContactReferenceAsync();
+            if (string.IsNullOrEmpty(referenceNumber))
+            {
+                return RedirectToRoute(CertificatesListRouteGet);
+            }
+
             var model = await _certificatesOrchestrator.GetContactUsViewModel(referenceNumber, null);
+            if (model == null)
+            {
+                return RedirectToRoute(CertificatesListRouteGet);
+            }
+
             return View(model);
         }
 
-        [HttpGet("{certificateId}/contact/{referenceNumber}", Name = ContactUsForCertificateRouteGet)]
+        [HttpGet("{certificateId}/contact", Name = ContactUsForCertificateRouteGet)]
         [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsCertificateOwner))]
-        public async Task<IActionResult> ContactUsForCertificate(Guid certificateId, string referenceNumber)
+        public async Task<IActionResult> ContactUsForCertificate(Guid certificateId)
         {
+            var referenceNumber = await _sessionService.GetContactReferenceAsync();
+            if (string.IsNullOrEmpty(referenceNumber))
+            {
+                return RedirectToRoute(CertificateStandardRouteGet, new { certificateId });
+            }
+
             var model = await _certificatesOrchestrator.GetContactUsViewModel(referenceNumber, certificateId);
+            if (model == null)
+            {
+                return RedirectToRoute(CertificateStandardRouteGet, new { certificateId });
+            }
+
             return View("ContactUs", model);
         }
 
@@ -244,7 +272,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             if (string.IsNullOrEmpty(referenceNumber))
                 return RedirectToRoute(CertificatesListRouteGet);
 
-            return RedirectToRoute(ContactUsRouteGet, new { referenceNumber });
+            return RedirectToRoute(ContactUsRouteGet);
         }
 
         [HttpPost("{certificateId}/contact/create", Name = ContactUsForCertificateCreateRoutePost)]
@@ -263,7 +291,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
                 };
             }
 
-            return RedirectToRoute(ContactUsForCertificateRouteGet, new { certificateId, referenceNumber = result.ReferenceNumber });
+            return RedirectToRoute(ContactUsForCertificateRouteGet, new { certificateId });
         }
 
         [HttpGet("{certificateId}/sharing", Name = CreateCertificateSharingRouteGet)]

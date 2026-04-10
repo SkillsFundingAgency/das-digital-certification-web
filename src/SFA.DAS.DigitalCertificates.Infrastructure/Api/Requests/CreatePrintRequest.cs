@@ -2,11 +2,11 @@
 {
     public class CreatePrintRequest
     {
-        public PrintAddressDto Address { get; set; } = null!;
-        public PrintEmailDto Email { get; set; } = null!;
+        public CreatePrintAddressRequest Address { get; set; } = null!;
+        public CreatePrintEmailRequest Email { get; set; } = null!;
     }
 
-    public class PrintAddressDto
+    public class CreatePrintAddressRequest
     {
         public required string ContactName { get; set; }
         public string? ContactOrganisation { get; set; }
@@ -17,7 +17,7 @@
         public required string ContactPostCode { get; set; }
     }
 
-    public class PrintEmailDto
+    public class CreatePrintEmailRequest
     {
         public required string EmailAddress { get; set; }
         public required string UserName { get; set; }

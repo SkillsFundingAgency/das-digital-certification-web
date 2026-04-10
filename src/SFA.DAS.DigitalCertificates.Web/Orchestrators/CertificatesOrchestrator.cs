@@ -173,6 +173,11 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 CourseName = courseName
             });
 
+            if (result != null && !string.IsNullOrEmpty(result.ActionCode))
+            {
+                await _sessionService.SetContactReferenceAsync(result.ActionCode);
+            }
+
             return new CreateUserActionForCertificateResult
             {
                 ReferenceNumber = result?.ActionCode ?? string.Empty,
@@ -198,6 +203,11 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 FamilyName = familyName,
                 GivenNames = givenNames
             });
+
+            if (result != null && !string.IsNullOrEmpty(result.ActionCode))
+            {
+                await _sessionService.SetContactReferenceAsync(result.ActionCode);
+            }
 
             return result?.ActionCode ?? string.Empty;
         }
@@ -369,7 +379,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 
             var req = new CreatePrintRequest
             {
-                Address = new PrintAddressDto
+                Address = new CreatePrintAddressRequest
                 {
                     ContactName = userName,
                     ContactOrganisation = deliveryAddress?.Organisation,
@@ -379,7 +389,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                     ContactAddLine4 = deliveryAddress?.County,
                     ContactPostCode = deliveryAddress?.Postcode ?? string.Empty
                 },
-                Email = new PrintEmailDto
+                Email = new CreatePrintEmailRequest
                 {
                     EmailAddress = email,
                     UserName = userName,

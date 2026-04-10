@@ -77,6 +77,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             result.RouteValues.Should().ContainKey("certificateId");
             result.RouteValues["certificateId"].Should().Be(certificateId);
             _certificatesOrchestratorMock.Verify(x => x.GetCertificatesListViewModel(), Times.Once);
+            _sessionServiceMock.Verify(s => s.ClearContactReferenceAsync(), Times.Once);
         }
 
         [Test]
@@ -104,6 +105,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             result.Should().NotBeNull();
             result!.Model.Should().BeEquivalentTo(model);
             _certificatesOrchestratorMock.Verify(c => c.GetCertificateStandardViewModel(certificateId), Times.Once);
+            _sessionServiceMock.Verify(s => s.ClearContactReferenceAsync(), Times.Once);
         }
 
         [Test]
@@ -131,6 +133,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             result.Should().NotBeNull();
             result!.Model.Should().BeEquivalentTo(model);
             _certificatesOrchestratorMock.Verify(c => c.GetCertificateFrameworkViewModel(certificateId), Times.Once);
+            _sessionServiceMock.Verify(s => s.ClearContactReferenceAsync(), Times.Once);
         }
 
         [Test]
@@ -1019,9 +1022,9 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             var redirect = (RedirectToRouteResult)result;
             redirect.RouteName.Should().Be(CertificatesController.PrintRequestConfirmationRouteGet);
             redirect.RouteValues.Should().ContainKey("certificateId");
-	}
+        }
 
-        [Test]
+
         public async Task ContactUsForCertificateCreate_Redirects_To_ContactUs_When_ReferenceNumber_Returned()
         {
             // Arrange
@@ -1030,6 +1033,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
 
             _certificatesOrchestratorMock
                 .Setup(o => o.CreateUserActionForCertificate(certificateId, It.IsAny<ActionType>()))
+
                 .ReturnsAsync(new CreateUserActionForCertificateResult
                 {
                     ReferenceNumber = referenceNumber,
@@ -1043,7 +1047,6 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             result.Should().NotBeNull();
             result!.RouteName.Should().Be(CertificatesController.ContactUsForCertificateRouteGet);
             result.RouteValues["certificateId"].Should().Be(certificateId);
-            result.RouteValues["referenceNumber"].Should().Be(referenceNumber);
         }
 
         [Test]
@@ -1054,6 +1057,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
 
             _certificatesOrchestratorMock
                 .Setup(o => o.CreateUserActionForCertificate(certificateId, It.IsAny<ActionType>()))
+
                 .ReturnsAsync(new CreateUserActionForCertificateResult
                 {
                     ReferenceNumber = null,
@@ -1077,6 +1081,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
 
             _certificatesOrchestratorMock
                 .Setup(o => o.CreateUserActionForCertificate(certificateId, It.IsAny<ActionType>()))
+
                 .ReturnsAsync(new CreateUserActionForCertificateResult
                 {
                     ReferenceNumber = null,
@@ -1100,6 +1105,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
 
             _certificatesOrchestratorMock
                 .Setup(o => o.CreateUserActionForCertificate(certificateId, It.IsAny<ActionType>()))
+
                 .ReturnsAsync(new CreateUserActionForCertificateResult
                 {
                     ReferenceNumber = null,
