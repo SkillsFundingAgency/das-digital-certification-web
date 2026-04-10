@@ -23,9 +23,9 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
         "EnvironmentName": "LOCAL",
-        "StubId": "80ED73EB-DB10-4938-9ADF-4F0FDDAA4543",
+        "StubId": "71CDF94A-B6F0-41EE-F895-08DDE4955C11",
         "StubEmail": "chris+sfa+one@humesoftware.com",
-        "StubPhone": "111222333",
+        "StubPhone": "01234 567890",
         "StubAuth": "true"
       }
     },

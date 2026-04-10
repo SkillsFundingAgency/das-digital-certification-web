@@ -29,6 +29,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         private const string AchievedGrade = "Achieved grade";
         private const string AwardedOn = "Awarded on";
         private const string DateFormat = "d MMMM yyyy";
+        private const string CertificateNumber = "Certificate no";
 
         public CertificatesOrchestrator(IMediator mediator,
             ISessionService sessionService,
@@ -184,6 +185,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                     }.Where(x => !string.IsNullOrWhiteSpace(x))),
                 [AchievedGrade] = model.Result,
                 [AwardedOn] = model.DateAwarded.ToString(DateFormat, CultureInfo.InvariantCulture) ?? string.Empty,
+                [CertificateNumber] = model.CertificateNumber
             };
 
             using var templateStream = new MemoryStream(templateBytes);
