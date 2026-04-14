@@ -15,7 +15,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
         private readonly ISessionStorageService _sessionStorageService;
         private readonly IMediator _mediator;
 
-        private const string UsernameKey = "DigitalCertificates:Username";
         private const string ShareEmailKey = "DigitalCertificates:ShareEmail";
         private const string OwnedCertificatesKeyPrefix = "DigitalCertificates:OwnedCertificates:";
         private const string UlnAuthorisationKeyPrefix = "DigitalCertificates:UlnAuthorisation:";
@@ -25,16 +24,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
         {
             _sessionStorageService = sessionStorageService;
             _mediator = mediator;
-        }
-
-        public Task SetUsernameAsync(string username)
-        {
-            return _sessionStorageService.SetAsync(UsernameKey, username);
-        }
-
-        public Task<string?> GetUserNameAsync()
-        {
-            return _sessionStorageService.GetAsync(UsernameKey);
         }
 
         public Task SetShareEmailAsync(string email)
@@ -104,7 +93,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
         public async Task ClearSessionDataAsync(string govUkIdentifier)
         {
             await _sessionStorageService.ClearAsync(ShareEmailKey);
-            await _sessionStorageService.ClearAsync(UsernameKey);
 
             if (!string.IsNullOrEmpty(govUkIdentifier))
             {
