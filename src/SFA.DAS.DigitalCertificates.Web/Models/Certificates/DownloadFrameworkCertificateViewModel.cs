@@ -1,20 +1,16 @@
-﻿using SFA.DAS.DigitalCertificates.Domain.Models;
-using System;
+﻿using System;
 
 namespace SFA.DAS.DigitalCertificates.Web.Models.Certificates
 {
-    public class DownloadCertificateViewModel
+    public class DownloadFrameworkCertificateViewModelDelete
     {
         public required string FamilyName { get; set; }
         public required string GivenNames { get; set; }
         public string FullName => $"{GivenNames} \n {FamilyName}";
         public required string CourseName { get; set; }
         public string? CourseOption { get; set; }
-        public required string CourseLevel { get; set; }
-        public required string OverallGrade { get; set; }
+        public required string Level { get; set; }       
         public required DateTime DateAwarded { get; set; }
-        public required string CertificateNumber { get; set; }
-        public bool CoronationEmblem { get; set; }
-        public CertificateType CertificateType { get; set; }
+        public required string FrameworkCertificateNumber { get; set; }
     }
 }

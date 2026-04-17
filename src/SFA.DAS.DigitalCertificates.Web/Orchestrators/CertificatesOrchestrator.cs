@@ -78,13 +78,14 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             {
                 FamilyName = result.FamilyName!,
                 GivenNames = result.GivenNames!,
-                StandardName = result.CourseName!,
-                OptionName = result.CourseOption,
-                Level = result.CourseLevel.Value.ToString(),
-                Result = result.OverallGrade!,
+                CourseName = result.CourseName!,
+                CourseOption = result.CourseOption,
+                CourseLevel = result.CourseLevel.Value.ToString(),
+                OverallGrade = result.OverallGrade!,
                 DateAwarded = result.DateAwarded.Value,
                 CertificateNumber = result.CertificateReference!,
-                CoronationEmblem = result.CoronationEmblem
+                CoronationEmblem = result.CoronationEmblem,
+                CertificateType = CertificateType.Standard
             };
 
             return viewModel;
@@ -126,6 +127,40 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 
             return viewModel;
         }
+
+        public async Task<DownloadCertificateViewModel?> GetDownloadFrameworkCertificateViewModelAsync(Guid certificateId)
+        {
+            var result = await Mediator.Send(new GetFrameworkCertificateQuery { CertificateId = certificateId });
+
+            if (result == null)
+                return null;
+
+            if (string.IsNullOrWhiteSpace(result.FamilyName)
+                || string.IsNullOrWhiteSpace(result.GivenNames)
+                || string.IsNullOrWhiteSpace(result.CourseName)                
+                || result.DateAwarded == null
+                || result.CourseLevel == null
+                || string.IsNullOrWhiteSpace(result.FrameworkCertificateNumber))
+            {
+                throw new InvalidOperationException($"Certificate {certificateId} is missing required data.");
+            }
+
+            var viewModel = new DownloadCertificateViewModel
+            {
+                FamilyName = result.FamilyName!,
+                GivenNames = result.GivenNames!,
+                CourseName = result.CourseName!,
+                CourseOption = result.CourseOption,
+                OverallGrade = result.OverallGrade!,
+                CourseLevel = result.CourseLevel,
+                DateAwarded = result.DateAwarded.Value,
+                CertificateNumber = result.FrameworkCertificateNumber,
+                CertificateType = CertificateType.Framework
+            };
+
+            return viewModel;
+        }
+
 
         public async Task<CertificateFrameworkViewModel?> GetCertificateFrameworkViewModel(Guid certificateId)
         {
@@ -170,8 +205,48 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         [ExcludeFromCodeCoverage]
         public async Task<byte[]> GenerateCertificateAsync(DownloadCertificateViewModel model)
         {
-            var templateBytes = model.CoronationEmblem ? await _blob.GetBlobBytesAsync(_digitalCertificatesWebConfiguration.ContainerName, _digitalCertificatesWebConfiguration.GreenStandardTemplateBlobName)
+            byte[]? templateBytes = null;
+            var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                [FullName] = model.FullName,
+                [PassedInfo] = string.Join(Environment.NewLine,
+                    new[]
+                    {
+                model.CourseName,
+                model.CourseOption,
+                $"{Level} {model.CourseLevel}"
+                    }.Where(x => !string.IsNullOrWhiteSpace(x))),               
+                [AwardedOn] = model.DateAwarded.ToString(DateFormat, CultureInfo.InvariantCulture) ?? string.Empty,
+                [CertificateNumber] = model.CertificateNumber
+            };
+
+            if (model.CertificateType == CertificateType.Standard)
+            {
+                templateBytes = model.CoronationEmblem ? await _blob.GetBlobBytesAsync(_digitalCertificatesWebConfiguration.ContainerName, _digitalCertificatesWebConfiguration.GreenStandardTemplateBlobName)
                                                         : await _blob.GetBlobBytesAsync(_digitalCertificatesWebConfiguration.ContainerName, _digitalCertificatesWebConfiguration.StandardTemplateBlobName);
+                values.Add(AchievedGrade, model.OverallGrade);
+            }
+            else if (model.CertificateType == CertificateType.Framework)
+            {
+                templateBytes = await _blob.GetBlobBytesAsync(_digitalCertificatesWebConfiguration.ContainerName, _digitalCertificatesWebConfiguration.FrameworkTemplateBlobName);                
+            }
+
+            if (templateBytes is null)
+            {
+                throw new InvalidOperationException("Template bytes were not loaded.");
+            }
+
+            await _asposeLicenseService.GetAsposeLicense();
+            
+            var output = await CreatePDFMemoryStream(templateBytes, values);
+            return output.ToArray();
+        }
+
+
+        [ExcludeFromCodeCoverage]
+        public async Task<byte[]> GenerateFrameworkCertificateAsync(DownloadCertificateViewModel model)
+        {
+            var templateBytes = await _blob.GetBlobBytesAsync(_digitalCertificatesWebConfiguration.ContainerName, _digitalCertificatesWebConfiguration.FrameworkTemplateBlobName);
 
             await _asposeLicenseService.GetAsposeLicense();
 
@@ -181,17 +256,23 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 [PassedInfo] = string.Join(Environment.NewLine,
                     new[]
                     {
-                model.StandardName,
-                model.OptionName,
-                $"{Level} {model.Level}"
+                model.CourseName,
+                model.CourseOption,
+                $"{Level} {model.CourseLevel}"
                     }.Where(x => !string.IsNullOrWhiteSpace(x))),
-                [AchievedGrade] = model.Result,
                 [AwardedOn] = model.DateAwarded.ToString(DateFormat, CultureInfo.InvariantCulture) ?? string.Empty,
                 [CertificateNumber] = model.CertificateNumber
             };
+            
+            var output = await CreatePDFMemoryStream(templateBytes, values);
+            return output.ToArray();
+        }
 
-            using var templateStream = new MemoryStream(templateBytes);
-            using var document = new Document(templateStream);
+        [ExcludeFromCodeCoverage]
+        private async Task<MemoryStream> CreatePDFMemoryStream(byte[] templateBytes, Dictionary<string, string> values)
+        {
+            var templateStream = new MemoryStream(templateBytes);
+            var document = new Document(templateStream);
             var fields = document.Form.Fields.Cast<Field>().ToList();
 
             ValidateRequiredFields(fields, values.Keys);
@@ -212,9 +293,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             }
 
             document.Form.Flatten();
-
-            using var output = new MemoryStream();
-
+            var output = new MemoryStream();
             document.Encrypt(
                 userPassword: "",
                 ownerPassword: _digitalCertificatesWebConfiguration.MasterPassword,
@@ -222,7 +301,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 cryptoAlgorithm: CryptoAlgorithm.AESx128);
 
             document.Save(output);
-            return output.ToArray();
+            return output;
         }
 
         private static void ValidateRequiredFields(IEnumerable<Field> fields, IEnumerable<string> requiredFieldNames)

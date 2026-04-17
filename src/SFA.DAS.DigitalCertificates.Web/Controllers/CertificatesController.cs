@@ -26,6 +26,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         public const string CertificateStandardRouteGet = nameof(CertificateStandardRouteGet);
         public const string CertificateFrameworkRouteGet = nameof(CertificateFrameworkRouteGet);
         public const string DownloadCertificateStandardPdfRouteGet = nameof(DownloadCertificateStandardPdfRouteGet);
+        public const string DownloadCertificateFrameworkPdfRouteGet = nameof(DownloadCertificateFrameworkPdfRouteGet);
         public const string CreateCertificateSharingRouteGet = nameof(CreateCertificateSharingRouteGet);
         public const string CreateCertificateSharingRoutePost = nameof(CreateCertificateSharingRoutePost);
         public const string CertificateSharingLinkRouteGet = nameof(CertificateSharingLinkRouteGet);
@@ -91,6 +92,27 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         {
             var model = await _certificatesOrchestrator.GetCertificateFrameworkViewModel(certificateId);
             return View(model);
+        }
+
+        [HttpGet("{certificateId}/framework/download", Name = DownloadCertificateFrameworkPdfRouteGet)]
+        [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsCertificateOwner))]
+        public async Task<IActionResult> DownloadCertificateFrameworkPdf(Guid certificateId)
+        {
+            var model = await _certificatesOrchestrator.GetDownloadFrameworkCertificateViewModelAsync(certificateId);
+
+            if(model == null)
+            {
+                throw new InvalidOperationException(PdfCertificateCannotBeProduced);
+            }
+            
+            var pdfBytes = await _certificatesOrchestrator.GenerateCertificateAsync(model);
+
+            if (pdfBytes == null || pdfBytes.Length == 0)
+            {
+                throw new InvalidOperationException(PdfCertificateCannotBeProduced);
+            }
+
+            return File(pdfBytes, "application/pdf", $"CertificateNumber{model.CertificateNumber}.pdf");
         }
 
         [HttpGet("{certificateId}/standard/download", Name = DownloadCertificateStandardPdfRouteGet)]

@@ -140,10 +140,10 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
             result.FamilyName.Should().Be(queryResult.FamilyName);
             result.GivenNames.Should().Be(queryResult.GivenNames);
             result.FullName.Should().Be($"{queryResult.GivenNames} \n {queryResult.FamilyName}");
-            result.StandardName.Should().Be(queryResult.CourseName);
-            result.OptionName.Should().Be(queryResult.CourseOption);
-            result.Level.Should().Be(queryResult.CourseLevel.ToString());
-            result.Result.Should().Be(queryResult.OverallGrade);
+            result.CourseName.Should().Be(queryResult.CourseName);
+            result.CourseOption.Should().Be(queryResult.CourseOption);
+            result.CourseLevel.Should().Be(queryResult.CourseLevel.ToString());
+            result.OverallGrade.Should().Be(queryResult.OverallGrade);
             result.DateAwarded.Should().Be(queryResult.DateAwarded);
             result.CertificateNumber.Should().Be(queryResult.CertificateReference);
             result.CoronationEmblem.Should().Be(queryResult.CoronationEmblem);
