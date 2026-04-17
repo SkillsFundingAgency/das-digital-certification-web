@@ -68,30 +68,22 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 Limit = _digitalCertificatesWebConfiguration.SharingListLimit == 0 ? null : _digitalCertificatesWebConfiguration.SharingListLimit
             });
 
-            if (response == null)
-            {
-                return new CreateCertificateSharingViewModel
-                {
-                    CertificateId = certificateId,
-                    CourseName = certificate.CourseName,
-                    CertificateType = certificate.CertificateType,
-                    Sharings = new List<CreateCertificateSharingItemViewModel>()
-                };
-            }
-
-            return new CreateCertificateSharingViewModel
-            {
-                CertificateId = response.CertificateId,
-                CourseName = response.CourseName,
-                CertificateType = certificate.CertificateType,
-                Sharings = response.Sharings?.Select(s => new CreateCertificateSharingItemViewModel
+            var sharings = response?.Sharings?
+                .Select(s => new CreateCertificateSharingItemViewModel
                 {
                     SharingId = s.SharingId,
                     SharingNumber = s.SharingNumber,
                     CreatedAt = s.CreatedAt,
                     ExpiryTime = s.ExpiryTime
-                }).ToList()
-                ?? new List<CreateCertificateSharingItemViewModel>()
+                })
+                .ToList() ?? new List<CreateCertificateSharingItemViewModel>();
+
+            return new CreateCertificateSharingViewModel
+            {
+                CertificateId = certificateId,
+                CourseName = certificate.CourseName,
+                CertificateType = certificate.CertificateType,
+                Sharings = sharings
             };
         }
 

@@ -93,6 +93,7 @@ stages:
   variables:
   - group: PreProd Management Resources
   - group: PreProd Shared Resources
+  - group: PREPROD das-digital-certification-web
   jobs:
   - template: pipeline-templates/job/deploy.yml
     parameters:
@@ -133,6 +134,7 @@ stages:
   variables:
   - group: DevTest Management Resources
   - group: DEMO DevTest Shared Resources
+  - group: DEMO das-digital-certification-web
   jobs:
   - template: pipeline-templates/job/deploy.yml
     parameters:
