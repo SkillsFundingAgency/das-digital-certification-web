@@ -17,7 +17,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Enums
         [TestCase("Pass", Grade.Pass)]
         [TestCase("pass with excellence", Grade.PassWithExcellence)]
         [TestCase("UNKNOWN_VAL", Grade.Unknown)]
-        public void ParseFromApi_Maps_Values(string? input, Grade expected)
+        public void ParseFromApi_Maps_Values(string input, Grade expected)
         {
             var result = GradeExtensions.ParseFromApi(input);
             result.Should().Be(expected);

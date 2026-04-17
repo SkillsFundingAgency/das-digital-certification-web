@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.AspNetCore.Http;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetFrameworkCertificate;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetStandardCertificate;
 using SFA.DAS.DigitalCertificates.Domain.Models;
@@ -15,8 +16,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         private readonly ISessionService _sessionService;
         private readonly IUserService _userService;
 
-        public CertificatesOrchestrator(IMediator mediator, ISessionService sessionService, IUserService userService)
-            : base(mediator)
+        public CertificatesOrchestrator(IMediator mediator, IHttpContextAccessor httpContextAccessor, ISessionService sessionService, IUserService userService)
+            : base(mediator, httpContextAccessor)
         {
             _sessionService = sessionService;
             _userService = userService;
