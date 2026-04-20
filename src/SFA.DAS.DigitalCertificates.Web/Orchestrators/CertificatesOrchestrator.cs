@@ -208,14 +208,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             byte[]? templateBytes = null;
             var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
-                [FullName] = model.FullName,
-                [PassedInfo] = string.Join(Environment.NewLine,
-                    new[]
-                    {
-                model.CourseName,
-                model.CourseOption,
-                $"{Level} {model.CourseLevel}"
-                    }.Where(x => !string.IsNullOrWhiteSpace(x))),               
+                [FullName] = model.FullName,                          
                 [AwardedOn] = model.DateAwarded.ToString(DateFormat, CultureInfo.InvariantCulture) ?? string.Empty,
                 [CertificateNumber] = model.CertificateNumber
             };
@@ -225,45 +218,31 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 templateBytes = model.CoronationEmblem ? await _blob.GetBlobBytesAsync(_digitalCertificatesWebConfiguration.ContainerName, _digitalCertificatesWebConfiguration.GreenStandardTemplateBlobName)
                                                         : await _blob.GetBlobBytesAsync(_digitalCertificatesWebConfiguration.ContainerName, _digitalCertificatesWebConfiguration.StandardTemplateBlobName);
                 values.Add(AchievedGrade, model.OverallGrade);
+                values.Add(PassedInfo, string.Join(Environment.NewLine,
+                    new[]
+                    {
+                model.CourseName,
+                model.CourseOption,
+                $"{Level} {model.CourseLevel}"
+                    }.Where(x => !string.IsNullOrWhiteSpace(x))));
             }
             else if (model.CertificateType == CertificateType.Framework)
             {
-                templateBytes = await _blob.GetBlobBytesAsync(_digitalCertificatesWebConfiguration.ContainerName, _digitalCertificatesWebConfiguration.FrameworkTemplateBlobName);                
+                templateBytes = await _blob.GetBlobBytesAsync(_digitalCertificatesWebConfiguration.ContainerName, _digitalCertificatesWebConfiguration.FrameworkTemplateBlobName);
+                values.Add(PassedInfo, string.Join(Environment.NewLine,
+                        new[]
+                        {
+                model.CourseName,
+                model.CourseOption,
+                $"{model.CourseLevel}  {Level}"
+                        }.Where(x => !string.IsNullOrWhiteSpace(x))));
             }
 
             if (templateBytes is null)
             {
                 throw new InvalidOperationException("Template bytes were not loaded.");
             }
-
-            await _asposeLicenseService.GetAsposeLicense();
-            
-            var output = await CreatePDFMemoryStream(templateBytes, values);
-            return output.ToArray();
-        }
-
-
-        [ExcludeFromCodeCoverage]
-        public async Task<byte[]> GenerateFrameworkCertificateAsync(DownloadCertificateViewModel model)
-        {
-            var templateBytes = await _blob.GetBlobBytesAsync(_digitalCertificatesWebConfiguration.ContainerName, _digitalCertificatesWebConfiguration.FrameworkTemplateBlobName);
-
-            await _asposeLicenseService.GetAsposeLicense();
-
-            var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-            {
-                [FullName] = model.FullName,
-                [PassedInfo] = string.Join(Environment.NewLine,
-                    new[]
-                    {
-                model.CourseName,
-                model.CourseOption,
-                $"{Level} {model.CourseLevel}"
-                    }.Where(x => !string.IsNullOrWhiteSpace(x))),
-                [AwardedOn] = model.DateAwarded.ToString(DateFormat, CultureInfo.InvariantCulture) ?? string.Empty,
-                [CertificateNumber] = model.CertificateNumber
-            };
-            
+                       
             var output = await CreatePDFMemoryStream(templateBytes, values);
             return output.ToArray();
         }
@@ -271,6 +250,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         [ExcludeFromCodeCoverage]
         private async Task<MemoryStream> CreatePDFMemoryStream(byte[] templateBytes, Dictionary<string, string> values)
         {
+            await _asposeLicenseService.GetAsposeLicense();
+
             var templateStream = new MemoryStream(templateBytes);
             var document = new Document(templateStream);
             var fields = document.Form.Fields.Cast<Field>().ToList();
