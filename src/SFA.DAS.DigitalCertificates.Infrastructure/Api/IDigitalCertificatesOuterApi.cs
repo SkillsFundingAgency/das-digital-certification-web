@@ -20,6 +20,9 @@ namespace SFA.DAS.DigitalCertificates.Domain.Interfaces
         [Get("/users/{userId}/certificates")]
         Task<CertificatesResponse> GetCertificates([Path] Guid userId);
 
+        [Get("/users/{userId}/match")]
+        Task<MatchesResponse> GetMatches([Path] Guid userId);
+
         [Get("/certificates/{certificateId}")]
         Task<GetStandardCertificateResponse> GetStandardCertificate([Path] Guid certificateId);
 

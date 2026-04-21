@@ -1,8 +1,10 @@
-﻿using System;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SFA.DAS.GovUK.Auth.Authentication;
+using SFA.DAS.DigitalCertificates.Web.Services;
+using SFA.DAS.DigitalCertificates.Web.Orchestrators;
+using System.Threading.Tasks;
 
 namespace SFA.DAS.DigitalCertificates.Web.Controllers
 {
@@ -11,17 +13,26 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
     {
         #region Routes
         public const string AuthoriseStartRouteGet = nameof(AuthoriseStartRouteGet);
+        public const string NeedMoreInformationRouteGet = nameof(NeedMoreInformationRouteGet);
         #endregion
 
-        public AuthoriseController(IHttpContextAccessor httpContextAccessor)
+        private readonly ISessionService _sessionService;
+        private readonly IAuthoriseOrchestrator _authoriseOrchestrator;
+
+        public AuthoriseController(IHttpContextAccessor httpContextAccessor, ISessionService sessionService, IAuthoriseOrchestrator authoriseOrchestrator)
             : base(httpContextAccessor)
         {
+            _sessionService = sessionService;
+            _authoriseOrchestrator = authoriseOrchestrator;
         }
 
-        [HttpGet("start", Name = AuthoriseStartRouteGet)]
+        [HttpGet("need-more-information", Name = NeedMoreInformationRouteGet)]
         [Authorize(Policy = nameof(PolicyNames.IsVerified))]
-        public IActionResult Start(Guid certificateId)
+        [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.NotUlnAuthorised))]
+        public async Task<IActionResult> NeedMoreInformation()
         {
+            await _authoriseOrchestrator.PrepareNeedMoreInformationAsync();
+
             return View();
         }
     }

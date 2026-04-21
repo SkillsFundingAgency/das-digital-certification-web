@@ -15,6 +15,7 @@ namespace SFA.DAS.DigitalCertificates.Infrastructure.Configuration
 
         public List<NotificationTemplate>? NotificationTemplates { get; set; }
         public DateTime? CutoverDate { get; set; }
+        public int? MatchesCacheExpiryDays { get; set; }
     }
 
     [ExcludeFromCodeCoverage]
