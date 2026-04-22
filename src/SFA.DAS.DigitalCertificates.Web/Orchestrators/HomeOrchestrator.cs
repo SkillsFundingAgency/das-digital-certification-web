@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using MediatR;
+using Microsoft.AspNetCore.Http;
 using SFA.DAS.DigitalCertificates.Application.Commands.CreateOrUpdateUser;
 using SFA.DAS.DigitalCertificates.Domain.Models;
 using SFA.DAS.DigitalCertificates.Web.Models.Home;
@@ -10,8 +11,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 {
     public class HomeOrchestrator : BaseOrchestrator, IHomeOrchestrator
     {
-        public HomeOrchestrator(IMediator mediator)
-            : base(mediator) { }
+        public HomeOrchestrator(IMediator mediator, IHttpContextAccessor httpContextAccessor)
+            : base(mediator, httpContextAccessor) { }
 
         public async Task<Guid> CreateOrUpdateUser(CreateOrUpdateUserModel model)
         {

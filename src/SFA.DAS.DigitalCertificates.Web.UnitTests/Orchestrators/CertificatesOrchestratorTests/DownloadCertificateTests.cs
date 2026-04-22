@@ -1,5 +1,6 @@
 ﻿using FluentAssertions;
 using MediatR;
+using Microsoft.AspNetCore.Http;
 using Moq;
 using NUnit.Framework;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetStandardCertificate;
@@ -15,6 +16,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
     public class DownloadCertificateTests
     {
         private Mock<IMediator> _mediatorMock;
+        private Mock<IHttpContextAccessor> _httpContextAccessorMock;
         private Mock<ISessionService> _sessionMock;
         private Mock<IUserService> _userServiceMock;
         private Mock<IBlobService> _blobServiceMock;
@@ -27,6 +29,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
         public void SetUp()
         {
             _mediatorMock = new Mock<IMediator>();
+            _httpContextAccessorMock = new Mock<IHttpContextAccessor>();
             _sessionMock = new Mock<ISessionService>();
             _userServiceMock = new Mock<IUserService>();
             _blobServiceMock = new Mock<IBlobService>();
@@ -34,6 +37,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
             _digitalCertificatesWebConfig = new DigitalCertificatesWebConfiguration
             {
                 ServiceBaseUrl = "https://test.local",
+                OneLoginSettingsUrl = "http://settings.com",
                 RedisConnectionString = "UseDevelopmentStorage=true",
                 DataProtectionKeysDatabase = "TestDb",
                 StandardTemplateBlobName = "standard-template",
@@ -48,6 +52,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
 
             _sut = new CertificatesOrchestrator(
                 _mediatorMock.Object,
+                _httpContextAccessorMock.Object,
                 _sessionMock.Object,
                 _userServiceMock.Object,
                 _blobServiceMock.Object,

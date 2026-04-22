@@ -19,6 +19,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
             var config = new DigitalCertificatesWebConfiguration
             {
                 ServiceBaseUrl = "https://test.local",
+                OneLoginSettingsUrl = "http://settings.com",
                 RedisConnectionString = "UseDevelopmentStorage=true",
                 DataProtectionKeysDatabase = "TestDb",
                 StandardTemplateBlobName = "standard-template",
@@ -62,6 +63,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
             var config = new DigitalCertificatesWebConfiguration
             {
                 ServiceBaseUrl = "https://test.local",
+                OneLoginSettingsUrl = "http://settings.com",
                 RedisConnectionString = "UseDevelopmentStorage=true",
                 DataProtectionKeysDatabase = "TestDb",
                 StandardTemplateBlobName = "standard-template",
