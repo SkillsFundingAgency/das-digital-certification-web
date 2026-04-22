@@ -253,8 +253,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
             Func<DistributedCacheEntryOptions, Task<int>> capturedDelegate = null!;
 
             _cacheStorageMock
-                .Setup(x => x.SetAsync<int>(key, It.IsAny<Func<DistributedCacheEntryOptions, Task<int>>>() ))
-                .Callback<string, Func<DistributedCacheEntryOptions, Task<int>>>((k, func) => capturedDelegate = func)
+                .Setup(x => x.SetAsync<int>(key, It.IsAny<Func<DistributedCacheEntryOptions, Task<int>>>(), It.IsAny<CancellationToken>()))
+                .Callback<string, Func<DistributedCacheEntryOptions, Task<int>>, CancellationToken>((k, func, t) => capturedDelegate = func)
                 .ReturnsAsync(1);
 
             // Act

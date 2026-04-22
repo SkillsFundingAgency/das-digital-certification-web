@@ -7,5 +7,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Authentication
     {
         public static string IsCertificateOwner => nameof(IsCertificateOwner);
         public static string IsUlnAuthorised => nameof(IsUlnAuthorised);
+        public static string VerifiedAndNotUlnAuthorised => nameof(VerifiedAndNotUlnAuthorised);
     }
 }
