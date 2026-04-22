@@ -5,6 +5,8 @@ using NUnit.Framework;
 using MediatR;
 using SFA.DAS.DigitalCertificates.Web.Orchestrators;
 using SFA.DAS.DigitalCertificates.Web.Services;
+using FluentValidation;
+using SFA.DAS.DigitalCertificates.Web.Models.Authorise;
 
 namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
 {
@@ -14,6 +16,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         private Mock<IMediator> _mediatorMock;
         private Mock<IUserService> _userServiceMock;
         private Mock<ICacheService> _cacheServiceMock;
+        private Mock<IValidator<KnowYourUlnViewModel>> _knowUlnValidatorMock;
         private AuthoriseOrchestrator _sut;
 
         [SetUp]
@@ -22,14 +25,16 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             _mediatorMock = new Mock<IMediator>();
             _userServiceMock = new Mock<IUserService>();
             _cacheServiceMock = new Mock<ICacheService>();
+            _knowUlnValidatorMock = new Mock<IValidator<KnowYourUlnViewModel>>();
 
-            _sut = new AuthoriseOrchestrator(_mediatorMock.Object, _userServiceMock.Object, _cacheServiceMock.Object);
+            _sut = new AuthoriseOrchestrator(_mediatorMock.Object, _userServiceMock.Object, _cacheServiceMock.Object, _knowUlnValidatorMock.Object);
         }
 
         [TearDown]
         public void TearDown()
         {
             _sut = null;
+            _knowUlnValidatorMock = null;
         }
 
         [Test]
