@@ -362,5 +362,97 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
 
             result.ShowBackLink.Should().BeTrue();
         }
+
+        [Test]
+        public async Task GetDownloadFrameworkCertificateViewModelAsync_ReturnsNull_When_MediatorReturnsNull()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+
+            _mediatorMock
+                .Setup(m => m.Send(
+                    It.Is<GetFrameworkCertificateQuery>(q => q.CertificateId == certificateId),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync((GetFrameworkCertificateQueryResult)null);
+
+            // Act
+            var result = await _sut.GetDownloadFrameworkCertificateViewModelAsync(certificateId);
+
+            // Assert
+            result.Should().BeNull();
+        }
+
+        [Test]
+        public async Task GetDownloadFrameworkCertificateViewModelAsync_ReturnsMappedViewModel_When_ResultIsValid()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+            var awardedDate = DateTime.UtcNow.Date;
+
+            var mediatorResult = new GetFrameworkCertificateQueryResult
+            {
+                FamilyName = "Smith",
+                GivenNames = "John",
+                CertificateType = "Framework",
+                CourseName = "Cloud Developer",
+                CourseOption = "Option A",
+                CourseLevel = "3",
+                DateAwarded = awardedDate,
+                FrameworkCertificateNumber = "123456"
+            };
+
+            _mediatorMock
+                .Setup(m => m.Send(
+                    It.Is<GetFrameworkCertificateQuery>(q => q.CertificateId == certificateId),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(mediatorResult);
+
+            // Act
+            var result = await _sut.GetDownloadFrameworkCertificateViewModelAsync(certificateId);
+
+            // Assert
+            result.Should().NotBeNull();
+            result!.FamilyName.Should().Be("Smith");
+            result.GivenNames.Should().Be("John");
+            result.CourseName.Should().Be("Cloud Developer");
+            result.CourseOption.Should().Be("Option A");
+            result.CourseLevel.Should().Be("3");
+            result.DateAwarded.Should().Be(awardedDate);
+            result.CertificateNumber.Should().Be("123456");
+            result.CertificateType.Should().Be(CertificateType.Framework);
+        }
+
+        [Test]
+        public async Task GetDownloadFrameworkCertificateViewModelAsync_ThrowsInvalidOperationException_When_RequiredDataIsMissing()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+
+            var mediatorResult = new GetFrameworkCertificateQueryResult
+            {
+                FamilyName = null,
+                GivenNames = "John",
+                CertificateType = "Framework",
+                CourseName = "Cloud Developer",
+                CourseOption = "Option A",
+                CourseLevel = "3",
+                DateAwarded = DateTime.UtcNow.Date,
+                FrameworkCertificateNumber = "9876543"
+            };
+
+            _mediatorMock
+                .Setup(m => m.Send(
+                    It.Is<GetFrameworkCertificateQuery>(q => q.CertificateId == certificateId),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(mediatorResult);
+
+            // Act
+            Func<Task> act = async () => await _sut.GetDownloadFrameworkCertificateViewModelAsync(certificateId);
+
+            // Assert
+            await act.Should()
+                .ThrowAsync<InvalidOperationException>()
+                .WithMessage($"Certificate {certificateId} is missing required data.");
+        }
     }
 }
