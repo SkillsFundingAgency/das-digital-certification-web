@@ -53,7 +53,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             // Arrange
             var answers = new AuthorisationAnswers
             {
-                KnowUln = "Yes",
+                KnowUln = true,
                 Uln = 1234567890L
             };
 
@@ -67,7 +67,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             var view = result as ViewResult;
             view.Model.Should().BeOfType<KnowYourUlnViewModel>();
             var model = view.Model as KnowYourUlnViewModel;
-            model.KnowUln.Should().Be("Yes");
+            model.KnowUln.Should().BeTrue();
             model.Uln.Should().Be(1234567890L);
         }
 
@@ -75,7 +75,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
         public async Task KnowYourUln_Post_Invalid_Redirects_To_Get()
         {
             // Arrange
-            var vm = new KnowYourUlnViewModel { KnowUln = "Yes", Uln = 1234567890L };
+            var vm = new KnowYourUlnViewModel { KnowUln = true, Uln = 1234567890L };
             _orchestratorMock.Setup(o => o.ValidateKnowYourUlnViewModel(vm, It.IsAny<ModelStateDictionary>())).ReturnsAsync(false);
 
             // Act
@@ -91,7 +91,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
         public async Task KnowYourUln_Post_Valid_Saves_To_Session_And_Returns_View()
         {
             // Arrange
-            var vm = new KnowYourUlnViewModel { KnowUln = "Yes", Uln = 1234567890L };
+            var vm = new KnowYourUlnViewModel { KnowUln = true, Uln = 1234567890L };
             _orchestratorMock.Setup(o => o.ValidateKnowYourUlnViewModel(vm, It.IsAny<ModelStateDictionary>())).ReturnsAsync(true);
             _sessionServiceMock.Setup(s => s.GetAuthorisationAnswersAsync()).ReturnsAsync((AuthorisationAnswers)null);
 
@@ -99,7 +99,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             var result = await _sut.KnowYourUln(vm);
 
             // Assert
-            _sessionServiceMock.Verify(s => s.SetAuthorisationAnswersAsync(It.Is<AuthorisationAnswers>(a => a.KnowUln == "Yes" && a.Uln == 1234567890L)), Times.Once);
+            _sessionServiceMock.Verify(s => s.SetAuthorisationAnswersAsync(It.Is<AuthorisationAnswers>(a => a.KnowUln == true && a.Uln == 1234567890L)), Times.Once);
             result.Should().BeOfType<ViewResult>();
         }
     }

@@ -74,7 +74,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             var answers = await _sessionService.GetAuthorisationAnswersAsync() ?? new AuthorisationAnswers();
             answers.KnowUln = model.KnowUln;
 
-            answers.Uln = model.KnowUln == "Yes" ? model.Uln : null;
+            answers.Uln = model.KnowUln == true ? model.Uln : null;
 
             await _sessionService.SetAuthorisationAnswersAsync(answers);
             return View(model);

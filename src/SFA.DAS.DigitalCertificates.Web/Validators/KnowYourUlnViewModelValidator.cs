@@ -12,14 +12,14 @@ namespace SFA.DAS.DigitalCertificates.Web.Validators
         public KnowYourUlnViewModelValidator()
         {
             RuleFor(x => x.KnowUln)
-                .NotEmpty()
+                .NotNull()
                 .WithMessage(SelectYesIfYouKnowError);
 
             RuleFor(x => x.Uln)
                 .Cascade(CascadeMode.Stop)
                 .NotNull().WithMessage(EnterUlnError)
                 .Must(u => u.HasValue && u.Value.ToString().Length == 10).WithMessage(InvalidUlnFormatError)
-                .When(x => x.KnowUln == "Yes");
+                .When(x => x.KnowUln == true);
         }
     }
 }

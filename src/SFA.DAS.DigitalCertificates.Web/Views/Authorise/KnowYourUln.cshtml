@@ -37,12 +37,12 @@
 
                                 <div class="govuk-radios__item">
                                     <input asp-for="KnowUln" id="KnowUln" class="govuk-radios__input" type="radio"
-                                           value="Yes" data-aria-controls="conditional-KnowUln"
+                                           value="true" data-aria-controls="conditional-KnowUln"
                                            aria-describedby="KnowUln-error" />
                                     <label class="govuk-label govuk-radios__label" for="KnowUln">Yes</label>
                                 </div>
 
-                                <div class="govuk-radios__conditional @(Model?.KnowUln == "Yes" ? "" : "govuk-radios__conditional--hidden")"
+                                <div class="govuk-radios__conditional @(Model?.KnowUln == true ? "" : "govuk-radios__conditional--hidden")"
                                      id="conditional-KnowUln">
                                     <div class="govuk-form-group" das-highlight-error-for="Uln"
                                          error-class="govuk-form-group--error">
@@ -58,7 +58,7 @@
 
                                 <div class="govuk-radios__item">
                                     <input asp-for="KnowUln" id="KnowUln-No" class="govuk-radios__input" type="radio"
-                                           value="No" aria-describedby="KnowUln-error" />
+                                           value="false" aria-describedby="KnowUln-error" />
                                     <label class="govuk-label govuk-radios__label" for="KnowUln-No">No</label>
                                 </div>
 

@@ -335,7 +335,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
         [Test]
         public async Task SetAuthorisationAnswersAsync_Calls_Storage_With_Correct_Key()
         {
-            var answers = new AuthorisationAnswers { KnowUln = "Yes", Uln = 1234567890L };
+            var answers = new AuthorisationAnswers { KnowUln = true, Uln = 1234567890L };
 
             await _sut.SetAuthorisationAnswersAsync(answers);
 
@@ -345,7 +345,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
         [Test]
         public async Task GetAuthorisationAnswersAsync_Returns_Value_From_Storage()
         {
-            var answers = new AuthorisationAnswers { KnowUln = "No", Uln = (long?)null };
+            var answers = new AuthorisationAnswers { KnowUln = false, Uln = (long?)null };
             var json = JsonSerializer.Serialize(answers);
 
             _sessionStorageMock.Setup(s => s.GetAsync(AuthorisationAnswersKeyPrefix)).ReturnsAsync(json);
@@ -353,7 +353,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
             var result = await _sut.GetAuthorisationAnswersAsync();
 
             result.Should().NotBeNull();
-            result!.KnowUln.Should().Be("No");
+            result!.KnowUln.Should().BeFalse();
             result.Uln.Should().BeNull();
         }
 
