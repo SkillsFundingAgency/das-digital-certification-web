@@ -1,6 +1,7 @@
 ﻿using Aspose.Pdf;
 using Aspose.Pdf.Forms;
 using MediatR;
+using Microsoft.AspNetCore.Http;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetFrameworkCertificate;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetStandardCertificate;
 using SFA.DAS.DigitalCertificates.Domain.Models;
@@ -32,14 +33,14 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         private const string DateFormat = "d MMMM yyyy";
         private const string CertificateNumber = "Certificate no";
 
-        public CertificatesOrchestrator(IMediator mediator,
-            ISessionService sessionService,
-            IUserService userService,
+        public CertificatesOrchestrator(IMediator mediator, 
+            IHttpContextAccessor httpContextAccessor, 
+            ISessionService sessionService, 
+            IUserService userService, 
             IBlobService blob,
             IAsposeLicenseService apposeLicenseService,
-            DigitalCertificatesWebConfiguration digitalCertificatesPdfConfiguration
-            )
-            : base(mediator)
+            DigitalCertificatesWebConfiguration digitalCertificatesPdfConfiguration)
+            : base(mediator, httpContextAccessor)
         {
             _sessionService = sessionService;
             _userService = userService;

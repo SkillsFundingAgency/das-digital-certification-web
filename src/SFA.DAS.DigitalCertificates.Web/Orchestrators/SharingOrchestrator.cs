@@ -22,27 +22,28 @@ using System.Threading.Tasks;
 using SFA.DAS.DigitalCertificates.Web.Models.Certificates;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetSharedStandardCertificate;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetSharedFrameworkCertificate;
+using Microsoft.AspNetCore.Http;
 
 namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 {
     public class SharingOrchestrator : BaseOrchestrator, ISharingOrchestrator
     {
         private readonly IUserService _userService;
-        private readonly ICacheService _cacheService;
         private readonly ISessionService _sessionService;
         private readonly DigitalCertificatesWebConfiguration _digitalCertificatesWebConfiguration;
         private readonly IDateTimeHelper _dateTimeHelper;
         private readonly IValidator<ShareByEmailViewModel> _shareByEmailValidator;
 
-        public SharingOrchestrator(IMediator mediator, IUserService userService, ICacheService cacheService,
+        public SharingOrchestrator(IMediator mediator,
+            IHttpContextAccessor httpContextAccessor,
+            IUserService userService,
             ISessionService sessionService,
             DigitalCertificatesWebConfiguration digitalCertificatesWebConfiguration,
             IDateTimeHelper dateTimeHelper,
             IValidator<ShareByEmailViewModel> shareByEmailValidator)
-            : base(mediator)
+            : base(mediator, httpContextAccessor)
         {
             _userService = userService;
-            _cacheService = cacheService;
             _sessionService = sessionService;
             _digitalCertificatesWebConfiguration = digitalCertificatesWebConfiguration;
             _shareByEmailValidator = shareByEmailValidator;
@@ -202,7 +203,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 
             var messageText = $"This link will stop working at {sharingResponse.ExpiryTime.ToUkExpiryDateTimeString()}.";
 
-            var userName = await GetUserDisplayNameAsync();
+            var userName = GetUserDisplayName();
 
             var templateId = GetTemplateId(_digitalCertificatesWebConfiguration, NotificationTemplateNames.SharingEmail);
 
@@ -284,17 +285,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 
             var certificates = await _sessionService.GetOwnedCertificatesAsync(govUkIdentifier);
             return certificates?.FirstOrDefault(c => c.CertificateId == certificateId);
-        }
-
-        private async Task<string> GetUserDisplayNameAsync()
-        {
-            var displayName = await _sessionService.GetUserNameAsync();
-            if (!string.IsNullOrWhiteSpace(displayName))
-            {
-                return displayName;
-            }
-
-            return string.Empty;
         }
 
         public async Task<bool> ValidateShareByEmailViewModel(ShareByEmailViewModel viewModel, ModelStateDictionary modelState)

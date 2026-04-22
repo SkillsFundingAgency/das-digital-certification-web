@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using MediatR;
+using Microsoft.AspNetCore.Http;
 using Moq;
 using NUnit.Framework;
 using SFA.DAS.DigitalCertificates.Application.Commands.CreateOrUpdateUser;
@@ -17,13 +18,23 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
     public class HomeOrchestratorTests
     {
         private Mock<IMediator> _mediatorMock;
+        private Mock<IHttpContextAccessor> _contextAccessorMock;
+
         private HomeOrchestrator _sut;
+        private DefaultHttpContext _httpContext;
 
         [SetUp]
         public void SetUp()
         {
             _mediatorMock = new Mock<IMediator>();
-            _sut = new HomeOrchestrator(_mediatorMock.Object);
+            _contextAccessorMock = new Mock<IHttpContextAccessor>();
+
+            _httpContext = new DefaultHttpContext();
+            _contextAccessorMock.Setup(c => c.HttpContext).Returns(_httpContext);
+
+            _sut = new HomeOrchestrator(
+                _mediatorMock.Object, 
+                _contextAccessorMock.Object);
         }
 
         [TearDown]
