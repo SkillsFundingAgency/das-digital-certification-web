@@ -20,8 +20,9 @@
                 reference, or it may be printed on your certificates or results slips.
             </p>
 
-            <!-- TODO: the button click should be handled as part of next ticket -->
-            <a class="govuk-button" href="/authorise/know-your-uln">Continue</a>
+            <form asp-action="NeedMoreInformationContinue" method="post">
+                <button class="govuk-button" type="submit">Continue</button>
+            </form>
         </div>
     </div>
 </main>

@@ -30,6 +30,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
         private const string UlnAuthorisationKeyPrefix = "DigitalCertificates:UlnAuthorisation:";
         private const string RecordedSharingAccessKey = "DigitalCertificates:RecordedSharingAccessCodes";
         private const string DeliveryAddressKeyPrefix = "DigitalCertificates:DeliveryAddress:";
+        private const string AuthorisationAnswersKeyPrefix = "DigitalCertificates:AuthorisationAnswers:";
 
         [SetUp]
         public void SetUp()
@@ -329,6 +330,39 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
             await _sut.ClearDeliveryAddressAsync();
 
             _sessionStorageMock.Verify(s => s.ClearAsync(DeliveryAddressKeyPrefix), Times.Once);
+        }
+
+        [Test]
+        public async Task SetAuthorisationAnswersAsync_Calls_Storage_With_Correct_Key()
+        {
+            var answers = new AuthorisationAnswers { KnowUln = "Yes", Uln = 1234567890L };
+
+            await _sut.SetAuthorisationAnswersAsync(answers);
+
+            _sessionStorageMock.Verify(s => s.SetAsync(AuthorisationAnswersKeyPrefix, It.IsAny<string>()), Times.Once);
+        }
+
+        [Test]
+        public async Task GetAuthorisationAnswersAsync_Returns_Value_From_Storage()
+        {
+            var answers = new AuthorisationAnswers { KnowUln = "No", Uln = (long?)null };
+            var json = JsonSerializer.Serialize(answers);
+
+            _sessionStorageMock.Setup(s => s.GetAsync(AuthorisationAnswersKeyPrefix)).ReturnsAsync(json);
+
+            var result = await _sut.GetAuthorisationAnswersAsync();
+
+            result.Should().NotBeNull();
+            result!.KnowUln.Should().Be("No");
+            result.Uln.Should().BeNull();
+        }
+
+        [Test]
+        public async Task ClearAuthorisationAnswersAsync_Calls_ClearAsync_With_Correct_Key()
+        {
+            await _sut.ClearAuthorisationAnswersAsync();
+
+            _sessionStorageMock.Verify(s => s.ClearAsync(AuthorisationAnswersKeyPrefix), Times.Once);
         }
     }
 }

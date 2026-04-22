@@ -18,6 +18,9 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
         Task ClearDeliveryAddressAsync();
         Task<List<Certificate>?> GetOwnedCertificatesAsync();
         Task<UlnAuthorisation?> GetUlnAuthorisationAsync();
+        Task<AuthorisationAnswers?> GetAuthorisationAnswersAsync();
+        Task SetAuthorisationAnswersAsync(AuthorisationAnswers answers);
+        Task ClearAuthorisationAnswersAsync();
         Task ClearSessionDataAsync();
         Task SetContactReferenceAsync(string referenceNumber);
         Task<string?> GetContactReferenceAsync();
