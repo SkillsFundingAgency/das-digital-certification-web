@@ -11,7 +11,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Models.Certificates
         public required string CourseName { get; set; }
         public string? CourseOption { get; set; }
         public required string CourseLevel { get; set; }
-        public required string OverallGrade { get; set; }
+        public string? OverallGrade { get; set; }
         public required DateTime DateAwarded { get; set; }
         public required string CertificateNumber { get; set; }
         public bool CoronationEmblem { get; set; }

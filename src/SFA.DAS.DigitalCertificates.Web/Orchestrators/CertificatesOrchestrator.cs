@@ -147,12 +147,11 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             }
 
             var viewModel = new DownloadCertificateViewModel
-            {
+            {               
                 FamilyName = result.FamilyName!,
                 GivenNames = result.GivenNames!,
                 CourseName = result.CourseName!,
-                CourseOption = result.CourseOption,
-                OverallGrade = result.OverallGrade!,
+                CourseOption = result.CourseOption, 
                 CourseLevel = result.CourseLevel,
                 DateAwarded = result.DateAwarded.Value,
                 CertificateNumber = result.FrameworkCertificateNumber,
@@ -161,7 +160,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 
             return viewModel;
         }
-
 
         public async Task<CertificateFrameworkViewModel?> GetCertificateFrameworkViewModel(Guid certificateId)
         {
