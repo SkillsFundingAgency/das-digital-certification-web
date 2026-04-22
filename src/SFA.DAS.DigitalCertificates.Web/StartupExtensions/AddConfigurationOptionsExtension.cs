@@ -1,9 +1,10 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
 using SFA.DAS.Encoding;
+using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace SFA.DAS.DigitalCertificates.Web.StartupExtensions
 {
@@ -16,7 +17,8 @@ namespace SFA.DAS.DigitalCertificates.Web.StartupExtensions
             services.Configure<DigitalCertificatesWebConfiguration>(options =>
             {
                 configuration.GetSection(nameof(DigitalCertificatesWebConfiguration)).Bind(options);
-                options.StorageConnectionString = configuration["StorageConnectionString"];
+                options.StorageConnectionString = configuration["StorageConnectionString"]
+                ?? throw new InvalidOperationException("StorageConnectionString is not configured."); ;
             });
 
             services.AddSingleton(cfg => cfg.GetRequiredService<IOptions<DigitalCertificatesWebConfiguration>>().Value);

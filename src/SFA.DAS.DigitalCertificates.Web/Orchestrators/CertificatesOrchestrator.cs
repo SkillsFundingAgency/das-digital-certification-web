@@ -216,7 +216,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             {
                 templateBytes = model.CoronationEmblem ? await _blob.GetBlobBytesAsync(_digitalCertificatesWebConfiguration.ContainerName, _digitalCertificatesWebConfiguration.GreenStandardTemplateBlobName)
                                                         : await _blob.GetBlobBytesAsync(_digitalCertificatesWebConfiguration.ContainerName, _digitalCertificatesWebConfiguration.StandardTemplateBlobName);
-                values.Add(AchievedGrade, model.OverallGrade);
+                values.Add(AchievedGrade, model.OverallGrade ?? string.Empty);
                 values.Add(PassedInfo, string.Join(Environment.NewLine,
                     new[]
                     {
@@ -260,6 +260,11 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             foreach (var kv in values)
             {
                 var field = FindField(fields, kv.Key);
+
+                if (field == null)
+                {
+                    continue;
+                }
 
                 if (field is TextBoxField textBox)
                 {
