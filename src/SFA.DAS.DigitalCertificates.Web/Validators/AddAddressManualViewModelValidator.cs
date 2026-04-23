@@ -56,14 +56,13 @@ namespace SFA.DAS.DigitalCertificates.Web.Validators
 
         private async Task<bool> BeAValidPostcode(string postcode, CancellationToken ct)
         {
-            var result = await _locationsOrchestrator.GetLocations(postcode);
+            var normalized = Normalize(postcode);
+            var result = await _locationsOrchestrator.GetLocations(normalized);
 
             if (result?.Locations == null)
                 return false;
 
-            var input = Normalize(postcode);
-
-            return result.Locations.Any(location => Normalize(location.Postcode) == input);
+            return result.Locations.Any(location => Normalize(location.Postcode) == normalized);
         }
 
         private static string Normalize(string? value) =>
