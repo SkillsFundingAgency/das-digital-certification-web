@@ -5,6 +5,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Models.Authorise
 {
     public class SelectCourseViewModel
     {
+        //ToDo:Neeed to remove the unused fields at the end of journey
         public string? SelectedCourseCode { get; set; }
         public List<CourseOption>? Courses { get; set; }
 

@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Moq;
 using NUnit.Framework;
-using SFA.DAS.DigitalCertificates.Domain.Models;
 using SFA.DAS.DigitalCertificates.Web.Controllers;
 using SFA.DAS.DigitalCertificates.Web.Models.Authorise;
 using SFA.DAS.DigitalCertificates.Web.Orchestrators;
@@ -51,13 +50,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
         public async Task KnowYourUln_Get_Populates_Model_From_Session()
         {
             // Arrange
-            var answers = new AuthorisationAnswers
-            {
-                KnowUln = true,
-                Uln = 1234567890L
-            };
-
-            _sessionServiceMock.Setup(s => s.GetAuthorisationAnswersAsync()).ReturnsAsync(answers);
+            var vm = new KnowYourUlnViewModel { KnowUln = true, Uln = 1234567890L };
+            _orchestratorMock.Setup(o => o.GetKnowYourUlnViewModelAsync()).ReturnsAsync(vm);
 
             // Act
             var result = await _sut.KnowYourUln();
@@ -93,13 +87,13 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             // Arrange
             var vm = new KnowYourUlnViewModel { KnowUln = true, Uln = 1234567890L };
             _orchestratorMock.Setup(o => o.ValidateKnowYourUlnViewModel(vm, It.IsAny<ModelStateDictionary>())).ReturnsAsync(true);
-            _sessionServiceMock.Setup(s => s.GetAuthorisationAnswersAsync()).ReturnsAsync((AuthorisationAnswers)null);
+            _orchestratorMock.Setup(o => o.SaveKnowYourUlnAsync(vm)).Returns(Task.CompletedTask);
 
             // Act
             var result = await _sut.KnowYourUln(vm);
 
             // Assert
-            _sessionServiceMock.Verify(s => s.SetAuthorisationAnswersAsync(It.Is<AuthorisationAnswers>(a => a.KnowUln == true && a.Uln == 1234567890L)), Times.Once);
+            _orchestratorMock.Verify(o => o.SaveKnowYourUlnAsync(vm), Times.Once);
             result.Should().BeOfType<RedirectToRouteResult>();
             var redirect = result as RedirectToRouteResult;
             redirect.RouteName.Should().Be(AuthoriseController.SelectCourseRouteGet);

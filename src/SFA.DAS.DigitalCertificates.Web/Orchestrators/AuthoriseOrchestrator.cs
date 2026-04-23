@@ -47,6 +47,29 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             return await ValidateViewModel(_knowUlnValidator, viewModel, modelState);
         }
 
+        public async Task<KnowYourUlnViewModel?> GetKnowYourUlnViewModelAsync()
+        {
+            var answers = await _sessionService.GetAuthorisationAnswersAsync();
+            if (answers == null) return new KnowYourUlnViewModel();
+
+            return new KnowYourUlnViewModel
+            {
+                KnowUln = answers.KnowUln,
+                Uln = answers.Uln
+            };
+        }
+
+        public async Task SaveKnowYourUlnAsync(KnowYourUlnViewModel viewModel)
+        {
+            if (viewModel == null) return;
+
+            var answers = await _sessionService.GetAuthorisationAnswersAsync() ?? new AuthorisationAnswers();
+            answers.KnowUln = viewModel.KnowUln;
+            answers.Uln = viewModel.KnowUln == true ? viewModel.Uln : null;
+
+            await _sessionService.SetAuthorisationAnswersAsync(answers);
+        }
+
         private async Task<MatchesAndMasks?> GetMatchesAsync()
         {
             var govUkId = _userService.GetGovUkIdentifier();

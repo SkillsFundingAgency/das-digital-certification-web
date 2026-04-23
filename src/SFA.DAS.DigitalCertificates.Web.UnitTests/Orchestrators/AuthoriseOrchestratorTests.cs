@@ -143,7 +143,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             _userServiceMock.Setup(u => u.GetUserId()).Returns(userId);
 
             var matches = new MatchesAndMasks();
-            matches.Matches.Add(new SFA.DAS.DigitalCertificates.Domain.Models.Match { CourseCode = "C1", CourseName = "Course One", CourseLevel = "2", CertificateType = CertificateType.Standard });
+            matches.Matches.Add(new Domain.Models.Match { CourseCode = "C1", CourseName = "Course One", CourseLevel = "2", CertificateType = CertificateType.Standard });
 
             _cacheServiceMock.Setup(c => c.GetOrCreateMatchesAsync(govUkId, userId)).ReturnsAsync(matches);
 
@@ -156,6 +156,75 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
 
             // Assert
             _sessionServiceMock.Verify(s => s.SetAuthorisationAnswersAsync(It.Is<AuthorisationAnswers>(a => a.CourseCode == "C1" && a.CourseName == "Course One")), Times.Once);
+        }
+
+        [Test]
+        public async Task GetKnowYourUlnViewModelAsync_Returns_New_Model_When_No_Answers()
+        {
+            // Arrange
+            _sessionServiceMock.Setup(s => s.GetAuthorisationAnswersAsync()).ReturnsAsync((AuthorisationAnswers)null);
+
+            // Act
+            var result = await _sut.GetKnowYourUlnViewModelAsync();
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.That(result.KnowUln, Is.Null);
+            Assert.That(result.Uln, Is.Null);
+        }
+
+        [Test]
+        public async Task GetKnowYourUlnViewModelAsync_Returns_Model_From_Session()
+        {
+            // Arrange
+            var answers = new AuthorisationAnswers { KnowUln = true, Uln = 1234567890L };
+            _sessionServiceMock.Setup(s => s.GetAuthorisationAnswersAsync()).ReturnsAsync(answers);
+
+            // Act
+            var result = await _sut.GetKnowYourUlnViewModelAsync();
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.That(result.KnowUln, Is.EqualTo(true));
+            Assert.That(result.Uln, Is.EqualTo(1234567890L));
+        }
+
+        [Test]
+        public async Task SaveKnowYourUlnAsync_Does_Nothing_When_ViewModel_Null()
+        {
+            // Act
+            await _sut.SaveKnowYourUlnAsync(null);
+
+            // Assert
+            _sessionServiceMock.Verify(s => s.SetAuthorisationAnswersAsync(It.IsAny<AuthorisationAnswers>()), Times.Never);
+        }
+
+        [Test]
+        public async Task SaveKnowYourUlnAsync_Saves_KnowUln_True_And_Uln()
+        {
+            // Arrange
+            var vm = new KnowYourUlnViewModel { KnowUln = true, Uln = 999999L };
+            _sessionServiceMock.Setup(s => s.GetAuthorisationAnswersAsync()).ReturnsAsync((AuthorisationAnswers)null);
+
+            // Act
+            await _sut.SaveKnowYourUlnAsync(vm);
+
+            // Assert
+            _sessionServiceMock.Verify(s => s.SetAuthorisationAnswersAsync(It.Is<AuthorisationAnswers>(a => a.KnowUln == true && a.Uln == 999999L)), Times.Once);
+        }
+
+        [Test]
+        public async Task SaveKnowYourUlnAsync_Sets_Uln_Null_When_KnowUln_False()
+        {
+            // Arrange
+            var vm = new KnowYourUlnViewModel { KnowUln = false, Uln = 111111L };
+            _sessionServiceMock.Setup(s => s.GetAuthorisationAnswersAsync()).ReturnsAsync(new AuthorisationAnswers { KnowUln = true, Uln = 222222L });
+
+            // Act
+            await _sut.SaveKnowYourUlnAsync(vm);
+
+            // Assert
+            _sessionServiceMock.Verify(s => s.SetAuthorisationAnswersAsync(It.Is<AuthorisationAnswers>(a => a.KnowUln == false && a.Uln == null)), Times.Once);
         }
     }
 }

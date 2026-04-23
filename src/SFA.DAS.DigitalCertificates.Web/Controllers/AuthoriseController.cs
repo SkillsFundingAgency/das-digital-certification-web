@@ -6,7 +6,6 @@ using SFA.DAS.DigitalCertificates.Web.Orchestrators;
 using System.Threading.Tasks;
 using SFA.DAS.DigitalCertificates.Web.Authentication;
 using SFA.DAS.DigitalCertificates.Web.Models.Authorise;
-using SFA.DAS.DigitalCertificates.Domain.Models;
 
 namespace SFA.DAS.DigitalCertificates.Web.Controllers
 {
@@ -54,13 +53,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.VerifiedAndNotUlnAuthorised))]
         public async Task<IActionResult> KnowYourUln()
         {
-            var answers = await _sessionService.GetAuthorisationAnswersAsync();
-            var model = new KnowYourUlnViewModel
-            {
-                KnowUln = answers?.KnowUln,
-                Uln = answers?.Uln
-            };
-
+            var model = await _authoriseOrchestrator.GetKnowYourUlnViewModelAsync();
             return View(model);
         }
 
@@ -72,13 +65,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             {
                 return RedirectToRoute(KnowYourUlnRouteGet);
             }
-
-            var answers = await _sessionService.GetAuthorisationAnswersAsync() ?? new AuthorisationAnswers();
-            answers.KnowUln = model.KnowUln;
-
-            answers.Uln = model.KnowUln == true ? model.Uln : null;
-
-            await _sessionService.SetAuthorisationAnswersAsync(answers);
+            await _authoriseOrchestrator.SaveKnowYourUlnAsync(model);
             return RedirectToRoute(SelectCourseRouteGet);
         }
 
