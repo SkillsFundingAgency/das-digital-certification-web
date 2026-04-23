@@ -18,6 +18,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         public const string NeedMoreInformationContinueRoutePost = nameof(NeedMoreInformationContinueRoutePost);
         public const string KnowYourUlnRouteGet = nameof(KnowYourUlnRouteGet);
         public const string KnowYourUlnRoutePost = nameof(KnowYourUlnRoutePost);
+        public const string SelectCourseRouteGet = nameof(SelectCourseRouteGet);
+        public const string SelectCourseRoutePost = nameof(SelectCourseRoutePost);
         #endregion
 
         private readonly ISessionService _sessionService;
@@ -77,6 +79,28 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             answers.Uln = model.KnowUln == true ? model.Uln : null;
 
             await _sessionService.SetAuthorisationAnswersAsync(answers);
+            return RedirectToRoute(SelectCourseRouteGet);
+        }
+
+        [HttpGet("select-course", Name = SelectCourseRouteGet)]
+        [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.VerifiedAndNotUlnAuthorised))]
+        public async Task<IActionResult> SelectCourse()
+        {
+            var model = await _authoriseOrchestrator.GetSelectCourseViewModelAsync();
+            return View(model);
+        }
+
+        [HttpPost("select-course", Name = SelectCourseRoutePost)]
+        [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.VerifiedAndNotUlnAuthorised))]
+        public async Task<IActionResult> SelectCourse(Models.Authorise.SelectCourseViewModel model)
+        {
+            if (!await _authoriseOrchestrator.ValidateSelectCourseViewModel(model, ModelState))
+            {
+                return RedirectToRoute(SelectCourseRouteGet);
+            }
+            await _authoriseOrchestrator.SaveSelectedCourseAsync(model);
+
+            //ToDo: Next page not implemented yet - stay on the page per AC2
             return View(model);
         }
     }

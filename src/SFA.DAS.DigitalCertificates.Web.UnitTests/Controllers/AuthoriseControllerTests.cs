@@ -100,7 +100,65 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
 
             // Assert
             _sessionServiceMock.Verify(s => s.SetAuthorisationAnswersAsync(It.Is<AuthorisationAnswers>(a => a.KnowUln == true && a.Uln == 1234567890L)), Times.Once);
+            result.Should().BeOfType<RedirectToRouteResult>();
+            var redirect = result as RedirectToRouteResult;
+            redirect.RouteName.Should().Be(AuthoriseController.SelectCourseRouteGet);
+        }
+
+        [Test]
+        public async Task SelectCourse_Get_Returns_View_With_Model()
+        {
+            // Arrange
+            var model = new SelectCourseViewModel
+            {
+                SelectedCourseCode = "ABC123"
+            };
+
+            _orchestratorMock.Setup(o => o.GetSelectCourseViewModelAsync()).ReturnsAsync(model);
+
+            // Act
+            var result = await _sut.SelectCourse();
+
+            // Assert
+            _orchestratorMock.Verify(o => o.GetSelectCourseViewModelAsync(), Times.Once);
             result.Should().BeOfType<ViewResult>();
+            var view = result as ViewResult;
+            view.Model.Should().BeOfType<SelectCourseViewModel>();
+            var vm = view.Model as SelectCourseViewModel;
+            vm.SelectedCourseCode.Should().Be("ABC123");
+        }
+
+        [Test]
+        public async Task SelectCourse_Post_Invalid_Redirects_To_Get()
+        {
+            // Arrange
+            var vm = new SelectCourseViewModel { SelectedCourseCode = null };
+            _orchestratorMock.Setup(o => o.ValidateSelectCourseViewModel(vm, It.IsAny<ModelStateDictionary>())).ReturnsAsync(false);
+
+            // Act
+            var result = await _sut.SelectCourse(vm);
+
+            // Assert
+            result.Should().BeOfType<RedirectToRouteResult>();
+            var redirect = result as RedirectToRouteResult;
+            redirect.RouteName.Should().Be(AuthoriseController.SelectCourseRouteGet);
+        }
+
+        [Test]
+        public async Task SelectCourse_Post_Valid_Calls_Save_And_Returns_View()
+        {
+            // Arrange
+            var vm = new SelectCourseViewModel { SelectedCourseCode = "ABC123" };
+            _orchestratorMock.Setup(o => o.ValidateSelectCourseViewModel(vm, It.IsAny<ModelStateDictionary>())).ReturnsAsync(true);
+
+            // Act
+            var result = await _sut.SelectCourse(vm);
+
+            // Assert
+            _orchestratorMock.Verify(o => o.SaveSelectedCourseAsync(vm), Times.Once);
+            result.Should().BeOfType<ViewResult>();
+            var view = result as ViewResult;
+            view.Model.Should().Be(vm);
         }
     }
 }
