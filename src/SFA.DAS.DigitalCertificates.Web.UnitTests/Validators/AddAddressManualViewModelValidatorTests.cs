@@ -55,10 +55,10 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Validators
         public async Task Validate_Passes_When_AllValidAnd_PostcodeMatches()
         {
             // Arrange
-            var model = new AddAddressManualViewModel { AddressLine1 = "Line1", TownOrCity = "Town", Postcode = "AB1 2CD" };
-            _locationsOrchestrator.Setup(x => x.GetLocations("AB12CD")).ReturnsAsync(new GetLocationsQueryResult
+            var model = new AddAddressManualViewModel { AddressLine1 = "Line1", TownOrCity = "Town", Postcode = "AB1 2BD" };
+            _locationsOrchestrator.Setup(x => x.GetLocations("AB12BD")).ReturnsAsync(new GetLocationsQueryResult
             {
-                Locations = new[] { new LocationResult { Name = "Addr", Postcode = "AB1 2CD" } }
+                Locations = new[] { new LocationResult { Name = "Addr", Postcode = "AB1 2BD" } }
             });
 
             // Act
