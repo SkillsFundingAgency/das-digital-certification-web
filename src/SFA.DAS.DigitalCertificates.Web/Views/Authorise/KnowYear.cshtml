@@ -35,8 +35,8 @@
                                 <p id="KnowYear-error" das-validation-for="KnowYear" class="govuk-error-message"></p>
 
                                 <div class="govuk-radios__item">
-                                    <input asp-for="KnowYear" id="KnowYear-Yes" class="govuk-radios__input" type="radio" value="true" data-aria-controls="conditional-KnowYear" aria-describedby="KnowYear-error" />
-                                    <label class="govuk-label govuk-radios__label" for="KnowYear-Yes">Yes</label>
+                                    <input asp-for="KnowYear" id="KnowYear" class="govuk-radios__input" type="radio" value="true" data-aria-controls="conditional-KnowYear" aria-describedby="KnowYear-error" />
+                                    <label class="govuk-label govuk-radios__label" for="KnowYear">Yes</label>
                                 </div>
 
                                 <div class="govuk-radios__conditional @(Model?.KnowYear == true ? "" : "govuk-radios__conditional--hidden")" id="conditional-KnowYear">

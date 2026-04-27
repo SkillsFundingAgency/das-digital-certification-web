@@ -8,7 +8,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
     public interface IAuthoriseOrchestrator
     {
         Task PrepareNeedMoreInformationAsync();
-        Task<CourseMatchOutcome> GetCourseMatchOutcomeAsync(Models.Authorise.SelectCourseViewModel viewModel);
+        Task<CourseMatchOutcome> GetCourseMatchOutcomeAsync(SelectCourseViewModel viewModel);
         Task<bool> ValidateKnowYourUlnViewModel(KnowYourUlnViewModel viewModel, ModelStateDictionary modelState);
         Task<KnowYourUlnViewModel?> GetKnowYourUlnViewModelAsync();
         Task SaveKnowYourUlnAsync(KnowYourUlnViewModel viewModel);
@@ -19,5 +19,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         Task<bool> ValidateSelectCourseViewModel(SelectCourseViewModel viewModel, ModelStateDictionary modelState);
         Task<SelectCourseViewModel?> GetSelectCourseViewModelAsync();
         Task SaveSelectedCourseAsync(SelectCourseViewModel viewModel);
+        Task<bool> ValidateSelectProviderViewModel(SelectProviderViewModel viewModel, ModelStateDictionary modelState);
+        Task<SelectProviderViewModel?> GetSelectProviderViewModelAsync();
+        Task SaveSelectedProviderAsync(SelectProviderViewModel viewModel);
     }
 }

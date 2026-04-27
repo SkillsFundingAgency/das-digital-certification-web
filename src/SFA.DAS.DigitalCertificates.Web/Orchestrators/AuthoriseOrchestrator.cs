@@ -19,11 +19,13 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         private readonly IValidator<KnowYourUlnViewModel> _knowUlnValidator;
         private readonly IValidator<KnowYearViewModel> _knowYearValidator;
         private readonly IValidator<SelectCourseViewModel> _selectCourseValidator;
+        private readonly IValidator<SelectProviderViewModel> _selectProviderValidator;
 
         public AuthoriseOrchestrator(IMediator mediator, ISessionService sessionService, IUserService userService, ICacheService cacheService,
-            IValidator<KnowYourUlnViewModel> knowUlnValidator,
+                IValidator<KnowYourUlnViewModel> knowUlnValidator,
                 IValidator<KnowYearViewModel> knowYearValidator,
-                IValidator<SelectCourseViewModel> selectCourseValidator)
+                IValidator<SelectCourseViewModel> selectCourseValidator,
+                IValidator<SelectProviderViewModel> selectProviderValidator)
             : base(mediator)
         {
             _sessionService = sessionService;
@@ -32,6 +34,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             _knowUlnValidator = knowUlnValidator;
             _knowYearValidator = knowYearValidator;
             _selectCourseValidator = selectCourseValidator;
+            _selectProviderValidator = selectProviderValidator;
         }
 
         public async Task PrepareNeedMoreInformationAsync()
@@ -183,6 +186,102 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             return courseOptions;
             }
             // TODO: This needs to be refined in the upcoming ticket
+        public async Task<bool> ValidateSelectProviderViewModel(SelectProviderViewModel viewModel, ModelStateDictionary modelState)
+        {
+            return await ValidateViewModel(_selectProviderValidator, viewModel, modelState);
+        }
+
+        public async Task<SelectProviderViewModel?> GetSelectProviderViewModelAsync()
+        {
+            var answers = await _sessionService.GetAuthorisationAnswersAsync();
+            var matches = await GetMatchesAsync();
+            var providerOptions = MapMatchesToProviderOptions(matches);
+
+            var model = new SelectProviderViewModel
+            {
+                SelectedProviderName = answers?.ProviderName,
+                SelectedProviderUnknown = answers?.ProviderUnknown,
+                Providers = providerOptions
+            };
+
+            return model;
+        }
+
+        public async Task SaveSelectedProviderAsync(SelectProviderViewModel viewModel)
+        {
+            if (viewModel == null) return;
+
+            var answers = await _sessionService.GetAuthorisationAnswersAsync() ?? new AuthorisationAnswers();
+
+            if (viewModel.SelectedProviderUnknown == true)
+            {
+                answers.ProviderUnknown = true;
+                answers.ProviderUkprn = null;
+                answers.ProviderName = null;
+                await _sessionService.SetAuthorisationAnswersAsync(answers);
+                return;
+            }
+
+            var selectedName = viewModel.SelectedProviderName?.Trim();
+
+            var matches = await GetMatchesAsync();
+            var providerOptions = MapMatchesToProviderOptions(matches);
+
+            var selected = providerOptions.FirstOrDefault(p =>
+                !string.IsNullOrWhiteSpace(p.ProviderName) && string.Equals(p.ProviderName?.Trim(), selectedName, System.StringComparison.OrdinalIgnoreCase)
+            );
+
+            if (selected != null)
+            {
+                answers.ProviderUkprn = string.IsNullOrWhiteSpace(selected.Ukprn) ? null : selected.Ukprn?.Trim();
+                answers.ProviderName = selected.ProviderName?.Trim();
+                answers.ProviderUnknown = false;
+            }
+            else
+            {
+                answers.ProviderUkprn = null;
+                answers.ProviderName = null;
+                answers.ProviderUnknown = false;
+            }
+
+            await _sessionService.SetAuthorisationAnswersAsync(answers);
+        }
+
+        private static List<SelectProviderViewModel.ProviderOption> MapMatchesToProviderOptions(MatchesAndMasks? matches)
+        {
+            var providerOptions = new List<SelectProviderViewModel.ProviderOption>();
+            if (matches == null) return providerOptions;
+
+            if (matches.Matches != null)
+            {
+                providerOptions.AddRange(matches.Matches
+                    .Where(m => !string.IsNullOrWhiteSpace(m.ProviderName))
+                    .Select(m => new SelectProviderViewModel.ProviderOption
+                    {
+                        Ukprn = m.Ukprn,
+                        ProviderName = m.ProviderName
+                    }));
+            }
+
+            if (matches.Masks != null)
+            {
+                providerOptions.AddRange(matches.Masks
+                    .Where(m => !string.IsNullOrWhiteSpace(m.ProviderName))
+                    .Select(m => new SelectProviderViewModel.ProviderOption
+                    {
+                        Ukprn = null,
+                        ProviderName = m.ProviderName
+                    }));
+            }
+
+            var distinct = providerOptions
+                .GroupBy(p => (p.ProviderName ?? string.Empty).Trim())
+                .Select(g => g.FirstOrDefault(p => !string.IsNullOrWhiteSpace(p.Ukprn)) ?? g.First())
+                .OrderBy(p => p.ProviderName)
+                .ToList();
+
+            return distinct;
+        }
         public async Task<CourseMatchOutcome> GetCourseMatchOutcomeAsync(SelectCourseViewModel viewModel)
         {
             if (viewModel == null) return CourseMatchOutcome.NoData;

@@ -20,6 +20,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         public const string KnowYourUlnRoutePost = nameof(KnowYourUlnRoutePost);
         public const string SelectCourseRouteGet = nameof(SelectCourseRouteGet);
         public const string SelectCourseRoutePost = nameof(SelectCourseRoutePost);
+        public const string SelectProviderRouteGet = nameof(SelectProviderRouteGet);
+        public const string SelectProviderRoutePost = nameof(SelectProviderRoutePost);
         public const string CheckAnswersRouteGet = nameof(CheckAnswersRouteGet);
         public const string KnowYearRouteGet = nameof(KnowYearRouteGet);
         public const string KnowYearRoutePost = nameof(KnowYearRoutePost);
@@ -112,6 +114,35 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             return RedirectToRoute(CheckAnswersRouteGet);
         }
 
+        [HttpGet("select-provider", Name = SelectProviderRouteGet)]
+        [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.VerifiedAndNotUlnAuthorised))]
+        public async Task<IActionResult> SelectProvider()
+        {
+            var model = await _authoriseOrchestrator.GetSelectProviderViewModelAsync();
+            return View(model);
+        }
+
+        [HttpPost("select-provider", Name = SelectProviderRoutePost)]
+        [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.VerifiedAndNotUlnAuthorised))]
+        public async Task<IActionResult> SelectProvider(SelectProviderViewModel model)
+        {
+            if (string.Equals(model.SelectedProviderName?.Trim(), SelectProviderViewModel.UnknownProviderSentinel, System.StringComparison.OrdinalIgnoreCase))
+            {
+                model.SelectedProviderUnknown = true;
+                model.SelectedProviderName = null;
+            }
+
+            if (!await _authoriseOrchestrator.ValidateSelectProviderViewModel(model, ModelState))
+            {
+                return RedirectToRoute(SelectProviderRouteGet);
+            }
+
+            await _authoriseOrchestrator.SaveSelectedProviderAsync(model);
+
+            // Page not implemented - refresh page per AC2
+            return View(model);
+        }
+
         [HttpGet("check-answers", Name = CheckAnswersRouteGet)]
         [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.VerifiedAndNotUlnAuthorised))]
         public async Task<IActionResult> CheckAnswers()
@@ -146,8 +177,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
 
             await _authoriseOrchestrator.SaveKnowYearAsync(model);
 
-            // Next page not implemented yet - refresh the page per AC2
-            return View(model);
+            // Per AC1: after saving year, proceed to provider selection
+            return RedirectToRoute(SelectProviderRouteGet);
         }
     }
 }

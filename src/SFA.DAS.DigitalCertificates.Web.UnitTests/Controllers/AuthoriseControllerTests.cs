@@ -142,18 +142,14 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             var vm = new KnowYearViewModel { KnowYear = true, YearCompleted = 2018 };
             _orchestratorMock.Setup(o => o.ValidateKnowYearViewModel(vm, It.IsAny<ModelStateDictionary>())).ReturnsAsync(true);
             _orchestratorMock.Setup(o => o.SaveKnowYearAsync(vm)).Returns(Task.CompletedTask);
-
             // Act
             var result = await _sut.KnowYear(vm);
 
             // Assert
             _orchestratorMock.Verify(o => o.SaveKnowYearAsync(vm), Times.Once);
-            result.Should().BeOfType<ViewResult>();
-            var view = result as ViewResult;
-            view.Model.Should().BeOfType<KnowYearViewModel>();
-            var model = view.Model as KnowYearViewModel;
-            model.KnowYear.Should().BeTrue();
-            model.YearCompleted.Should().Be(2018);
+            result.Should().BeOfType<RedirectToRouteResult>();
+            var redirect = result as RedirectToRouteResult;
+            redirect.RouteName.Should().Be(AuthoriseController.SelectProviderRouteGet);
         }
 
         [Test]
@@ -269,6 +265,85 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             result.Should().BeOfType<RedirectToRouteResult>();
             var redirect = result as RedirectToRouteResult;
             redirect.RouteName.Should().Be(AuthoriseController.CheckAnswersRouteGet);
+        }
+
+        [Test]
+        public async Task SelectProvider_Get_Returns_View_With_Model()
+        {
+            // Arrange
+            var model = new SelectProviderViewModel
+            {
+                SelectedProviderName = "Provider A"
+            };
+
+            _orchestratorMock.Setup(o => o.GetSelectProviderViewModelAsync()).ReturnsAsync(model);
+
+            // Act
+            var result = await _sut.SelectProvider();
+
+            // Assert
+            _orchestratorMock.Verify(o => o.GetSelectProviderViewModelAsync(), Times.Once);
+            result.Should().BeOfType<ViewResult>();
+            var view = result as ViewResult;
+            view.Model.Should().BeOfType<SelectProviderViewModel>();
+            var vm = view.Model as SelectProviderViewModel;
+            vm.SelectedProviderName.Should().Be("Provider A");
+        }
+
+        [Test]
+        public async Task SelectProvider_Post_Invalid_Redirects_To_Get()
+        {
+            // Arrange -
+            var vm = new SelectProviderViewModel { SelectedProviderName = null };
+            _orchestratorMock.Setup(o => o.ValidateSelectProviderViewModel(It.IsAny<SelectProviderViewModel>(), It.IsAny<ModelStateDictionary>())).ReturnsAsync(false);
+
+            // Act
+            var result = await _sut.SelectProvider(vm);
+
+            // Assert
+            result.Should().BeOfType<RedirectToRouteResult>();
+            var redirect = result as RedirectToRouteResult;
+            redirect.RouteName.Should().Be(AuthoriseController.SelectProviderRouteGet);
+        }
+
+        [Test]
+        public async Task SelectProvider_Post_Unknown_Sets_Unknown_And_Saves()
+        {
+            // Arrange
+            var vm = new SelectProviderViewModel { SelectedProviderName = SelectProviderViewModel.UnknownProviderSentinel };
+
+            _orchestratorMock.Setup(o => o.ValidateSelectProviderViewModel(It.IsAny<SelectProviderViewModel>(), It.IsAny<ModelStateDictionary>())).ReturnsAsync(true);
+            _orchestratorMock.Setup(o => o.SaveSelectedProviderAsync(It.IsAny<SelectProviderViewModel>())).Returns(Task.CompletedTask);
+
+            // Act
+            var result = await _sut.SelectProvider(vm);
+
+            // Assert 
+            _orchestratorMock.Verify(o => o.SaveSelectedProviderAsync(It.Is<SelectProviderViewModel>(m => m.SelectedProviderUnknown == true && m.SelectedProviderName == null)), Times.Once);
+            result.Should().BeOfType<ViewResult>();
+            var view = result as ViewResult;
+            view.Model.Should().BeOfType<SelectProviderViewModel>();
+        }
+
+        [Test]
+        public async Task SelectProvider_Post_Valid_Saves_And_Returns_View()
+        {
+            // Arrange 
+            var vm = new SelectProviderViewModel { SelectedProviderName = "Provider A" };
+
+            _orchestratorMock.Setup(o => o.ValidateSelectProviderViewModel(It.IsAny<SelectProviderViewModel>(), It.IsAny<ModelStateDictionary>())).ReturnsAsync(true);
+            _orchestratorMock.Setup(o => o.SaveSelectedProviderAsync(It.IsAny<SelectProviderViewModel>())).Returns(Task.CompletedTask);
+
+            // Act
+            var result = await _sut.SelectProvider(vm);
+
+            // Assert
+            _orchestratorMock.Verify(o => o.SaveSelectedProviderAsync(It.Is<SelectProviderViewModel>(m => m.SelectedProviderUnknown != true && m.SelectedProviderName == "Provider A")), Times.Once);
+            result.Should().BeOfType<ViewResult>();
+            var view = result as ViewResult;
+            view.Model.Should().BeOfType<SelectProviderViewModel>();
+            var model = view.Model as SelectProviderViewModel;
+            model.SelectedProviderName.Should().Be("Provider A");
         }
     }
 }

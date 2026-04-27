@@ -1,0 +1,84 @@
+﻿@using SFA.DAS.DigitalCertificates.Web.Controllers
+@using SFA.DAS.DigitalCertificates.Web.ViewDataKeys
+@using static SFA.DAS.DigitalCertificates.Web.Models.Authorise.SelectProviderViewModel
+@model SFA.DAS.DigitalCertificates.Web.Models.Authorise.SelectProviderViewModel
+@{
+    ViewData[ViewDataKeys.Title] = ViewData[ViewDataKeys.ServiceName] + " Who was your training provider?";
+    ViewBag.GaData.Vpv = @ViewData[ViewDataKeys.GaDataVpvPrefix] + "who-was-your-training-provider";
+}
+
+<div class="govuk-width-container">
+
+    <a asp-route="@AuthoriseController.KnowYearRouteGet" class="govuk-back-link">Back</a>
+
+    <main class="govuk-main-wrapper" id="main-content">
+        <partial name="_ValidationSummary" />
+
+        <div class="govuk-grid-row">
+            <div class="govuk-grid-column-two-thirds">
+
+                <form asp-action="SelectProvider" method="post">
+
+                    <div class="govuk-form-group" das-highlight-error-for="SelectedProviderName" error-class="govuk-form-group--error">
+
+                        <span class="govuk-caption-l">Matching your information</span>
+
+                            <fieldset id="SelectedProviderOptions-fieldset" class="govuk-fieldset" aria-describedby="SelectProvider-hint">
+                            <legend class="govuk-fieldset__legend govuk-fieldset__legend--l">
+                                <h1 class="govuk-fieldset__heading">Who was your training provider?</h1>
+                            </legend>
+
+                            
+
+                            <div class="govuk-radios" data-module="govuk-radios">
+                                <p id="SelectedProviderOption-error" das-validation-for="SelectedProviderName" class="govuk-error-message"></p>
+
+                                @if (Model?.Providers != null)
+                                {
+                                    var idx = 0;
+                                        foreach (ProviderOption p in Model.Providers)
+                                        {
+                                            var inputId = idx == 0 ? "SelectedProviderName" : $"SelectedProviderOption-{idx}";
+                                            <div class="govuk-radios__item">
+                                                  <input name="SelectedProviderName"
+                                                      id="@inputId"
+                                                      class="govuk-radios__input"
+                                                      type="radio"
+                                                      value="@p.ProviderName"
+                                                      aria-describedby="SelectedProviderOption-error"
+                                                      @( (Model?.SelectedProviderName != null && System.String.Equals(p.ProviderName?.Trim(), Model.SelectedProviderName?.Trim(), System.StringComparison.OrdinalIgnoreCase)) ? "checked=\"checked\"" : "" ) />
+                                                <label class="govuk-label govuk-radios__label" for="@inputId">@p.DisplayName</label>
+                                            </div>
+                                            idx++;
+                                        }
+                                }
+
+                                <div class="govuk-body govuk-!-margin-bottom-3">or</div>
+
+                                <div class="govuk-radios__item">
+                                     <input name="SelectedProviderName"
+                                         id="SelectedProviderOption-Unknown"
+                                         class="govuk-radios__input"
+                                         type="radio"
+                                        value="@UnknownProviderSentinel"
+                                         aria-describedby="SelectedProviderOption-error"
+                                            @(Model?.SelectedProviderUnknown == true ? "checked=\"checked\"" : "") />
+                                    <label class="govuk-label govuk-radios__label" for="SelectedProviderOption-Unknown">I don’t know</label>
+                                </div>
+
+                            </div>
+
+                        </fieldset>
+
+                    </div>
+
+                    <button type="submit" class="govuk-button" data-module="govuk-button">Continue</button>
+
+                </form>
+
+            </div>
+        </div>
+
+    </main>
+
+</div>

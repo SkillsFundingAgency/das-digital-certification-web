@@ -22,6 +22,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         private Mock<IValidator<KnowYourUlnViewModel>> _knowUlnValidatorMock;
         private Mock<IValidator<KnowYearViewModel>> _knowYearValidatorMock;
         private Mock<IValidator<SelectCourseViewModel>> _selectCourseValidatorMock;
+        private Mock<IValidator<SelectProviderViewModel>> _selectProviderValidatorMock;
         private AuthoriseOrchestrator _sut;
 
         [SetUp]
@@ -34,6 +35,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             _knowUlnValidatorMock = new Mock<IValidator<KnowYourUlnViewModel>>();
             _knowYearValidatorMock = new Mock<IValidator<KnowYearViewModel>>();
             _selectCourseValidatorMock = new Mock<IValidator<SelectCourseViewModel>>();
+            _selectProviderValidatorMock = new Mock<IValidator<SelectProviderViewModel>>();
 
             _sut = new AuthoriseOrchestrator(
                 _mediatorMock.Object,
@@ -42,7 +44,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 _cacheServiceMock.Object,
                 _knowUlnValidatorMock.Object,
                 _knowYearValidatorMock.Object,
-                _selectCourseValidatorMock.Object);
+                _selectCourseValidatorMock.Object,
+                _selectProviderValidatorMock.Object);
         }
 
         [TearDown]
@@ -52,6 +55,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             _knowUlnValidatorMock = null;
             _knowYearValidatorMock = null;
             _selectCourseValidatorMock = null;
+            _selectProviderValidatorMock = null;
             _sessionServiceMock = null;
         }
 
@@ -440,6 +444,78 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             // Assert
             Assert.That(result, Is.EqualTo(CourseMatchOutcome.NoMatch));
             _sessionServiceMock.Verify(s => s.SetAuthorisationAnswersAsync(It.Is<AuthorisationAnswers>(a => a.FailedMatchCount == 1)), Times.Once);
+        }
+ 
+        [Test]
+        public async Task GetSelectProviderViewModelAsync_Returns_Model_With_Providers_And_SessionValues()
+        {
+            // Arrange
+            var govUkId = "gov-1";
+            var userId = Guid.NewGuid();
+
+            _userServiceMock.Setup(u => u.GetGovUkIdentifier()).Returns(govUkId);
+            _userServiceMock.Setup(u => u.GetUserId()).Returns(userId);
+
+            var matches = new MatchesAndMasks();
+            matches.Matches.Add(new Domain.Models.Match { ProviderName = "Provider A", Ukprn = "12345" });
+            matches.Masks.Add(new Mask { ProviderName = "Provider B" });
+
+            _cacheServiceMock.Setup(c => c.GetOrCreateMatchesAsync(govUkId, userId)).ReturnsAsync(matches);
+
+            _sessionServiceMock.Setup(s => s.GetAuthorisationAnswersAsync()).ReturnsAsync(new AuthorisationAnswers { ProviderName = "Provider A", ProviderUnknown = false });
+
+            // Act
+            var result = await _sut.GetSelectProviderViewModelAsync();
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.That(result.SelectedProviderName, Is.EqualTo("Provider A"));
+            Assert.That(result.SelectedProviderUnknown, Is.EqualTo(false));
+            Assert.IsNotNull(result.Providers);
+            Assert.IsTrue(result.Providers.Exists(p => p.ProviderName == "Provider A" && p.Ukprn == "12345"));
+            Assert.IsTrue(result.Providers.Exists(p => p.ProviderName == "Provider B" && p.Ukprn == null));
+        }
+
+        [Test]
+        public async Task SaveSelectedProviderAsync_When_Unknown_Sets_Unknown_And_Clears_Other_Fields()
+        {
+            // Arrange
+            _sessionServiceMock.Setup(s => s.GetAuthorisationAnswersAsync()).ReturnsAsync(new AuthorisationAnswers { ProviderName = "Old", ProviderUkprn = "999" });
+            _sessionServiceMock.Setup(s => s.SetAuthorisationAnswersAsync(It.IsAny<AuthorisationAnswers>())).Returns(Task.CompletedTask);
+
+            var vm = new SelectProviderViewModel { SelectedProviderUnknown = true };
+
+            // Act
+            await _sut.SaveSelectedProviderAsync(vm);
+
+            // Assert
+            _sessionServiceMock.Verify(s => s.SetAuthorisationAnswersAsync(It.Is<AuthorisationAnswers>(a => a.ProviderUnknown == true && a.ProviderName == null && a.ProviderUkprn == null)), Times.Once);
+        }
+
+        [Test]
+        public async Task SaveSelectedProviderAsync_When_ValidProvider_Saves_Ukprn_And_Name()
+        {
+            // Arrange
+            var govUkId = "gov-1";
+            var userId = Guid.NewGuid();
+
+            _userServiceMock.Setup(u => u.GetGovUkIdentifier()).Returns(govUkId);
+            _userServiceMock.Setup(u => u.GetUserId()).Returns(userId);
+
+            var matches = new MatchesAndMasks();
+            matches.Matches.Add(new Domain.Models.Match { ProviderName = "Provider A", Ukprn = "12345" });
+            _cacheServiceMock.Setup(c => c.GetOrCreateMatchesAsync(govUkId, userId)).ReturnsAsync(matches);
+
+            _sessionServiceMock.Setup(s => s.GetAuthorisationAnswersAsync()).ReturnsAsync((AuthorisationAnswers)null);
+            _sessionServiceMock.Setup(s => s.SetAuthorisationAnswersAsync(It.IsAny<AuthorisationAnswers>())).Returns(Task.CompletedTask);
+
+            var vm = new SelectProviderViewModel { SelectedProviderName = "Provider A" };
+
+            // Act
+            await _sut.SaveSelectedProviderAsync(vm);
+
+            // Assert
+            _sessionServiceMock.Verify(s => s.SetAuthorisationAnswersAsync(It.Is<AuthorisationAnswers>(a => a.ProviderName == "Provider A" && a.ProviderUkprn == "12345" && a.ProviderUnknown == false)), Times.Once);
         }
     }
 }
