@@ -4,6 +4,7 @@ using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using SFA.DAS.DigitalCertificates.Web.Models.Authorise;
+using SFA.DAS.DigitalCertificates.Web.Enums;
 using SFA.DAS.DigitalCertificates.Web.Services;
 using SFA.DAS.DigitalCertificates.Domain.Models;
 using System.Collections.Generic;
@@ -16,17 +17,20 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         private readonly ICacheService _cacheService;
         private readonly ISessionService _sessionService;
         private readonly IValidator<KnowYourUlnViewModel> _knowUlnValidator;
+        private readonly IValidator<KnowYearViewModel> _knowYearValidator;
         private readonly IValidator<SelectCourseViewModel> _selectCourseValidator;
 
         public AuthoriseOrchestrator(IMediator mediator, ISessionService sessionService, IUserService userService, ICacheService cacheService,
             IValidator<KnowYourUlnViewModel> knowUlnValidator,
-            IValidator<SelectCourseViewModel> selectCourseValidator)
+                IValidator<KnowYearViewModel> knowYearValidator,
+                IValidator<SelectCourseViewModel> selectCourseValidator)
             : base(mediator)
         {
             _sessionService = sessionService;
             _userService = userService;
             _cacheService = cacheService;
             _knowUlnValidator = knowUlnValidator;
+            _knowYearValidator = knowYearValidator;
             _selectCourseValidator = selectCourseValidator;
         }
 
@@ -66,6 +70,34 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             var answers = await _sessionService.GetAuthorisationAnswersAsync() ?? new AuthorisationAnswers();
             answers.KnowUln = viewModel.KnowUln;
             answers.Uln = viewModel.KnowUln == true ? viewModel.Uln : null;
+
+            await _sessionService.SetAuthorisationAnswersAsync(answers);
+        }
+
+        public async Task<bool> ValidateKnowYearViewModel(KnowYearViewModel viewModel, ModelStateDictionary modelState)
+        {
+            return await ValidateViewModel(_knowYearValidator, viewModel, modelState);
+        }
+
+        public async Task<KnowYearViewModel?> GetKnowYearViewModelAsync()
+        {
+            var answers = await _sessionService.GetAuthorisationAnswersAsync();
+            if (answers == null) return new KnowYearViewModel();
+
+            return new KnowYearViewModel
+            {
+                KnowYear = answers.KnowYear,
+                YearCompleted = answers.YearCompleted
+            };
+        }
+
+        public async Task SaveKnowYearAsync(KnowYearViewModel viewModel)
+        {
+            if (viewModel == null) return;
+
+            var answers = await _sessionService.GetAuthorisationAnswersAsync() ?? new AuthorisationAnswers();
+            answers.KnowYear = viewModel.KnowYear;
+            answers.YearCompleted = viewModel.KnowYear == true ? viewModel.YearCompleted : null;
 
             await _sessionService.SetAuthorisationAnswersAsync(answers);
         }
@@ -149,6 +181,36 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             }
 
             return courseOptions;
+            }
+            // TODO: This needs to be refined in the upcoming ticket
+        public async Task<CourseMatchOutcome> GetCourseMatchOutcomeAsync(SelectCourseViewModel viewModel)
+        {
+            if (viewModel == null) return CourseMatchOutcome.NoData;
+
+            var selected = viewModel.SelectedCourseCode?.Trim();
+            if (string.IsNullOrWhiteSpace(selected)) return CourseMatchOutcome.NoMatch;
+
+            var matches = await GetMatchesAsync();
+            if (matches == null) return CourseMatchOutcome.NoData;
+
+            var matchCount = matches.Matches?.Count(m => string.Equals(m.CourseCode?.Trim(), selected, System.StringComparison.OrdinalIgnoreCase)) ?? 0;
+            var maskCount = matches.Masks?.Count(m => string.Equals(m.CourseCode?.Trim(), selected, System.StringComparison.OrdinalIgnoreCase)) ?? 0;
+
+            // More than one real match, or a single real match with masks -> There is no such real scenario
+            if (matchCount > 1 || (matchCount == 1 && maskCount > 0))
+            {
+                return CourseMatchOutcome.MultipleMatches;
+            }
+
+            // Single exact match (no masks)
+            if (matchCount == 1) return CourseMatchOutcome.SingleMatch;
+
+            // No real matches (masks only or none) -> record failure and route to KnowYear
+            var answers = await _sessionService.GetAuthorisationAnswersAsync() ?? new AuthorisationAnswers();
+            answers.FailedMatchCount = answers.FailedMatchCount + 1;
+            await _sessionService.SetAuthorisationAnswersAsync(answers);
+
+            return CourseMatchOutcome.NoMatch;
         }
     }
 }

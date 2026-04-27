@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SFA.DAS.DigitalCertificates.Web.Services;
 using SFA.DAS.DigitalCertificates.Web.Orchestrators;
+using SFA.DAS.DigitalCertificates.Web.Enums;
 using System.Threading.Tasks;
 using SFA.DAS.DigitalCertificates.Web.Authentication;
 using SFA.DAS.DigitalCertificates.Web.Models.Authorise;
@@ -19,6 +20,10 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         public const string KnowYourUlnRoutePost = nameof(KnowYourUlnRoutePost);
         public const string SelectCourseRouteGet = nameof(SelectCourseRouteGet);
         public const string SelectCourseRoutePost = nameof(SelectCourseRoutePost);
+        public const string CheckAnswersRouteGet = nameof(CheckAnswersRouteGet);
+        public const string KnowYearRouteGet = nameof(KnowYearRouteGet);
+        public const string KnowYearRoutePost = nameof(KnowYearRoutePost);
+        public const string CannotMatchRouteGet = nameof(CannotMatchRouteGet);
         #endregion
 
         private readonly ISessionService _sessionService;
@@ -87,7 +92,61 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             }
             await _authoriseOrchestrator.SaveSelectedCourseAsync(model);
 
-            //ToDo: Next page not implemented yet - stay on the page per AC2
+            var matchOutcome = await _authoriseOrchestrator.GetCourseMatchOutcomeAsync(model);
+
+            if (matchOutcome == CourseMatchOutcome.NoData)
+            {
+                return RedirectToRoute(CannotMatchRouteGet);
+            }
+
+            if (matchOutcome == CourseMatchOutcome.NoMatch)
+            {
+                return RedirectToRoute(KnowYearRouteGet);
+            }
+
+            if (matchOutcome == CourseMatchOutcome.MultipleMatches)
+            {
+                return RedirectToRoute(KnowYearRouteGet);
+            }
+
+            return RedirectToRoute(CheckAnswersRouteGet);
+        }
+
+        [HttpGet("check-answers", Name = CheckAnswersRouteGet)]
+        [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.VerifiedAndNotUlnAuthorised))]
+        public async Task<IActionResult> CheckAnswers()
+        {
+            var model = await _authoriseOrchestrator.GetSelectCourseViewModelAsync();
+            return View(model);
+        }
+
+        [HttpGet("cannot-match", Name = CannotMatchRouteGet)]
+        [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.VerifiedAndNotUlnAuthorised))]
+        public IActionResult CannotMatch()
+        {
+            return View();
+        }
+
+        [HttpGet("know-year", Name = KnowYearRouteGet)]
+        [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.VerifiedAndNotUlnAuthorised))]
+        public async Task<IActionResult> KnowYear()
+        {
+            var model = await _authoriseOrchestrator.GetKnowYearViewModelAsync();
+            return View(model);
+        }
+
+        [HttpPost("know-year", Name = KnowYearRoutePost)]
+        [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.VerifiedAndNotUlnAuthorised))]
+        public async Task<IActionResult> KnowYear(KnowYearViewModel model)
+        {
+            if (!await _authoriseOrchestrator.ValidateKnowYearViewModel(model, ModelState))
+            {
+                return RedirectToRoute(KnowYearRouteGet);
+            }
+
+            await _authoriseOrchestrator.SaveKnowYearAsync(model);
+
+            // Next page not implemented yet - refresh the page per AC2
             return View(model);
         }
     }

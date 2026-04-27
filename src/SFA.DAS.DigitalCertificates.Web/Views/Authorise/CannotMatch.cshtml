@@ -1,0 +1,17 @@
+﻿@{
+    ViewData["Title"] = ViewData["ServiceName"] + " We cannot match your information";
+}
+@* TODO: Need to update this page in the upcoming ticket *@
+<main class="govuk-main-wrapper govuk-main-wrapper--auto-spacing">
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+            <h1 class="govuk-heading-l">We cannot match your information to any apprenticeship results</h1>
+
+            <p class="govuk-body">
+                We couldn't find any apprenticeship results that match the details provided. Check your answers and try again, or contact your training provider for help.
+            </p>
+
+            <a asp-route="SelectCourseRouteGet" class="govuk-link">Back to course selection</a>
+        </div>
+    </div>
+</main>

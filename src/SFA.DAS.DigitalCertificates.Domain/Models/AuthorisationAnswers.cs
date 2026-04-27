@@ -8,6 +8,9 @@ namespace SFA.DAS.DigitalCertificates.Domain.Models
         public long? Uln { get; set; }
         public string? CourseCode { get; set; }
         public string? CourseName { get; set; }
+        public bool? KnowYear { get; set; }
+        public int? YearCompleted { get; set; }
+        public int FailedMatchCount { get; set; }
     }
 }
     

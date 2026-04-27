@@ -1,0 +1,70 @@
+﻿@using SFA.DAS.DigitalCertificates.Web.Controllers
+@using SFA.DAS.DigitalCertificates.Web.ViewDataKeys
+@model SFA.DAS.DigitalCertificates.Web.Models.Authorise.KnowYearViewModel
+@{
+    ViewData[ViewDataKeys.Title] = ViewData[ViewDataKeys.ServiceName] + " Do you know the year you completed your apprenticeship?";
+    ViewBag.GaData.Vpv = ViewData[ViewDataKeys.GaDataVpvPrefix] + "do-you-know-year-you-completed-your-apprenticeship";
+}
+
+<div class="govuk-width-container">
+
+    <a asp-route="@AuthoriseController.SelectCourseRouteGet" class="govuk-back-link">Back</a>
+
+    <main class="govuk-main-wrapper" id="main-content">
+        <partial name="_ValidationSummary" />
+
+        <div class="govuk-grid-row">
+            <div class="govuk-grid-column-two-thirds">
+
+                <form asp-action="KnowYear" method="post">
+
+                    <div class="govuk-form-group" das-highlight-error-for="KnowYear" error-class="govuk-form-group--error">
+
+                        <span class="govuk-caption-l">Matching your information</span>
+
+                        <fieldset class="govuk-fieldset" aria-describedby="KnowYear-hint">
+                            <legend class="govuk-fieldset__legend govuk-fieldset__legend--l">
+                                <h1 class="govuk-fieldset__heading">Do you know the year you completed your apprenticeship?</h1>
+                            </legend>
+
+                            <div id="KnowYear-hint" class="govuk-hint">
+                                
+                            </div>
+
+                            <div class="govuk-radios" data-module="govuk-radios">
+                                <p id="KnowYear-error" das-validation-for="KnowYear" class="govuk-error-message"></p>
+
+                                <div class="govuk-radios__item">
+                                    <input asp-for="KnowYear" id="KnowYear-Yes" class="govuk-radios__input" type="radio" value="true" data-aria-controls="conditional-KnowYear" aria-describedby="KnowYear-error" />
+                                    <label class="govuk-label govuk-radios__label" for="KnowYear-Yes">Yes</label>
+                                </div>
+
+                                <div class="govuk-radios__conditional @(Model?.KnowYear == true ? "" : "govuk-radios__conditional--hidden")" id="conditional-KnowYear">
+                                    <div class="govuk-form-group" das-highlight-error-for="YearCompleted" error-class="govuk-form-group--error">
+                                        <label class="govuk-label" for="YearCompleted">Year you completed your apprenticeship, for example 2017</label>
+                                        <p id="YearCompleted-error" das-validation-for="YearCompleted" class="govuk-error-message"></p>
+                                        <input asp-for="YearCompleted" data-default-value="@Model?.YearCompleted" aria-describedby="YearCompleted-error" class="govuk-input govuk-!-width-one-quarter" maxlength="4" inputmode="numeric" />
+                                    </div>
+                                </div>
+
+                                <div class="govuk-radios__item">
+                                    <input asp-for="KnowYear" id="KnowYear-No" class="govuk-radios__input" type="radio" value="false" aria-describedby="KnowYear-error" />
+                                    <label class="govuk-label govuk-radios__label" for="KnowYear-No">No</label>
+                                </div>
+
+                            </div>
+
+                        </fieldset>
+
+                    </div>
+
+                    <button type="submit" class="govuk-button" data-module="govuk-button">Continue</button>
+
+                </form>
+
+            </div>
+        </div>
+
+    </main>
+
+</div>
