@@ -6,6 +6,7 @@ using SFA.DAS.DigitalCertificates.Application.Queries.GetFrameworkCertificate;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetStandardCertificate;
 using SFA.DAS.DigitalCertificates.Domain.Models;
 using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
+using SFA.DAS.DigitalCertificates.Web.Extensions;
 using SFA.DAS.DigitalCertificates.Web.Models.Certificates;
 using SFA.DAS.DigitalCertificates.Web.Services;
 using System;
@@ -25,6 +26,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         private readonly IBlobService _blob;
         private readonly IAsposeLicenseService _asposeLicenseService;
         private readonly DigitalCertificatesWebConfiguration _digitalCertificatesWebConfiguration;
+        private readonly IDownloadCertificateService _downloadCertificateService;
         private const string Level = "Level";
         private const string FullName = "Full Name";
         private const string PassedInfo = "Passed info";
@@ -39,7 +41,9 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             IUserService userService, 
             IBlobService blob,
             IAsposeLicenseService apposeLicenseService,
-            DigitalCertificatesWebConfiguration digitalCertificatesPdfConfiguration)
+            DigitalCertificatesWebConfiguration digitalCertificatesPdfConfiguration,
+            IDownloadCertificateService downloadCertificateService
+            )
             : base(mediator, httpContextAccessor)
         {
             _sessionService = sessionService;
@@ -47,6 +51,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             _blob = blob;
             _asposeLicenseService = apposeLicenseService;
             _digitalCertificatesWebConfiguration = digitalCertificatesPdfConfiguration;
+            _downloadCertificateService = downloadCertificateService;
         }
 
         public async Task<CertificatesListViewModel> GetCertificatesListViewModel()
@@ -64,32 +69,9 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             if (result == null)
                 return null;
 
-            if (string.IsNullOrWhiteSpace(result.FamilyName)
-                || string.IsNullOrWhiteSpace(result.GivenNames)
-                || string.IsNullOrWhiteSpace(result.CourseName)
-                || result.CourseLevel == null
-                || result.DateAwarded == null
-                || string.IsNullOrWhiteSpace(result.OverallGrade)
-                || string.IsNullOrWhiteSpace(result.CertificateReference))
-            {
-                throw new InvalidOperationException($"Certificate {certificateId} is missing required data.");
-            }
+            var model = result.ToDownloadCertificateRequest(certificateId);
 
-            var viewModel = new DownloadCertificateViewModel
-            {
-                FamilyName = result.FamilyName!,
-                GivenNames = result.GivenNames!,
-                CourseName = result.CourseName!,
-                CourseOption = result.CourseOption,
-                CourseLevel = result.CourseLevel.Value.ToString(),
-                OverallGrade = result.OverallGrade!,
-                DateAwarded = result.DateAwarded.Value,
-                CertificateNumber = result.CertificateReference!,
-                CoronationEmblem = result.CoronationEmblem,
-                CertificateType = CertificateType.Standard
-            };
-
-            return viewModel;
+            return _downloadCertificateService.CreateDownloadCertificateViewModel(model);
         }
 
         public async Task<CertificateStandardViewModel?> GetCertificateStandardViewModel(Guid certificateId)
@@ -136,29 +118,9 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             if (result == null)
                 return null;
 
-            if (string.IsNullOrWhiteSpace(result.FamilyName)
-                || string.IsNullOrWhiteSpace(result.GivenNames)
-                || string.IsNullOrWhiteSpace(result.CourseName)                
-                || result.DateAwarded == null
-                || result.CourseLevel == null
-                || string.IsNullOrWhiteSpace(result.FrameworkCertificateNumber))
-            {
-                throw new InvalidOperationException($"Certificate {certificateId} is missing required data.");
-            }
+            var model = result.ToDownloadCertificateRequest(certificateId);
 
-            var viewModel = new DownloadCertificateViewModel
-            {               
-                FamilyName = result.FamilyName!,
-                GivenNames = result.GivenNames!,
-                CourseName = result.CourseName!,
-                CourseOption = result.CourseOption, 
-                CourseLevel = result.CourseLevel,
-                DateAwarded = result.DateAwarded.Value,
-                CertificateNumber = result.FrameworkCertificateNumber,
-                CertificateType = CertificateType.Framework
-            };
-
-            return viewModel;
+            return _downloadCertificateService.CreateDownloadCertificateViewModel(model);
         }
 
         public async Task<CertificateFrameworkViewModel?> GetCertificateFrameworkViewModel(Guid certificateId)

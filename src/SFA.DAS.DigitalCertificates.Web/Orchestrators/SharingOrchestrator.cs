@@ -1,29 +1,29 @@
 ﻿using FluentValidation;
 using MediatR;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using SFA.DAS.DigitalCertificates.Application.Commands.CreateSharing;
+using SFA.DAS.DigitalCertificates.Application.Commands.CreateSharingAccess;
 using SFA.DAS.DigitalCertificates.Application.Commands.CreateSharingEmail;
+using SFA.DAS.DigitalCertificates.Application.Commands.CreateSharingEmailAccess;
+using SFA.DAS.DigitalCertificates.Application.Queries.GetSharedFrameworkCertificate;
+using SFA.DAS.DigitalCertificates.Application.Queries.GetSharedStandardCertificate;
+using SFA.DAS.DigitalCertificates.Application.Queries.GetSharingByCode;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetSharingById;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetSharings;
-using SFA.DAS.DigitalCertificates.Application.Queries.GetSharingByCode;
-using SFA.DAS.DigitalCertificates.Application.Commands.CreateSharingAccess;
-using SFA.DAS.DigitalCertificates.Application.Commands.CreateSharingEmailAccess;
 using SFA.DAS.DigitalCertificates.Domain.Extensions;
 using SFA.DAS.DigitalCertificates.Domain.Models;
 using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
 using SFA.DAS.DigitalCertificates.Infrastructure.Constants;
 using SFA.DAS.DigitalCertificates.Web.Extensions;
+using SFA.DAS.DigitalCertificates.Web.Models.Certificates;
 using SFA.DAS.DigitalCertificates.Web.Models.Sharing;
 using SFA.DAS.DigitalCertificates.Web.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using SFA.DAS.DigitalCertificates.Web.Models.Certificates;
-using SFA.DAS.DigitalCertificates.Application.Queries.GetSharedStandardCertificate;
-using SFA.DAS.DigitalCertificates.Application.Queries.GetSharedFrameworkCertificate;
-using Microsoft.AspNetCore.Http;
-
+using Certificate = SFA.DAS.DigitalCertificates.Domain.Models.Certificate;
 namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 {
     public class SharingOrchestrator : BaseOrchestrator, ISharingOrchestrator
@@ -33,6 +33,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         private readonly DigitalCertificatesWebConfiguration _digitalCertificatesWebConfiguration;
         private readonly IDateTimeHelper _dateTimeHelper;
         private readonly IValidator<ShareByEmailViewModel> _shareByEmailValidator;
+        private readonly IDownloadCertificateService _downloadCertificateService;
 
         public SharingOrchestrator(IMediator mediator,
             IHttpContextAccessor httpContextAccessor,
@@ -40,7 +41,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             ISessionService sessionService,
             DigitalCertificatesWebConfiguration digitalCertificatesWebConfiguration,
             IDateTimeHelper dateTimeHelper,
-            IValidator<ShareByEmailViewModel> shareByEmailValidator)
+            IValidator<ShareByEmailViewModel> shareByEmailValidator,
+            IDownloadCertificateService downloadCertificateService)
             : base(mediator, httpContextAccessor)
         {
             _userService = userService;
@@ -48,6 +50,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             _digitalCertificatesWebConfiguration = digitalCertificatesWebConfiguration;
             _shareByEmailValidator = shareByEmailValidator;
             _dateTimeHelper = dateTimeHelper;
+            _downloadCertificateService = downloadCertificateService;
         }
 
         public async Task<CreateCertificateSharingViewModel> GetSharings(Guid certificateId)
@@ -359,6 +362,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             return new SharedCertificateStandardViewModel
             {
                 CertificateId = shareInfo.CertificateId,
+                SharingLinkCode = code,
                 FamilyName = cert.FamilyName,
                 GivenNames = cert.GivenNames,
                 CertificateReference = cert.CertificateReference,
@@ -374,18 +378,54 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             };
         }
 
-        public async Task<SharedCertificateFrameworkViewModel?> GetSharedFrameworkCertificateViewModel(Guid code)
+        public async Task<DownloadCertificateViewModel?> GetDownloadSharedStandardCertificateViewModelAsync(Guid code)
         {
             var shareInfo = await Mediator.Send(new GetSharingByCodeQuery { Code = code });
+            
+            if (shareInfo == null)
+                return null;
+
+            var cert = await Mediator.Send(new GetSharedStandardCertificateQuery { Id = shareInfo.CertificateId });
+            
+            if (cert == null) 
+                return null;
+
+            var model = cert.ToDownloadCertificateRequest(shareInfo.CertificateId);
+            return _downloadCertificateService.CreateDownloadCertificateViewModel(model);
+        }
+
+        public async Task<DownloadCertificateViewModel?> GetDownloadSharedFrameworkCertificateViewModelAsync(Guid code)
+        {
+            var shareInfo = await Mediator.Send(new GetSharingByCodeQuery { Code = code });
+            
             if (shareInfo == null)
                 return null;
 
             var cert = await Mediator.Send(new GetSharedFrameworkCertificateQuery { Id = shareInfo.CertificateId });
-            if (cert == null) return null;
+
+            if (cert == null)
+                return null;
+
+            var model = cert.ToDownloadCertificateRequest(shareInfo.CertificateId);
+            return _downloadCertificateService.CreateDownloadCertificateViewModel(model);
+        }
+
+        public async Task<SharedCertificateFrameworkViewModel?> GetSharedFrameworkCertificateViewModel(Guid code)
+        {
+            var shareInfo = await Mediator.Send(new GetSharingByCodeQuery { Code = code });
+            
+            if (shareInfo == null)
+                return null;
+
+            var cert = await Mediator.Send(new GetSharedFrameworkCertificateQuery { Id = shareInfo.CertificateId });
+
+            if (cert == null) 
+                return null;
 
             return new SharedCertificateFrameworkViewModel
             {
                 CertificateId = shareInfo.CertificateId,
+                SharingLinkCode = code,
                 FamilyName = cert.FamilyName,
                 GivenNames = cert.GivenNames,
                 CertificateReference = cert.CertificateReference,

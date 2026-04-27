@@ -37,6 +37,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         private Mock<ISessionService> _sessionServiceMock;
         private Mock<IValidator<ShareByEmailViewModel>> _shareByEmailValidatorMock;
         private Mock<IDateTimeHelper> _dateTimeHelperMock;
+        private Mock<IDownloadCertificateService> _downloadCertificateService;
         
         private DigitalCertificatesWebConfiguration _digitalCertificatesWebConfiguration;
         private SharingOrchestrator _sut;
@@ -51,6 +52,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             _sessionServiceMock = new Mock<ISessionService>();
             _shareByEmailValidatorMock = new Mock<IValidator<ShareByEmailViewModel>>();
             _dateTimeHelperMock = new Mock<IDateTimeHelper>();
+            _downloadCertificateService = new Mock<IDownloadCertificateService>();
             _dateTimeHelperMock.SetupGet(d => d.Now).Returns(DateTime.UtcNow);
 
             var claims = new[]
@@ -94,7 +96,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 _sessionServiceMock.Object, 
                 _digitalCertificatesWebConfiguration, 
                 _dateTimeHelperMock.Object, 
-                _shareByEmailValidatorMock.Object);
+                _shareByEmailValidatorMock.Object, 
+                _downloadCertificateService.Object);
         }
 
         [TearDown]

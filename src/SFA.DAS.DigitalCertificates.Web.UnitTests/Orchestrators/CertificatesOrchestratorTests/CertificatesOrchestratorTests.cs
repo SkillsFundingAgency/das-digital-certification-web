@@ -24,6 +24,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
         private Mock<IUserService> _userServiceMock;
         private Mock<IBlobService> _blobServiceMock;
         private Mock<IAsposeLicenseService> _asposeLicenseServiceMock;
+        private Mock<IDownloadCertificateService> _downloadCertificateServiceMock;
         private DigitalCertificatesWebConfiguration _digitalCertificatesWebConfig;
 
         private CertificatesOrchestrator _sut;
@@ -38,6 +39,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
             _userServiceMock = new Mock<IUserService>();
             _blobServiceMock = new Mock<IBlobService>();
             _asposeLicenseServiceMock = new Mock<IAsposeLicenseService>();
+            _downloadCertificateServiceMock = new Mock<IDownloadCertificateService>();
             _digitalCertificatesWebConfig = new DigitalCertificatesWebConfiguration
             {
                 ServiceBaseUrl = "https://test.local",
@@ -64,7 +66,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
                 _userServiceMock.Object,
                 _blobServiceMock.Object,
                 _asposeLicenseServiceMock.Object,
-                _digitalCertificatesWebConfig);
+                _digitalCertificatesWebConfig,
+                _downloadCertificateServiceMock.Object);
         }
 
         [Test]
