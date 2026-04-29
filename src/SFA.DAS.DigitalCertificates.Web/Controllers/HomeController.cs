@@ -31,12 +31,14 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         #region Routes
         public const string VerifiedRouteGet = nameof(VerifiedRouteGet);
         public const string CheckRouteGet = nameof(CheckRouteGet);
+        public const string HelpRouteGet = nameof(HelpRouteGet);
         public const string LockedRouteGet = nameof(LockedRouteGet);
         public const string CookiesRouteGet = nameof(CookiesRouteGet);
         public const string CookieDetailsRouteGet = nameof(CookieDetailsRouteGet);
         public const string ErrorRouteGet = nameof(ErrorRouteGet);
         public const string SignOutRouteGet = nameof(SignOutRouteGet);
         public const string UserSignedOutRouteGet = nameof(UserSignedOutRouteGet);
+        public const string AccessibilityStatementRouteGet = nameof(AccessibilityStatementRouteGet);
         #endregion Routes
 
         public HomeController(IHomeOrchestrator homeOrchestrator,
@@ -114,13 +116,25 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         }
 
         [Route("cookies", Name = CookiesRouteGet)]
-        public IActionResult Cookies()
+        public IActionResult Cookies(string? returnUrl = null)
+        {
+            return View();
+        }
+
+        [Route("help", Name = HelpRouteGet)]
+        public IActionResult Help()
         {
             return View();
         }
 
         [Route("cookie-details", Name = CookieDetailsRouteGet)]
         public IActionResult CookieDetails()
+        {
+            return View();
+        }
+
+        [Route("accessibility-statement", Name = AccessibilityStatementRouteGet)]
+        public IActionResult AccessibilityStatement()
         {
             return View();
         }
