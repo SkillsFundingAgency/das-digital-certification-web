@@ -96,3 +96,24 @@ document.addEventListener('DOMContentLoaded', function () {
             });
     });
 });
+
+
+// cookies
+function saveCookieSettings() {
+    let consentAnalyticsCookieRadioValue = document.querySelector(
+        "input[name=ConsentAnalyticsCookie]:checked"
+    ).value;    
+
+    createCookie("AnalyticsConsent", consentAnalyticsCookieRadioValue);    
+
+    document.getElementById("confirmation-banner").removeAttribute("hidden");
+    window.scrollTo({ top: 0, behavior: "instant" });
+}
+
+function createCookie(cookiname, cookivalue) {
+    let date = new Date();
+    date.setFullYear(date.getFullYear() + 1);
+    let expires = "expires=" + date.toGMTString();
+    document.cookie =
+        cookiname + "=" + cookivalue + ";" + expires + ";path=/;Secure";
+}

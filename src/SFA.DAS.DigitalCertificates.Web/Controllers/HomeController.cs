@@ -11,8 +11,10 @@ using Microsoft.Extensions.Logging;
 using SFA.DAS.DigitalCertificates.Domain.Extensions;
 using SFA.DAS.DigitalCertificates.Web.Exceptions;
 using SFA.DAS.DigitalCertificates.Web.Extensions;
+using SFA.DAS.DigitalCertificates.Web.Infrastructure;
 using SFA.DAS.DigitalCertificates.Web.Models;
 using SFA.DAS.DigitalCertificates.Web.Models.Home;
+using SFA.DAS.DigitalCertificates.Web.Models.Sharing;
 using SFA.DAS.DigitalCertificates.Web.Orchestrators;
 using SFA.DAS.DigitalCertificates.Web.StartupExtensions;
 using SFA.DAS.GovUK.Auth.Authentication;
@@ -115,10 +117,23 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             return View();
         }
 
+        [AllowAnonymous]
         [Route("cookies", Name = CookiesRouteGet)]
         public IActionResult Cookies(string? returnUrl = null)
         {
-            return View();
+            var analyticsCookieValue = Request.Cookies[CookieKeys.AnalyticsConsent];            
+
+            _ = bool.TryParse(analyticsCookieValue, out var isAnalyticsCookieConsentGiven);            
+
+            var referer = Request.Headers.Referer.FirstOrDefault();
+
+            var cookieViewModel = new CookiesViewModel
+            {
+                PreviousPageUrl = referer,
+                ShowBannerMessage = false,
+                ConsentAnalyticsCookie = isAnalyticsCookieConsentGiven,                
+            };
+            return View(cookieViewModel);
         }
 
         [Route("help", Name = HelpRouteGet)]
