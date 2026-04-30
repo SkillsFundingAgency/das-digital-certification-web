@@ -1398,5 +1398,42 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             result.QualificationsAndAwardingBodies.Should().BeEquivalentTo(cert.QualificationsAndAwardingBodies);
             result.FormattedExpiry.Should().Be(expiry.ToUkExpiryDateTimeString());
         }
+
+        [Test]
+        public async Task GetDownloadSharedStandardCertificateViewModelAsync_Returns_Null_When_Sharing_Has_Expired()
+        {
+            // Arrange
+            var code = Guid.NewGuid();
+            var certId = Guid.NewGuid();
+
+            var shareInfo = new GetSharingByCodeQueryResult
+            {
+                CertificateId = certId,
+                CertificateType = CertificateType.Standard,
+                ExpiryTime = DateTime.UtcNow.AddMinutes(-1)
+            };
+
+            _mediatorMock
+                .Setup(m => m.Send(
+                    It.Is<GetSharingByCodeQuery>(q => q.Code == code),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(shareInfo);
+
+            // Act
+            var result = await _sut.GetDownloadSharedStandardCertificateViewModelAsync(code);
+
+            // Assert
+            result.Should().BeNull();
+
+            _mediatorMock.Verify(m => m.Send(
+                    It.Is<GetSharingByCodeQuery>(q => q.Code == code),
+                    It.IsAny<CancellationToken>()),
+                Times.Once);
+
+            _mediatorMock.Verify(m => m.Send(
+                    It.IsAny<GetSharedStandardCertificateQuery>(),
+                    It.IsAny<CancellationToken>()),
+                Times.Never);            
+        }
     }
 }

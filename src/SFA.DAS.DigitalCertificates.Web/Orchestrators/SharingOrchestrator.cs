@@ -382,7 +382,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         {
             var shareInfo = await Mediator.Send(new GetSharingByCodeQuery { Code = code });
             
-            if (shareInfo == null)
+            if (shareInfo == null || shareInfo.ExpiryTime <= _dateTimeHelper.Now)
                 return null;
 
             var cert = await Mediator.Send(new GetSharedStandardCertificateQuery { Id = shareInfo.CertificateId });

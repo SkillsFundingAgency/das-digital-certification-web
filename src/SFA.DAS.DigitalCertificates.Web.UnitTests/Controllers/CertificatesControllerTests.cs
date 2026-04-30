@@ -137,8 +137,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
         {
             // Arrange
             var certificateId = Guid.NewGuid();
-            
-            var pdfBytes = new byte[] { 1, 2, 3, 4 };            
+
+            var pdfBytes = new byte[] { 1, 2, 3, 4 };
 
             var model = new DownloadCertificateViewModel
             {
@@ -170,16 +170,16 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             var fileResult = result as FileContentResult;
             fileResult.Should().NotBeNull();
             fileResult!.ContentType.Should().Be("application/pdf");
-            fileResult.FileDownloadName.Should().Be("CertificateNumber678123.pdf");            
+            fileResult.FileDownloadName.Should().Be("CertificateNumber678123.pdf");
             fileResult.FileContents.Should().BeEquivalentTo(pdfBytes);
-           
+
             _certificatesOrchestratorMock.Verify(
                 x => x.GetDownloadCertificateViewModelAsync(certificateId),
                 Times.Once);
 
             _certificatesOrchestratorMock.Verify(
                 x => x.GenerateCertificateAsync(model),
-                Times.Once);           
+                Times.Once);
         }
 
         [Test]
@@ -1137,7 +1137,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             var fileResult = result as FileContentResult;
             fileResult.Should().NotBeNull();
             fileResult!.ContentType.Should().Be("application/pdf");
-            fileResult.FileDownloadName.Should().Be("TestGivenNameTest_CertificateNumber678123.pdf");
+            fileResult.FileDownloadName.Should().Be("TestGivenName_Test_CertificateNumber678123.pdf");
             fileResult.FileContents.Should().BeEquivalentTo(pdfBytes);
 
             _sharingOrchestratorMock.Verify(
@@ -1221,8 +1221,15 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
                 Times.Never);
         }
 
-        [Test]
-        public async Task DownloadSharedCertificateStandardPdf_Returns_Pdf_File_When_Model_Found()
+        [TestCase("TestGivenName", "Test", "TestGivenName_Test_CertificateNumber678123.pdf")]
+        [TestCase("John Paul", "Smith", "John_Paul_Smith_CertificateNumber678123.pdf")]
+        [TestCase("John-Paul", "O'Connor", "John_Paul_O_Connor_CertificateNumber678123.pdf")]
+        [TestCase(" John   Paul ", " O'Connor-Smith ", "John_Paul_O_Connor_Smith_CertificateNumber678123.pdf")]
+        [TestCase("Anne.Marie", "Van der Berg", "Anne_Marie_Van_der_Berg_CertificateNumber678123.pdf")]
+        public async Task DownloadSharedCertificateStandardPdf_Returns_Pdf_File_When_Model_Found(
+        string givenNames,
+        string familyName,
+        string expectedFileName)
         {
             // Arrange
             var sharingLinkCode = Guid.NewGuid();
@@ -1231,8 +1238,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             var model = new DownloadCertificateViewModel
             {
                 CertificateNumber = "678123",
-                FamilyName = "Test",
-                GivenNames = "TestGivenName",
+                FamilyName = familyName,
+                GivenNames = givenNames,
                 CourseOption = "Software developer",
                 CourseLevel = "3",
                 OverallGrade = "Pass",
@@ -1254,12 +1261,10 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             var result = await _sut.DownloadSharedCertificateStandardPdf(sharingLinkCode);
 
             // Assert
-            result.Should().BeOfType<FileContentResult>();
+            var fileResult = result.Should().BeOfType<FileContentResult>().Subject;
 
-            var fileResult = result as FileContentResult;
-            fileResult.Should().NotBeNull();
-            fileResult!.ContentType.Should().Be("application/pdf");
-            fileResult.FileDownloadName.Should().Be("TestGivenNameTest_CertificateNumber678123.pdf");
+            fileResult.ContentType.Should().Be("application/pdf");
+            fileResult.FileDownloadName.Should().Be(expectedFileName);
             fileResult.FileContents.Should().BeEquivalentTo(pdfBytes);
 
             _sharingOrchestratorMock.Verify(

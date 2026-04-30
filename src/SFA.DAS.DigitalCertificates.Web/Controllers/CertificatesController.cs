@@ -355,7 +355,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
                 throw new InvalidOperationException(PdfCertificateCannotBeProduced);
             }
 
-            return File(pdfBytes, "application/pdf", $"{model.GivenNames}{model.FamilyName}_CertificateNumber{model.CertificateNumber}.pdf");
+            return File(pdfBytes, "application/pdf", model.SanitisedAnonymousCertificateName);
         }
 
         [HttpGet("shared/{sharingLinkCode}/standard/download", Name = DownloadSharedCertificateStandardPdfRouteGet)]
@@ -376,7 +376,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
                 throw new InvalidOperationException(PdfCertificateCannotBeProduced);
             }
 
-            return File(pdfBytes, "application/pdf", $"{model.GivenNames}{model.FamilyName}_CertificateNumber{model.CertificateNumber}.pdf");
+            return File(pdfBytes, "application/pdf", model.SanitisedAnonymousCertificateName);
         }
 
         [HttpGet("/certificates/expired", Name = CheckQualificationExpiredRouteGet)]
