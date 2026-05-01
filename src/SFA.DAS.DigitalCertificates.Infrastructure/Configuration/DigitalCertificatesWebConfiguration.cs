@@ -11,8 +11,15 @@ namespace SFA.DAS.DigitalCertificates.Infrastructure.Configuration
         public required string RedisConnectionString { get; set; }
         public required string DataProtectionKeysDatabase { get; set; }
         public int? SharingListLimit { get; set; }
-        public int? SharingHistoryLimit { get; set; }
-
+        public int? SharingHistoryLimit { get; set; }       
+        public required string ContainerName { get; set; }
+        public required string AsposeLicenseContainerName { get; set; }
+        public required string StandardTemplateBlobName { get; set; }
+        public required string GreenStandardTemplateBlobName { get; set; }
+        public required string FrameworkTemplateBlobName { get; set; }
+        public required string LicenseBlobName { get; set; }
+        public required string MasterPassword { get; set; }
+        public required string StorageConnectionString { get; set; }
         public List<NotificationTemplate>? NotificationTemplates { get; set; }
     }
 

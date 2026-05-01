@@ -105,6 +105,121 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             result!.Model.Should().BeEquivalentTo(model);
             _certificatesOrchestratorMock.Verify(c => c.GetCertificateStandardViewModel(certificateId), Times.Once);
         }
+        [Test]
+        public async Task DownloadCertificateStandardPdf_Throws_InvalidOperationException_When_Model_Is_Null()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+
+            _certificatesOrchestratorMock
+                .Setup(x => x.GetDownloadCertificateViewModelAsync(certificateId))
+                .ReturnsAsync((DownloadCertificateViewModel)null!);
+
+            // Act
+            Func<Task> act = async () => await _sut.DownloadCertificateStandardPdf(certificateId);
+
+            // Assert
+            await act.Should()
+                .ThrowAsync<InvalidOperationException>()
+                .WithMessage(CertificatesController.PdfCertificateCannotBeProduced);
+
+            _certificatesOrchestratorMock.Verify(
+                x => x.GetDownloadCertificateViewModelAsync(certificateId),
+                Times.Once);
+
+            _certificatesOrchestratorMock.Verify(
+                x => x.GenerateCertificateAsync(It.IsAny<DownloadCertificateViewModel>()),
+                Times.Never);
+        }
+
+        [Test]
+        public async Task DownloadCertificateStandardPdf_Returns_Pdf_File_When_Model_Found()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+
+            var pdfBytes = new byte[] { 1, 2, 3, 4 };
+
+            var model = new DownloadCertificateViewModel
+            {
+                CertificateNumber = "678123",
+                FamilyName = "Test",
+                GivenNames = "Test Given Name",
+                CourseOption = "Software developer",
+                CourseLevel = "3",
+                OverallGrade = "Pass",
+                CourseName = "Test",
+                CoronationEmblem = false,
+                DateAwarded = DateTime.UtcNow,
+            };
+
+            _certificatesOrchestratorMock
+                .Setup(x => x.GetDownloadCertificateViewModelAsync(certificateId))
+                .ReturnsAsync(model);
+
+            _certificatesOrchestratorMock
+                .Setup(x => x.GenerateCertificateAsync(model))
+                .ReturnsAsync(pdfBytes);
+
+            // Act
+            var result = await _sut.DownloadCertificateStandardPdf(certificateId);
+
+            // Assert
+            result.Should().BeOfType<FileContentResult>();
+
+            var fileResult = result as FileContentResult;
+            fileResult.Should().NotBeNull();
+            fileResult!.ContentType.Should().Be("application/pdf");
+            fileResult.FileDownloadName.Should().Be("CertificateNumber678123.pdf");
+            fileResult.FileContents.Should().BeEquivalentTo(pdfBytes);
+
+            _certificatesOrchestratorMock.Verify(
+                x => x.GetDownloadCertificateViewModelAsync(certificateId),
+                Times.Once);
+
+            _certificatesOrchestratorMock.Verify(
+                x => x.GenerateCertificateAsync(model),
+                Times.Once);
+        }
+
+        [Test]
+        public void DownloadCertificateStandardPdf_Throws_InvalidOperationException_When_Pdf_Cannot_Be_Produced()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+
+            var model = new DownloadCertificateViewModel
+            {
+                CertificateNumber = "678123",
+                FamilyName = "Test",
+                GivenNames = "Test Given Name",
+                CourseOption = "Software developer",
+                CourseLevel = "3",
+                OverallGrade = "Pass",
+                CourseName = "Test",
+                CoronationEmblem = false,
+                DateAwarded = DateTime.UtcNow,
+            };
+
+            _certificatesOrchestratorMock
+                .Setup(x => x.GetDownloadCertificateViewModelAsync(certificateId))
+                .ReturnsAsync(model);
+
+            _certificatesOrchestratorMock
+                .Setup(x => x.GenerateCertificateAsync(model))
+                .ReturnsAsync((byte[])null!);
+
+            // Act
+            var result = async () => await _sut.DownloadCertificateStandardPdf(certificateId);
+
+            // Assert
+            Assert.That(result, Throws.TypeOf<InvalidOperationException>()
+                .With.Message.EqualTo("PDF certificate cannot be produced"));
+
+            _certificatesOrchestratorMock.Verify(x => x.GetDownloadCertificateViewModelAsync(certificateId), Times.Once);
+
+            _certificatesOrchestratorMock.Verify(x => x.GenerateCertificateAsync(model), Times.Once);
+        }
 
         [Test]
         public async Task CertificateFramework_Returns_View()
@@ -799,6 +914,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             var code = Guid.NewGuid();
             var model = new SharedCertificateFrameworkViewModel
             {
+                SharingLinkCode = code,
                 GivenNames = "Given",
                 FamilyName = "Family",
                 CourseName = "Course",
@@ -833,6 +949,376 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             // Assert
             result.Should().NotBeNull();
             result!.RouteName.Should().Be(CertificatesController.CheckQualificationExpiredRouteGet);
+        }
+
+        [Test]
+        public async Task DownloadCertificateFrameworkPdf_Throws_InvalidOperationException_When_Model_Is_Null()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+
+            _certificatesOrchestratorMock
+                .Setup(x => x.GetDownloadFrameworkCertificateViewModelAsync(certificateId))
+                .ReturnsAsync((DownloadCertificateViewModel)null!);
+
+            // Act
+            Func<Task> act = async () => await _sut.DownloadCertificateFrameworkPdf(certificateId);
+
+            // Assert
+            await act.Should()
+                .ThrowAsync<InvalidOperationException>()
+                .WithMessage(CertificatesController.PdfCertificateCannotBeProduced);
+
+            _certificatesOrchestratorMock.Verify(
+                x => x.GetDownloadFrameworkCertificateViewModelAsync(certificateId),
+                Times.Once);
+
+            _certificatesOrchestratorMock.Verify(
+                x => x.GenerateCertificateAsync(It.IsAny<DownloadCertificateViewModel>()),
+                Times.Never);
+        }
+
+        [Test]
+        public async Task DownloadCertificateFrameworkPdf_Returns_Pdf_File_When_Model_Found()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+
+            var pdfBytes = new byte[] { 1, 2, 3, 4 };
+
+            var model = new DownloadCertificateViewModel
+            {
+                CertificateNumber = "678123",
+                FamilyName = "Test",
+                GivenNames = "Test Given Name",
+                CourseOption = "Software developer",
+                CourseLevel = "3",
+                OverallGrade = "Pass",
+                CourseName = "Test",
+                CoronationEmblem = false,
+                DateAwarded = DateTime.UtcNow,
+            };
+
+            _certificatesOrchestratorMock
+                .Setup(x => x.GetDownloadFrameworkCertificateViewModelAsync(certificateId))
+                .ReturnsAsync(model);
+
+            _certificatesOrchestratorMock
+                .Setup(x => x.GenerateCertificateAsync(model))
+                .ReturnsAsync(pdfBytes);
+
+            // Act
+            var result = await _sut.DownloadCertificateFrameworkPdf(certificateId);
+
+            // Assert
+            result.Should().BeOfType<FileContentResult>();
+
+            var fileResult = result as FileContentResult;
+            fileResult.Should().NotBeNull();
+            fileResult!.ContentType.Should().Be("application/pdf");
+            fileResult.FileDownloadName.Should().Be("CertificateNumber678123.pdf");
+            fileResult.FileContents.Should().BeEquivalentTo(pdfBytes);
+
+            _certificatesOrchestratorMock.Verify(
+                x => x.GetDownloadFrameworkCertificateViewModelAsync(certificateId),
+                Times.Once);
+
+            _certificatesOrchestratorMock.Verify(
+                x => x.GenerateCertificateAsync(model),
+                Times.Once);
+        }
+
+        [Test]
+        public async Task DownloadCertificateFrameworkPdf_Throws_InvalidOperationException_When_Pdf_Cannot_Be_Produced()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+
+            var model = new DownloadCertificateViewModel
+            {
+                CertificateNumber = "678123",
+                FamilyName = "Test",
+                GivenNames = "Test Given Name",
+                CourseOption = "Software developer",
+                CourseLevel = "3",
+                OverallGrade = "Pass",
+                CourseName = "Test",
+                CoronationEmblem = false,
+                DateAwarded = DateTime.UtcNow,
+            };
+
+            _certificatesOrchestratorMock
+                .Setup(x => x.GetDownloadFrameworkCertificateViewModelAsync(certificateId))
+                .ReturnsAsync(model);
+
+            _certificatesOrchestratorMock
+                .Setup(x => x.GenerateCertificateAsync(model))
+                .ReturnsAsync((byte[])null!);
+
+            // Act
+            Func<Task> act = async () => await _sut.DownloadCertificateFrameworkPdf(certificateId);
+
+            // Assert
+            await act.Should()
+                .ThrowAsync<InvalidOperationException>()
+                .WithMessage(CertificatesController.PdfCertificateCannotBeProduced);
+
+            _certificatesOrchestratorMock.Verify(
+                x => x.GetDownloadFrameworkCertificateViewModelAsync(certificateId),
+                Times.Once);
+
+            _certificatesOrchestratorMock.Verify(
+                x => x.GenerateCertificateAsync(model),
+                Times.Once);
+        }
+
+        [Test]
+        public async Task DownloadSharedCertificateFrameworkPdf_Throws_InvalidOperationException_When_Model_Is_Null()
+        {
+            // Arrange
+            var sharingLinkCode = Guid.NewGuid();
+
+            _sharingOrchestratorMock
+                .Setup(x => x.GetDownloadSharedFrameworkCertificateViewModelAsync(sharingLinkCode))
+                .ReturnsAsync((DownloadCertificateViewModel)null!);
+
+            // Act
+            Func<Task> act = async () => await _sut.DownloadSharedCertificateFrameworkPdf(sharingLinkCode);
+
+            // Assert
+            await act.Should()
+                .ThrowAsync<InvalidOperationException>()
+                .WithMessage(CertificatesController.PdfCertificateCannotBeProduced);
+
+            _sharingOrchestratorMock.Verify(
+                x => x.GetDownloadSharedFrameworkCertificateViewModelAsync(sharingLinkCode),
+                Times.Once);
+
+            _certificatesOrchestratorMock.Verify(
+                x => x.GenerateCertificateAsync(It.IsAny<DownloadCertificateViewModel>()),
+                Times.Never);
+        }
+
+        [Test]
+        public async Task DownloadSharedCertificateFrameworkPdf_Returns_Pdf_File_When_Model_Found()
+        {
+            // Arrange
+            var sharingLinkCode = Guid.NewGuid();
+            var pdfBytes = new byte[] { 1, 2, 3, 4 };
+
+            var model = new DownloadCertificateViewModel
+            {
+                CertificateNumber = "678123",
+                FamilyName = "Test",
+                GivenNames = "TestGivenName",
+                CourseOption = "Software developer",
+                CourseLevel = "3",
+                OverallGrade = "Pass",
+                CourseName = "Test",
+                CoronationEmblem = false,
+                DateAwarded = DateTime.UtcNow,
+                CertificateType = CertificateType.Framework
+            };
+
+            _sharingOrchestratorMock
+                .Setup(x => x.GetDownloadSharedFrameworkCertificateViewModelAsync(sharingLinkCode))
+                .ReturnsAsync(model);
+
+            _certificatesOrchestratorMock
+                .Setup(x => x.GenerateCertificateAsync(model))
+                .ReturnsAsync(pdfBytes);
+
+            // Act
+            var result = await _sut.DownloadSharedCertificateFrameworkPdf(sharingLinkCode);
+
+            // Assert
+            result.Should().BeOfType<FileContentResult>();
+
+            var fileResult = result as FileContentResult;
+            fileResult.Should().NotBeNull();
+            fileResult!.ContentType.Should().Be("application/pdf");
+            fileResult.FileDownloadName.Should().Be("TestGivenName_Test_CertificateNumber678123.pdf");
+            fileResult.FileContents.Should().BeEquivalentTo(pdfBytes);
+
+            _sharingOrchestratorMock.Verify(
+                x => x.GetDownloadSharedFrameworkCertificateViewModelAsync(sharingLinkCode),
+                Times.Once);
+
+            _certificatesOrchestratorMock.Verify(
+                x => x.GenerateCertificateAsync(model),
+                Times.Once);
+        }
+
+        [Test]
+        public async Task DownloadSharedCertificateFrameworkPdf_Throws_InvalidOperationException_When_Pdf_Cannot_Be_Produced()
+        {
+            // Arrange
+            var sharingLinkCode = Guid.NewGuid();
+
+            var model = new DownloadCertificateViewModel
+            {
+                CertificateNumber = "678123",
+                FamilyName = "Test",
+                GivenNames = "TestGivenName",
+                CourseOption = "Software developer",
+                CourseLevel = "3",
+                OverallGrade = "Pass",
+                CourseName = "Test",
+                CoronationEmblem = false,
+                DateAwarded = DateTime.UtcNow,
+                CertificateType = CertificateType.Framework
+            };
+
+            _sharingOrchestratorMock
+                .Setup(x => x.GetDownloadSharedFrameworkCertificateViewModelAsync(sharingLinkCode))
+                .ReturnsAsync(model);
+
+            _certificatesOrchestratorMock
+                .Setup(x => x.GenerateCertificateAsync(model))
+                .ReturnsAsync((byte[])null!);
+
+            // Act
+            Func<Task> act = async () => await _sut.DownloadSharedCertificateFrameworkPdf(sharingLinkCode);
+
+            // Assert
+            await act.Should()
+                .ThrowAsync<InvalidOperationException>()
+                .WithMessage(CertificatesController.PdfCertificateCannotBeProduced);
+
+            _sharingOrchestratorMock.Verify(
+                x => x.GetDownloadSharedFrameworkCertificateViewModelAsync(sharingLinkCode),
+                Times.Once);
+
+            _certificatesOrchestratorMock.Verify(
+                x => x.GenerateCertificateAsync(model),
+                Times.Once);
+        }
+
+        [Test]
+        public async Task DownloadSharedCertificateStandardPdf_Throws_InvalidOperationException_When_Model_Is_Null()
+        {
+            // Arrange
+            var sharingLinkCode = Guid.NewGuid();
+
+            _sharingOrchestratorMock
+                .Setup(x => x.GetDownloadSharedStandardCertificateViewModelAsync(sharingLinkCode))
+                .ReturnsAsync((DownloadCertificateViewModel)null!);
+
+            // Act
+            Func<Task> act = async () => await _sut.DownloadSharedCertificateStandardPdf(sharingLinkCode);
+
+            // Assert
+            await act.Should()
+                .ThrowAsync<InvalidOperationException>()
+                .WithMessage(CertificatesController.PdfCertificateCannotBeProduced);
+
+            _sharingOrchestratorMock.Verify(
+                x => x.GetDownloadSharedStandardCertificateViewModelAsync(sharingLinkCode),
+                Times.Once);
+
+            _certificatesOrchestratorMock.Verify(
+                x => x.GenerateCertificateAsync(It.IsAny<DownloadCertificateViewModel>()),
+                Times.Never);
+        }
+
+        [TestCase("TestGivenName", "Test", "TestGivenName_Test_CertificateNumber678123.pdf")]
+        [TestCase("John Paul", "Smith", "John_Paul_Smith_CertificateNumber678123.pdf")]
+        [TestCase("John-Paul", "O'Connor", "John_Paul_O_Connor_CertificateNumber678123.pdf")]
+        [TestCase(" John   Paul ", " O'Connor-Smith ", "John_Paul_O_Connor_Smith_CertificateNumber678123.pdf")]
+        [TestCase("Anne.Marie", "Van der Berg", "Anne_Marie_Van_der_Berg_CertificateNumber678123.pdf")]
+        public async Task DownloadSharedCertificateStandardPdf_Returns_Pdf_File_When_Model_Found(
+        string givenNames,
+        string familyName,
+        string expectedFileName)
+        {
+            // Arrange
+            var sharingLinkCode = Guid.NewGuid();
+            var pdfBytes = new byte[] { 1, 2, 3, 4 };
+
+            var model = new DownloadCertificateViewModel
+            {
+                CertificateNumber = "678123",
+                FamilyName = familyName,
+                GivenNames = givenNames,
+                CourseOption = "Software developer",
+                CourseLevel = "3",
+                OverallGrade = "Pass",
+                CourseName = "Test",
+                CoronationEmblem = false,
+                DateAwarded = DateTime.UtcNow,
+                CertificateType = CertificateType.Standard
+            };
+
+            _sharingOrchestratorMock
+                .Setup(x => x.GetDownloadSharedStandardCertificateViewModelAsync(sharingLinkCode))
+                .ReturnsAsync(model);
+
+            _certificatesOrchestratorMock
+                .Setup(x => x.GenerateCertificateAsync(model))
+                .ReturnsAsync(pdfBytes);
+
+            // Act
+            var result = await _sut.DownloadSharedCertificateStandardPdf(sharingLinkCode);
+
+            // Assert
+            var fileResult = result.Should().BeOfType<FileContentResult>().Subject;
+
+            fileResult.ContentType.Should().Be("application/pdf");
+            fileResult.FileDownloadName.Should().Be(expectedFileName);
+            fileResult.FileContents.Should().BeEquivalentTo(pdfBytes);
+
+            _sharingOrchestratorMock.Verify(
+                x => x.GetDownloadSharedStandardCertificateViewModelAsync(sharingLinkCode),
+                Times.Once);
+
+            _certificatesOrchestratorMock.Verify(
+                x => x.GenerateCertificateAsync(model),
+                Times.Once);
+        }
+
+        [Test]
+        public async Task DownloadSharedCertificateStandardPdf_Throws_InvalidOperationException_When_Pdf_Cannot_Be_Produced()
+        {
+            // Arrange
+            var sharingLinkCode = Guid.NewGuid();
+
+            var model = new DownloadCertificateViewModel
+            {
+                CertificateNumber = "678123",
+                FamilyName = "Test",
+                GivenNames = "TestGivenName",
+                CourseOption = "Software developer",
+                CourseLevel = "3",
+                OverallGrade = "Pass",
+                CourseName = "Test",
+                CoronationEmblem = false,
+                DateAwarded = DateTime.UtcNow,
+                CertificateType = CertificateType.Standard
+            };
+
+            _sharingOrchestratorMock
+                .Setup(x => x.GetDownloadSharedStandardCertificateViewModelAsync(sharingLinkCode))
+                .ReturnsAsync(model);
+
+            _certificatesOrchestratorMock
+                .Setup(x => x.GenerateCertificateAsync(model))
+                .ReturnsAsync((byte[])null!);
+
+            // Act
+            Func<Task> act = async () => await _sut.DownloadSharedCertificateStandardPdf(sharingLinkCode);
+
+            // Assert
+            await act.Should()
+                .ThrowAsync<InvalidOperationException>()
+                .WithMessage(CertificatesController.PdfCertificateCannotBeProduced);
+
+            _sharingOrchestratorMock.Verify(
+                x => x.GetDownloadSharedStandardCertificateViewModelAsync(sharingLinkCode),
+                Times.Once);
+
+            _certificatesOrchestratorMock.Verify(
+                x => x.GenerateCertificateAsync(model),
+                Times.Once);
         }
     }
 }

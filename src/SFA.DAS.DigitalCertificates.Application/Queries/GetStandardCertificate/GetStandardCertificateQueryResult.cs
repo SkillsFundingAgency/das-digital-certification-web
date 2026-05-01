@@ -22,6 +22,7 @@ namespace SFA.DAS.DigitalCertificates.Application.Queries.GetStandardCertificate
         public DateTime? StartDate { get; set; }
         public DateTime? PrintRequestedAt { get; set; }
         public string? PrintRequestedBy { get; set; }
+        public bool CoronationEmblem { get; set; }
 
         public static implicit operator GetStandardCertificateQueryResult?(GetStandardCertificateResponse? source)
         {
@@ -49,7 +50,9 @@ namespace SFA.DAS.DigitalCertificates.Application.Queries.GetStandardCertificate
                 AssessorName = source.AssessorName,
                 StartDate = source.StartDate,
                 PrintRequestedAt = source.PrintRequestedAt,
-                PrintRequestedBy = source.PrintRequestedBy
+                PrintRequestedBy = source.PrintRequestedBy,
+                CoronationEmblem = source.CoronationEmblem
+
             };
         }
     }

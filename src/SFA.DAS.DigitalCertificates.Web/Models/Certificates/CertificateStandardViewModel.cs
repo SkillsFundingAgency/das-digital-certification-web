@@ -8,7 +8,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Models.Certificates
     {
         public Guid CertificateId { get; set; }
         public string? FamilyName { get; set; }
-        public string? GivenNames { get; set; }
+        public string? GivenNames { get; set; }    
         public long? Uln { get; set; }
         public CertificateType CertificateType { get; set; }
         public string? CertificateReference { get; set; }
