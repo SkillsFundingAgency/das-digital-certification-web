@@ -326,7 +326,6 @@
     border-bottom-width: 5px;
 }
 
-
 .app-download-link {
     background-image: url("/assets/images/icon-document--black.svg");
     background-repeat: no-repeat;
@@ -339,4 +338,24 @@
 /* Additional autocomplete */
 .autocomplete__input--error {
     border-color: #d4351c; /* Same color as .govuk-input--error */
+}
+
+/* Status tag for certificate print status */
+.status-tag {
+    display: inline-block;
+    padding: 0.25em 0.5em;
+    border-radius: 4px;
+    font-weight: 600;
+}
+.status-tag--requested {
+    background-color: #b5d4f7; 
+    color: #005ea5; 
+}
+.status-tag--delivered {
+    background-color: #cfead5; 
+    color: #00703c; 
+}
+.status-tag--neutral {
+    background-color: #f3f2f1;
+    color: #0b0c0c;
 }

@@ -41,6 +41,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         public const string SharedCertificateFrameworkRouteGet = nameof(SharedCertificateFrameworkRouteGet);
         public const string ContactUsRouteGet = nameof(ContactUsRouteGet);
         public const string ContactUsForCertificateRouteGet = nameof(ContactUsForCertificateRouteGet);
+        public const string ContactUsCreateRoutePost = nameof(ContactUsCreateRoutePost);
+        public const string ContactUsForCertificateCreateRoutePost = nameof(ContactUsForCertificateCreateRoutePost);
         public const string SelectAddressRouteGet = nameof(SelectAddressRouteGet);
         public const string AddAddressRouteGet = nameof(AddAddressRouteGet);
         public const string CheckAndSubmitRouteGet = nameof(CheckAndSubmitRouteGet);
@@ -48,8 +50,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         public const string SelectAddressRoutePost = nameof(SelectAddressRoutePost);
         public const string AddAddressRoutePost = nameof(AddAddressRoutePost);
         public const string PrintRequestConfirmationRouteGet = nameof(PrintRequestConfirmationRouteGet);
-        public const string ContactUsCreateRoutePost = nameof(ContactUsCreateRoutePost);
-        public const string ContactUsForCertificateCreateRoutePost = nameof(ContactUsForCertificateCreateRoutePost);
         #endregion
 
         private readonly ICertificatesOrchestrator _certificatesOrchestrator;
@@ -277,9 +277,9 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
 
         [HttpPost("{certificateId}/contact/create", Name = ContactUsForCertificateCreateRoutePost)]
         [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsCertificateOwner))]
-        public async Task<IActionResult> ContactUsForCertificateCreate(Guid certificateId)
+        public async Task<IActionResult> ContactUsForCertificateCreate(Guid certificateId, ActionType actionType = ActionType.Help)
         {
-            var result = await _certificatesOrchestrator.CreateUserActionForCertificate(certificateId);
+            var result = await _certificatesOrchestrator.CreateUserActionForCertificate(certificateId, actionType);
 
             if (string.IsNullOrEmpty(result.ReferenceNumber))
             {
