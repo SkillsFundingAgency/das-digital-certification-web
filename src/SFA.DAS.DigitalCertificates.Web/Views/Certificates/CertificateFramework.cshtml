@@ -1,6 +1,7 @@
 ﻿@model SFA.DAS.DigitalCertificates.Web.Models.Certificates.CertificateFrameworkViewModel
 @using SFA.DAS.DigitalCertificates.Web.Controllers
 @using SFA.DAS.DigitalCertificates.Web.ViewDataKeys
+@using SFA.DAS.DigitalCertificates.Web.Enums
 @{
     ViewData[ViewDataKeys.Title] = ViewData[ViewDataKeys.ServiceName] + " Certificate Framework";
     ViewBag.GaData.Vpv = @ViewData[ViewDataKeys.GaDataVpvPrefix] + "certificate-framework";
@@ -135,16 +136,17 @@
                     }
                 </dl>
 
-                <form asp-route="@CertificatesController.ContactUsForCertificateCreateRoutePost" asp-route-certificateId="@certificateId" method="post">
-                    <p class="govuk-body">If any of these details are incorrect, <button type="submit" class="das-button--inline-link" data-prevent-double-click="true" data-module="govuk-button">contact us</button>.</p>
-                </form>
-
-
+                    <form asp-route="@CertificatesController.ContactUsForCertificateCreateRoutePost"
+                          asp-route-certificateId="@certificateId"
+                          method="post">
+                        <p class="govuk-body">
+                            If these details are wrong, 
+                            <button type="submit" class="das-button--inline-link" data-prevent-double-click="true" data-module="govuk-button">contact us to correct your details</button>.
+                        </p>
+                    </form>
                 <h2 class="govuk-heading-m">Create a sharing link</h2>
-                <p class="govuk-body">
-                    You can create a secure link to share your apprenticeship certificate. This allows
-                    employers, colleges or universities to verify your apprenticeship.
-                </p>
+                <p class="govuk-body">You can create a secure link to share your apprenticeship certificate. This allows
+                    employers, colleges or universities to verify your apprenticeship.</p>
                 <a asp-route="@CertificatesController.CreateCertificateSharingRouteGet"
                    asp-route-certificateId="@certificateId" role="button" draggable="false"
                    class="govuk-button govuk-button--secondary" data-module="govuk-button">Create link</a>
@@ -154,15 +156,29 @@
                 <a href="#" role="button" draggable="false" class="govuk-button govuk-button--secondary"
                    data-module="govuk-button">Download certificate (PDF)</a>
 
-                @* TODO: Request a printed certificate. This is not part of the current ticket and will need to be addressed based on the requirements in upcoming tickets. *@
-                <h2 class="govuk-heading-m">Request a printed certificate</h2>
-                <p class="govuk-body">
-                    We can post a certificate to you. You need to <a href="#">
-                        request a printed
-                        certificate
-                    </a>. Certificates can take up to 3 weeks to arrive.
-                </p>
+                @if (Model?.ShowPrintHeader == true)
+                {
+                    <h2 class="govuk-heading-m">Certificate print status</h2>
 
+                    <dl class="govuk-summary-list">
+                        <div class="govuk-summary-list__row">
+                            <dt class="govuk-summary-list__key"><span class="govuk-body">Your certificate is</span></dt>
+                            <dd class="govuk-summary-list__value">
+                                <span class="@Model.PrintStatusCssClass">@Model.PrintStatusDisplay</span>
+                            </dd>
+                        </div>
+                    </dl>
+
+                    <p class="govuk-body">@Model?.PrintStatusMessage</p>
+                    <form asp-route="@CertificatesController.ContactUsForCertificateCreateRoutePost"
+                          asp-route-certificateId="@certificateId"
+                          method="post">
+                        <p class="govuk-body">
+                            If your certificate has been lost, 
+                            <button type="submit" name="actionType" value="Reprint" class="das-button--inline-link" data-prevent-double-click="true" data-module="govuk-button">contact us for a replacement printed certificate</button>.
+                        </p>
+                    </form>
+                }
             </div>
         </div>
     </main>

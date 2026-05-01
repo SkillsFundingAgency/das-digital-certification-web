@@ -133,7 +133,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             var family = selectedName?.FamilyNames ?? string.Empty;
             var displayName = string.IsNullOrWhiteSpace(given) ? family : (string.IsNullOrWhiteSpace(family) ? given : $"{given} {family}");
 
-            await _sessionService.SetUserDetailsAsync(new UserDetails { GivenNames = given, FamilyName = family, FullName = displayName });
+            await _sessionService.SetUserDetailsAsync(new UserDetails { GivenNames = given, FamilyName = family, FullName = displayName, Email = details.Email });
 
             return RedirectToRoute(CertificatesController.CertificatesListRouteGet);
         }

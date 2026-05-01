@@ -1,0 +1,35 @@
+﻿@using SFA.DAS.DigitalCertificates.Web.Controllers
+@using SFA.DAS.DigitalCertificates.Web.ViewDataKeys
+@{
+    ViewData[ViewDataKeys.Title] = ViewData[ViewDataKeys.ServiceName] + " Print Request Confirmation";
+    ViewBag.GaData.Vpv = @ViewData[ViewDataKeys.GaDataVpvPrefix] + "print-request-confirmation";
+}
+
+<div class="govuk-width-container">
+    <main class="govuk-main-wrapper" id="main-content">
+        <div class="govuk-grid-row">
+            <div class="govuk-grid-column-two-thirds-from-desktop">
+
+                <div class="govuk-panel govuk-panel--confirmation">
+                    <h1 class="govuk-panel__title">
+                        Certificate request submitted
+                    </h1>
+
+                </div>
+
+                <h2 class="govuk-heading-m" style="margin-top: 30px;">
+                    What happens next
+                </h2>
+
+                <p class="govuk-body">
+                    Your request is being processed. Certificates can take up to 3 weeks to arrive.
+                </p>
+
+                <p class="govuk-body">
+                    <a href="@Url.RouteUrl(CertificatesController.CertificateStandardRouteGet, new { certificateId = Model.CertificateId })"
+                       title="Return to @Model.CourseName">Return to @Model.CourseName</a>
+                </p>
+            </div>
+        </div>
+    </main>
+</div>
