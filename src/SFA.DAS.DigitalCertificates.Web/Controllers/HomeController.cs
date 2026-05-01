@@ -36,6 +36,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         public const string HelpRouteGet = nameof(HelpRouteGet);
         public const string LockedRouteGet = nameof(LockedRouteGet);
         public const string CookiesRouteGet = nameof(CookiesRouteGet);
+        public const string CookiesRoutePost = nameof(CookiesRoutePost);
         public const string CookieDetailsRouteGet = nameof(CookieDetailsRouteGet);
         public const string ErrorRouteGet = nameof(ErrorRouteGet);
         public const string SignOutRouteGet = nameof(SignOutRouteGet);
@@ -117,7 +118,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             return View();
         }
 
-        [AllowAnonymous]
+        [AllowAnonymous]        
         [Route("cookies", Name = CookiesRouteGet)]
         public IActionResult Cookies(string? returnUrl = null)
         {
@@ -125,21 +126,24 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
 
             _ = bool.TryParse(analyticsCookieValue, out var isAnalyticsCookieConsentGiven);            
 
-            var referer = Request.Headers.Referer.FirstOrDefault();
-
             var cookieViewModel = new CookiesViewModel
-            {
-                PreviousPageUrl = referer,
-                ShowBannerMessage = false,
-                ConsentAnalyticsCookie = isAnalyticsCookieConsentGiven,                
+            {                
+                ConsentAnalyticsCookie = isAnalyticsCookieConsentGiven,
+                BackUrl = returnUrl,
             };
             return View(cookieViewModel);
         }
-
+        
+        [AllowAnonymous]
         [Route("help", Name = HelpRouteGet)]
-        public IActionResult Help()
+        public IActionResult Help(string? returnUrl = null)
         {
-            return View();
+            var model = new PageViewModel
+            {
+                BackUrl = returnUrl,
+            };
+
+            return View(model);
         }
 
         [Route("cookie-details", Name = CookieDetailsRouteGet)]
@@ -148,10 +152,16 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             return View();
         }
 
+        [AllowAnonymous]
         [Route("accessibility-statement", Name = AccessibilityStatementRouteGet)]
-        public IActionResult AccessibilityStatement()
+        public IActionResult AccessibilityStatement(string? returnUrl = null)
         {
-            return View();
+            var model = new PageViewModel
+            {
+                BackUrl = returnUrl,
+            };
+
+            return View(model);
         }
 
         [Route("error/403")]

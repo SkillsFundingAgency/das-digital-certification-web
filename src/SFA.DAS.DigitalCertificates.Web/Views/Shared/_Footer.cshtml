@@ -25,11 +25,12 @@
                 <h2 class="govuk-visually-hidden">Support links</h2>
                 <ul class="govuk-footer__inline-list">
                     <li class="govuk-footer__inline-list-item">
-                        <a class="govuk-footer__link" asp-route="@HomeController.AccessibilityStatementRouteGet">
+                        <a class="govuk-footer__link" asp-route="@HomeController.AccessibilityStatementRouteGet"
+                               asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString">
                             Accessibility statement
                         </a>
                     </li>
-                    <li class="govuk-footer__inline-list-item">                       
+                    <li class="govuk-footer__inline-list-item">
                         <a class="govuk-footer__link" asp-route="@HomeController.CookiesRouteGet"
                                asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString">
                             Cookies
@@ -37,7 +38,8 @@
                     </li>
                     
                     <li class="govuk-footer__inline-list-item">
-                        <a class="govuk-footer__link" asp-route="@HomeController.HelpRouteGet">
+                        <a class="govuk-footer__link" asp-route="@HomeController.HelpRouteGet"
+                               asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString">
                             Get help
                         </a>
                     </li>
@@ -46,7 +48,7 @@
                             Privacy(opens in new tab)
                         </a>
                     </li>
-                </ul>                            
+                </ul>
             </div>
             <div class="govuk-footer__meta-item">
                 <a class="govuk-footer__link govuk-footer__copyright-logo"

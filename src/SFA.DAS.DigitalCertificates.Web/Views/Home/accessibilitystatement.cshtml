@@ -1,4 +1,9 @@
-﻿<div class="govuk-grid-row">
+﻿@using SFA.DAS.DigitalCertificates.Web.Models.Sharing
+@model PageViewModel
+
+@await Html.PartialAsync("_BackLink", Model)
+
+<div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
         <h1 class="govuk-heading-xl">
             Accessibility statement for Apprenticeship certificates
