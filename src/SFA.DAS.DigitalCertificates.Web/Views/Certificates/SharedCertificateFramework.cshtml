@@ -1,4 +1,5 @@
 ﻿@model SFA.DAS.DigitalCertificates.Web.Models.Certificates.SharedCertificateFrameworkViewModel
+@using SFA.DAS.DigitalCertificates.Web.Controllers
 @using SFA.DAS.DigitalCertificates.Web.ViewDataKeys
 @{
     ViewData[ViewDataKeys.Title] = ViewData[ViewDataKeys.ServiceName] + " Shared Certificate Framework";
@@ -125,10 +126,10 @@
                         }
                     </tbody>
                 </table>
-
-                @* TODO: Download your certificate. This is not part of the current ticket and will need to be addressed based on the requirements in upcoming tickets. *@
+                
                 <h2 class="govuk-heading-m">Download certificate</h2>
-                <a href="#" role="button" draggable="false" class="govuk-button govuk-button--secondary"
+                <a asp-route="@CertificatesController.DownloadSharedCertificateFrameworkPdfRouteGet"
+                   asp-route-sharingLinkCode="@Model.SharingLinkCode" draggable="false" class="govuk-button govuk-button--secondary"
                    data-module="govuk-button">Download certificate (PDF)</a>
             </div>
         </div>

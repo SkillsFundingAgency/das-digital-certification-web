@@ -10,6 +10,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         Task<CertificateStandardViewModel?> GetCertificateStandardViewModel(Guid certificateId);
         Task<CertificateFrameworkViewModel?> GetCertificateFrameworkViewModel(Guid certificateId);
         Task<DownloadCertificateViewModel?> GetDownloadCertificateViewModelAsync(Guid certificateId);
+        Task<DownloadCertificateViewModel?> GetDownloadFrameworkCertificateViewModelAsync(Guid certificateId);
         Task<byte[]> GenerateCertificateAsync(DownloadCertificateViewModel model);
     }
 }

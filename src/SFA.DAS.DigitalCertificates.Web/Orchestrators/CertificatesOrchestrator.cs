@@ -6,6 +6,7 @@ using SFA.DAS.DigitalCertificates.Application.Queries.GetFrameworkCertificate;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetStandardCertificate;
 using SFA.DAS.DigitalCertificates.Domain.Models;
 using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
+using SFA.DAS.DigitalCertificates.Web.Extensions;
 using SFA.DAS.DigitalCertificates.Web.Models.Certificates;
 using SFA.DAS.DigitalCertificates.Web.Services;
 using System;
@@ -25,6 +26,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         private readonly IBlobService _blob;
         private readonly IAsposeLicenseService _asposeLicenseService;
         private readonly DigitalCertificatesWebConfiguration _digitalCertificatesWebConfiguration;
+        private readonly IDownloadCertificateService _downloadCertificateService;
         private const string Level = "Level";
         private const string FullName = "Full Name";
         private const string PassedInfo = "Passed info";
@@ -39,7 +41,9 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             IUserService userService, 
             IBlobService blob,
             IAsposeLicenseService apposeLicenseService,
-            DigitalCertificatesWebConfiguration digitalCertificatesPdfConfiguration)
+            DigitalCertificatesWebConfiguration digitalCertificatesPdfConfiguration,
+            IDownloadCertificateService downloadCertificateService
+            )
             : base(mediator, httpContextAccessor)
         {
             _sessionService = sessionService;
@@ -47,6 +51,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             _blob = blob;
             _asposeLicenseService = apposeLicenseService;
             _digitalCertificatesWebConfiguration = digitalCertificatesPdfConfiguration;
+            _downloadCertificateService = downloadCertificateService;
         }
 
         public async Task<CertificatesListViewModel> GetCertificatesListViewModel()
@@ -64,31 +69,9 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             if (result == null)
                 return null;
 
-            if (string.IsNullOrWhiteSpace(result.FamilyName)
-                || string.IsNullOrWhiteSpace(result.GivenNames)
-                || string.IsNullOrWhiteSpace(result.CourseName)
-                || result.CourseLevel == null
-                || result.DateAwarded == null
-                || string.IsNullOrWhiteSpace(result.OverallGrade)
-                || string.IsNullOrWhiteSpace(result.CertificateReference))
-            {
-                throw new InvalidOperationException($"Certificate {certificateId} is missing required data.");
-            }
+            var model = result.ToDownloadCertificateRequest(certificateId);
 
-            var viewModel = new DownloadCertificateViewModel
-            {
-                FamilyName = result.FamilyName!,
-                GivenNames = result.GivenNames!,
-                StandardName = result.CourseName!,
-                OptionName = result.CourseOption,
-                Level = result.CourseLevel.Value.ToString(),
-                Result = result.OverallGrade!,
-                DateAwarded = result.DateAwarded.Value,
-                CertificateNumber = result.CertificateReference!,
-                CoronationEmblem = result.CoronationEmblem
-            };
-
-            return viewModel;
+            return _downloadCertificateService.CreateDownloadCertificateViewModel(model);
         }
 
         public async Task<CertificateStandardViewModel?> GetCertificateStandardViewModel(Guid certificateId)
@@ -126,6 +109,18 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             viewModel.ShowBackLink = (owned?.Count() ?? 0) > 1;
 
             return viewModel;
+        }
+
+        public async Task<DownloadCertificateViewModel?> GetDownloadFrameworkCertificateViewModelAsync(Guid certificateId)
+        {
+            var result = await Mediator.Send(new GetFrameworkCertificateQuery { CertificateId = certificateId });
+
+            if (result == null)
+                return null;
+
+            var model = result.ToDownloadCertificateRequest(certificateId);
+
+            return _downloadCertificateService.CreateDownloadCertificateViewModel(model);
         }
 
         public async Task<CertificateFrameworkViewModel?> GetCertificateFrameworkViewModel(Guid certificateId)
@@ -171,28 +166,55 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         [ExcludeFromCodeCoverage]
         public async Task<byte[]> GenerateCertificateAsync(DownloadCertificateViewModel model)
         {
-            var templateBytes = model.CoronationEmblem ? await _blob.GetBlobBytesAsync(_digitalCertificatesWebConfiguration.ContainerName, _digitalCertificatesWebConfiguration.GreenStandardTemplateBlobName)
-                                                        : await _blob.GetBlobBytesAsync(_digitalCertificatesWebConfiguration.ContainerName, _digitalCertificatesWebConfiguration.StandardTemplateBlobName);
-
-            await _asposeLicenseService.GetAsposeLicense();
-
+            byte[]? templateBytes = null;
             var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
-                [FullName] = model.FullName,
-                [PassedInfo] = string.Join(Environment.NewLine,
-                    new[]
-                    {
-                model.StandardName,
-                model.OptionName,
-                $"{Level} {model.Level}"
-                    }.Where(x => !string.IsNullOrWhiteSpace(x))),
-                [AchievedGrade] = model.Result,
+                [FullName] = model.FullName,                          
                 [AwardedOn] = model.DateAwarded.ToString(DateFormat, CultureInfo.InvariantCulture) ?? string.Empty,
                 [CertificateNumber] = model.CertificateNumber
             };
 
-            using var templateStream = new MemoryStream(templateBytes);
-            using var document = new Document(templateStream);
+            if (model.CertificateType == CertificateType.Standard)
+            {
+                templateBytes = model.CoronationEmblem ? await _blob.GetBlobBytesAsync(_digitalCertificatesWebConfiguration.ContainerName, _digitalCertificatesWebConfiguration.GreenStandardTemplateBlobName)
+                                                        : await _blob.GetBlobBytesAsync(_digitalCertificatesWebConfiguration.ContainerName, _digitalCertificatesWebConfiguration.StandardTemplateBlobName);
+                values.Add(AchievedGrade, model.OverallGrade ?? string.Empty);
+                values.Add(PassedInfo, string.Join(Environment.NewLine,
+                    new[]
+                    {
+                model.CourseName,
+                model.CourseOption,
+                $"{Level} {model.CourseLevel}"
+                    }.Where(x => !string.IsNullOrWhiteSpace(x))));
+            }
+            else if (model.CertificateType == CertificateType.Framework)
+            {
+                templateBytes = await _blob.GetBlobBytesAsync(_digitalCertificatesWebConfiguration.ContainerName, _digitalCertificatesWebConfiguration.FrameworkTemplateBlobName);
+                values.Add(PassedInfo, string.Join(Environment.NewLine,
+                        new[]
+                        {
+                model.CourseName,
+                model.CourseOption,
+                $"{model.CourseLevel}  {Level}"
+                        }.Where(x => !string.IsNullOrWhiteSpace(x))));
+            }
+
+            if (templateBytes is null)
+            {
+                throw new InvalidOperationException("Template bytes were not loaded.");
+            }
+                       
+            var output = await CreatePDFMemoryStream(templateBytes, values);
+            return output.ToArray();
+        }
+
+        [ExcludeFromCodeCoverage]
+        private async Task<MemoryStream> CreatePDFMemoryStream(byte[] templateBytes, Dictionary<string, string> values)
+        {
+            await _asposeLicenseService.GetAsposeLicense();
+
+            var templateStream = new MemoryStream(templateBytes);
+            var document = new Document(templateStream);
             var fields = document.Form.Fields.Cast<Field>().ToList();
 
             ValidateRequiredFields(fields, values.Keys);
@@ -200,6 +222,11 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             foreach (var kv in values)
             {
                 var field = FindField(fields, kv.Key);
+
+                if (field == null)
+                {
+                    continue;
+                }
 
                 if (field is TextBoxField textBox)
                 {
@@ -213,9 +240,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             }
 
             document.Form.Flatten();
-
-            using var output = new MemoryStream();
-
+            var output = new MemoryStream();
             document.Encrypt(
                 userPassword: "",
                 ownerPassword: _digitalCertificatesWebConfiguration.MasterPassword,
@@ -223,7 +248,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 cryptoAlgorithm: CryptoAlgorithm.AESx128);
 
             document.Save(output);
-            return output.ToArray();
+            return output;
         }
 
         private static void ValidateRequiredFields(IEnumerable<Field> fields, IEnumerable<string> requiredFieldNames)
