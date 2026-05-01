@@ -15,6 +15,7 @@ namespace SFA.DAS.DigitalCertificates.Application.Queries.GetSharedStandardCerti
         public string? OverallGrade { get; set; }
         public string? ProviderName { get; set; }
         public DateTime? StartDate { get; set; }
+        public bool CoronationEmblem { get; set; }
 
         public static implicit operator GetSharedStandardCertificateQueryResult?(GetSharedStandardCertificateResponse? source)
         {
@@ -32,7 +33,8 @@ namespace SFA.DAS.DigitalCertificates.Application.Queries.GetSharedStandardCerti
                 DateAwarded = source.DateAwarded,
                 OverallGrade = source.OverallGrade,
                 ProviderName = source.ProviderName,
-                StartDate = source.StartDate
+                StartDate = source.StartDate,
+                CoronationEmblem = source.CoronationEmblem              
             };
         }
     }

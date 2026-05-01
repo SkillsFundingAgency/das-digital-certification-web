@@ -7,6 +7,7 @@ using SFA.DAS.DigitalCertificates.Application.Queries.GetFrameworkCertificate;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetStandardCertificate;
 using SFA.DAS.DigitalCertificates.Domain.Models;
 using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
+using SFA.DAS.DigitalCertificates.Web.Models.Certificates;
 using SFA.DAS.DigitalCertificates.Web.Orchestrators;
 using SFA.DAS.DigitalCertificates.Web.Services;
 using System;
@@ -24,6 +25,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
         private Mock<IUserService> _userServiceMock;
         private Mock<IBlobService> _blobServiceMock;
         private Mock<IAsposeLicenseService> _asposeLicenseServiceMock;
+        private Mock<IDownloadCertificateService> _downloadCertificateServiceMock;
         private DigitalCertificatesWebConfiguration _digitalCertificatesWebConfig;
 
         private CertificatesOrchestrator _sut;
@@ -38,6 +40,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
             _userServiceMock = new Mock<IUserService>();
             _blobServiceMock = new Mock<IBlobService>();
             _asposeLicenseServiceMock = new Mock<IAsposeLicenseService>();
+            _downloadCertificateServiceMock = new Mock<IDownloadCertificateService>();
             _digitalCertificatesWebConfig = new DigitalCertificatesWebConfiguration
             {
                 ServiceBaseUrl = "https://test.local",
@@ -64,7 +67,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
                 _userServiceMock.Object,
                 _blobServiceMock.Object,
                 _asposeLicenseServiceMock.Object,
-                _digitalCertificatesWebConfig);
+                _digitalCertificatesWebConfig,
+                _downloadCertificateServiceMock.Object);
         }
 
         [Test]
@@ -380,10 +384,14 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
 
             // Assert
             result.Should().BeNull();
+
+            _downloadCertificateServiceMock.Verify(s => s.CreateDownloadCertificateViewModel(
+                It.IsAny<DownloadCertificateRequestViewModel>()),
+                Times.Never);
         }
 
         [Test]
-        public async Task GetDownloadFrameworkCertificateViewModelAsync_ReturnsMappedViewModel_When_ResultIsValid()
+        public async Task GetDownloadFrameworkCertificateViewModelAsync_ReturnsViewModel_When_ResultIsValid()
         {
             // Arrange
             var certificateId = Guid.NewGuid();
@@ -401,29 +409,54 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
                 FrameworkCertificateNumber = "123456"
             };
 
+            var expectedViewModel = new DownloadCertificateViewModel
+            {
+                FamilyName = "Smith",
+                GivenNames = "John",
+                CourseName = "Cloud Developer",
+                CourseOption = "Option A",
+                CourseLevel = "3",
+                DateAwarded = awardedDate,
+                CertificateNumber = "123456",
+                CertificateType = CertificateType.Framework
+            };
+
             _mediatorMock
                 .Setup(m => m.Send(
                     It.Is<GetFrameworkCertificateQuery>(q => q.CertificateId == certificateId),
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync(mediatorResult);
 
+            _downloadCertificateServiceMock
+                .Setup(s => s.CreateDownloadCertificateViewModel(
+                    It.Is<DownloadCertificateRequestViewModel>(r =>
+                        r.CertificateId == certificateId
+                        && r.CertificateType == CertificateType.Framework
+                        && r.FamilyName == "Smith"
+                        && r.GivenNames == "John"
+                        && r.CourseName == "Cloud Developer"
+                        && r.CourseOption == "Option A"
+                        && r.CourseLevel == "3"
+                        && r.DateAwarded == awardedDate
+                        && r.CertificateNumber == "123456")))
+                .Returns(expectedViewModel);
+
             // Act
             var result = await _sut.GetDownloadFrameworkCertificateViewModelAsync(certificateId);
 
             // Assert
-            result.Should().NotBeNull();
-            result!.FamilyName.Should().Be("Smith");
-            result.GivenNames.Should().Be("John");
-            result.CourseName.Should().Be("Cloud Developer");
-            result.CourseOption.Should().Be("Option A");
-            result.CourseLevel.Should().Be("3");
-            result.DateAwarded.Should().Be(awardedDate);
-            result.CertificateNumber.Should().Be("123456");
-            result.CertificateType.Should().Be(CertificateType.Framework);
+            result.Should().BeSameAs(expectedViewModel);
+
+            _mediatorMock.Verify(m => m.Send(
+                It.Is<GetFrameworkCertificateQuery>(q => q.CertificateId == certificateId),
+                It.IsAny<CancellationToken>()), Times.Once);
+
+            _downloadCertificateServiceMock.Verify(s => s.CreateDownloadCertificateViewModel(
+                It.IsAny<DownloadCertificateRequestViewModel>()), Times.Once);
         }
 
         [Test]
-        public async Task GetDownloadFrameworkCertificateViewModelAsync_ThrowsInvalidOperationException_When_RequiredDataIsMissing()
+        public async Task GetDownloadFrameworkCertificateViewModelAsync_ThrowsInvalidOperationException_When_DownloadServiceThrows()
         {
             // Arrange
             var certificateId = Guid.NewGuid();
@@ -446,13 +479,32 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync(mediatorResult);
 
+            _downloadCertificateServiceMock
+                .Setup(s => s.CreateDownloadCertificateViewModel(
+                    It.IsAny<DownloadCertificateRequestViewModel>()))
+                .Throws(new InvalidOperationException(
+                    $"Certificate {certificateId} is missing required data."));
+
             // Act
-            Func<Task> act = async () => await _sut.GetDownloadFrameworkCertificateViewModelAsync(certificateId);
+            Func<Task> act = async () =>
+                await _sut.GetDownloadFrameworkCertificateViewModelAsync(certificateId);
 
             // Assert
             await act.Should()
                 .ThrowAsync<InvalidOperationException>()
                 .WithMessage($"Certificate {certificateId} is missing required data.");
+
+            _downloadCertificateServiceMock.Verify(s => s.CreateDownloadCertificateViewModel(
+                It.Is<DownloadCertificateRequestViewModel>(r =>
+                    r.CertificateId == certificateId
+                    && r.CertificateType == CertificateType.Framework
+                    && r.FamilyName == null
+                    && r.GivenNames == "John"
+                    && r.CourseName == "Cloud Developer"
+                    && r.CourseOption == "Option A"
+                    && r.CourseLevel == "3"
+                    && r.CertificateNumber == "9876543")),
+                Times.Once);
         }
     }
 }

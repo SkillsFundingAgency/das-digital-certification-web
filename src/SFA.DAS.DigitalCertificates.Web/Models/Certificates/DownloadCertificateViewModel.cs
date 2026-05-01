@@ -1,5 +1,7 @@
 ﻿using SFA.DAS.DigitalCertificates.Domain.Models;
 using System;
+using System.Reflection;
+using System.Text.RegularExpressions;
 
 namespace SFA.DAS.DigitalCertificates.Web.Models.Certificates
 {
@@ -16,5 +18,15 @@ namespace SFA.DAS.DigitalCertificates.Web.Models.Certificates
         public required string CertificateNumber { get; set; }
         public bool CoronationEmblem { get; set; }
         public CertificateType CertificateType { get; set; }
+        public string SanitisedAnonymousCertificateName
+        {
+            get
+            {
+                var safeGivenNames = Regex.Replace(GivenNames, "[^a-zA-Z0-9]+", "_", RegexOptions.None, TimeSpan.FromMilliseconds(100)).Trim('_');
+                var safeFamilyName = Regex.Replace(FamilyName, "[^a-zA-Z0-9]+", "_", RegexOptions.None, TimeSpan.FromMilliseconds(100)).Trim('_');
+
+                return $"{safeGivenNames}_{safeFamilyName}_CertificateNumber{CertificateNumber}.pdf";
+            }
+        }
     }
 }

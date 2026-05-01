@@ -41,6 +41,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         public const string CheckQualificationExpiredRouteGet = nameof(CheckQualificationExpiredRouteGet);
         public const string SharedCertificateStandardRouteGet = nameof(SharedCertificateStandardRouteGet);
         public const string SharedCertificateFrameworkRouteGet = nameof(SharedCertificateFrameworkRouteGet);
+        public const string DownloadSharedCertificateFrameworkPdfRouteGet = nameof(DownloadSharedCertificateFrameworkPdfRouteGet);
+        public const string DownloadSharedCertificateStandardPdfRouteGet = nameof(DownloadSharedCertificateStandardPdfRouteGet);
         #endregion
 
         private readonly ICertificatesOrchestrator _certificatesOrchestrator;
@@ -333,6 +335,48 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             }
 
             return View(model);
+        }
+
+        [HttpGet("shared/{sharingLinkCode}/framework/download", Name = DownloadSharedCertificateFrameworkPdfRouteGet)]
+        [AllowAnonymous]
+        public async Task<IActionResult> DownloadSharedCertificateFrameworkPdf(Guid sharingLinkCode)
+        {
+            var model = await _sharingOrchestrator.GetDownloadSharedFrameworkCertificateViewModelAsync(sharingLinkCode);
+
+            if (model == null)
+            {
+                throw new InvalidOperationException(PdfCertificateCannotBeProduced);
+            }
+
+            var pdfBytes = await _certificatesOrchestrator.GenerateCertificateAsync(model);
+
+            if (pdfBytes == null || pdfBytes.Length == 0)
+            {
+                throw new InvalidOperationException(PdfCertificateCannotBeProduced);
+            }
+
+            return File(pdfBytes, "application/pdf", model.SanitisedAnonymousCertificateName);
+        }
+
+        [HttpGet("shared/{sharingLinkCode}/standard/download", Name = DownloadSharedCertificateStandardPdfRouteGet)]
+        [AllowAnonymous]
+        public async Task<IActionResult> DownloadSharedCertificateStandardPdf(Guid sharingLinkCode)
+        {
+            var model = await _sharingOrchestrator.GetDownloadSharedStandardCertificateViewModelAsync(sharingLinkCode);          
+
+            if (model == null)
+            {
+                throw new InvalidOperationException(PdfCertificateCannotBeProduced);
+            }
+
+            var pdfBytes = await _certificatesOrchestrator.GenerateCertificateAsync(model);
+
+            if (pdfBytes == null || pdfBytes.Length == 0)
+            {
+                throw new InvalidOperationException(PdfCertificateCannotBeProduced);
+            }
+
+            return File(pdfBytes, "application/pdf", model.SanitisedAnonymousCertificateName);
         }
 
         [HttpGet("/certificates/expired", Name = CheckQualificationExpiredRouteGet)]
