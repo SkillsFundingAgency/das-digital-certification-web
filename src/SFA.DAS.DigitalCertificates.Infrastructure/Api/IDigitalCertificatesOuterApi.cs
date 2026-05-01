@@ -58,5 +58,11 @@ namespace SFA.DAS.DigitalCertificates.Domain.Interfaces
 
         [Get("/sharing/certificates/framework/{id}")]
         Task<GetSharedFrameworkCertificateResponse> GetSharedFrameworkCertificate([Path] Guid id);
+
+        [Get("/locations")]
+        Task<LocationsResponse> GetLocations([Query("query")] string searchTerm);
+
+        [Post("/certificates/{certificateId}/printrequest")]
+        Task CreatePrintRequest([Path] Guid certificateId, [Body] CreatePrintRequest request);
     }
 }

@@ -25,7 +25,7 @@ namespace SFA.DAS.DigitalCertificates.Infrastructure.Api.Responses
         public DateTime? PrintRequestedAt { get; set; }
         public string? PrintRequestedBy { get; set; }
         public List<QualificationDetailsResponse>? QualificationsAndAwardingBodies { get; set; }
-        public List<string>? DeliveryInformation { get; set; }
+        public List<DeliveryInformationResponse>? DeliveryInformation { get; set; }
     }
 
     public class QualificationDetailsResponse

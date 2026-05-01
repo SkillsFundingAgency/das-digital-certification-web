@@ -7,6 +7,7 @@ using SFA.DAS.DigitalCertificates.Application.Queries.GetCertificates;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetUser;
 using System.Text.Json;
 using System;
+using SFA.DAS.DigitalCertificates.Web.Models.Certificates;
 
 namespace SFA.DAS.DigitalCertificates.Web.Services
 {
@@ -14,18 +15,21 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
     {
         private readonly ISessionStorageService _sessionStorageService;
         private readonly IMediator _mediator;
+        private readonly IUserService _userService;
 
         private const string UserDetailsKey = "DigitalCertificates:UserDetails";
         private const string ShareEmailKey = "DigitalCertificates:ShareEmail";
         private const string OwnedCertificatesKeyPrefix = "DigitalCertificates:OwnedCertificates:";
         private const string UlnAuthorisationKeyPrefix = "DigitalCertificates:UlnAuthorisation:";
         private const string RecordedSharingAccessKey = "DigitalCertificates:RecordedSharingAccessCodes";
+        private const string DeliveryAddressKeyPrefix = "DigitalCertificates:DeliveryAddress:";
         private const string ContactReferenceKey = "DigitalCertificates:ContactReference";
 
-        public SessionService(ISessionStorageService sessionStorageService, IMediator mediator)
+        public SessionService(ISessionStorageService sessionStorageService, IMediator mediator, IUserService userService)
         {
             _sessionStorageService = sessionStorageService;
             _mediator = mediator;
+            _userService = userService;
         }
 
         public Task SetUserDetailsAsync(UserDetails userDetails)
@@ -58,68 +62,101 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
             return _sessionStorageService.ClearAsync(ShareEmailKey);
         }
 
-        public async Task<List<Certificate>?> GetOwnedCertificatesAsync(string govUkIdentifier)
+        public async Task<List<Certificate>?> GetOwnedCertificatesAsync()
         {
-            var json = await _sessionStorageService.GetAsync(OwnedCertificatesKeyPrefix + govUkIdentifier);
+            var json = await _sessionStorageService.GetAsync(OwnedCertificatesKeyPrefix);
             if (!string.IsNullOrEmpty(json))
             {
                 return JsonSerializer.Deserialize<List<Certificate>>(json);
             }
+            Guid? userId = _userService.GetUserId();
+            if (userId == null)
+            {
+                var govUkIdentifier = _userService.GetGovUkIdentifier();
+                if (string.IsNullOrEmpty(govUkIdentifier)) return null;
 
-            var user = await _mediator.Send(new GetUserQuery { GovUkIdentifier = govUkIdentifier });
-            if (user == null)
-                return null;
+                var user = await _mediator.Send(new GetUserQuery { GovUkIdentifier = govUkIdentifier });
+                if (user == null) return null;
 
-            var response = await _mediator.Send(new GetCertificatesQuery { UserId = user.Id });
+                userId = user.Id;
+            }
+
+            var response = await _mediator.Send(new GetCertificatesQuery { UserId = userId.Value });
             var result = response as GetCertificatesQueryResult;
             var certificates = result?.Certificates;
 
             if (certificates != null)
             {
                 var certJson = JsonSerializer.Serialize(certificates);
-                await _sessionStorageService.SetAsync(OwnedCertificatesKeyPrefix + govUkIdentifier, certJson);
+                await _sessionStorageService.SetAsync(OwnedCertificatesKeyPrefix, certJson);
             }
 
             return certificates;
         }
 
-        public async Task<UlnAuthorisation?> GetUlnAuthorisationAsync(string govUkIdentifier)
+        public async Task<UlnAuthorisation?> GetUlnAuthorisationAsync()
         {
-            var json = await _sessionStorageService.GetAsync(UlnAuthorisationKeyPrefix + govUkIdentifier);
+            var json = await _sessionStorageService.GetAsync(UlnAuthorisationKeyPrefix);
             if (!string.IsNullOrEmpty(json))
             {
                 return JsonSerializer.Deserialize<UlnAuthorisation>(json);
             }
+            Guid? userId = _userService.GetUserId();
+            if (userId == null)
+            {
+                var govUkIdentifier = _userService.GetGovUkIdentifier();
+                if (string.IsNullOrEmpty(govUkIdentifier)) return null;
 
-            var user = await _mediator.Send(new GetUserQuery { GovUkIdentifier = govUkIdentifier });
-            if (user == null)
-                return null;
+                var user = await _mediator.Send(new GetUserQuery { GovUkIdentifier = govUkIdentifier });
+                if (user == null) return null;
 
-            var response = await _mediator.Send(new GetCertificatesQuery { UserId = user.Id });
+                userId = user.Id;
+            }
+
+            var response = await _mediator.Send(new GetCertificatesQuery { UserId = userId.Value });
             var result = response as GetCertificatesQueryResult;
             var authorisation = result?.Authorisation;
 
             if (authorisation != null)
             {
                 var authJson = JsonSerializer.Serialize(authorisation);
-                await _sessionStorageService.SetAsync(UlnAuthorisationKeyPrefix + govUkIdentifier, authJson);
+                await _sessionStorageService.SetAsync(UlnAuthorisationKeyPrefix, authJson);
             }
 
             return authorisation;
         }
-        public async Task ClearSessionDataAsync(string govUkIdentifier)
+        public async Task ClearSessionDataAsync()
         {
             await _sessionStorageService.ClearAsync(ShareEmailKey);
             await _sessionStorageService.ClearAsync(UserDetailsKey);
 
-            if (!string.IsNullOrEmpty(govUkIdentifier))
-            {
-                await _sessionStorageService.ClearAsync(OwnedCertificatesKeyPrefix + govUkIdentifier);
-                await _sessionStorageService.ClearAsync(UlnAuthorisationKeyPrefix + govUkIdentifier);
-            }
+            await _sessionStorageService.ClearAsync(OwnedCertificatesKeyPrefix);
+            await _sessionStorageService.ClearAsync(UlnAuthorisationKeyPrefix);
 
             await _sessionStorageService.ClearAsync(RecordedSharingAccessKey);
+            await _sessionStorageService.ClearAsync(DeliveryAddressKeyPrefix);
+
             await _sessionStorageService.ClearAsync(ContactReferenceKey);
+        }
+
+        public Task SetDeliveryAddressAsync(CheckAndSubmitViewModel address)
+        {
+            var json = JsonSerializer.Serialize(address);
+            return _sessionStorageService.SetAsync(DeliveryAddressKeyPrefix, json);
+        }
+
+        public async Task<CheckAndSubmitViewModel?> GetDeliveryAddressAsync()
+        {
+            var json = await _sessionStorageService.GetAsync(DeliveryAddressKeyPrefix);
+            if (string.IsNullOrWhiteSpace(json))
+                return null;
+
+            return JsonSerializer.Deserialize<CheckAndSubmitViewModel>(json);
+        }
+
+        public Task ClearDeliveryAddressAsync()
+        {
+            return _sessionStorageService.ClearAsync(DeliveryAddressKeyPrefix);
         }
 
         public Task SetContactReferenceAsync(string referenceNumber)

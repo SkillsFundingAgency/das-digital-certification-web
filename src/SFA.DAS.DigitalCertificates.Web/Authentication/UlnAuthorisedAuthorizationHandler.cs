@@ -17,7 +17,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Authentication
 
         protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, UlnAuthorisedRequirement requirement)
         {
-            var ulnAuthorised = await _sessionService.GetUlnAuthorisationAsync(_userService.GetGovUkIdentifier());
+            var ulnAuthorised = await _sessionService.GetUlnAuthorisationAsync();
             if (ulnAuthorised != null)
             {
                 context.Succeed(requirement);

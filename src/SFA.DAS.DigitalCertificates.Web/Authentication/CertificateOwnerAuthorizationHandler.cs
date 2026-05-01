@@ -43,7 +43,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Authentication
                 _ => null
             };
 
-            var certificates = await _sessionService.GetOwnedCertificatesAsync(_userService.GetGovUkIdentifier()) ?? new List<Certificate>();
+            var certificates = await _sessionService.GetOwnedCertificatesAsync() ?? new List<Certificate>();
 
             var match = certificates.FirstOrDefault(p =>
                 p.CertificateId == certificateId &&
