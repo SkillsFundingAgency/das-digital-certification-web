@@ -7,20 +7,23 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 {
     public interface IAuthoriseOrchestrator
     {
-        Task PrepareNeedMoreInformationAsync();
-        Task<CourseMatchOutcome> GetCourseMatchOutcomeAsync(SelectCourseViewModel viewModel);
+        Task<bool> PrepareNeedMoreInformationAsync();
         Task<bool> ValidateKnowYourUlnViewModel(KnowYourUlnViewModel viewModel, ModelStateDictionary modelState);
         Task<KnowYourUlnViewModel?> GetKnowYourUlnViewModelAsync();
-        Task SaveKnowYourUlnAsync(KnowYourUlnViewModel viewModel);
+        Task<KnowYourUlnViewModel> SaveKnowYourUlnAsync(KnowYourUlnViewModel viewModel);
         Task<bool> ValidateKnowYearViewModel(KnowYearViewModel viewModel, ModelStateDictionary modelState);
         Task<KnowYearViewModel?> GetKnowYearViewModelAsync();
-        Task SaveKnowYearAsync(KnowYearViewModel viewModel);
+        Task<KnowYearViewModel> SaveKnowYearAsync(KnowYearViewModel viewModel);
         
         Task<bool> ValidateSelectCourseViewModel(SelectCourseViewModel viewModel, ModelStateDictionary modelState);
         Task<SelectCourseViewModel?> GetSelectCourseViewModelAsync();
-        Task SaveSelectedCourseAsync(SelectCourseViewModel viewModel);
+        Task<SelectCourseViewModel> SaveSelectedCourseAsync(SelectCourseViewModel viewModel);
         Task<bool> ValidateSelectProviderViewModel(SelectProviderViewModel viewModel, ModelStateDictionary modelState);
         Task<SelectProviderViewModel?> GetSelectProviderViewModelAsync();
-        Task SaveSelectedProviderAsync(SelectProviderViewModel viewModel);
+        Task<SelectProviderViewModel> SaveSelectedProviderAsync(SelectProviderViewModel viewModel);
+        Task<CheckAnswersViewModel?> GetCheckAnswersViewModelAsync();
+        Task<MatchOutcome> GetUlnMatchOutcomeAsync(KnowYourUlnViewModel viewModel);
+        Task<MatchOutcome> GetCourseMatchOutcomeAsync(SelectCourseViewModel viewModel);
+        Task<MatchOutcome> SubmitCheckAnswersAsync();
     }
 }

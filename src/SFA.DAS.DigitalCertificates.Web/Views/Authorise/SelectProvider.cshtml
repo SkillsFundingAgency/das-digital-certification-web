@@ -9,7 +9,7 @@
 
 <div class="govuk-width-container">
 
-    <a asp-route="@AuthoriseController.KnowYearRouteGet" class="govuk-back-link">Back</a>
+    <a asp-route="@(Model?.IsReturningToCheck == true ? AuthoriseController.CheckAnswersRouteGet : AuthoriseController.KnowYearRouteGet)" class="govuk-back-link">Back</a>
 
     <main class="govuk-main-wrapper" id="main-content">
         <partial name="_ValidationSummary" />
@@ -47,7 +47,7 @@
                                                       value="@p.ProviderName"
                                                       aria-describedby="SelectedProviderOption-error"
                                                       @( (Model?.SelectedProviderName != null && System.String.Equals(p.ProviderName?.Trim(), Model.SelectedProviderName?.Trim(), System.StringComparison.OrdinalIgnoreCase)) ? "checked=\"checked\"" : "" ) />
-                                                <label class="govuk-label govuk-radios__label" for="@inputId">@p.DisplayName</label>
+                                                <label class="govuk-label govuk-radios__label" for="@inputId">@p.ProviderName</label>
                                             </div>
                                             idx++;
                                         }

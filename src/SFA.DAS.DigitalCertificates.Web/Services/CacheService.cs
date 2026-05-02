@@ -78,6 +78,13 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
             return updated;
         }
 
+        public async Task<int> GetMatchFailCountAsync(string govUkIdentifier)
+        {
+            var key = GetScopedKey(MatchFailCountKey, govUkIdentifier);
+            var current = await _cacheStorageService.GetAsync<int?>(key) ?? 0;
+            return current;
+        }
+
         internal static string GetScopedKey(string key, string identifier)
         {
             return $"{DigitalCertificates}:{key}:{identifier}";

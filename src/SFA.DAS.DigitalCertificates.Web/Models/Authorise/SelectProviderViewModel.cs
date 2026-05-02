@@ -2,7 +2,7 @@
 
 namespace SFA.DAS.DigitalCertificates.Web.Models.Authorise
 {
-    public class SelectProviderViewModel
+    public class SelectProviderViewModel : AuthoriseViewModelBase
     {
         public string? SelectedProviderName { get; set; }
         public const string UnknownProviderSentinel = "UNKNOWN";
@@ -11,9 +11,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Models.Authorise
 
         public class ProviderOption
         {
-            public string? Ukprn { get; set; }
-            public string? ProviderName { get; set; }
-            public string DisplayName => ProviderName ?? string.Empty;
+            public long? Ukprn { get; set; }
+            public required string ProviderName { get; set; }
         }
     }
 }

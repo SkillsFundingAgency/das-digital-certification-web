@@ -9,6 +9,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
         Task Clear(string govUkIdentifier);
         Task<MatchesAndMasks?> GetOrCreateMatchesAsync(string govUkIdentifier, Guid userId);
         Task<int> IncrementMatchFailCountAsync(string govUkIdentifier);
+        Task<int> GetMatchFailCountAsync(string govUkIdentifier);
 
         Task ClearMatches(string govUkIdentifier);
     }

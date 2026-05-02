@@ -8,7 +8,7 @@
 
 <div class="govuk-width-container">
 
-    <a asp-route="@AuthoriseController.NeedMoreInformationRouteGet" class="govuk-back-link">Back</a>
+    <a asp-route="@(Model?.IsReturningToCheck == true ? AuthoriseController.CheckAnswersRouteGet : AuthoriseController.NeedMoreInformationRouteGet)" class="govuk-back-link">Back</a>
 
     <main class="govuk-main-wrapper" id="main-content">
         <partial name="_ValidationSummary" />

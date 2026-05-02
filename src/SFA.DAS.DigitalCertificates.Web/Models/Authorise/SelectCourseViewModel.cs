@@ -3,7 +3,7 @@ using SFA.DAS.DigitalCertificates.Domain.Models;
 
 namespace SFA.DAS.DigitalCertificates.Web.Models.Authorise
 {
-    public class SelectCourseViewModel
+    public class SelectCourseViewModel : AuthoriseViewModelBase
     {
         //ToDo:Neeed to remove the unused fields at the end of journey
         public string? SelectedCourseCode { get; set; }
@@ -11,8 +11,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Models.Authorise
 
         public class CourseOption
         {
-            public string? CourseCode { get; set; }
-            public string? CourseName { get; set; }
+            public required string CourseCode { get; set; }
+            public required string CourseName { get; set; }
             public string? CourseLevel { get; set; }
             public CertificateType CertificateType { get; set; }
 
