@@ -121,6 +121,11 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.VerifiedAndNotUlnAuthorised))]
         public async Task<IActionResult> SelectCourse(SelectCourseViewModel model)
         {
+            if (string.Equals(model.SelectedCourseCode?.Trim(), SelectCourseViewModel.UnknownCourseSentinel, System.StringComparison.OrdinalIgnoreCase))
+            {
+                model.SelectedCourseUnknown = true;
+                model.SelectedCourseCode = null;
+            }
             if (!await _authoriseOrchestrator.ValidateSelectCourseViewModel(model, ModelState))
             {
                 return RedirectToRoute(SelectCourseRouteGet);

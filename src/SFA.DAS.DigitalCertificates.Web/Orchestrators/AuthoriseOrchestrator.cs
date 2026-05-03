@@ -147,6 +147,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             var model = new SelectCourseViewModel
             {
                 SelectedCourseCode = answers?.CourseCode,
+                SelectedCourseUnknown = answers?.CourseUnknown,
                 Courses = courseOptions,
                 IsReturningToCheck = answers?.IsReturningToCheck == true,
                 IsShortJourney = answers?.IsShortJourney == true
@@ -158,7 +159,17 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         public async Task<SelectCourseViewModel> SaveSelectedCourseAsync(SelectCourseViewModel viewModel)
         {
             var answers = await _sessionService.GetAuthorisationAnswersAsync() ?? new AuthorisationAnswers();
-            answers.CourseCode = viewModel.SelectedCourseCode?.Trim();
+            if (viewModel.SelectedCourseUnknown == true)
+            {
+                answers.CourseUnknown = true;
+                answers.CourseCode = null;
+                answers.CourseName = null;
+            }
+            else
+            {
+                answers.CourseUnknown = false;
+                answers.CourseCode = viewModel.SelectedCourseCode?.Trim();
+            }
 
             var matches = await GetMatchesAsync();
             var courseOptions = MapMatchesToCourseOptions(matches);
@@ -376,6 +387,12 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             var answers = await _sessionService.GetAuthorisationAnswersAsync();
             if (answers == null) return null;
 
+            var courseAnswered = answers.CourseUnknown != null || !string.IsNullOrWhiteSpace(answers.CourseCode);
+            if (answers.KnowUln == null && !courseAnswered)
+            {
+                return null;
+            }
+
             answers.IsReturningToCheck = true;
             await _sessionService.SetAuthorisationAnswersAsync(answers);
 
@@ -391,12 +408,14 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 ? DisplayConstants.NotKnown
                 : answers.ProviderName;
 
+            var courseDisplay = answers.CourseUnknown == true
+                ? DisplayConstants.NotKnown
+                : answers.CourseName;
+
             return new CheckAnswersViewModel
             {
-                CourseCode = answers.CourseCode,
-                CourseName = answers.CourseName,
+                CourseDisplay = courseDisplay,
                 IsShortJourney = answers.IsShortJourney,
-                ShowNoMatchBanner = false,
                 UlnDisplay = ulnDisplay,
                 YearDisplay = yearDisplay,
                 ProviderDisplay = providerDisplay

@@ -419,6 +419,19 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         }
 
         [Test]
+        public async Task GetCheckAnswersViewModelAsync_Returns_Null_When_FirstTwoQuestions_Unanswered()
+        {
+            // Arrange 
+            _sessionServiceMock.Setup(s => s.GetAuthorisationAnswersAsync()).ReturnsAsync(new AuthorisationAnswers());
+
+            // Act
+            var result = await _sut.GetCheckAnswersViewModelAsync();
+
+            // Assert
+            Assert.IsNull(result);
+        }
+
+        [Test]
         public async Task GetCheckAnswersViewModelAsync_Sets_IsReturningToCheck_And_Updates_Session()
         {
             // Arrange

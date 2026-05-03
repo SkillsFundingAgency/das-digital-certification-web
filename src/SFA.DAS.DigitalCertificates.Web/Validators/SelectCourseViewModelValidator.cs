@@ -11,6 +11,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Validators
         {
             RuleFor(x => x.SelectedCourseCode)
                 .NotEmpty()
+                .When(x => x.SelectedCourseUnknown != true)
                 .WithMessage(SelectCourseErrorMessage);
         }
     }

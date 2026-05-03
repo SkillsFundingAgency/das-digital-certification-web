@@ -20,7 +20,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Validators
         [Test]
         public void When_NoSelection_Must_Fail_With_SelectCourseErrorMessage()
         {
-            var model = new SelectCourseViewModel { SelectedCourseCode = string.Empty };
+            var model = new SelectCourseViewModel { SelectedCourseCode = string.Empty, SelectedCourseUnknown = false };
 
             var result = _sut.TestValidate(model);
 
@@ -32,6 +32,16 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Validators
         public void When_Selection_Must_Pass()
         {
             var model = new SelectCourseViewModel { SelectedCourseCode = "ABC" };
+
+            var result = _sut.TestValidate(model);
+
+            result.IsValid.Should().BeTrue();
+        }
+
+        [Test]
+        public void When_Unknown_Selected_Must_Pass()
+        {
+            var model = new SelectCourseViewModel { SelectedCourseCode = null, SelectedCourseUnknown = true };
 
             var result = _sut.TestValidate(model);
 

@@ -37,9 +37,10 @@
 
                                 @if (Model?.Courses != null)
                                 {
+                                    var idx = 0;
                                     foreach (CourseOption c in Model.Courses)
                                     {
-                                        var inputId = $"SelectedCourseCode-{c.CourseCode}";
+                                        var inputId = idx == 0 ? "SelectedCourseCode" : $"SelectedCourseOption-{idx}";
                                         <div class="govuk-radios__item">
                                               <input name="SelectedCourseCode"
                                                   id="@inputId"
@@ -50,6 +51,7 @@
                                                   @( (Model?.SelectedCourseCode != null && System.String.Equals(c.CourseCode?.Trim(), Model.SelectedCourseCode?.Trim(), System.StringComparison.OrdinalIgnoreCase)) ? "checked=\"checked\"" : "" ) />
                                             <label class="govuk-label govuk-radios__label" for="@inputId">@c.DisplayName</label>
                                         </div>
+                                        idx++;
                                     }
                                 }
 
@@ -60,9 +62,9 @@
                                          id="SelectedCourseCode-Unknown"
                                          class="govuk-radios__input"
                                          type="radio"
-                                         value="UNKNOWN"
+                                         value="@UnknownCourseSentinel"
                                          aria-describedby="SelectedCourseCode-error"
-                                         @( (Model?.SelectedCourseCode != null && System.String.Equals(Model.SelectedCourseCode?.Trim(), "UNKNOWN", System.StringComparison.OrdinalIgnoreCase)) ? "checked=\"checked\"" : "" ) />
+                                         @(Model?.SelectedCourseUnknown == true ? "checked=\"checked\"" : "") />
                                     <label class="govuk-label govuk-radios__label" for="SelectedCourseCode-Unknown">I don’t know</label>
                                 </div>
 

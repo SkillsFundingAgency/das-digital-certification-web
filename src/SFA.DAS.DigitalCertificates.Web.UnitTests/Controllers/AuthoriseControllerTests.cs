@@ -278,6 +278,24 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
         }
 
         [Test]
+        public async Task SelectCourse_Post_Unknown_Sets_Unknown_And_Saves()
+        {
+            // Arrange
+            var vm = new SelectCourseViewModel { SelectedCourseCode = SelectCourseViewModel.UnknownCourseSentinel };
+
+            _orchestratorMock.Setup(o => o.ValidateSelectCourseViewModel(It.IsAny<SelectCourseViewModel>(), It.IsAny<ModelStateDictionary>())).ReturnsAsync(true);
+            _orchestratorMock.Setup(o => o.SaveSelectedCourseAsync(It.IsAny<SelectCourseViewModel>())).ReturnsAsync((SelectCourseViewModel m) => m);
+
+            // Act
+            var result = await _sut.SelectCourse(vm);
+
+            // Assert 
+            _orchestratorMock.Verify(o => o.SaveSelectedCourseAsync(It.Is<SelectCourseViewModel>(m => m.SelectedCourseUnknown == true && m.SelectedCourseCode == null)), Times.Once);
+            result.Should().BeOfType<RedirectToRouteResult>();
+            var redirect = result as RedirectToRouteResult;
+        }
+
+        [Test]
         public async Task SelectProvider_Get_Returns_View_With_Model()
         {
             // Arrange

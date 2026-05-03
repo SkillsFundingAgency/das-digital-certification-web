@@ -21,13 +21,13 @@
             <div class="govuk-summary-list__row">
                 <dt class="govuk-summary-list__key">Unique learner number</dt>
                 <dd class="govuk-summary-list__value">@Model?.UlnDisplay</dd>
-                <dd class="govuk-summary-list__actions"><a asp-route="@AuthoriseController.KnowYourUlnRouteGet">Change</a></dd>
+                <dd class="govuk-summary-list__actions"><a asp-route="@AuthoriseController.KnowYourUlnRouteGet" aria-label="Change unique learner number">Change</a></dd>
             </div>
 
             <div class="govuk-summary-list__row">
                 <dt class="govuk-summary-list__key">Course</dt>
-                <dd class="govuk-summary-list__value">@Model?.CourseName</dd>
-                <dd class="govuk-summary-list__actions"><a asp-route="@AuthoriseController.SelectCourseRouteGet">Change</a></dd>
+                <dd class="govuk-summary-list__value">@Model?.CourseDisplay</dd>
+                <dd class="govuk-summary-list__actions"><a asp-route="@AuthoriseController.SelectCourseRouteGet" aria-label="Change course">Change</a></dd>
             </div>
 
             @if (!(Model?.IsShortJourney ?? false))
@@ -36,13 +36,13 @@
                 <div class="govuk-summary-list__row">
                     <dt class="govuk-summary-list__key">Year of completion</dt>
                     <dd class="govuk-summary-list__value">@Model?.YearDisplay</dd>
-                    <dd class="govuk-summary-list__actions"><a asp-route="@AuthoriseController.KnowYearRouteGet">Change</a></dd>
+                    <dd class="govuk-summary-list__actions"><a asp-route="@AuthoriseController.KnowYearRouteGet" aria-label="Change year of completion">Change</a></dd>
                 </div>
 
                 <div class="govuk-summary-list__row">
                     <dt class="govuk-summary-list__key">Training provider</dt>
                     <dd class="govuk-summary-list__value">@Model?.ProviderDisplay</dd>
-                    <dd class="govuk-summary-list__actions"><a asp-route="@AuthoriseController.SelectProviderRouteGet">Change</a></dd>
+                    <dd class="govuk-summary-list__actions"><a asp-route="@AuthoriseController.SelectProviderRouteGet" aria-label="Change training provider">Change</a></dd>
                 </div>
             }
 
