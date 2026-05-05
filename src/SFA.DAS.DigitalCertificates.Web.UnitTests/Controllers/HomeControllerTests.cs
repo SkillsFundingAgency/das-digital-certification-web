@@ -117,7 +117,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
                 .Subject;
 
             model.ConsentAnalyticsCookie.Should().BeTrue();
-            model.BackUrl.Should().BeNull();
+            model.BackUrl.Should().BeEmpty();
         }
 
         [Test]
@@ -140,7 +140,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
                 .Subject;
 
             model.ConsentAnalyticsCookie.Should().BeFalse();
-            model.BackUrl.Should().BeNull();
+            model.BackUrl.Should().BeEmpty();
         }
 
         [Test]
@@ -160,7 +160,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
                 .Subject;
 
             model.ConsentAnalyticsCookie.Should().BeFalse();
-            model.BackUrl.Should().BeNull();
+            model.BackUrl.Should().BeEmpty();
         }
 
         [Test]
@@ -183,7 +183,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
                 .Subject;
 
             model.ConsentAnalyticsCookie.Should().BeFalse();
-            model.BackUrl.Should().BeNull();
+            model.BackUrl.Should().BeEmpty();
         }
 
         [Test]
@@ -389,11 +389,11 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
 
             var model = result!.Model as PageViewModel;
             model.Should().NotBeNull();
-            model!.BackUrl.Should().BeNull();
+            model!.BackUrl.Should().BeEmpty();
         }
 
         private HomeController CreateControllerWithCookies(
-             Dictionary<string, string>? cookies = null)
+             Dictionary<string, string> cookies = null)
         {
             var requestCookieCollectionMock = new Mock<IRequestCookieCollection>();
 

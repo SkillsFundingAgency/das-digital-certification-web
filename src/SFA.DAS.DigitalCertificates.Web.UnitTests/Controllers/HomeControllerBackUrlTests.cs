@@ -84,7 +84,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
                 .BeOfType<CookiesViewModel>()
                 .Subject;
 
-            model.BackUrl.Should().BeNull();
+            model.BackUrl.Should().BeEmpty();
         }
 
         [Test]
@@ -119,7 +119,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
                 .BeOfType<PageViewModel>()
                 .Subject;
 
-            model.BackUrl.Should().BeNull();
+            model.BackUrl.Should().BeEmpty();
         }
 
         [Test]
@@ -154,8 +154,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
                 .BeOfType<PageViewModel>()
                 .Subject;
 
-            model.BackUrl.Should().BeNull();
+            model.BackUrl.Should().BeEmpty();
         }
-
     }
 }

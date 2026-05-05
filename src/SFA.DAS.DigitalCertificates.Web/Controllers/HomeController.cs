@@ -129,7 +129,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             var cookieViewModel = new CookiesViewModel
             {                
                 ConsentAnalyticsCookie = isAnalyticsCookieConsentGiven,
-                BackUrl = returnUrl,
+                BackUrl = returnUrl ?? string.Empty,
             };
             return View(cookieViewModel);
         }
@@ -140,7 +140,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         {
             var model = new PageViewModel
             {
-                BackUrl = returnUrl,
+                BackUrl = returnUrl ?? string.Empty,
             };
 
             return View(model);
@@ -158,7 +158,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         {
             var model = new PageViewModel
             {
-                BackUrl = returnUrl,
+                BackUrl = returnUrl ?? string.Empty,
             };
 
             return View(model);
