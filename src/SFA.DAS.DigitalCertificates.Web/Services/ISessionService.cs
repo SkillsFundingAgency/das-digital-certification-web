@@ -8,8 +8,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
 {
     public interface ISessionService
     {
-        Task SetUserDetailsAsync(UserDetails userDetails);
-        Task<UserDetails?> GetUserDetailsAsync();
         Task SetShareEmailAsync(string email);
         Task<string?> GetShareEmailAsync();
         Task ClearShareEmailAsync();

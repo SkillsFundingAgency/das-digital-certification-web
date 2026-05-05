@@ -16,6 +16,7 @@ using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
 using SFA.DAS.DigitalCertificates.Infrastructure.Constants;
 using System.Collections.Generic;
 using SFA.DAS.DigitalCertificates.Infrastructure.Api.Responses;
+using Microsoft.AspNetCore.Http;
 
 namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 {
@@ -27,11 +28,14 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         private readonly IValidator<SelectAddressViewModel> _selectAddressValidator;
         private readonly IValidator<AddAddressManualViewModel> _addAddressValidator;
 
-        public CertificatesOrchestrator(IMediator mediator, ISessionService sessionService, IUserService userService,
+        public CertificatesOrchestrator(IMediator mediator,
+            IHttpContextAccessor httpContextAccessor,
+            ISessionService sessionService, 
+            IUserService userService,
             IValidator<SelectAddressViewModel> selectAddressValidator,
             IValidator<AddAddressManualViewModel> addAddressValidator,
             DigitalCertificatesWebConfiguration configuration)
-            : base(mediator)
+            : base(mediator, httpContextAccessor)
         {
             _sessionService = sessionService;
             _userService = userService;
@@ -154,10 +158,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             if (ownedCertificate == null)
                 return new CreateUserActionForCertificateResult();
 
-            var userDetails = await _sessionService.GetUserDetailsAsync();
-
-            var familyName = userDetails?.FamilyName ?? string.Empty;
-            var givenNames = userDetails?.GivenNames ?? string.Empty;
+            var familyName = GetUserSurname();
+            var givenNames = GetUserGivenNames();
 
             var certificateType = ownedCertificate.CertificateType;
             var courseName = ownedCertificate.CourseName ?? string.Empty;
@@ -191,10 +193,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             if (userId == null)
                 return null;
 
-            var userDetails = await _sessionService.GetUserDetailsAsync();
-
-            var familyName = userDetails?.FamilyName ?? string.Empty;
-            var givenNames = userDetails?.GivenNames ?? string.Empty;
+            var familyName = GetUserSurname();
+            var givenNames = GetUserGivenNames();
 
             var result = await Mediator.Send(new CreateUserActionCommand
             {
@@ -246,14 +246,12 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 return null;
             }
 
-            var userDetails = await _sessionService.GetUserDetailsAsync();
-
             var viewModel = new SelectAddressViewModel
             {
                 CertificateId = certificateId,
                 CourseName = ownedCertificate.CourseName,
-                GivenNames = userDetails?.GivenNames,
-                FamilyName = userDetails?.FamilyName,
+                GivenNames = GetUserGivenNames(),
+                FamilyName = GetUserSurname(),
                 SearchTerm = searchTerm
             };
 
@@ -270,14 +268,12 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 return null;
             }
 
-            var userDetails = await _sessionService.GetUserDetailsAsync();
-
             var viewModel = new AddAddressManualViewModel
             {
                 CertificateId = certificateId,
                 CourseName = ownedCertificate.CourseName,
-                GivenNames = userDetails?.GivenNames,
-                FamilyName = userDetails?.FamilyName
+                GivenNames = GetUserGivenNames(),
+                FamilyName = GetUserSurname()
             };
 
             var address = await _sessionService.GetDeliveryAddressAsync();
@@ -304,14 +300,12 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 return null;
             }
 
-            var userDetails = await _sessionService.GetUserDetailsAsync();
-
             var vm = new CheckAndSubmitViewModel
             {
                 CertificateId = certificateId,
                 CourseName = ownedCertificate.CourseName,
-                GivenNames = userDetails?.GivenNames,
-                FamilyName = userDetails?.FamilyName
+                GivenNames = GetUserGivenNames(),
+                FamilyName = GetUserSurname()
             };
 
             var address = await _sessionService.GetDeliveryAddressAsync();
@@ -369,9 +363,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 
         public async Task CreatePrintRequest(Guid certificateId)
         {
-            var userDetails = await _sessionService.GetUserDetailsAsync();
-            string email = userDetails?.Email ?? string.Empty;
-            string userName = userDetails?.FullName ?? string.Empty;
+            string email = GetUserEmail();
+            string userName = GetUserDisplayName();
 
             var templateId = GetTemplateId(_configuration, NotificationTemplateNames.PrintRequest);
 

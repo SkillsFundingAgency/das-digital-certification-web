@@ -53,7 +53,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
         }
 
         [Test]
-        public async Task SigningOut_ReturnsSignOutResult_WithOidcHint_AndSchemes_AndClearsSession()
+        public async Task SigningOut_ReturnsSignOutResult_WithOidcHint_AndSchemes()
         {
             // Arrange
             var idToken = "some_id_token";
@@ -88,6 +88,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
                 .ReturnsAsync(AuthenticateResult.Success(cookieTicket));
             auth.Setup(a => a.AuthenticateAsync(It.IsAny<HttpContext>(), OpenIdConnectDefaults.AuthenticationScheme))
                 .ReturnsAsync(AuthenticateResult.Success(oidcTicket));
+            auth.Setup(a => a.AuthenticateAsync(It.IsAny<HttpContext>(), It.Is<string>(s => s == null)))
+                .ReturnsAsync(AuthenticateResult.Success(oidcTicket));
 
             var sp = new Mock<IServiceProvider>();
             sp.Setup(s => s.GetService(typeof(IAuthenticationService))).Returns(auth.Object);
@@ -111,13 +113,6 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
 
             signOut.Properties.Parameters.Should().ContainKey(OpenIdConnectParameterNames.IdTokenHint);
             signOut.Properties.Parameters[OpenIdConnectParameterNames.IdTokenHint].Should().Be(idToken);
-
-            _cacheServiceMock.Verify(
-                x => x.Clear(govUkIdentifier),
-                Times.Once
-            );
-
-            _sessionServiceMock.Verify(s => s.ClearSessionDataAsync(), Times.Once);
         }
 
         [Test]

@@ -1,28 +1,30 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Linq;
 using FluentAssertions;
+using FluentValidation;
 using MediatR;
+using Microsoft.AspNetCore.Http;
 using Moq;
 using NUnit.Framework;
 using SFA.DAS.DigitalCertificates.Application.Commands.CreateSharing;
-using SFA.DAS.DigitalCertificates.Application.Queries.GetSharings;
+using SFA.DAS.DigitalCertificates.Application.Commands.CreateSharingAccess;
+using SFA.DAS.DigitalCertificates.Application.Commands.CreateSharingEmailAccess;
+using SFA.DAS.DigitalCertificates.Application.Queries.GetSharedFrameworkCertificate;
+using SFA.DAS.DigitalCertificates.Application.Queries.GetSharedStandardCertificate;
+using SFA.DAS.DigitalCertificates.Application.Queries.GetSharingByCode;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetSharingById;
+using SFA.DAS.DigitalCertificates.Application.Queries.GetSharings;
+using SFA.DAS.DigitalCertificates.Domain.Extensions;
 using SFA.DAS.DigitalCertificates.Domain.Models;
 using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
-using SFA.DAS.DigitalCertificates.Web.Orchestrators;
-using SFA.DAS.DigitalCertificates.Web.Services;
 using SFA.DAS.DigitalCertificates.Web.Extensions;
 using SFA.DAS.DigitalCertificates.Web.Models.Sharing;
-using FluentValidation;
-using SFA.DAS.DigitalCertificates.Domain.Extensions;
-using SFA.DAS.DigitalCertificates.Application.Queries.GetSharingByCode;
-using SFA.DAS.DigitalCertificates.Application.Commands.CreateSharingAccess;
-using SFA.DAS.DigitalCertificates.Application.Queries.GetSharedStandardCertificate;
-using SFA.DAS.DigitalCertificates.Application.Queries.GetSharedFrameworkCertificate;
-using SFA.DAS.DigitalCertificates.Application.Commands.CreateSharingEmailAccess;
+using SFA.DAS.DigitalCertificates.Web.Orchestrators;
+using SFA.DAS.DigitalCertificates.Web.Services;
 
 namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
 {
@@ -30,28 +32,44 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
     public class SharingOrchestratorTests
     {
         private Mock<IMediator> _mediatorMock;
+        private Mock<IHttpContextAccessor> _contextAccessorMock;
         private Mock<IUserService> _userServiceMock;
-        private Mock<ICacheService> _cacheServiceMock;
         private Mock<ISessionService> _sessionServiceMock;
         private Mock<IValidator<ShareByEmailViewModel>> _shareByEmailValidatorMock;
         private Mock<IDateTimeHelper> _dateTimeHelperMock;
+        
         private DigitalCertificatesWebConfiguration _digitalCertificatesWebConfiguration;
         private SharingOrchestrator _sut;
+        private DefaultHttpContext _httpContext;
 
         [SetUp]
         public void SetUp()
         {
             _mediatorMock = new Mock<IMediator>();
+            _contextAccessorMock = new Mock<IHttpContextAccessor>();
             _userServiceMock = new Mock<IUserService>();
-            _cacheServiceMock = new Mock<ICacheService>();
             _sessionServiceMock = new Mock<ISessionService>();
             _shareByEmailValidatorMock = new Mock<IValidator<ShareByEmailViewModel>>();
             _dateTimeHelperMock = new Mock<IDateTimeHelper>();
             _dateTimeHelperMock.SetupGet(d => d.Now).Returns(DateTime.UtcNow);
 
+            var claims = new[]
+            {
+                new Claim(ClaimTypes.Name, "John Doe")
+            };
+
+            var identity = new ClaimsIdentity(claims, "TestAuthType");
+            _httpContext = new DefaultHttpContext
+            {
+                User = new ClaimsPrincipal(identity)
+            };
+
+            _contextAccessorMock.Setup(c => c.HttpContext).Returns(_httpContext);
+
             _digitalCertificatesWebConfiguration = new DigitalCertificatesWebConfiguration
             {
                 ServiceBaseUrl = "https://test.com",
+                OneLoginSettingsUrl = "http://settings.com",
                 RedisConnectionString = "test",
                 DataProtectionKeysDatabase = "test",
                 SharingListLimit = 10,
@@ -61,9 +79,14 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 }
             };
 
-            _sessionServiceMock.Setup(s => s.GetUserDetailsAsync()).ReturnsAsync((UserDetails)null);
-
-            _sut = new SharingOrchestrator(_mediatorMock.Object, _userServiceMock.Object, _cacheServiceMock.Object, _sessionServiceMock.Object, _digitalCertificatesWebConfiguration, _dateTimeHelperMock.Object, _shareByEmailValidatorMock.Object);
+            _sut = new SharingOrchestrator(
+                _mediatorMock.Object, 
+                _contextAccessorMock.Object,
+                _userServiceMock.Object, 
+                _sessionServiceMock.Object, 
+                _digitalCertificatesWebConfiguration, 
+                _dateTimeHelperMock.Object, 
+                _shareByEmailValidatorMock.Object);
         }
 
         [TearDown]
@@ -795,21 +818,6 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             _mediatorMock
                 .Setup(m => m.Send(It.IsAny<GetSharingByIdQuery>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(response);
-
-            var user = new User
-            {
-                Id = Guid.NewGuid(),
-                GovUkIdentifier = govUkIdentifier,
-                EmailAddress = "user@test.com",
-                Names = new List<Name>
-                {
-                    new Name { GivenNames = "John", FamilyName = "Doe" }
-                }
-            };
-
-            _cacheServiceMock.Setup(s => s.GetUserAsync(govUkIdentifier)).ReturnsAsync(user);
-            var userDetails = new UserDetails { GivenNames = "John", FamilyName = "Doe", FullName = "John Doe" };
-            _sessionServiceMock.Setup(s => s.GetUserDetailsAsync()).ReturnsAsync(userDetails);
 
             var commandResult = new Application.Commands.CreateSharingEmail.CreateSharingEmailCommandResult
             {

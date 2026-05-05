@@ -45,8 +45,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
                 throw new InvalidOperationException("No HttpContext available.");
             }
 
-            var idToken = await HttpContextAccessor.HttpContext
-                .GetTokenAsync(OpenIdConnectDefaults.AuthenticationScheme, OpenIdConnectParameterNames.IdToken);
+
+            var idToken = await HttpContextAccessor.HttpContext.GetTokenAsync(OpenIdConnectParameterNames.IdToken);
 
             var authenticationProperties = new AuthenticationProperties();
             authenticationProperties.Parameters[OpenIdConnectParameterNames.IdTokenHint] = idToken;
@@ -59,12 +59,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
                     .ToArray();
             }
 
-            var govUkIdentifier = _userService.GetGovUkIdentifier();
-
-            await _cacheService.Clear(govUkIdentifier);
-            await _sessionService.ClearSessionDataAsync();
-
-            HttpContextAccessor.HttpContext?.Session?.Clear();
 
             return SignOut(
                 authenticationProperties,

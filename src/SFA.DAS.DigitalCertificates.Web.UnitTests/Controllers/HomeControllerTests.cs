@@ -17,8 +17,6 @@ using SFA.DAS.DigitalCertificates.Web.Models.Home;
 using SFA.DAS.DigitalCertificates.Web.Orchestrators;
 using SFA.DAS.GovUK.Auth.Models;
 using SFA.DAS.GovUK.Auth.Services;
-using SFA.DAS.DigitalCertificates.Web.Services;
-using SFA.DAS.DigitalCertificates.Domain.Models;
 
 namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
 {
@@ -30,7 +28,6 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
         private Mock<IGovUkAuthenticationService> _govUkAuthServiceMock;
         private Mock<IHttpContextAccessor> _contextAccessorMock;
         private Mock<ILogger<HomeController>> _loggerMock;
-        private Mock<ISessionService> _sessionServiceMock;
         private HomeController _sut;
         private DefaultHttpContext _httpContext;
 
@@ -42,19 +39,16 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             _govUkAuthServiceMock = new Mock<IGovUkAuthenticationService>();
             _contextAccessorMock = new Mock<IHttpContextAccessor>();
             _loggerMock = new Mock<ILogger<HomeController>>();
-            _sessionServiceMock = new Mock<ISessionService>();
 
             _httpContext = new DefaultHttpContext();
             _contextAccessorMock.Setup(c => c.HttpContext).Returns(_httpContext);
-            _sessionServiceMock.Setup(s => s.SetUserDetailsAsync(It.IsAny<UserDetails>())).Returns(Task.CompletedTask);
 
             _sut = new HomeController(
                 _orchestratorMock.Object,
                 _configMock.Object,
                 _govUkAuthServiceMock.Object,
                 _contextAccessorMock.Object,
-                _loggerMock.Object,
-                _sessionServiceMock.Object);
+                _loggerMock.Object);
         }
 
         [TearDown]

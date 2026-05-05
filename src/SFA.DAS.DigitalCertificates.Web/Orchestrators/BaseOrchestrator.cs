@@ -1,24 +1,61 @@
-﻿using FluentValidation;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
-using SFA.DAS.DigitalCertificates.Web.Helpers;
-using System.Threading.Tasks;
-using MediatR;
-using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
+﻿using System;
 using System.Linq;
-using System;
+using System.Security.Claims;
+using System.Threading.Tasks;
+using FluentValidation;
+using MediatR;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
+using SFA.DAS.DigitalCertificates.Web.Helpers;
 
 namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 {
     public class BaseOrchestrator
     {
         private readonly IMediator _mediator;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public BaseOrchestrator(IMediator mediator)
+        public BaseOrchestrator(IMediator mediator, IHttpContextAccessor httpContextAccessor)
         {
             _mediator = mediator;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public IMediator Mediator => _mediator;
+
+        protected string GetUserDisplayName()
+        {
+            return _httpContextAccessor?
+                .HttpContext?
+                .User?
+                .Identity?
+                .Name ?? string.Empty;
+        }
+
+        protected string GetUserGivenNames()
+        {
+            return _httpContextAccessor?
+                .HttpContext?
+                .User?
+                .FindFirstValue(ClaimTypes.GivenName) ?? string.Empty;
+        }
+
+        protected string GetUserSurname()
+        {
+            return _httpContextAccessor?
+                .HttpContext?
+                .User?
+                .FindFirstValue(ClaimTypes.Surname) ?? string.Empty;
+        }
+
+        protected string GetUserEmail()
+        {
+            return _httpContextAccessor?
+                .HttpContext?
+                .User?
+                .FindFirstValue(ClaimTypes.Email) ?? string.Empty;
+        }
 
         protected static async Task<bool> ValidateViewModel<T>(IValidator<T> validator, T viewModel, ModelStateDictionary modelState)
         {
