@@ -1,7 +1,6 @@
-﻿using SFA.DAS.DigitalCertificates.Domain.Models;
-using System;
-using System.Reflection;
+﻿using System;
 using System.Text.RegularExpressions;
+using SFA.DAS.DigitalCertificates.Domain.Models;
 
 namespace SFA.DAS.DigitalCertificates.Web.Models.Certificates
 {

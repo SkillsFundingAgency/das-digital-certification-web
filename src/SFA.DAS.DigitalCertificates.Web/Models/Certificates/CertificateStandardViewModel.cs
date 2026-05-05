@@ -28,6 +28,13 @@ namespace SFA.DAS.DigitalCertificates.Web.Models.Certificates
         public DateTime? StartDate { get; set; }
         public DateTime? PrintRequestedAt { get; set; }
         public string? PrintRequestedBy { get; set; }
+        public PrintStatus PrintStatus { get; set; } = PrintStatus.None;
+        public DateTime? PrintStatusDate { get; set; }
+        public string? PrintStatusMessage { get; set; }
+        public string? PrintStatusCssClass { get; set; }
+        public string? PrintStatusDisplay { get; set; }
         public bool ShowBackLink { get; set; } = true;
+        public bool ShowPrintHeader { get; set; }
+        public bool ShowRequestPrint { get; set; }
     }
 }

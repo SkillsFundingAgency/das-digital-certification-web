@@ -1,0 +1,50 @@
+﻿@model SFA.DAS.DigitalCertificates.Web.Models.Certificates.SelectAddressViewModel
+@using SFA.DAS.DigitalCertificates.Web.Controllers
+@using SFA.DAS.DigitalCertificates.Web.ViewDataKeys
+@{
+    ViewData[ViewDataKeys.Title] = ViewData[ViewDataKeys.ServiceName] + " Select Address";
+    ViewBag.GaData.Vpv = @ViewData[ViewDataKeys.GaDataVpvPrefix] + "select-address";
+}
+
+<div class="govuk-width-container">
+    <a asp-route="@CertificatesController.CertificateStandardRouteGet" asp-route-certificateId="@Model.CertificateId"
+       class="govuk-back-link">Back</a>
+
+    <main class="govuk-main-wrapper" id="main-content">
+        <div class="govuk-grid-row">
+            <div class="govuk-grid-column-two-thirds">
+                <h1 class="govuk-heading-l">
+                    <span class="govuk-caption-l">@Model.CourseName</span>
+                    Select the address that you’d like us to send your certificate to
+                </h1>
+
+                <div class="govuk-inset-text">It will be addressed to @Model.FullName</div>
+
+                <partial name="_ValidationSummary" />
+
+                <form asp-route="@CertificatesController.SelectAddressRoutePost"
+                      asp-route-certificateId="@Model.CertificateId" method="post">
+                    <div class="govuk-form-group govuk-!-margin-top-6" das-highlight-error-for="SearchTerm"
+                         error-class="govuk-form-group--error">
+                        <div id="SearchTerm-hint" class="govuk-hint">Start typing an address or postcode</div>
+                        <p das-validation-for="SearchTerm" class="govuk-error-message"></p>
+                        <input asp-for="SearchTerm" das-highlight-error-for="SearchTerm"
+                               error-class="govuk-input--error" data-role="search-location"
+                               data-submit-on-selection="false" data-default-value=""
+                               class="govuk-input govuk-!-width-two-thirds" type="search"
+                               aria-describedby="SearchTerm-hint" />
+                        @Html.HiddenFor(m => m.SelectedAddress)
+                        <p das-validation-for="SelectedAddress" data-default-value="@Model.SelectedAddress"
+                           class="govuk-error-message"></p>
+                    </div>
+
+                    <p><a asp-route="@CertificatesController.AddAddressRouteGet"
+                              asp-route-certificateId="@Model.CertificateId">Enter address manually</a></p>
+
+                        <button type="submit" class="govuk-button govuk-!-margin-top-4">Continue</button>
+                    </form>
+
+                </div>
+            </div>
+        </main>
+    </div>

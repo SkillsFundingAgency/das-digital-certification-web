@@ -1,4 +1,5 @@
 ﻿using FluentValidation.TestHelper;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using SFA.DAS.DigitalCertificates.Web.Models.Sharing;
 using SFA.DAS.DigitalCertificates.Web.Validators;
@@ -45,16 +46,15 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Validators
         }
 
         [Test]
-        public void When_Email_Has_Valid_Format_But_Domain_Invalid_Should_Fail_With_InvalidDomainErrorMessage()
+        public async Task When_Email_Has_Valid_Format_But_Domain_Invalid_Should_Fail_With_InvalidDomainErrorMessage()
         {
             // Arrange
             var model = new ShareByEmailViewModel { EmailAddress = "user@invalid-domain.test" };
 
             // Act
-            var result = _sut.TestValidate(model);
+            var result = await _sut.TestValidateAsync(model);
 
             // Assert
-
             result.ShouldHaveValidationErrorFor(x => x.EmailAddress)
                 .WithErrorMessage(ShareByEmailViewModelValidator.InvalidDomainErrorMessage);
         }

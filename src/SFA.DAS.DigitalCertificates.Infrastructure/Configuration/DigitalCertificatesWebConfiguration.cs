@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Collections.Generic;
 
 namespace SFA.DAS.DigitalCertificates.Infrastructure.Configuration
@@ -21,6 +22,7 @@ namespace SFA.DAS.DigitalCertificates.Infrastructure.Configuration
         public required string MasterPassword { get; set; }
         public required string StorageConnectionString { get; set; }
         public List<NotificationTemplate>? NotificationTemplates { get; set; }
+        public DateTime? CutoverDate { get; set; }
     }
 
     [ExcludeFromCodeCoverage]

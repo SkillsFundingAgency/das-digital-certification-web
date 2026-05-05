@@ -24,113 +24,103 @@
                     </div>
                 </div>
 
-                <table class="govuk-table">
-                    <caption class="govuk-table__caption govuk-table__caption--m">Apprentice details</caption>
-                    <tbody class="govuk-table__body">
-                        @if (!string.IsNullOrEmpty(Model.GivenNames))
-                        {
-                            <tr class="govuk-table__row">
-                                <th scope="row" class="govuk-table__header govuk-!-width-one-third">First name</th>
-                                <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.GivenNames</td>
-                            </tr>
-                        }
+                <h2 class="govuk-heading-m">Apprentice details</h2>
+                <dl class="govuk-summary-list">
+                    @if (!string.IsNullOrEmpty(Model.GivenNames))
+                    {
+                        <div class="govuk-summary-list__row">
+                            <dt class="govuk-summary-list__key">First name</dt>
+                            <dd class="govuk-summary-list__value">@Model.GivenNames</dd>
+                        </div>
+                    }
 
-                        @if (!string.IsNullOrEmpty(Model.FamilyName))
-                        {
-                            <tr class="govuk-table__row">
-                                <th scope="row" class="govuk-table__header govuk-!-width-one-third">Last name</th>
-                                <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.FamilyName</td>
-                            </tr>
-                        }
+                    @if (!string.IsNullOrEmpty(Model.FamilyName))
+                    {
+                        <div class="govuk-summary-list__row">
+                            <dt class="govuk-summary-list__key">Last name</dt>
+                            <dd class="govuk-summary-list__value">@Model.FamilyName</dd>
+                        </div>
+                    }
 
-                        @if (!string.IsNullOrEmpty(Model.FrameworkCertificateNumber))
-                        {
-                            <tr class="govuk-table__row">
-                                <th scope="row" class="govuk-table__header govuk-!-width-one-third">Certificate number</th>
-                                <td class="govuk-table__cell govuk-!-width-two-thirds">
-                                    @Model.FrameworkCertificateNumber
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
+                    @if (!string.IsNullOrEmpty(Model.FrameworkCertificateNumber))
+                    {
+                        <div class="govuk-summary-list__row">
+                            <dt class="govuk-summary-list__key">Certificate number</dt>
+                            <dd class="govuk-summary-list__value">@Model.FrameworkCertificateNumber</dd>
+                        </div>
+                    }
+                </dl>
 
-                <table class="govuk-table">
-                    <caption class="govuk-table__caption govuk-table__caption--m">Apprenticeship details</caption>
-                    <tbody class="govuk-table__body">
+                <h2 class="govuk-heading-m">Apprenticeship details</h2>
+                <dl class="govuk-summary-list">
                         @if (!string.IsNullOrEmpty(Model.CourseName))
                         {
-                            <tr class="govuk-table__row">
-                                <th scope="row" class="govuk-table__header govuk-!-width-one-third">Course</th>
-                                <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.CourseName</td>
-                            </tr>
+                            <div class="govuk-summary-list__row">
+                                <dt class="govuk-summary-list__key">Course</dt>
+                                <dd class="govuk-summary-list__value">@Model.CourseName</dd>
+                            </div>
                         }
 
                         @if (!string.IsNullOrEmpty(Model.CourseOption))
                         {
-                            <tr class="govuk-table__row">
-                                <th scope="row" class="govuk-table__header govuk-!-width-one-third">Framework pathway</th>
-                                <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.CourseOption</td>
-                            </tr>
+                            <div class="govuk-summary-list__row">
+                                <dt class="govuk-summary-list__key">Framework pathway</dt>
+                                <dd class="govuk-summary-list__value">@Model.CourseOption</dd>
+                            </div>
                         }
 
                         @if (!string.IsNullOrEmpty(Model.CourseLevel))
                         {
-                            <tr class="govuk-table__row">
-                                <th scope="row" class="govuk-table__header govuk-!-width-one-third">Level</th>
-                                <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.CourseLevel</td>
-                            </tr>
+                            <div class="govuk-summary-list__row">
+                                <dt class="govuk-summary-list__key">Level</dt>
+                                <dd class="govuk-summary-list__value">@Model.CourseLevel</dd>
+                            </div>
                         }
 
-                        @if (Model.QualificationsAndAwardingBodies != null &&
-                                                Model.QualificationsAndAwardingBodies.Any())
+                        @if (Model.QualificationsAndAwardingBodies != null && Model.QualificationsAndAwardingBodies.Any())
                         {
-                            <tr class="govuk-table__row">
-                                <th scope="row" class="govuk-table__header govuk-!-width-one-third">
-                                    Qualifications and
-                                    awarding bodies
-                                </th>
-                                <td class="govuk-table__cell govuk-!-width-two-thirds">
+                            <div class="govuk-summary-list__row">
+                                <dt class="govuk-summary-list__key">Qualifications and awarding bodies</dt>
+                                <dd class="govuk-summary-list__value">
                                     <ul class="govuk-list govuk-list--bullet">
                                         @foreach (var q in Model.QualificationsAndAwardingBodies)
                                         {
                                             <li>@q</li>
                                         }
                                     </ul>
-                                </td>
-                            </tr>
+                                </dd>
+                            </div>
                         }
 
                         @if (!string.IsNullOrEmpty(Model.ProviderName))
                         {
-                            <tr class="govuk-table__row">
-                                <th scope="row" class="govuk-table__header govuk-!-width-one-third">Training provider</th>
-                                <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.ProviderName</td>
-                            </tr>
+                            <div class="govuk-summary-list__row">
+                                <dt class="govuk-summary-list__key">Training provider</dt>
+                                <dd class="govuk-summary-list__value">@Model.ProviderName</dd>
+                            </div>
                         }
 
                         @if (Model?.StartDate != null)
                         {
-                            <tr class="govuk-table__row">
-                                <th scope="row" class="govuk-table__header govuk-!-width-one-third">Start date</th>
-                                <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.StartDate?.ToString("dd MMMM yyyy")</td>
-                            </tr>
+                            <div class="govuk-summary-list__row">
+                                <dt class="govuk-summary-list__key">Start date</dt>
+                                <dd class="govuk-summary-list__value">@Model.StartDate?.ToString("dd MMMM yyyy")</dd>
+                            </div>
                         }
 
                         @if (Model?.DateAwarded != null)
                         {
-                            <tr class="govuk-table__row">
-                                <th scope="row" class="govuk-table__header govuk-!-width-one-third">Date awarded</th>
-                                <td class="govuk-table__cell govuk-!-width-two-thirds">@Model.DateAwarded?.ToString("dd MMMM yyyy")</td>
-                            </tr>
+                            <div class="govuk-summary-list__row">
+                                <dt class="govuk-summary-list__key">Date awarded</dt>
+                                <dd class="govuk-summary-list__value">@Model.DateAwarded?.ToString("dd MMMM yyyy")</dd>
+                            </div>
                         }
-                    </tbody>
-                </table>
-                
-                <h2 class="govuk-heading-m">Download certificate</h2>
-                <a asp-route="@CertificatesController.DownloadSharedCertificateFrameworkPdfRouteGet"
-                   asp-route-sharingLinkCode="@Model.SharingLinkCode" draggable="false" class="govuk-button govuk-button--secondary"
-                   data-module="govuk-button">Download certificate (PDF)</a>
+                    </dl>
+
+               <h2 class="govuk-heading-m">Download certificate</h2>
+               <a asp-route="@CertificatesController.DownloadSharedCertificateFrameworkPdfRouteGet"
+                  asp-route-sharingLinkCode="@Model.SharingLinkCode" draggable="false" class="govuk-button govuk-button--secondary"
+                  data-module="govuk-button">Download certificate (PDF)</a>
             </div>
         </div>
     </main>

@@ -31,7 +31,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authentication
             _userServiceMock.Setup(x => x.GetGovUkIdentifier())
                 .Returns(govId);
 
-            _sessionServiceMock.Setup(x => x.GetUlnAuthorisationAsync(govId))
+            _sessionServiceMock.Setup(x => x.GetUlnAuthorisationAsync())
                 .ReturnsAsync(new UlnAuthorisation { Uln = "123" });
 
             var requirement = new UlnAuthorisedRequirement();
@@ -52,7 +52,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authentication
             _userServiceMock.Setup(x => x.GetGovUkIdentifier())
                 .Returns(govId);
 
-            _sessionServiceMock.Setup(x => x.GetUlnAuthorisationAsync(govId))
+            _sessionServiceMock.Setup(x => x.GetUlnAuthorisationAsync())
                 .ReturnsAsync((UlnAuthorisation)null);
 
             var requirement = new UlnAuthorisedRequirement();

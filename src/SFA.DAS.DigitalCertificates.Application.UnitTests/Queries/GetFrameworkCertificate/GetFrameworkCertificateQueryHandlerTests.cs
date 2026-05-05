@@ -4,6 +4,7 @@ using NUnit.Framework;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetFrameworkCertificate;
 using SFA.DAS.DigitalCertificates.Domain.Interfaces;
 using SFA.DAS.DigitalCertificates.Infrastructure.Api.Responses;
+using SFA.DAS.DigitalCertificates.Infrastructure.Constants;
 
 namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetFrameworkCertificate
 {
@@ -48,7 +49,7 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetFramework
                 {
                     new QualificationDetailsResponse { Name = "Q1", AwardingBody = "A1" }
                 },
-                DeliveryInformation = new List<string> { "Del1" }
+                DeliveryInformation = new List<DeliveryInformationResponse> { new DeliveryInformationResponse { Id = "Del1", Action = "Requested", Status = DeliveryInformationStatuses.Submitted, EventTime = DateTime.UtcNow } }
             };
 
             _outerApiMock
@@ -78,7 +79,8 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetFramework
             result.PrintRequestedAt.Should().Be(response.PrintRequestedAt);
             result.PrintRequestedBy.Should().Be(response.PrintRequestedBy);
             result.QualificationsAndAwardingBodies.Should().Contain("Q1, A1");
-            result.DeliveryInformation.Should().Contain("Del1");
+            result.DeliveryInformation.Should().NotBeNull();
+            result.DeliveryInformation!.Select(d => d.Id).Should().Contain("Del1");
 
             _outerApiMock.Verify(x => x.GetFrameworkCertificate(certificateId), Times.Once);
         }

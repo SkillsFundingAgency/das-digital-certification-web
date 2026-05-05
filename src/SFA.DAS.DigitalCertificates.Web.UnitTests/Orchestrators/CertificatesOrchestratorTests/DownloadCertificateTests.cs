@@ -1,4 +1,9 @@
-﻿using FluentAssertions;
+﻿using System;
+using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
+using FluentAssertions;
+using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using Moq;
@@ -9,16 +14,13 @@ using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
 using SFA.DAS.DigitalCertificates.Web.Models.Certificates;
 using SFA.DAS.DigitalCertificates.Web.Orchestrators;
 using SFA.DAS.DigitalCertificates.Web.Services;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOrchestratorTests
 {
     public class DownloadCertificateTests
     {
         private Mock<IMediator> _mediatorMock;
-        private Mock<IHttpContextAccessor> _httpContextAccessorMock;
+        private Mock<IHttpContextAccessor> _contextAccessorMock;
         private Mock<ISessionService> _sessionMock;
         private Mock<IUserService> _userServiceMock;
         private Mock<IBlobService> _blobServiceMock;
@@ -27,12 +29,14 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
         private Mock<IDownloadCertificateService> _downloadCertificateServiceMock;
 
         private CertificatesOrchestrator _sut;
+        private Mock<IValidator<SelectAddressViewModel>> _selectAddressValidatorMock;
+        private Mock<IValidator<AddAddressManualViewModel>> _addAddressValidatorMock;
 
         [SetUp]
         public void SetUp()
         {
             _mediatorMock = new Mock<IMediator>();
-            _httpContextAccessorMock = new Mock<IHttpContextAccessor>();
+            _contextAccessorMock = new Mock<IHttpContextAccessor>();
             _sessionMock = new Mock<ISessionService>();
             _userServiceMock = new Mock<IUserService>();
             _blobServiceMock = new Mock<IBlobService>();
@@ -54,11 +58,16 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
                 LicenseBlobName = "license-blob"
             };
 
+            _selectAddressValidatorMock = new Mock<IValidator<SelectAddressViewModel>>();
+            _addAddressValidatorMock = new Mock<IValidator<AddAddressManualViewModel>>();
+
             _sut = new CertificatesOrchestrator(
                 _mediatorMock.Object,
-                _httpContextAccessorMock.Object,
+                _contextAccessorMock.Object,
                 _sessionMock.Object,
                 _userServiceMock.Object,
+                _selectAddressValidatorMock.Object,
+                _addAddressValidatorMock.Object,
                 _blobServiceMock.Object,
                 _asposeLicenseServiceMock.Object,
                 _digitalCertificatesWebConfig,
