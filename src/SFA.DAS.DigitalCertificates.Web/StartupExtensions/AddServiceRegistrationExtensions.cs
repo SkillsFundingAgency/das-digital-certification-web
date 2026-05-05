@@ -1,12 +1,15 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using Azure.Storage.Blobs;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using RestEase.HttpClientFactory;
 using SFA.DAS.DigitalCertificates.Application.Commands.CreateOrUpdateUser;
+using SFA.DAS.DigitalCertificates.Domain.Extensions;
 using SFA.DAS.DigitalCertificates.Domain.Interfaces;
 using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
 using SFA.DAS.DigitalCertificates.Infrastructure.Services.CacheStorage;
+using SFA.DAS.DigitalCertificates.Infrastructure.Services.SessionStorage;
 using SFA.DAS.DigitalCertificates.Web.Attributes;
 using SFA.DAS.DigitalCertificates.Web.Authentication;
 using SFA.DAS.DigitalCertificates.Web.Authorization;
@@ -14,8 +17,7 @@ using SFA.DAS.DigitalCertificates.Web.Orchestrators;
 using SFA.DAS.DigitalCertificates.Web.Services;
 using SFA.DAS.GovUK.Auth.Authentication;
 using SFA.DAS.Http.Configuration;
-using SFA.DAS.DigitalCertificates.Domain.Extensions;
-using SFA.DAS.DigitalCertificates.Infrastructure.Services.SessionStorage;
+using System.Diagnostics.CodeAnalysis;
 
 namespace SFA.DAS.DigitalCertificates.Web.StartupExtensions
 {
@@ -31,6 +33,15 @@ namespace SFA.DAS.DigitalCertificates.Web.StartupExtensions
             services.AddTransient<ICacheStorageService, CacheStorageService>();
             services.AddTransient<ICacheService, CacheService>();
             services.AddTransient<IUserService, UserService>();
+            services.AddSingleton(sp =>
+            {
+                var configuration = sp.GetRequiredService<IConfiguration>();
+                var connectionString = configuration["StorageConnectionString"];
+                return new BlobServiceClient(connectionString);
+            });
+            services.AddTransient<IBlobService, BlobService>();
+            services.AddTransient<IAsposeLicenseService, AsposeLicenseService>();
+            services.AddTransient<IAsposeLicenseWrapper, AsposeLicenseWrapper>();
 
             services.AddScoped<ISessionStorageService, SessionStorageService>();
             services.AddScoped<ISessionService, SessionService>();
@@ -44,6 +55,7 @@ namespace SFA.DAS.DigitalCertificates.Web.StartupExtensions
             services.AddTransient<IHomeOrchestrator, HomeOrchestrator>();
             services.AddTransient<ICertificatesOrchestrator, CertificatesOrchestrator>();
             services.AddTransient<ISharingOrchestrator, SharingOrchestrator>();
+            services.AddScoped<IDownloadCertificateService, DownloadCertificateService>();
             services.AddTransient<ILocationsOrchestrator, LocationsOrchestrator>();
 
             services.AddTransient<IClaimsTransformation, DigitalCertificatesClaimsTransformer>();

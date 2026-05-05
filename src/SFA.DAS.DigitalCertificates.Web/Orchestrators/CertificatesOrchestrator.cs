@@ -1,22 +1,28 @@
-﻿using SFA.DAS.DigitalCertificates.Application.Queries.GetFrameworkCertificate;
-using SFA.DAS.DigitalCertificates.Application.Queries.GetStandardCertificate;
-using SFA.DAS.DigitalCertificates.Application.Commands.CreateUserAction;
-using SFA.DAS.DigitalCertificates.Domain.Models;
-using SFA.DAS.DigitalCertificates.Web.Models.Certificates;
-using SFA.DAS.DigitalCertificates.Web.Services;
-using MediatR;
-using System;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Aspose.Pdf;
+using Aspose.Pdf.Forms;
 using FluentValidation;
-using SFA.DAS.DigitalCertificates.Application.Queries.GetLocations;
-using SFA.DAS.DigitalCertificates.Infrastructure.Api.Requests;
+using MediatR;
+using Microsoft.AspNetCore.Http;
+using SFA.DAS.DigitalCertificates.Application.Commands.CreateUserAction;
 using SFA.DAS.DigitalCertificates.Application.Commands.RequestPrintCertificate;
+using SFA.DAS.DigitalCertificates.Application.Queries.GetFrameworkCertificate;
+using SFA.DAS.DigitalCertificates.Application.Queries.GetLocations;
+using SFA.DAS.DigitalCertificates.Application.Queries.GetStandardCertificate;
+using SFA.DAS.DigitalCertificates.Domain.Models;
+using SFA.DAS.DigitalCertificates.Infrastructure.Api.Requests;
+using SFA.DAS.DigitalCertificates.Infrastructure.Api.Responses;
 using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
 using SFA.DAS.DigitalCertificates.Infrastructure.Constants;
-using System.Collections.Generic;
-using SFA.DAS.DigitalCertificates.Infrastructure.Api.Responses;
-using Microsoft.AspNetCore.Http;
+using SFA.DAS.DigitalCertificates.Web.Extensions;
+using SFA.DAS.DigitalCertificates.Web.Models.Certificates;
+using SFA.DAS.DigitalCertificates.Web.Services;
 
 namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 {
@@ -24,24 +30,40 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
     {
         private readonly ISessionService _sessionService;
         private readonly IUserService _userService;
-        private readonly DigitalCertificatesWebConfiguration _configuration;
+        private readonly DigitalCertificatesWebConfiguration _digitalCertificatesWebConfiguration;
+        private readonly IBlobService _blob;
+        private readonly IAsposeLicenseService _asposeLicenseService;   
+        private readonly IDownloadCertificateService _downloadCertificateService;
+        private const string Level = "Level";
+        private const string FullName = "Full Name";
+        private const string PassedInfo = "Passed info";
+        private const string AchievedGrade = "Achieved grade";
+        private const string AwardedOn = "Awarded on";
+        private const string DateFormat = "d MMMM yyyy";
+        private const string CertificateNumber = "Certificate no";
         private readonly IValidator<SelectAddressViewModel> _selectAddressValidator;
         private readonly IValidator<AddAddressManualViewModel> _addAddressValidator;
 
-        public CertificatesOrchestrator(IMediator mediator,
-            IHttpContextAccessor httpContextAccessor,
+        public CertificatesOrchestrator(IMediator mediator, 
+            IHttpContextAccessor httpContextAccessor, 
             ISessionService sessionService, 
             IUserService userService,
             IValidator<SelectAddressViewModel> selectAddressValidator,
             IValidator<AddAddressManualViewModel> addAddressValidator,
-            DigitalCertificatesWebConfiguration configuration)
+            IBlobService blob,
+            IAsposeLicenseService apposeLicenseService,
+            DigitalCertificatesWebConfiguration digitalCertificatesPdfConfiguration,
+            IDownloadCertificateService downloadCertificateService)
             : base(mediator, httpContextAccessor)
         {
             _sessionService = sessionService;
             _userService = userService;
+            _blob = blob;
+            _asposeLicenseService = apposeLicenseService;
+            _digitalCertificatesWebConfiguration = digitalCertificatesPdfConfiguration;
+            _downloadCertificateService = downloadCertificateService;
             _selectAddressValidator = selectAddressValidator;
             _addAddressValidator = addAddressValidator;
-            _configuration = configuration;
         }
 
         public async Task<CertificatesListViewModel> GetCertificatesListViewModel()
@@ -50,6 +72,18 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             {
                 Certificates = await _sessionService.GetOwnedCertificatesAsync()
             };
+        }
+
+        public async Task<DownloadCertificateViewModel?> GetDownloadCertificateViewModelAsync(Guid certificateId)
+        {
+            var result = await Mediator.Send(new GetStandardCertificateQuery { CertificateId = certificateId });
+
+            if (result == null)
+                return null;
+
+            var model = result.ToDownloadCertificateRequest(certificateId);
+
+            return _downloadCertificateService.CreateDownloadCertificateViewModel(model);
         }
 
         public async Task<CertificateStandardViewModel?> GetCertificateStandardViewModel(Guid certificateId)
@@ -96,6 +130,18 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             viewModel.ShowBackLink = (owned?.Count() ?? 0) > 1;
 
             return viewModel;
+        }
+
+        public async Task<DownloadCertificateViewModel?> GetDownloadFrameworkCertificateViewModelAsync(Guid certificateId)
+        {
+            var result = await Mediator.Send(new GetFrameworkCertificateQuery { CertificateId = certificateId });
+
+            if (result == null)
+                return null;
+
+            var model = result.ToDownloadCertificateRequest(certificateId);
+
+            return _downloadCertificateService.CreateDownloadCertificateViewModel(model);
         }
 
         public async Task<CertificateFrameworkViewModel?> GetCertificateFrameworkViewModel(Guid certificateId)
@@ -146,6 +192,119 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             return viewModel;
         }
 
+        [ExcludeFromCodeCoverage]
+        public async Task<byte[]> GenerateCertificateAsync(DownloadCertificateViewModel model)
+        {
+            byte[]? templateBytes = null;
+            var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                [FullName] = model.FullName,                          
+                [AwardedOn] = model.DateAwarded.ToString(DateFormat, CultureInfo.InvariantCulture) ?? string.Empty,
+                [CertificateNumber] = model.CertificateNumber
+            };
+
+            if (model.CertificateType == CertificateType.Standard)
+            {
+                templateBytes = model.CoronationEmblem ? await _blob.GetBlobBytesAsync(_digitalCertificatesWebConfiguration.ContainerName, _digitalCertificatesWebConfiguration.GreenStandardTemplateBlobName)
+                                                        : await _blob.GetBlobBytesAsync(_digitalCertificatesWebConfiguration.ContainerName, _digitalCertificatesWebConfiguration.StandardTemplateBlobName);
+                values.Add(AchievedGrade, model.OverallGrade ?? string.Empty);
+                values.Add(PassedInfo, string.Join(Environment.NewLine,
+                    new[]
+                    {
+                model.CourseName,
+                model.CourseOption,
+                $"{Level} {model.CourseLevel}"
+                    }.Where(x => !string.IsNullOrWhiteSpace(x))));
+            }
+            else if (model.CertificateType == CertificateType.Framework)
+            {
+                templateBytes = await _blob.GetBlobBytesAsync(_digitalCertificatesWebConfiguration.ContainerName, _digitalCertificatesWebConfiguration.FrameworkTemplateBlobName);
+                values.Add(PassedInfo, string.Join(Environment.NewLine,
+                        new[]
+                        {
+                model.CourseName,
+                model.CourseOption,
+                $"{model.CourseLevel}  {Level}"
+                        }.Where(x => !string.IsNullOrWhiteSpace(x))));
+            }
+
+            if (templateBytes is null)
+            {
+                throw new InvalidOperationException("Template bytes were not loaded.");
+            }
+                       
+            var output = await CreatePDFMemoryStream(templateBytes, values);
+            return output.ToArray();
+        }
+
+        [ExcludeFromCodeCoverage]
+        private async Task<MemoryStream> CreatePDFMemoryStream(byte[] templateBytes, Dictionary<string, string> values)
+        {
+            await _asposeLicenseService.GetAsposeLicense();
+
+            var templateStream = new MemoryStream(templateBytes);
+            var document = new Document(templateStream);
+            var fields = document.Form.Fields.Cast<Field>().ToList();
+
+            ValidateRequiredFields(fields, values.Keys);
+
+            foreach (var kv in values)
+            {
+                var field = FindField(fields, kv.Key);
+
+                if (field == null)
+                {
+                    continue;
+                }
+
+                if (field is TextBoxField textBox)
+                {
+                    textBox.Value = kv.Value ?? string.Empty;
+                    textBox.ReadOnly = true;
+                }
+                else
+                {
+                    field.Value = kv.Value ?? string.Empty;
+                }
+            }
+
+            document.Form.Flatten();
+            var output = new MemoryStream();
+            document.Encrypt(
+                userPassword: "",
+                ownerPassword: _digitalCertificatesWebConfiguration.MasterPassword,
+                permissions: Permissions.PrintDocument,
+                cryptoAlgorithm: CryptoAlgorithm.AESx128);
+
+            document.Save(output);
+            return output;
+        }
+
+        private static void ValidateRequiredFields(IEnumerable<Field> fields, IEnumerable<string> requiredFieldNames)
+        {
+            var missingFields = requiredFieldNames
+                .Where(required => FindField(fields, required) is null)
+                .ToList();
+
+            if (missingFields.Count != 0)
+            {
+                throw new InvalidOperationException(
+                    $"The PDF template is missing required field(s): {string.Join(", ", missingFields)}");
+            }
+        }
+
+        private static Field? FindField(IEnumerable<Field> fields, string key)
+        {
+            if (string.IsNullOrWhiteSpace(key))
+            {
+                return null;
+            }
+
+            return fields.FirstOrDefault(f =>
+                string.Equals(f.PartialName, key, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(f.FullName, key, StringComparison.OrdinalIgnoreCase));
+        }
+   
         public async Task<CreateUserActionForCertificateResult> CreateUserActionForCertificate(Guid certificateId, ActionType actionType)
         {
             var userId = _userService.GetUserId();
@@ -366,7 +525,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             string email = GetUserEmail();
             string userName = GetUserDisplayName();
 
-            var templateId = GetTemplateId(_configuration, NotificationTemplateNames.PrintRequest);
+            var templateId = GetTemplateId(_digitalCertificatesWebConfiguration, NotificationTemplateNames.PrintRequest);
 
             var deliveryAddress = await _sessionService.GetDeliveryAddressAsync();
 
@@ -386,7 +545,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 {
                     EmailAddress = email,
                     UserName = userName,
-                    LinkDomain = _configuration.ServiceBaseUrl,
+                    LinkDomain = _digitalCertificatesWebConfiguration.ServiceBaseUrl,
                     TemplateId = templateId ?? string.Empty
                 }
             };
@@ -415,7 +574,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 
         private (Enums.PrintStatus status, DateTime? date, string? message) MapPrintStatus(List<DeliveryInformationResponse>? deliveryInformation)
         {
-            var cutoverDate = _configuration.CutoverDate;
+            var cutoverDate = _digitalCertificatesWebConfiguration.CutoverDate;
 
             if (deliveryInformation == null || !deliveryInformation.Any())
             {

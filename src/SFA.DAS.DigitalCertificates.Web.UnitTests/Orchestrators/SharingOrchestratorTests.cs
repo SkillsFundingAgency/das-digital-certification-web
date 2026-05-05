@@ -37,6 +37,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         private Mock<ISessionService> _sessionServiceMock;
         private Mock<IValidator<ShareByEmailViewModel>> _shareByEmailValidatorMock;
         private Mock<IDateTimeHelper> _dateTimeHelperMock;
+        private Mock<IDownloadCertificateService> _downloadCertificateService;
         
         private DigitalCertificatesWebConfiguration _digitalCertificatesWebConfiguration;
         private SharingOrchestrator _sut;
@@ -51,6 +52,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             _sessionServiceMock = new Mock<ISessionService>();
             _shareByEmailValidatorMock = new Mock<IValidator<ShareByEmailViewModel>>();
             _dateTimeHelperMock = new Mock<IDateTimeHelper>();
+            _downloadCertificateService = new Mock<IDownloadCertificateService>();
             _dateTimeHelperMock.SetupGet(d => d.Now).Returns(DateTime.UtcNow);
 
             var claims = new[]
@@ -76,7 +78,15 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 NotificationTemplates = new List<NotificationTemplate>
                 {
                     new NotificationTemplate { TemplateName = "SharingEmail", TemplateId = "template-id" }
-                }
+                },
+                StandardTemplateBlobName = "standard-template",
+                GreenStandardTemplateBlobName = "green-standard-template",
+                FrameworkTemplateBlobName = "framework-template",
+                StorageConnectionString = "UseDevelopmentStorage=true",
+                ContainerName = "test-container",
+                AsposeLicenseContainerName = "test-license-container",
+                LicenseBlobName = "license-blob",
+                MasterPassword = "master-password"
             };
 
             _sut = new SharingOrchestrator(
@@ -86,7 +96,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 _sessionServiceMock.Object, 
                 _digitalCertificatesWebConfiguration, 
                 _dateTimeHelperMock.Object, 
-                _shareByEmailValidatorMock.Object);
+                _shareByEmailValidatorMock.Object, 
+                _downloadCertificateService.Object);
         }
 
         [TearDown]
@@ -1375,6 +1386,43 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             result.StartDate.Should().Be(cert.StartDate);
             result.QualificationsAndAwardingBodies.Should().BeEquivalentTo(cert.QualificationsAndAwardingBodies);
             result.FormattedExpiry.Should().Be(expiry.ToUkExpiryDateTimeString());
+        }
+
+        [Test]
+        public async Task GetDownloadSharedStandardCertificateViewModelAsync_Returns_Null_When_Sharing_Has_Expired()
+        {
+            // Arrange
+            var code = Guid.NewGuid();
+            var certId = Guid.NewGuid();
+
+            var shareInfo = new GetSharingByCodeQueryResult
+            {
+                CertificateId = certId,
+                CertificateType = CertificateType.Standard,
+                ExpiryTime = DateTime.UtcNow.AddMinutes(-1)
+            };
+
+            _mediatorMock
+                .Setup(m => m.Send(
+                    It.Is<GetSharingByCodeQuery>(q => q.Code == code),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(shareInfo);
+
+            // Act
+            var result = await _sut.GetDownloadSharedStandardCertificateViewModelAsync(code);
+
+            // Assert
+            result.Should().BeNull();
+
+            _mediatorMock.Verify(m => m.Send(
+                    It.Is<GetSharingByCodeQuery>(q => q.Code == code),
+                    It.IsAny<CancellationToken>()),
+                Times.Once);
+
+            _mediatorMock.Verify(m => m.Send(
+                    It.IsAny<GetSharedStandardCertificateQuery>(),
+                    It.IsAny<CancellationToken>()),
+                Times.Never);            
         }
     }
 }

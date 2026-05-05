@@ -15,7 +15,6 @@ namespace SFA.DAS.DigitalCertificates.Infrastructure.Api.Responses
         public string? OverallGrade { get; set; }
         public string? ProviderName { get; set; }
         public DateTime? StartDate { get; set; }
-
-        
+        public bool CoronationEmblem { get; set; }
     }
 }
