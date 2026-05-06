@@ -30,7 +30,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         public const string KnowYearRouteGet = nameof(KnowYearRouteGet);
         public const string KnowYearRoutePost = nameof(KnowYearRoutePost);
         public const string CannotMatchRouteGet = nameof(CannotMatchRouteGet);
-        public const string LockedRouteGet = nameof(LockedRouteGet);
+        public const string LockedOutRouteGet = nameof(LockedOutRouteGet);
         public const string NotFoundRouteGet = nameof(NotFoundRouteGet);
         #endregion
 
@@ -257,7 +257,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> CannotMatch()
         {
-            // TODO: Add unit test cases and complete any remaining changes
             if (User?.Identity?.IsAuthenticated == true)
             {
                 var ulnAuthorisation = await _sessionService.GetUlnAuthorisationAsync();
@@ -269,14 +268,13 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
 
             var reference = await _authoriseOrchestrator.GetLatestUserActionReferenceAsync(ActionType.NotMatched);
             var model = new CannotMatchViewModel { ReferenceNumber = reference };
-            return View(model);
+            return View("ShutterPage", model);
         }
 
         [HttpGet("not-found", Name = NotFoundRouteGet)]
         [AllowAnonymous]
         public async Task<IActionResult> NotFoundPage()
         {
-            // TODO: Add unit test cases and complete any remaining changes
             if (User?.Identity?.IsAuthenticated == true)
             {
                 var ulnAuthorisation = await _sessionService.GetUlnAuthorisationAsync();
@@ -288,7 +286,29 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
 
             var reference = await _authoriseOrchestrator.GetLatestUserActionReferenceAsync(ActionType.NotFound);
             var model = new CannotMatchViewModel { ReferenceNumber = reference };
-            return View("CannotMatch", model);
+            return View("ShutterPage", model);
+        }
+
+        [HttpGet("locked", Name = LockedOutRouteGet)]
+        [AllowAnonymous]
+        public async Task<IActionResult> Locked()
+        {
+            if (User?.Identity?.IsAuthenticated == true)
+            {
+                var ulnAuthorisation = await _sessionService.GetUlnAuthorisationAsync();
+                if (ulnAuthorisation != null)
+                {
+                    return RedirectToRoute(CertificatesController.CertificatesListRouteGet);
+                }
+            }
+
+            var reference = await _authoriseOrchestrator.GetLatestUserActionReferenceAsync(ActionType.NotMatched);
+            if (string.IsNullOrWhiteSpace(reference))
+            {
+                reference = await _authoriseOrchestrator.CreateUserActionForCannotMatchAsync(ActionType.NotMatched);
+            }
+            var model = new CannotMatchViewModel { ReferenceNumber = reference };
+            return View("ShutterPage", model);
         }
 
         [HttpGet("know-year", Name = KnowYearRouteGet)]
