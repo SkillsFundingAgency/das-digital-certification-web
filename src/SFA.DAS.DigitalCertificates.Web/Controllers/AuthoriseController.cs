@@ -7,8 +7,11 @@ using SFA.DAS.DigitalCertificates.Web.Orchestrators;
 using SFA.DAS.DigitalCertificates.Web.Enums;
 using System.Threading.Tasks;
 using SFA.DAS.DigitalCertificates.Web.Authentication;
+using System.Security.Claims;
+using SFA.DAS.GovUK.Auth.Authentication;
 using SFA.DAS.DigitalCertificates.Web.Models.Authorise;
 using SFA.DAS.DigitalCertificates.Web.Extensions;
+using SFA.DAS.DigitalCertificates.Domain.Models;
 
 namespace SFA.DAS.DigitalCertificates.Web.Controllers
 {
@@ -29,6 +32,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         public const string KnowYearRouteGet = nameof(KnowYearRouteGet);
         public const string KnowYearRoutePost = nameof(KnowYearRoutePost);
         public const string CannotMatchRouteGet = nameof(CannotMatchRouteGet);
+        public const string LockedRouteGet = nameof(LockedRouteGet);
+        public const string NotFoundRouteGet = nameof(NotFoundRouteGet);
         #endregion
 
         private readonly ISessionService _sessionService;
@@ -49,7 +54,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
 
             if (!hasMatches)
             {
-                return await RedirectToCannotMatchAsync();
+                return await RedirectToNotFoundAsync();
             }
 
             return View();
@@ -100,7 +105,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
                 case MatchOutcome.SingleMatch:
                     return RedirectToRoute(CheckAnswersRouteGet);
                 default:
-                    return await RedirectToCannotMatchAsync();
+                    return await RedirectToNotFoundAsync();
             }
         }
 
@@ -144,14 +149,14 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             switch (matchOutcome)
             {
                 case MatchOutcome.NoData:
-                    return await RedirectToCannotMatchAsync();
+                    return await RedirectToNotFoundAsync();
                 case MatchOutcome.NoMatch:
                     return RedirectToRoute(KnowYearRouteGet);
                 case MatchOutcome.MultipleMatches:
                 case MatchOutcome.SingleMatch:
                     return RedirectToRoute(CheckAnswersRouteGet);
                 default:
-                    return RedirectToRoute(CannotMatchRouteGet);
+                    return await RedirectToNotFoundAsync();
             }
         }
 
@@ -162,7 +167,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             var model = await _authoriseOrchestrator.GetSelectProviderViewModelAsync();
             if (model == null || model.Providers == null || !model.Providers.Any())
             {
-                return await RedirectToCannotMatchAsync();
+                return await RedirectToNotFoundAsync();
             }
 
             return View(model);
@@ -226,8 +231,18 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
 
         private async Task<IActionResult> RedirectToCannotMatchAsync()
         {
+            await _authoriseOrchestrator.CreateUserActionForCannotMatchAsync(ActionType.NotMatched);
             await _sessionService.ClearAuthorisationAnswersAsync();
+
             return RedirectToRoute(CannotMatchRouteGet);
+        }
+
+        private async Task<IActionResult> RedirectToNotFoundAsync()
+        {
+            await _authoriseOrchestrator.CreateUserActionForCannotMatchAsync(ActionType.NotFound);
+            await _sessionService.ClearAuthorisationAnswersAsync();
+
+            return RedirectToRoute(NotFoundRouteGet);
         }
 
         private IActionResult HandleNoMatch()
@@ -241,10 +256,43 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         }
 
         [HttpGet("cannot-match", Name = CannotMatchRouteGet)]
-        [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.VerifiedAndNotUlnAuthorised))]
-        public IActionResult CannotMatch()
+        [AllowAnonymous]
+        public async Task<IActionResult> CannotMatch()
         {
-            return View();
+            if (User?.Identity?.IsAuthenticated == true)
+            {
+                var ulnAuthorisation = await _sessionService.GetUlnAuthorisationAsync();
+                if (ulnAuthorisation != null)
+                {
+                    return RedirectToRoute(CertificatesController.CertificatesListRouteGet);
+                }
+
+                return RedirectToRoute(NeedMoreInformationRouteGet);
+            }
+
+            var reference = await _authoriseOrchestrator.GetLatestUserActionReferenceAsync(ActionType.NotMatched);
+            var model = new CannotMatchViewModel { ReferenceNumber = reference };
+            return View(model);
+        }
+
+        [HttpGet("not-found", Name = NotFoundRouteGet)]
+        [AllowAnonymous]
+        public async Task<IActionResult> NotFoundPage()
+        {
+            if (User?.Identity?.IsAuthenticated == true)
+            {
+                var ulnAuthorisation = await _sessionService.GetUlnAuthorisationAsync();
+                if (ulnAuthorisation != null)
+                {
+                    return RedirectToRoute(CertificatesController.CertificatesListRouteGet);
+                }
+
+                return RedirectToRoute(NeedMoreInformationRouteGet);
+            }
+
+            var reference = await _authoriseOrchestrator.GetLatestUserActionReferenceAsync(ActionType.NotFound);
+            var model = new CannotMatchViewModel { ReferenceNumber = reference };
+            return View("CannotMatch", model);
         }
 
         [HttpGet("know-year", Name = KnowYearRouteGet)]

@@ -1,17 +1,27 @@
-﻿@{
-    ViewData["Title"] = ViewData["ServiceName"] + " We cannot match your information";
+﻿@using SFA.DAS.DigitalCertificates.Web.ViewDataKeys
+@model SFA.DAS.DigitalCertificates.Web.Models.Authorise.CannotMatchViewModel
+@{
+    ViewData[ViewDataKeys.Title] = ViewData[ViewDataKeys.ServiceName] + " We cannot match your information";
+    ViewBag.GaData.Vpv = ViewData[ViewDataKeys.GaDataVpvPrefix] + "we-cannot-match-your-information";
 }
-@* TODO: Need to update this page in the upcoming ticket *@
 <main class="govuk-main-wrapper govuk-main-wrapper--auto-spacing">
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
             <h1 class="govuk-heading-l">We cannot match your information to any apprenticeship results</h1>
 
-            <p class="govuk-body">
-                We couldn't find any apprenticeship results that match the details provided. Check your answers and try again, or contact your training provider for help.
-            </p>
+            <div class="govuk-inset-text">If you’re waiting for the result of your apprenticeship assessment, contact your training provider.</div>
 
-            <a asp-route="SelectCourseRouteGet" class="govuk-link">Back to course selection</a>
+            <p class="govuk-body">If you have your assessment result or have previously completed an apprenticeship, contact us for support.</p>
+
+            <p class="govuk-body">Your reference number is <strong>@Model.ReferenceNumber</strong></p>
+       
+            <h2 class="govuk-heading-s">Email</h2>
+            <p class="govuk-body">Include your reference number in the email.</p>
+            <p class="govuk-body"><a href="mailto:helpdesk@manage-apprenticeships.service.gov.uk" class="govuk-link">helpdesk@manage-apprenticeships.service.gov.uk</a></p>
+
+            <h2 class="govuk-heading-s">Phone</h2>
+            <p class="govuk-body">Have your reference number with you when you call.</p>
+            <p class="govuk-body">Phone: 0800 0150 600<br/>Monday to Friday, 9am to 6pm<br/><a target="_blank" rel="noopener" href="https://www.gov.uk/call-charges" class="govuk-link">Find out about call charges</a></p>
         </div>
     </div>
 </main>

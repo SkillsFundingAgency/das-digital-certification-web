@@ -44,6 +44,9 @@ namespace SFA.DAS.DigitalCertificates.Domain.Interfaces
         [Post("/users/{userId}/actions")]
         Task<CreateUserActionResponse> CreateUserAction([Path] Guid userId, [Body] CreateUserActionRequest request);
 
+        [Get("/users/{userId}/actions")]
+        Task<GetUserActionsResponse> GetUserActions([Path] Guid userId);
+
         [Get("/sharing/{sharingId}")]
         Task<GetSharingByIdResponse> GetSharingById([Path] Guid sharingId, [Query("limit")] int? limit);
 
