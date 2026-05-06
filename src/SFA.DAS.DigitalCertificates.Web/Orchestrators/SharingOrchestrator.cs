@@ -1,52 +1,56 @@
 ﻿using FluentValidation;
 using MediatR;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using SFA.DAS.DigitalCertificates.Application.Commands.CreateSharing;
+using SFA.DAS.DigitalCertificates.Application.Commands.CreateSharingAccess;
 using SFA.DAS.DigitalCertificates.Application.Commands.CreateSharingEmail;
+using SFA.DAS.DigitalCertificates.Application.Commands.CreateSharingEmailAccess;
+using SFA.DAS.DigitalCertificates.Application.Queries.GetSharedFrameworkCertificate;
+using SFA.DAS.DigitalCertificates.Application.Queries.GetSharedStandardCertificate;
+using SFA.DAS.DigitalCertificates.Application.Queries.GetSharingByCode;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetSharingById;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetSharings;
-using SFA.DAS.DigitalCertificates.Application.Queries.GetSharingByCode;
-using SFA.DAS.DigitalCertificates.Application.Commands.CreateSharingAccess;
-using SFA.DAS.DigitalCertificates.Application.Commands.CreateSharingEmailAccess;
 using SFA.DAS.DigitalCertificates.Domain.Extensions;
 using SFA.DAS.DigitalCertificates.Domain.Models;
 using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
 using SFA.DAS.DigitalCertificates.Infrastructure.Constants;
 using SFA.DAS.DigitalCertificates.Web.Extensions;
+using SFA.DAS.DigitalCertificates.Web.Models.Certificates;
 using SFA.DAS.DigitalCertificates.Web.Models.Sharing;
 using SFA.DAS.DigitalCertificates.Web.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using SFA.DAS.DigitalCertificates.Web.Models.Certificates;
-using SFA.DAS.DigitalCertificates.Application.Queries.GetSharedStandardCertificate;
-using SFA.DAS.DigitalCertificates.Application.Queries.GetSharedFrameworkCertificate;
-
+using Certificate = SFA.DAS.DigitalCertificates.Domain.Models.Certificate;
 namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 {
     public class SharingOrchestrator : BaseOrchestrator, ISharingOrchestrator
     {
         private readonly IUserService _userService;
-        private readonly ICacheService _cacheService;
         private readonly ISessionService _sessionService;
         private readonly DigitalCertificatesWebConfiguration _digitalCertificatesWebConfiguration;
         private readonly IDateTimeHelper _dateTimeHelper;
         private readonly IValidator<ShareByEmailViewModel> _shareByEmailValidator;
+        private readonly IDownloadCertificateService _downloadCertificateService;
 
-        public SharingOrchestrator(IMediator mediator, IUserService userService, ICacheService cacheService,
+        public SharingOrchestrator(IMediator mediator,
+            IHttpContextAccessor httpContextAccessor,
+            IUserService userService,
             ISessionService sessionService,
             DigitalCertificatesWebConfiguration digitalCertificatesWebConfiguration,
             IDateTimeHelper dateTimeHelper,
-            IValidator<ShareByEmailViewModel> shareByEmailValidator)
-            : base(mediator)
+            IValidator<ShareByEmailViewModel> shareByEmailValidator,
+            IDownloadCertificateService downloadCertificateService)
+            : base(mediator, httpContextAccessor)
         {
             _userService = userService;
-            _cacheService = cacheService;
             _sessionService = sessionService;
             _digitalCertificatesWebConfiguration = digitalCertificatesWebConfiguration;
             _shareByEmailValidator = shareByEmailValidator;
             _dateTimeHelper = dateTimeHelper;
+            _downloadCertificateService = downloadCertificateService;
         }
 
         public async Task<CreateCertificateSharingViewModel> GetSharings(Guid certificateId)
@@ -202,7 +206,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 
             var messageText = $"This link will stop working at {sharingResponse.ExpiryTime.ToUkExpiryDateTimeString()}.";
 
-            var userName = await GetUserDisplayNameAsync();
+            var userName = GetUserDisplayName();
 
             var templateId = GetTemplateId(_digitalCertificatesWebConfiguration, NotificationTemplateNames.SharingEmail);
 
@@ -286,17 +290,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             return certificates?.FirstOrDefault(c => c.CertificateId == certificateId);
         }
 
-        private async Task<string> GetUserDisplayNameAsync()
-        {
-            var userDetails = await _sessionService.GetUserDetailsAsync();
-            if (userDetails == null)
-            {
-                return string.Empty;
-            }
-
-            return string.IsNullOrWhiteSpace(userDetails.FullName) ? string.Empty : userDetails.FullName;
-        }
-
         public async Task<bool> ValidateShareByEmailViewModel(ShareByEmailViewModel viewModel, ModelStateDictionary modelState)
         {
             return await ValidateViewModel(_shareByEmailValidator, viewModel, modelState);
@@ -369,6 +362,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             return new SharedCertificateStandardViewModel
             {
                 CertificateId = shareInfo.CertificateId,
+                SharingLinkCode = code,
                 FamilyName = cert.FamilyName,
                 GivenNames = cert.GivenNames,
                 CertificateReference = cert.CertificateReference,
@@ -384,18 +378,54 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             };
         }
 
-        public async Task<SharedCertificateFrameworkViewModel?> GetSharedFrameworkCertificateViewModel(Guid code)
+        public async Task<DownloadCertificateViewModel?> GetDownloadSharedStandardCertificateViewModelAsync(Guid code)
         {
             var shareInfo = await Mediator.Send(new GetSharingByCodeQuery { Code = code });
+            
+            if (shareInfo == null || shareInfo.ExpiryTime <= _dateTimeHelper.Now)
+                return null;
+
+            var cert = await Mediator.Send(new GetSharedStandardCertificateQuery { Id = shareInfo.CertificateId });
+            
+            if (cert == null) 
+                return null;
+
+            var model = cert.ToDownloadCertificateRequest(shareInfo.CertificateId);
+            return _downloadCertificateService.CreateDownloadCertificateViewModel(model);
+        }
+
+        public async Task<DownloadCertificateViewModel?> GetDownloadSharedFrameworkCertificateViewModelAsync(Guid code)
+        {
+            var shareInfo = await Mediator.Send(new GetSharingByCodeQuery { Code = code });
+            
             if (shareInfo == null)
                 return null;
 
             var cert = await Mediator.Send(new GetSharedFrameworkCertificateQuery { Id = shareInfo.CertificateId });
-            if (cert == null) return null;
+
+            if (cert == null)
+                return null;
+
+            var model = cert.ToDownloadCertificateRequest(shareInfo.CertificateId);
+            return _downloadCertificateService.CreateDownloadCertificateViewModel(model);
+        }
+
+        public async Task<SharedCertificateFrameworkViewModel?> GetSharedFrameworkCertificateViewModel(Guid code)
+        {
+            var shareInfo = await Mediator.Send(new GetSharingByCodeQuery { Code = code });
+            
+            if (shareInfo == null)
+                return null;
+
+            var cert = await Mediator.Send(new GetSharedFrameworkCertificateQuery { Id = shareInfo.CertificateId });
+
+            if (cert == null) 
+                return null;
 
             return new SharedCertificateFrameworkViewModel
             {
                 CertificateId = shareInfo.CertificateId,
+                SharingLinkCode = code,
                 FamilyName = cert.FamilyName,
                 GivenNames = cert.GivenNames,
                 CertificateReference = cert.CertificateReference,

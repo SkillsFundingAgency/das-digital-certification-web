@@ -1,65 +1,110 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using FluentValidation;
-using SFA.DAS.DigitalCertificates.Web.Models.Certificates;
 using MediatR;
+using Microsoft.AspNetCore.Http;
 using Moq;
 using NUnit.Framework;
-using SFA.DAS.DigitalCertificates.Application.Queries.GetFrameworkCertificate;
-using SFA.DAS.DigitalCertificates.Application.Queries.GetStandardCertificate;
-using SFA.DAS.DigitalCertificates.Infrastructure.Api.Responses;
-using SFA.DAS.DigitalCertificates.Domain.Models;
-using SFA.DAS.DigitalCertificates.Web.Orchestrators;
-using SFA.DAS.DigitalCertificates.Web.Services;
 using SFA.DAS.DigitalCertificates.Application.Commands.CreateUserAction;
 using SFA.DAS.DigitalCertificates.Application.Commands.RequestPrintCertificate;
+using SFA.DAS.DigitalCertificates.Application.Queries.GetFrameworkCertificate;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetLocations;
+using SFA.DAS.DigitalCertificates.Application.Queries.GetStandardCertificate;
+using SFA.DAS.DigitalCertificates.Domain.Models;
+using SFA.DAS.DigitalCertificates.Infrastructure.Api.Responses;
 using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
 using SFA.DAS.DigitalCertificates.Infrastructure.Constants;
 using SFA.DAS.DigitalCertificates.Web.Enums;
+using SFA.DAS.DigitalCertificates.Web.Models.Certificates;
+using SFA.DAS.DigitalCertificates.Web.Orchestrators;
+using SFA.DAS.DigitalCertificates.Web.Services;
 
-namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
+namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOrchestratorTests
 {
     public class CertificatesOrchestratorTests
     {
         private Mock<IMediator> _mediatorMock;
+        private Mock<IHttpContextAccessor> _contextAccessorMock;
         private Mock<ISessionService> _sessionMock;
         private Mock<IUserService> _userServiceMock;
-        private DigitalCertificatesWebConfiguration _configuration;
+        private Mock<IBlobService> _blobServiceMock;
+        private Mock<IAsposeLicenseService> _asposeLicenseServiceMock;
+        private Mock<IDownloadCertificateService> _downloadCertificateServiceMock;
+        private DigitalCertificatesWebConfiguration _digitalCertificatesWebConfig;
 
         private CertificatesOrchestrator _sut;
         private Mock<IValidator<SelectAddressViewModel>> _selectAddressValidatorMock;
         private Mock<IValidator<AddAddressManualViewModel>> _addAddressValidatorMock;
+        private DefaultHttpContext _httpContext;
 
         [SetUp]
         public void SetUp()
         {
             _mediatorMock = new Mock<IMediator>();
+            _contextAccessorMock = new Mock<IHttpContextAccessor>();
             _sessionMock = new Mock<ISessionService>();
             _userServiceMock = new Mock<IUserService>();
-            _selectAddressValidatorMock = new Mock<IValidator<SelectAddressViewModel>>();
-            _addAddressValidatorMock = new Mock<IValidator<AddAddressManualViewModel>>();
-            _configuration = new DigitalCertificatesWebConfiguration
+            _blobServiceMock = new Mock<IBlobService>();
+            _asposeLicenseServiceMock = new Mock<IAsposeLicenseService>();
+            _downloadCertificateServiceMock = new Mock<IDownloadCertificateService>();
+            _digitalCertificatesWebConfig = new DigitalCertificatesWebConfiguration
             {
-                ServiceBaseUrl = "http://localhost",
-                RedisConnectionString = "localhost:6379",
+                ServiceBaseUrl = "https://test.local",
+                OneLoginSettingsUrl = "http://settings.com",
+                RedisConnectionString = "UseDevelopmentStorage=true",
                 DataProtectionKeysDatabase = "0",
+                StandardTemplateBlobName = "standard-template",
+                GreenStandardTemplateBlobName = "green-standard-template",
+                FrameworkTemplateBlobName = "framework-template",
+                MasterPassword = "master-password",
+                StorageConnectionString = "UseDevelopmentStorage=true",
+                ContainerName = "test-container",
+                AsposeLicenseContainerName = "test-aspose-container",
+                LicenseBlobName = "license-blob",
                 NotificationTemplates = new List<NotificationTemplate>
                 {
                     new NotificationTemplate { TemplateName = NotificationTemplateNames.PrintRequest, TemplateId = "template-id" }
                 }
-            };
+            };           
+            _selectAddressValidatorMock = new Mock<IValidator<SelectAddressViewModel>>();
+            _addAddressValidatorMock = new Mock<IValidator<AddAddressManualViewModel>>();
+
+            _httpContext = new DefaultHttpContext();
+            _contextAccessorMock.Setup(c => c.HttpContext).Returns(_httpContext);
 
             _sut = new CertificatesOrchestrator(
                 _mediatorMock.Object,
+                _contextAccessorMock.Object,
                 _sessionMock.Object,
                 _userServiceMock.Object,
                 _selectAddressValidatorMock.Object,
                 _addAddressValidatorMock.Object,
-                _configuration);
+                _blobServiceMock.Object,
+                _asposeLicenseServiceMock.Object,
+                _digitalCertificatesWebConfig,
+                _downloadCertificateServiceMock.Object);
+        }
+
+        private void SetupUserClaims(
+            string givenNames = "Given",
+            string surname = "Fam",
+            string email = "user@ex.com",
+            string displayName = "Test User")
+        {
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.GivenName, givenNames),
+                new Claim(ClaimTypes.Surname, surname),
+                new Claim(ClaimTypes.Email, email),
+                new Claim(ClaimTypes.Name, displayName)
+            };
+
+            var identity = new ClaimsIdentity(claims, "TestAuth");
+            _httpContext.User = new ClaimsPrincipal(identity);
         }
 
         [Test]
@@ -133,7 +178,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
 
             // Assert
             _mediatorMock.Verify(m => m.Send(It.IsAny<object>(), default), Times.Never);
-        }
+        }     
 
         [Test]
         public async Task GetCertificateStandardViewModel_ReturnsNull_When_MediatorReturnsNull()
@@ -358,8 +403,6 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             result.ShowBackLink.Should().BeTrue();
         }
 
-        
-
         [Test]
         public async Task GetCertificateFrameworkViewModel_Sets_ShowPrintHeaderTrue_When_StatusDelivered()
         {
@@ -436,7 +479,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             var userId = Guid.NewGuid();
 
             _userServiceMock.Setup(u => u.GetUserId()).Returns(userId);
-            _sessionMock.Setup(s => s.GetUserDetailsAsync()).ReturnsAsync(new UserDetails { FamilyName = "Fam", GivenNames = "Given" });
+            SetupUserClaims(givenNames: "Given", surname: "Fam");
 
             _mediatorMock.Setup(m => m.Send(It.IsAny<CreateUserActionCommand>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new CreateUserActionCommandResult { ActionCode = "REF-NON" });
@@ -445,7 +488,12 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
 
             result.Should().Be("REF-NON");
 
-            _mediatorMock.Verify(m => m.Send(It.Is<CreateUserActionCommand>(c => c.UserId == userId && c.ActionType == ActionType.Contact && c.FamilyName == "Fam" && c.GivenNames == "Given"), It.IsAny<CancellationToken>()), Times.Once);
+            _mediatorMock.Verify(m => m.Send(It.Is<CreateUserActionCommand>(c =>
+                    c.UserId == userId &&
+                    c.ActionType == ActionType.Contact &&
+                    c.FamilyName == "Fam" &&
+                    c.GivenNames == "Given"),
+                It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Test]
@@ -457,13 +505,22 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
 
             _userServiceMock.Setup(u => u.GetUserId()).Returns(userId);
             _userServiceMock.Setup(u => u.GetGovUkIdentifier()).Returns(govId);
+            SetupUserClaims(givenNames: "G", surname: "F");
 
-            _sessionMock.Setup(s => s.GetUserDetailsAsync()).ReturnsAsync(new Domain.Models.UserDetails { FamilyName = "F", GivenNames = "G" });
+            var owned = new List<Certificate>
+            {
+                new Certificate
+                {
+                    CertificateId = certificateId,
+                    CertificateType = CertificateType.Framework,
+                    CourseName = "CourseX",
+                    CourseLevel = "1"
+                }
+            };
 
-            var owned = new List<Certificate> { new Certificate { CertificateId = certificateId, CertificateType = CertificateType.Framework, CourseName = "CourseX", CourseLevel = "1" } };
             _sessionMock.Setup(s => s.GetOwnedCertificatesAsync()).ReturnsAsync(owned);
 
-            _mediatorMock.Setup(m => m.Send(It.IsAny<CreateUserActionCommand>(), It.IsAny<System.Threading.CancellationToken>()))
+            _mediatorMock.Setup(m => m.Send(It.IsAny<CreateUserActionCommand>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new CreateUserActionCommandResult { ActionCode = "REF-CERT" });
 
             var result = await _sut.CreateUserActionForCertificate(certificateId, ActionType.Help);
@@ -471,7 +528,15 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             result.ReferenceNumber.Should().Be("REF-CERT");
             result.CertificateType.Should().Be(CertificateType.Framework);
 
-            _mediatorMock.Verify(m => m.Send(It.Is<CreateUserActionCommand>(c => c.UserId == userId && c.ActionType == ActionType.Help && c.CertificateId == certificateId && c.CertificateType == CertificateType.Framework && c.CourseName == "CourseX"), It.IsAny<System.Threading.CancellationToken>()), Times.Once);
+            _mediatorMock.Verify(m => m.Send(It.Is<CreateUserActionCommand>(c =>
+                    c.UserId == userId &&
+                    c.ActionType == ActionType.Help &&
+                    c.CertificateId == certificateId &&
+                    c.CertificateType == CertificateType.Framework &&
+                    c.CourseName == "CourseX" &&
+                    c.FamilyName == "F" &&
+                    c.GivenNames == "G"),
+                It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Test]
@@ -498,6 +563,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         public async Task GetContactUsViewModel_ReturnsNull_When_ReferenceEmpty()
         {
             var result = await _sut.GetContactUsViewModel(string.Empty, null);
+
             result.Should().BeNull();
         }
 
@@ -517,33 +583,22 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 Postcode = "DEL123"
             };
 
-            var userDetails = new UserDetails { Email = "user@ex.com", FullName = "Test User" };
-
             _sessionMock.Setup(s => s.GetDeliveryAddressAsync()).ReturnsAsync(deliveryAddress);
-            _sessionMock.Setup(s => s.GetUserDetailsAsync()).ReturnsAsync(userDetails);
+            SetupUserClaims(email: "user@ex.com", displayName: "Test User");
 
             CreatePrintRequestCommand sentCommand = null!;
+
             _mediatorMock
                 .Setup(m => m.Send(It.IsAny<CreatePrintRequestCommand>(), It.IsAny<CancellationToken>()))
-                .Callback<object, CancellationToken>((c, ct) => sentCommand = (CreatePrintRequestCommand)c)
+                .Callback<object, CancellationToken>((c, _) => sentCommand = (CreatePrintRequestCommand)c)
                 .Returns(Task.CompletedTask);
-
-            var model = new CheckAndSubmitViewModel
-            {
-                CertificateId = certificateId,
-                Organisation = "ModelOrg",
-                AddressLine1 = "Model1",
-                AddressLine2 = "Model2",
-                TownOrCity = "ModelTown",
-                County = "ModelCounty",
-                Postcode = "MOD123"
-            };
 
             // Act
             await _sut.CreatePrintRequest(certificateId);
 
             // Assert
             _mediatorMock.Verify(m => m.Send(It.IsAny<CreatePrintRequestCommand>(), It.IsAny<CancellationToken>()), Times.Once);
+
             sentCommand.Should().NotBeNull();
             sentCommand!.Request.Address.ContactOrganisation.Should().Be(deliveryAddress.Organisation);
             sentCommand.Request.Address.ContactAddLine1.Should().Be(deliveryAddress.AddressLine1);
@@ -551,8 +606,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             sentCommand.Request.Address.ContactAddLine3.Should().Be(deliveryAddress.TownOrCity);
             sentCommand.Request.Address.ContactAddLine4.Should().Be(deliveryAddress.County);
             sentCommand.Request.Address.ContactPostCode.Should().Be(deliveryAddress.Postcode);
-            sentCommand.Request.Email.EmailAddress.Should().Be(userDetails.Email);
-            sentCommand.Request.Email.UserName.Should().Be(userDetails.FullName);
+            sentCommand.Request.Email.EmailAddress.Should().Be("user@ex.com");
+            sentCommand.Request.Email.UserName.Should().Be("Test User");
         }
 
         [Test]
@@ -563,7 +618,11 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
 
             _userServiceMock.Setup(u => u.GetGovUkIdentifier()).Returns(govId);
 
-            var owned = new List<Certificate> { new Certificate { CertificateId = certificateId, CertificateType = CertificateType.Standard, CourseName = "Unknown", CourseLevel = "1" } };
+            var owned = new List<Certificate>
+            {
+                new Certificate { CertificateId = certificateId, CertificateType = CertificateType.Standard, CourseName = "Unknown", CourseLevel = "1" }
+            };
+
             _sessionMock.Setup(s => s.GetOwnedCertificatesAsync()).ReturnsAsync(owned);
 
             var model = await _sut.GetContactUsViewModel("REF-1", certificateId);
@@ -579,7 +638,11 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             var certificateId = Guid.NewGuid();
             var courseName = "Confirmed Course";
 
-            var owned = new List<Certificate> { new Certificate { CertificateId = certificateId, CertificateType = CertificateType.Standard, CourseName = courseName, CourseLevel = "1" } };
+            var owned = new List<Certificate>
+            {
+                new Certificate { CertificateId = certificateId, CertificateType = CertificateType.Standard, CourseName = courseName, CourseLevel = "1" }
+            };
+
             _sessionMock.Setup(s => s.GetOwnedCertificatesAsync()).ReturnsAsync(owned);
 
             var result = await _sut.GetPrintRequestConfirmationViewModel(certificateId);
@@ -607,17 +670,19 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         }
 
         [Test]
-        public async Task GetSelectAddressViewModel_PopulatesFields_When_CertificateFoundAndUserDetailsPresent()
+        public async Task GetSelectAddressViewModel_PopulatesFields_When_CertificateFoundAndUserClaimsPresent()
         {
             // Arrange
             var certificateId = Guid.NewGuid();
-
             var courseName = "Course X";
 
-            var owned = new List<Certificate> { new Certificate { CertificateId = certificateId, CertificateType = CertificateType.Standard, CourseName = courseName, CourseLevel = "1", DateAwarded = DateTime.UtcNow } };
+            var owned = new List<Certificate>
+            {
+                new Certificate { CertificateId = certificateId, CertificateType = CertificateType.Standard, CourseName = courseName, CourseLevel = "1", DateAwarded = DateTime.UtcNow }
+            };
 
             _sessionMock.Setup(s => s.GetOwnedCertificatesAsync()).ReturnsAsync(owned);
-            _sessionMock.Setup(s => s.GetUserDetailsAsync()).ReturnsAsync(new UserDetails { GivenNames = "UserGiven", FamilyName = "UserFamily" });
+            SetupUserClaims(givenNames: "UserGiven", surname: "UserFamily");
 
             // Act
             var result = await _sut.GetSelectAddressViewModel(certificateId);
@@ -649,17 +714,19 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         }
 
         [Test]
-        public async Task GetAddAddressViewModel_PopulatesFields_When_CertificateFoundAndUserDetailsPresent()
+        public async Task GetAddAddressViewModel_PopulatesFields_When_CertificateFoundAndUserClaimsPresent()
         {
             // Arrange
             var certificateId = Guid.NewGuid();
-
             var courseName = "Course Y";
 
-            var owned = new List<Certificate> { new Certificate { CertificateId = certificateId, CertificateType = CertificateType.Standard, CourseName = courseName, CourseLevel = "1", DateAwarded = DateTime.UtcNow } };
+            var owned = new List<Certificate>
+            {
+                new Certificate { CertificateId = certificateId, CertificateType = CertificateType.Standard, CourseName = courseName, CourseLevel = "1", DateAwarded = DateTime.UtcNow }
+            };
 
             _sessionMock.Setup(s => s.GetOwnedCertificatesAsync()).ReturnsAsync(owned);
-            _sessionMock.Setup(s => s.GetUserDetailsAsync()).ReturnsAsync(new UserDetails { GivenNames = "UserGiven", FamilyName = "UserFamily" });
+            SetupUserClaims(givenNames: "UserGiven", surname: "UserFamily");
 
             // Act
             var result = await _sut.GetAddAddressViewModel(certificateId);
@@ -677,13 +744,15 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         {
             // Arrange
             var certificateId = Guid.NewGuid();
-
             var courseName = "Course Z";
 
-            var owned = new List<Certificate> { new Certificate { CertificateId = certificateId, CertificateType = CertificateType.Standard, CourseName = courseName, CourseLevel = "1", DateAwarded = DateTime.UtcNow } };
+            var owned = new List<Certificate>
+            {
+                new Certificate { CertificateId = certificateId, CertificateType = CertificateType.Standard, CourseName = courseName, CourseLevel = "1", DateAwarded = DateTime.UtcNow }
+            };
 
             _sessionMock.Setup(s => s.GetOwnedCertificatesAsync()).ReturnsAsync(owned);
-            _sessionMock.Setup(s => s.GetUserDetailsAsync()).ReturnsAsync(new UserDetails { GivenNames = "UserGiven", FamilyName = "UserFamily" });
+            SetupUserClaims(givenNames: "UserGiven", surname: "UserFamily");
 
             var addr = new CheckAndSubmitViewModel
             {
@@ -719,13 +788,15 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         {
             // Arrange
             var certificateId = Guid.NewGuid();
-
             var courseName = "Course Default";
 
-            var owned = new List<Certificate> { new Certificate { CertificateId = certificateId, CertificateType = CertificateType.Standard, CourseName = courseName, CourseLevel = "1", DateAwarded = DateTime.UtcNow } };
+            var owned = new List<Certificate>
+            {
+                new Certificate { CertificateId = certificateId, CertificateType = CertificateType.Standard, CourseName = courseName, CourseLevel = "1", DateAwarded = DateTime.UtcNow }
+            };
 
             _sessionMock.Setup(s => s.GetOwnedCertificatesAsync()).ReturnsAsync(owned);
-            _sessionMock.Setup(s => s.GetUserDetailsAsync()).ReturnsAsync(new UserDetails { GivenNames = "UserGiven", FamilyName = "UserFamily" });
+            SetupUserClaims(givenNames: "UserGiven", surname: "UserFamily");
 
             _sessionMock.Setup(s => s.GetDeliveryAddressAsync()).ReturnsAsync((CheckAndSubmitViewModel)null);
 
@@ -749,17 +820,37 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
 
             var locationsResult = new GetLocationsQueryResult
             {
-                Locations = new[] { new LocationResult { Name = selectedName, Organisation = "Org", AddressLine1 = "L1", AddressLine2 = "L2", PostTown = "Town", County = "County", Postcode = "PC1" } }
+                Locations = new[]
+                {
+                    new LocationResult
+                    {
+                        Name = selectedName,
+                        Organisation = "Org",
+                        AddressLine1 = "L1",
+                        AddressLine2 = "L2",
+                        PostTown = "Town",
+                        County = "County",
+                        Postcode = "PC1"
+                    }
+                }
             };
 
-            _mediatorMock.Setup(m => m.Send(It.IsAny<GetLocationsQuery>(), It.IsAny<CancellationToken>())).ReturnsAsync(locationsResult);
+            _mediatorMock
+                .Setup(m => m.Send(It.IsAny<GetLocationsQuery>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(locationsResult);
 
             // Act
             var result = await _sut.StoreDeliveryAddressFromLocationAsync(certificateId, selectedName, backRoute);
 
             // Assert
             result.Should().BeTrue();
-            _sessionMock.Verify(s => s.SetDeliveryAddressAsync(It.Is<CheckAndSubmitViewModel>(c => c.Organisation == "Org" && c.AddressLine1 == "L1" && c.Postcode == "PC1" && c.BackRoute == backRoute)), Times.Once);
+
+            _sessionMock.Verify(s => s.SetDeliveryAddressAsync(It.Is<CheckAndSubmitViewModel>(c =>
+                    c.Organisation == "Org" &&
+                    c.AddressLine1 == "L1" &&
+                    c.Postcode == "PC1" &&
+                    c.BackRoute == backRoute)),
+                Times.Once);
         }
 
         [Test]
@@ -772,16 +863,22 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
 
             var locationsResult = new GetLocationsQueryResult
             {
-                Locations = new[] { new LocationResult { Name = "Other Address", Organisation = "Org" } }
+                Locations = new[]
+                {
+                    new LocationResult { Name = "Other Address", Organisation = "Org" }
+                }
             };
 
-            _mediatorMock.Setup(m => m.Send(It.IsAny<GetLocationsQuery>(), It.IsAny<CancellationToken>())).ReturnsAsync(locationsResult);
+            _mediatorMock
+                .Setup(m => m.Send(It.IsAny<GetLocationsQuery>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(locationsResult);
 
             // Act
             var result = await _sut.StoreDeliveryAddressFromLocationAsync(certificateId, selectedName, backRoute);
 
             // Assert
             result.Should().BeFalse();
+
             _sessionMock.Verify(s => s.SetDeliveryAddressAsync(It.IsAny<CheckAndSubmitViewModel>()), Times.Never);
         }
 
@@ -794,6 +891,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
 
             result.ReferenceNumber.Should().BeNull();
             result.CertificateType.Should().Be(CertificateType.Unknown);
+
             _mediatorMock.Verify(m => m.Send(It.IsAny<CreateUserActionCommand>(), It.IsAny<CancellationToken>()), Times.Never);
         }
 
@@ -802,7 +900,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         {
             // Arrange
             var certificateId = Guid.NewGuid();
-            var eventTime = new DateTime(2024, 6, 1);
+            var eventTime = new DateTime(2024, 6, 1, 0, 0, 0, DateTimeKind.Utc);
 
             var mediatorResult = new GetStandardCertificateQueryResult
             {
@@ -841,7 +939,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         {
             // Arrange
             var certificateId = Guid.NewGuid();
-            var eventTime = new DateTime(2024, 5, 15);
+            var eventTime = new DateTime(2024, 5, 15, 0, 0, 0, DateTimeKind.Utc);
 
             var mediatorResult = new GetStandardCertificateQueryResult
             {
@@ -945,14 +1043,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         public async Task GetCertificateFrameworkViewModel_Sets_PrintStatusNone_When_AllEventsBeforeCutoverDate()
         {
             // Arrange
-            _configuration.CutoverDate = new DateTime(2024, 1, 1);
-            _sut = new CertificatesOrchestrator(
-                _mediatorMock.Object,
-                _sessionMock.Object,
-                _userServiceMock.Object,
-                _selectAddressValidatorMock.Object,
-                _addAddressValidatorMock.Object,
-                _configuration);
+            _digitalCertificatesWebConfig.CutoverDate = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
             var certificateId = Guid.NewGuid();
 
@@ -967,7 +1058,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 DateAwarded = DateTime.UtcNow,
                 DeliveryInformation = new List<DeliveryInformationResponse>
                 {
-                    new DeliveryInformationResponse { Id = "1", Action = "Submitted", Status = DeliveryInformationStatuses.Submitted, EventTime = new DateTime(2023, 6, 1) }
+                    new DeliveryInformationResponse { Id = "1", Action = "Submitted", Status = DeliveryInformationStatuses.Submitted, EventTime = new DateTime(2023, 6, 1, 0, 0, 0, DateTimeKind.Utc) }
                 }
             };
 
@@ -990,7 +1081,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         {
             // Arrange
             var certificateId = Guid.NewGuid();
-            var eventTime = new DateTime(2024, 3, 20);
+            var eventTime = new DateTime(2024, 3, 20, 0, 0, 0, DateTimeKind.Utc);
 
             var mediatorResult = new GetFrameworkCertificateQueryResult
             {
@@ -1030,7 +1121,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         {
             // Arrange
             var certificateId = Guid.NewGuid();
-            var eventTime = new DateTime(2024, 4, 10);
+            var eventTime = new DateTime(2024, 4, 10, 0, 0, 0, DateTimeKind.Utc);
 
             var mediatorResult = new GetFrameworkCertificateQueryResult
             {
@@ -1061,6 +1152,146 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             result!.PrintStatus.Should().Be(PrintStatus.Requested);
             result.PrintStatusDisplay.Should().Be("Print requested");
             result.PrintStatusMessage.Should().Contain("requested on");
+        }
+
+        [Test]
+        public async Task GetDownloadFrameworkCertificateViewModelAsync_ReturnsNull_When_MediatorReturnsNull()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+
+            _mediatorMock
+                .Setup(m => m.Send(
+                    It.Is<GetFrameworkCertificateQuery>(q => q.CertificateId == certificateId),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync((GetFrameworkCertificateQueryResult)null);
+
+            // Act
+            var result = await _sut.GetDownloadFrameworkCertificateViewModelAsync(certificateId);
+
+            // Assert
+            result.Should().BeNull();
+
+            _downloadCertificateServiceMock.Verify(s => s.CreateDownloadCertificateViewModel(
+                It.IsAny<DownloadCertificateRequestViewModel>()),
+                Times.Never);
+        }
+
+        [Test]
+        public async Task GetDownloadFrameworkCertificateViewModelAsync_ReturnsViewModel_When_ResultIsValid()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+            var awardedDate = DateTime.UtcNow.Date;
+
+            var mediatorResult = new GetFrameworkCertificateQueryResult
+            {
+                FamilyName = "Smith",
+                GivenNames = "John",
+                CertificateType = "Framework",
+                CourseName = "Cloud Developer",
+                CourseOption = "Option A",
+                CourseLevel = "3",
+                DateAwarded = awardedDate,
+                FrameworkCertificateNumber = "123456"
+            };
+
+            var expectedViewModel = new DownloadCertificateViewModel
+            {
+                FamilyName = "Smith",
+                GivenNames = "John",
+                CourseName = "Cloud Developer",
+                CourseOption = "Option A",
+                CourseLevel = "3",
+                DateAwarded = awardedDate,
+                CertificateNumber = "123456",
+                CertificateType = CertificateType.Framework
+            };
+
+            _mediatorMock
+                .Setup(m => m.Send(
+                    It.Is<GetFrameworkCertificateQuery>(q => q.CertificateId == certificateId),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(mediatorResult);
+
+            _downloadCertificateServiceMock
+                .Setup(s => s.CreateDownloadCertificateViewModel(
+                    It.Is<DownloadCertificateRequestViewModel>(r =>
+                        r.CertificateId == certificateId
+                        && r.CertificateType == CertificateType.Framework
+                        && r.FamilyName == "Smith"
+                        && r.GivenNames == "John"
+                        && r.CourseName == "Cloud Developer"
+                        && r.CourseOption == "Option A"
+                        && r.CourseLevel == "3"
+                        && r.DateAwarded == awardedDate
+                        && r.CertificateNumber == "123456")))
+                .Returns(expectedViewModel);
+
+            // Act
+            var result = await _sut.GetDownloadFrameworkCertificateViewModelAsync(certificateId);
+
+            // Assert
+            result.Should().BeSameAs(expectedViewModel);
+
+            _mediatorMock.Verify(m => m.Send(
+                It.Is<GetFrameworkCertificateQuery>(q => q.CertificateId == certificateId),
+                It.IsAny<CancellationToken>()), Times.Once);
+
+            _downloadCertificateServiceMock.Verify(s => s.CreateDownloadCertificateViewModel(
+                It.IsAny<DownloadCertificateRequestViewModel>()), Times.Once);
+        }
+
+        [Test]
+        public async Task GetDownloadFrameworkCertificateViewModelAsync_ThrowsInvalidOperationException_When_DownloadServiceThrows()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+
+            var mediatorResult = new GetFrameworkCertificateQueryResult
+            {
+                FamilyName = null,
+                GivenNames = "John",
+                CertificateType = "Framework",
+                CourseName = "Cloud Developer",
+                CourseOption = "Option A",
+                CourseLevel = "3",
+                DateAwarded = DateTime.UtcNow.Date,
+                FrameworkCertificateNumber = "9876543"
+            };
+
+            _mediatorMock
+                .Setup(m => m.Send(
+                    It.Is<GetFrameworkCertificateQuery>(q => q.CertificateId == certificateId),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(mediatorResult);
+
+            _downloadCertificateServiceMock
+                .Setup(s => s.CreateDownloadCertificateViewModel(
+                    It.IsAny<DownloadCertificateRequestViewModel>()))
+                .Throws(new InvalidOperationException(
+                    $"Certificate {certificateId} is missing required data."));
+
+            // Act
+            Func<Task> act = async () =>
+                await _sut.GetDownloadFrameworkCertificateViewModelAsync(certificateId);
+
+            // Assert
+            await act.Should()
+                .ThrowAsync<InvalidOperationException>()
+                .WithMessage($"Certificate {certificateId} is missing required data.");
+
+            _downloadCertificateServiceMock.Verify(s => s.CreateDownloadCertificateViewModel(
+                It.Is<DownloadCertificateRequestViewModel>(r =>
+                    r.CertificateId == certificateId
+                    && r.CertificateType == CertificateType.Framework
+                    && r.FamilyName == null
+                    && r.GivenNames == "John"
+                    && r.CourseName == "Cloud Developer"
+                    && r.CourseOption == "Option A"
+                    && r.CourseLevel == "3"
+                    && r.CertificateNumber == "9876543")),
+                Times.Once);
         }
     }
 }

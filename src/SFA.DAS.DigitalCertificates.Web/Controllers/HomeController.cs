@@ -17,8 +17,6 @@ using SFA.DAS.DigitalCertificates.Web.Orchestrators;
 using SFA.DAS.DigitalCertificates.Web.StartupExtensions;
 using SFA.DAS.GovUK.Auth.Authentication;
 using SFA.DAS.GovUK.Auth.Services;
-using SFA.DAS.DigitalCertificates.Web.Services;
-using SFA.DAS.DigitalCertificates.Domain.Models;
 
 namespace SFA.DAS.DigitalCertificates.Web.Controllers
 {
@@ -29,7 +27,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         private readonly IConfiguration _config;
         private readonly IGovUkAuthenticationService _govUkAuthenticationService;
         private readonly ILogger<HomeController> _logger;
-        private readonly ISessionService _sessionService;
 
         #region Routes
         public const string VerifiedRouteGet = nameof(VerifiedRouteGet);
@@ -44,15 +41,13 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
 
         public HomeController(IHomeOrchestrator homeOrchestrator,
             IConfiguration config, IGovUkAuthenticationService govUkAuthenticationService,
-            IHttpContextAccessor contextAccessor, ILogger<HomeController> logger,
-            ISessionService sessionService)
+            IHttpContextAccessor contextAccessor, ILogger<HomeController> logger)
             : base(contextAccessor)
         {
             _homeOrchestrator = homeOrchestrator;
             _config = config;
             _govUkAuthenticationService = govUkAuthenticationService;
             _logger = logger;
-            _sessionService = sessionService;
         }
 
         [Route("start-page")]
@@ -89,11 +84,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             if (details == null)
                 throw new VerifyException("Unable to load verify details");
 
-            var dob = details.CoreIdentityJwt.Vc.CredentialSubject.BirthDates
-                        .OrderByDescending(p => p.ValidUntil)
-                        .First().Value
-                        .ParseEnGbDateTime();
-
             await _homeOrchestrator.CreateOrUpdateUser(new CreateOrUpdateUserModel
             {
                 GovUkIdentifier = details.Sub,
@@ -112,33 +102,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
                         .First().Value
                         .ParseEnGbDateTime()
             });
-
-            // TODO: DisplayName is currently handled temporarily to support testing of the sharing email functionality. It will be updated to align with the agreed requirements as part of an upcoming ticket.
-
-            var historicalNames = details.CoreIdentityJwt?.Vc?.CredentialSubject?.GetHistoricalNames();
-            var selectedName = (historicalNames != null)
-                ? historicalNames.FirstOrDefault(n =>
-                {
-                    var now = DateTime.UtcNow;
-                    var validFrom = n.ValidFrom;
-                    var validUntil = n.ValidUntil;
-                    var fromOk = validFrom == null || validFrom <= now;
-                    var untilOk = validUntil == null || validUntil >= now;
-                    return fromOk && untilOk;
-                })
-                : null;
-
-            // fallback to the first historical name if no currently valid one found
-            if (selectedName == null && historicalNames != null)
-            {
-                selectedName = historicalNames.FirstOrDefault();
-            }
-
-            var given = selectedName?.GivenNames ?? string.Empty;
-            var family = selectedName?.FamilyNames ?? string.Empty;
-            var displayName = string.IsNullOrWhiteSpace(given) ? family : (string.IsNullOrWhiteSpace(family) ? given : $"{given} {family}");
-
-            await _sessionService.SetUserDetailsAsync(new UserDetails { GivenNames = given, FamilyName = family, FullName = displayName, Email = details.Email, DateOfBirth = dob });
 
             return RedirectToRoute(CertificatesController.CertificatesListRouteGet);
         }

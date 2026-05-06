@@ -24,7 +24,6 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
         private Mock<IUserService> _userServiceMock = null!;
         private SessionService _sut = null!;
 
-        private const string UserDetailsKey = "DigitalCertificates:UserDetails";
         private const string ShareEmailKey = "DigitalCertificates:ShareEmail";
         private const string OwnedCertificatesKeyPrefix = "DigitalCertificates:OwnedCertificates:";
         private const string UlnAuthorisationKeyPrefix = "DigitalCertificates:UlnAuthorisation:";
@@ -40,32 +39,6 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
             _userServiceMock = new Mock<IUserService>();
 
             _sut = new SessionService(_sessionStorageMock.Object, _mediatorMock.Object, _userServiceMock.Object);
-        }
-
-        [Test]
-        public async Task SetUserNamePartsAsync_Calls_Storage_With_Correct_Key()
-        {
-            var userDetails = new UserDetails { GivenNames = "Bob", FamilyName = "Smith", FullName = "Bob Smith" };
-
-            await _sut.SetUserDetailsAsync(userDetails);
-
-            _sessionStorageMock.Verify(s => s.SetAsync("DigitalCertificates:UserDetails", It.IsAny<string>()), Times.Once);
-        }
-
-        [Test]
-        public async Task GetUserDetailsAsync_Returns_Value_From_Storage()
-        {
-            var userDetails = new UserDetails { GivenNames = "Alice", FamilyName = "Jones", FullName = "Alice Jones" };
-            var json = JsonSerializer.Serialize(userDetails);
-
-            _sessionStorageMock.Setup(s => s.GetAsync("DigitalCertificates:UserDetails")).ReturnsAsync(json);
-
-            var result = await _sut.GetUserDetailsAsync();
-
-            result.Should().NotBeNull();
-            result!.FullName.Should().Be("Alice Jones");
-            result!.GivenNames.Should().Be("Alice");
-            result!.FamilyName.Should().Be("Jones");
         }
 
         [Test]
@@ -87,23 +60,11 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
         }
 
         [Test]
-        public async Task ClearSessionDataAsync_Clears_Username_And_ShareEmail_Only_When_Id_Empty()
-        {
-            await _sut.ClearSessionDataAsync();
-
-            _sessionStorageMock.Verify(s => s.ClearAsync(ShareEmailKey), Times.Once);
-            _sessionStorageMock.Verify(s => s.ClearAsync(UserDetailsKey), Times.Once);
-            _sessionStorageMock.Verify(s => s.ClearAsync(OwnedCertificatesKeyPrefix), Times.Once);
-            _sessionStorageMock.Verify(s => s.ClearAsync(UlnAuthorisationKeyPrefix), Times.Once);
-        }
-
-        [Test]
         public async Task ClearSessionDataAsync_Clears_Namespaced_Keys_When_Id_Provided()
         {
             await _sut.ClearSessionDataAsync();
 
             _sessionStorageMock.Verify(s => s.ClearAsync(ShareEmailKey), Times.Once);
-            _sessionStorageMock.Verify(s => s.ClearAsync(UserDetailsKey), Times.Once);
             _sessionStorageMock.Verify(s => s.ClearAsync(OwnedCertificatesKeyPrefix), Times.Once);
             _sessionStorageMock.Verify(s => s.ClearAsync(UlnAuthorisationKeyPrefix), Times.Once);
         }

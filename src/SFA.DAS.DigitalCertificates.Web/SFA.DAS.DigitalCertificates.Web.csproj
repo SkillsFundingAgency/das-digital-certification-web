@@ -13,7 +13,9 @@
 
 	<ItemGroup>
 		<PackageReference Include="AspNetCore.HealthChecks.Redis" Version="8.0.0" />
+		<PackageReference Include="Aspose.PDF" Version="23.5.0" />
 		<PackageReference Include="Azure.Monitor.OpenTelemetry.AspNetCore" Version="1.2.0" />
+		<PackageReference Include="Azure.Storage.Blobs" Version="12.27.0" />
 		<PackageReference Include="FluentValidation" Version="12.1.0" />
 		<PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.0" />
 		<PackageReference Include="MediatR" Version="12.2.0" />
@@ -22,7 +24,7 @@
 		<PackageReference Include="RestEase.HttpClientFactory" Version="1.6.4" />
 		<PackageReference Include="SFA.DAS.Configuration.AzureTableStorage" Version="3.0.84" />
 		<PackageReference Include="SFA.DAS.Encoding" Version="1.1.76" />
-		<PackageReference Include="SFA.DAS.GovUK.Auth" Version="17.1.160-prerelease-28" />
+		<PackageReference Include="SFA.DAS.GovUK.Auth" Version="17.1.177" />
 		<PackageReference Include="SFA.DAS.Http" Version="3.2.69" />
 		<PackageReference Include="SFA.DAS.Validation" Version="6.0.30" />
 		<PackageReference Include="SFA.DAS.Validation.Mvc" Version="6.0.30" />

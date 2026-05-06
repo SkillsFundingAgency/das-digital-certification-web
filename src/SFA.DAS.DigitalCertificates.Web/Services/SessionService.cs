@@ -17,7 +17,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
         private readonly IMediator _mediator;
         private readonly IUserService _userService;
 
-        private const string UserDetailsKey = "DigitalCertificates:UserDetails";
         private const string ShareEmailKey = "DigitalCertificates:ShareEmail";
         private const string OwnedCertificatesKeyPrefix = "DigitalCertificates:OwnedCertificates:";
         private const string UlnAuthorisationKeyPrefix = "DigitalCertificates:UlnAuthorisation:";
@@ -31,21 +30,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
             _sessionStorageService = sessionStorageService;
             _mediator = mediator;
             _userService = userService;
-        }
-
-        public Task SetUserDetailsAsync(UserDetails userDetails)
-        {
-            var json = JsonSerializer.Serialize(userDetails);
-            return _sessionStorageService.SetAsync(UserDetailsKey, json);
-        }
-
-        public async Task<UserDetails?> GetUserDetailsAsync()
-        {
-            var json = await _sessionStorageService.GetAsync(UserDetailsKey);
-            if (string.IsNullOrWhiteSpace(json))
-                return null;
-
-            return JsonSerializer.Deserialize<UserDetails>(json);
         }
 
         public Task SetShareEmailAsync(string email)
@@ -151,14 +135,10 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
         public async Task ClearSessionDataAsync()
         {
             await _sessionStorageService.ClearAsync(ShareEmailKey);
-            await _sessionStorageService.ClearAsync(UserDetailsKey);
-
             await _sessionStorageService.ClearAsync(OwnedCertificatesKeyPrefix);
             await _sessionStorageService.ClearAsync(UlnAuthorisationKeyPrefix);
-
             await _sessionStorageService.ClearAsync(RecordedSharingAccessKey);
             await _sessionStorageService.ClearAsync(DeliveryAddressKeyPrefix);
-
             await _sessionStorageService.ClearAsync(ContactReferenceKey);
         }
 
