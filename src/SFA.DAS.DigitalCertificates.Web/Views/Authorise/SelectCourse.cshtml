@@ -1,0 +1,86 @@
+﻿@using SFA.DAS.DigitalCertificates.Web.Controllers
+@using SFA.DAS.DigitalCertificates.Web.ViewDataKeys
+@using static SFA.DAS.DigitalCertificates.Web.Models.Authorise.SelectCourseViewModel
+@model SFA.DAS.DigitalCertificates.Web.Models.Authorise.SelectCourseViewModel
+@{
+    ViewData[ViewDataKeys.Title] = ViewData[ViewDataKeys.ServiceName] + " Select your course";
+    ViewBag.GaData.Vpv = @ViewData[ViewDataKeys.GaDataVpvPrefix] + "select-your-course";
+}
+
+<div class="govuk-width-container">
+
+    <a asp-route="@(Model?.IsReturningToCheck == true ? AuthoriseController.CheckAnswersRouteGet : AuthoriseController.KnowYourUlnRouteGet)" class="govuk-back-link">Back</a>
+
+    <main class="govuk-main-wrapper" id="main-content">
+        <partial name="_ValidationSummary" />
+
+        <div class="govuk-grid-row">
+            <div class="govuk-grid-column-two-thirds">
+
+                <form asp-action="SelectCourse" method="post">
+
+                    <div class="govuk-form-group" das-highlight-error-for="SelectedCourseCode" error-class="govuk-form-group--error">
+
+                        <span class="govuk-caption-l">Matching your information</span>
+
+                        <fieldset class="govuk-fieldset" aria-describedby="SelectCourse-hint">
+                            <legend class="govuk-fieldset__legend govuk-fieldset__legend--l">
+                                <h1 class="govuk-fieldset__heading">Select your course</h1>
+                            </legend>
+
+                            <div id="SelectCourse-hint" class="govuk-hint">
+                                Select the apprenticeship course that you’ve most recently completed.
+                            </div>
+
+                            <div class="govuk-radios" data-module="govuk-radios">
+                                <p id="SelectedCourseCode-error" das-validation-for="SelectedCourseCode" class="govuk-error-message"></p>
+
+                                @if (Model?.Courses != null)
+                                {
+                                    var idx = 0;
+                                    foreach (CourseOption c in Model.Courses)
+                                    {
+                                        var inputId = idx == 0 ? "SelectedCourseCode" : $"SelectedCourseOption-{idx}";
+                                        <div class="govuk-radios__item">
+                                              <input name="SelectedCourseCode"
+                                                  id="@inputId"
+                                                  class="govuk-radios__input"
+                                                  type="radio"
+                                                  value="@c.CourseCode"
+                                                  aria-describedby="SelectedCourseCode-error"
+                                                  @( (Model?.SelectedCourseCode != null && System.String.Equals(c.CourseCode?.Trim(), Model.SelectedCourseCode?.Trim(), System.StringComparison.OrdinalIgnoreCase)) ? "checked=\"checked\"" : "" ) />
+                                            <label class="govuk-label govuk-radios__label" for="@inputId">@c.DisplayName</label>
+                                        </div>
+                                        idx++;
+                                    }
+                                }
+
+                                <div class="govuk-body govuk-!-margin-bottom-3">or</div>
+
+                                <div class="govuk-radios__item">
+                                     <input name="SelectedCourseCode"
+                                         id="SelectedCourseCode-Unknown"
+                                         class="govuk-radios__input"
+                                         type="radio"
+                                         value="@UnknownCourseSentinel"
+                                         aria-describedby="SelectedCourseCode-error"
+                                         @(Model?.SelectedCourseUnknown == true ? "checked=\"checked\"" : "") />
+                                    <label class="govuk-label govuk-radios__label" for="SelectedCourseCode-Unknown">I don’t know</label>
+                                </div>
+
+                            </div>
+
+                        </fieldset>
+
+                    </div>
+
+                    <button type="submit" class="govuk-button" data-module="govuk-button">Continue</button>
+
+                </form>
+
+            </div>
+        </div>
+
+    </main>
+
+</div>

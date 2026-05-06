@@ -33,14 +33,14 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetMatches
                 {
                     new MatchResponse
                     {
-                        Uln = "1234567890",
+                        Uln = 1234567890,
                         CertificateType = "Standard",
                         CourseCode = "C1",
                         CourseName = "Course",
                         CourseLevel = "2",
                         DateAwarded = DateTime.UtcNow.Date,
                         ProviderName = "Provider",
-                        Ukprn = "100000"
+                        Ukprn = 100000
                     }
                 },
                 Masks =

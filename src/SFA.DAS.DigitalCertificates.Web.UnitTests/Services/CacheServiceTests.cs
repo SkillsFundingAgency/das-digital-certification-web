@@ -144,7 +144,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
 
             var expected = new MatchesAndMasks
             {
-                Matches = { new Match { Uln = "111" } },
+                Matches = { new Match { Uln = 111L } },
                 Masks = { new Mask { CourseCode = "C1" } }
             };
 
@@ -185,7 +185,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
 
             var expected = new MatchesAndMasks
             {
-                Matches = { new Match { Uln = "222" } }
+                Matches = { new Match { Uln = 222 } }
             };
 
             Func<DistributedCacheEntryOptions, Task<MatchesAndMasks>> capturedDelegate = null!;
@@ -268,6 +268,42 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
             var setValue = await capturedDelegate(options);
             setValue.Should().Be(1);
             options.AbsoluteExpirationRelativeToNow.Should().Be(TimeSpan.FromDays(configuration.MatchesCacheExpiryDays.Value));
+        }
+
+        [Test]
+        public async Task GetMatchFailCountAsync_Returns_Current_Value_When_Present()
+        {
+            // Arrange
+            var gov = "gov-555";
+            var key = CacheService.GetScopedKey("MatchFailCount", gov);
+
+            _cacheStorageMock
+                .Setup(x => x.GetAsync<int?>(key))
+                .ReturnsAsync(3);
+
+            // Act
+            var result = await _sut.GetMatchFailCountAsync(gov);
+
+            // Assert
+            result.Should().Be(3);
+        }
+
+        [Test]
+        public async Task GetMatchFailCountAsync_Returns_Zero_When_Not_Present()
+        {
+            // Arrange
+            var gov = "gov-666";
+            var key = CacheService.GetScopedKey("MatchFailCount", gov);
+
+            _cacheStorageMock
+                .Setup(x => x.GetAsync<int?>(key))
+                .ReturnsAsync((int?)null);
+
+            // Act
+            var result = await _sut.GetMatchFailCountAsync(gov);
+
+            // Assert
+            result.Should().Be(0);
         }
     }
 }

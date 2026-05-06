@@ -5,14 +5,14 @@ namespace SFA.DAS.DigitalCertificates.Infrastructure.Api.Responses
 {
     public class MatchResponse
     {
-        public string? Uln { get; set; }
+        public required long Uln { get; set; }
         public required string CertificateType { get; set; }
         public string? CourseCode { get; set; }
         public string? CourseName { get; set; }
         public string? CourseLevel { get; set; }
         public DateTime? DateAwarded { get; set; }
         public string? ProviderName { get; set; }
-        public string? Ukprn { get; set; }
+        public long? Ukprn { get; set; }
     }
 
     public class MaskResponse
