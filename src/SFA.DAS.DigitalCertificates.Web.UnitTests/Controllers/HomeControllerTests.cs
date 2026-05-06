@@ -185,32 +185,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             model.ConsentAnalyticsCookie.Should().BeFalse();
             model.BackUrl.Should().BeEmpty();
         }
-
-        [Test]
-        public void Cookies_WhenReturnUrlIsProvided_ReturnsViewWithBackUrl()
-        {
-            // Arrange
-            const string returnUrl = "/previous-page";
-
-            var controller = CreateControllerWithCookies(new Dictionary<string, string>
-            {
-                { CookieKeys.AnalyticsConsent, "true" }
-            });
-
-            // Act
-            var result = controller.Cookies(returnUrl);
-
-            // Assert
-            var viewResult = result.Should().BeOfType<ViewResult>().Subject;
-
-            var model = viewResult.Model.Should()
-                .BeOfType<CookiesViewModel>()
-                .Subject;
-
-            model.ConsentAnalyticsCookie.Should().BeTrue();
-            model.BackUrl.Should().Be(returnUrl);
-        }
-
+       
         [Test]
         public void CookieDetails_ShouldReturnView()
         {
@@ -366,6 +341,9 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
         {
             // Arrange
             var returnUrl = "/previous-page";
+            var urlHelperMock = new Mock<IUrlHelper>();
+            urlHelperMock.Setup(u => u.IsLocalUrl(It.IsAny<string>())).Returns(true);
+            _sut.Url = urlHelperMock.Object;
 
             // Act
             var result = _sut.AccessibilityStatement(returnUrl) as ViewResult;
@@ -374,22 +352,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             result.Should().NotBeNull();
 
             var model = result!.Model as PageViewModel;
-            model.Should().NotBeNull();
-            model!.BackUrl.Should().Be(returnUrl);
-        }
-
-        [Test]
-        public void AccessibilityStatement_ShouldReturnView_WithNullBackUrl_WhenReturnUrlIsNotProvided()
-        {
-            // Act
-            var result = _sut.AccessibilityStatement() as ViewResult;
-
-            // Assert
-            result.Should().NotBeNull();
-
-            var model = result!.Model as PageViewModel;
-            model.Should().NotBeNull();
-            model!.BackUrl.Should().BeEmpty();
+            model.Should().NotBeNull();           
         }
 
         private HomeController CreateControllerWithCookies(

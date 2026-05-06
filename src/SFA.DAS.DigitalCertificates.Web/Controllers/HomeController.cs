@@ -129,7 +129,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             var cookieViewModel = new CookiesViewModel
             {                
                 ConsentAnalyticsCookie = isAnalyticsCookieConsentGiven,
-                BackUrl = returnUrl ?? string.Empty,
+                BackUrl = GetSafeReturnUrl(returnUrl)
             };
             return View(cookieViewModel);
         }
@@ -140,7 +140,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         {
             var model = new PageViewModel
             {
-                BackUrl = returnUrl ?? string.Empty,
+                BackUrl = GetSafeReturnUrl(returnUrl)
             };
 
             return View(model);
@@ -158,7 +158,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         {
             var model = new PageViewModel
             {
-                BackUrl = returnUrl ?? string.Empty,
+                BackUrl = GetSafeReturnUrl(returnUrl)
             };
 
             return View(model);
@@ -176,6 +176,18 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         {
             _logger.LogError(errorMessage.SanitizeLogData());
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContextAccessor?.HttpContext?.TraceIdentifier, ErrorMessage = errorMessage });
+        }
+
+        private string GetSafeReturnUrl(string? returnUrl, string fallbackUrl = "")
+        {
+            if (string.IsNullOrWhiteSpace(returnUrl))
+            {
+                return fallbackUrl;
+            }
+
+            return Url.IsLocalUrl(returnUrl)
+                ? returnUrl
+                : fallbackUrl;
         }
     }
 }

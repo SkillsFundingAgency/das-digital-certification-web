@@ -9,7 +9,6 @@ using SFA.DAS.DigitalCertificates.Web.Controllers;
 using SFA.DAS.DigitalCertificates.Web.Models.Sharing;
 using SFA.DAS.DigitalCertificates.Web.Orchestrators;
 using SFA.DAS.GovUK.Auth.Services;
-using System.Net.Http;
 
 namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
 {
@@ -20,6 +19,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
         private Mock<IGovUkAuthenticationService> _govUkAuthServiceMock;
         private Mock<IHttpContextAccessor> _contextAccessorMock;
         private Mock<ILogger<HomeController>> _loggerMock;
+        private Mock<IUrlHelper> _urlHelperMock;
         private HomeController _sut;
         private DefaultHttpContext _httpContext;
 
@@ -31,9 +31,11 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             _govUkAuthServiceMock = new Mock<IGovUkAuthenticationService>();
             _contextAccessorMock = new Mock<IHttpContextAccessor>();
             _loggerMock = new Mock<ILogger<HomeController>>();
+            _urlHelperMock = new Mock<IUrlHelper>();
 
             _httpContext = new DefaultHttpContext();
             _contextAccessorMock.Setup(c => c.HttpContext).Returns(_httpContext);
+          
 
             _sut = new HomeController(
                 _orchestratorMock.Object,
@@ -45,21 +47,29 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
                 ControllerContext = new ControllerContext
                 {
                     HttpContext = _httpContext
-                }
+                },
+                Url = _urlHelperMock.Object
             };
         }
 
         [TearDown]
         public void TearDown() => _sut.Dispose();
 
-        [Test]
-        public void Cookies_WhenReturnUrlIsProvided_SetsBackUrlOnModel()
+        [TestCase(null, false, "")]
+        [TestCase("", false, "")]
+        [TestCase(" ", false, "")]
+        [TestCase("/home", true, "/home")]
+        [TestCase("https://evil-site.com", false, "")]
+
+        public void Cookies_WhenReturnUrlIsProvided_SetsBackUrlOnModel(string? returnUrl, bool useLocal, string expectedReturnUrl)
         {
-            // Arrange
-            const string returnUrl = "/previous-page";
+            // Arrange            
+            _urlHelperMock.Setup(u => u.IsLocalUrl(It.IsAny<string>())).Returns(useLocal);
+            _sut.Url = _urlHelperMock.Object;
 
             // Act
             var result = _sut.Cookies(returnUrl);
+            
 
             // Assert
             var viewResult = result.Should().BeOfType<ViewResult>().Subject;
@@ -68,30 +78,19 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
                 .BeOfType<CookiesViewModel>()
                 .Subject;
 
-            model.BackUrl.Should().Be(returnUrl);
+            model.BackUrl.Should().Be(expectedReturnUrl);
         }
 
-        [Test]
-        public void Cookies_WhenReturnUrlIsNotProvided_SetsBackUrlToNull()
-        {
-            // Act
-            var result = _sut.Cookies();
-
-            // Assert
-            var viewResult = result.Should().BeOfType<ViewResult>().Subject;
-
-            var model = viewResult.Model.Should()
-                .BeOfType<CookiesViewModel>()
-                .Subject;
-
-            model.BackUrl.Should().BeEmpty();
-        }
-
-        [Test]
-        public void Help_WhenReturnUrlIsProvided_SetsBackUrlOnModel()
-        {
-            // Arrange
-            const string returnUrl = "/previous-page";
+        [TestCase(null, false, "")]
+        [TestCase("", false, "")]
+        [TestCase(" ", false, "")]
+        [TestCase("/home", true, "/home")]
+        [TestCase("https://evil-site.com", false, "")]
+        public void Help_WhenReturnUrlIsProvided_SetsBackUrlOnModel(string? returnUrl, bool useLocal, string expectedReturnUrl)
+        {           
+            // Arrange            
+            _urlHelperMock.Setup(u => u.IsLocalUrl(It.IsAny<string>())).Returns(useLocal);
+            _sut.Url = _urlHelperMock.Object;
 
             // Act
             var result = _sut.Help(returnUrl);
@@ -103,30 +102,19 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
                 .BeOfType<PageViewModel>()
                 .Subject;
 
-            model.BackUrl.Should().Be(returnUrl);
+            model.BackUrl.Should().Be(expectedReturnUrl);
         }
 
-        [Test]
-        public void Help_WhenReturnUrlIsNotProvided_SetsBackUrlToNull()
-        {
-            // Act
-            var result = _sut.Help();
-
-            // Assert
-            var viewResult = result.Should().BeOfType<ViewResult>().Subject;
-
-            var model = viewResult.Model.Should()
-                .BeOfType<PageViewModel>()
-                .Subject;
-
-            model.BackUrl.Should().BeEmpty();
-        }
-
-        [Test]
-        public void AccessibilityStatement_WhenReturnUrlIsProvided_SetsBackUrlOnModel()
+        [TestCase(null, false, "")]
+        [TestCase("", false, "")]
+        [TestCase(" ", false, "")]
+        [TestCase("/home", true, "/home")]
+        [TestCase("https://evil-site.com", false, "")]
+        public void AccessibilityStatement_WhenReturnUrlIsProvided_SetsBackUrlOnModel(string? returnUrl, bool useLocal, string expectedReturnUrl)
         {
             // Arrange
-            const string returnUrl = "/previous-page";
+            _urlHelperMock.Setup(u => u.IsLocalUrl(It.IsAny<string>())).Returns(useLocal);
+            _sut.Url = _urlHelperMock.Object;
 
             // Act
             var result = _sut.AccessibilityStatement(returnUrl);
@@ -138,23 +126,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
                 .BeOfType<PageViewModel>()
                 .Subject;
 
-            model.BackUrl.Should().Be(returnUrl);
-        }
-
-        [Test]
-        public void AccessibilityStatement_WhenReturnUrlIsNotProvided_SetsBackUrlToNull()
-        {
-            // Act
-            var result = _sut.AccessibilityStatement();
-
-            // Assert
-            var viewResult = result.Should().BeOfType<ViewResult>().Subject;
-
-            var model = viewResult.Model.Should()
-                .BeOfType<PageViewModel>()
-                .Subject;
-
-            model.BackUrl.Should().BeEmpty();
+            model.BackUrl.Should().Be(expectedReturnUrl);
         }
     }
 }

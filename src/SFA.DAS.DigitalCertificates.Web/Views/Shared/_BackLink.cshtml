@@ -2,8 +2,6 @@
 @model PageViewModel
 
 @if (!string.IsNullOrWhiteSpace(Model.BackUrl))
-{
-    <div class="faa-js-back-link-history">
-        <a href="@Model.BackUrl" class="govuk-back-link">Back</a>
-    </div>
+{    
+ <a href="@Model.BackUrl" class="govuk-back-link">Back</a>
 }
