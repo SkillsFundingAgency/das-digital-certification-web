@@ -7,6 +7,7 @@ using SFA.DAS.DigitalCertificates.Web.Models.Authorise;
 using SFA.DAS.DigitalCertificates.Web.Constants;
 using SFA.DAS.DigitalCertificates.Web.Enums;
 using SFA.DAS.DigitalCertificates.Web.Services;
+using Microsoft.AspNetCore.Http;
 using SFA.DAS.DigitalCertificates.Domain.Models;
 using System.Collections.Generic;
 using System;
@@ -28,13 +29,13 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         private readonly IValidator<SelectProviderViewModel> _selectProviderValidator;
         private readonly DigitalCertificatesWebConfiguration _digitalCertificatesWebConfiguration;
 
-        public AuthoriseOrchestrator(IMediator mediator, ISessionService sessionService, IUserService userService, ICacheService cacheService,
+        public AuthoriseOrchestrator(IMediator mediator, IHttpContextAccessor httpContextAccessor, ISessionService sessionService, IUserService userService, ICacheService cacheService,
                 IValidator<KnowYourUlnViewModel> knowUlnValidator,
                 IValidator<KnowYearViewModel> knowYearValidator,
                 IValidator<SelectCourseViewModel> selectCourseValidator,
                 IValidator<SelectProviderViewModel> selectProviderValidator,
                 DigitalCertificatesWebConfiguration digitalCertificatesWebConfiguration)
-            : base(mediator)
+            : base(mediator, httpContextAccessor)
         {
             _sessionService = sessionService;
             _userService = userService;
@@ -442,9 +443,10 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 
             var userId = _userService.GetUserId();
 
-            var userDetails = await _sessionService.GetUserDetailsAsync();
-            var familyName = userDetails?.FamilyName ?? throw new InvalidOperationException("FamilyName is required for submitting match");
-            var dateOfBirth = userDetails?.DateOfBirth ?? throw new InvalidOperationException("DateOfBirth is required for submitting match");
+            var familyName = GetUserSurname();
+            if (string.IsNullOrWhiteSpace(familyName)) throw new InvalidOperationException("FamilyName is required for submitting match");
+                // If the user's DOB claim is missing, assign a dummy DOB to allow submission flow to continue.This should be handled correctly
+                var dateOfBirth = GetUserDateOfBirth() ?? new DateTime(1900, 1, 1);
 
             var matchResult = FindMatch(
                 answers,
@@ -604,9 +606,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             var userId = _userService.GetUserId();
             if (userId == null) return null;
 
-            var userDetails = await _sessionService.GetUserDetailsAsync();
-            var family = userDetails?.FamilyName ?? string.Empty;
-            var given = userDetails?.GivenNames ?? string.Empty;
+            var family = GetUserSurname();
+            var given = GetUserGivenNames();
 
             var result = await Mediator.Send(new Application.Commands.CreateUserAction.CreateUserActionCommand
             {

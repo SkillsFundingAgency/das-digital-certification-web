@@ -202,7 +202,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
         }
 
         [Test]
-        public async Task SelectCourse_Post_NoData_Redirects_To_CannotMatch()
+        public async Task SelectCourse_Post_NoData_Redirects_To_NotFound()
         {
             // Arrange
             var vm = new SelectCourseViewModel { SelectedCourseCode = "ABC123" };
@@ -217,7 +217,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             _orchestratorMock.Verify(o => o.SaveSelectedCourseAsync(vm), Times.Once);
             result.Should().BeOfType<RedirectToRouteResult>();
             var redirect = result as RedirectToRouteResult;
-            redirect.RouteName.Should().Be(AuthoriseController.CannotMatchRouteGet);
+            redirect.RouteName.Should().Be(AuthoriseController.NotFoundRouteGet);
         }
 
         [Test]
@@ -483,16 +483,6 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             _sut.TempData.ContainsKey(TempDataDictionaryExtensions.FlashMessageBodyTempDataKey).Should().BeTrue();
             _sut.TempData.ContainsKey(TempDataDictionaryExtensions.FlashMessageTempDetailKey).Should().BeTrue();
             _sut.TempData.ContainsKey(TempDataDictionaryExtensions.FlashMessageLevelTempDataKey).Should().BeTrue();
-        }
-
-        [Test]
-        public void CannotMatch_Get_Returns_View()
-        {
-            // Act
-            var result = _sut.CannotMatch();
-
-            // Assert
-            result.Should().BeOfType<ViewResult>();
         }
     }
 }

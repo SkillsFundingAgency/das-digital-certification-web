@@ -2,10 +2,11 @@
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using Moq;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
 using NUnit.Framework;
 using MediatR;
 using SFA.DAS.DigitalCertificates.Web.Orchestrators;
-using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
 using SFA.DAS.DigitalCertificates.Web.Services;
 using SFA.DAS.DigitalCertificates.Web.Enums;
 using FluentValidation;
@@ -14,6 +15,7 @@ using SFA.DAS.DigitalCertificates.Domain.Models;
 using SFA.DAS.DigitalCertificates.Application.Commands.SubmitMatch;
 using SFA.DAS.DigitalCertificates.Application.Commands.AuthoriseUser;
 using System.Threading;
+using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
 
 namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
 {
@@ -21,6 +23,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
     public class AuthoriseOrchestratorTests
     {
         private Mock<IMediator> _mediatorMock;
+        private Mock<IHttpContextAccessor> _httpContextAccessorMock;
+        private DefaultHttpContext _httpContext;
         private Mock<IUserService> _userServiceMock;
         private Mock<ICacheService> _cacheServiceMock;
         private Mock<ISessionService> _sessionServiceMock;
@@ -34,6 +38,9 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         public void SetUp()
         {
             _mediatorMock = new Mock<IMediator>();
+            _httpContextAccessorMock = new Mock<IHttpContextAccessor>();
+            _httpContext = new DefaultHttpContext();
+            _httpContextAccessorMock.Setup(c => c.HttpContext).Returns(_httpContext);
             _userServiceMock = new Mock<IUserService>();
             _cacheServiceMock = new Mock<ICacheService>();
             _sessionServiceMock = new Mock<ISessionService>();
@@ -44,6 +51,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
 
             _sut = new AuthoriseOrchestrator(
                 _mediatorMock.Object,
+                _httpContextAccessorMock.Object,
                 _sessionServiceMock.Object,
                 _userServiceMock.Object,
                 _cacheServiceMock.Object,
@@ -54,8 +62,17 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 new DigitalCertificatesWebConfiguration
                 {
                     ServiceBaseUrl = "https://test.local",
+                    OneLoginSettingsUrl = "https://onelogin",
                     RedisConnectionString = "localhost",
-                    DataProtectionKeysDatabase = "keys"
+                    DataProtectionKeysDatabase = "keys",
+                    ContainerName = "container",
+                    AsposeLicenseContainerName = "aspose-container",
+                    StandardTemplateBlobName = "standard",
+                    GreenStandardTemplateBlobName = "green",
+                    FrameworkTemplateBlobName = "framework",
+                    LicenseBlobName = "license",
+                    MasterPassword = "master",
+                    StorageConnectionString = "UseDevelopmentStorage=true"
                 });
         }
 
@@ -392,7 +409,11 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             _cacheServiceMock.Setup(c => c.GetOrCreateMatchesAsync(govUkId, userId)).ReturnsAsync(matches);
 
             _sessionServiceMock.Setup(s => s.GetAuthorisationAnswersAsync()).ReturnsAsync(new AuthorisationAnswers { Uln = 999999L, CourseCode = null, YearCompleted = 2019, ProviderUkprn = 12345L, ProviderName = "Provider A" });
-            _sessionServiceMock.Setup(s => s.GetUserDetailsAsync()).ReturnsAsync(new UserDetails { FamilyName = "Family", GivenNames = "Given", DateOfBirth = new DateTime(1990, 1, 1) });
+            _httpContext.User = new ClaimsPrincipal(new ClaimsIdentity(new[] {
+                new Claim(ClaimTypes.Surname, "Family"),
+                new Claim(ClaimTypes.GivenName, "Given"),
+                new Claim(ClaimTypes.DateOfBirth, "1990-01-01")
+            }, "Test"));
 
             _mediatorMock.Setup(m => m.Send(It.IsAny<MediatR.IRequest<bool>>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
 
@@ -491,7 +512,10 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             _userServiceMock.Setup(u => u.GetUserId()).Returns(userId);
 
             _sessionServiceMock.Setup(s => s.GetAuthorisationAnswersAsync()).ReturnsAsync(new AuthorisationAnswers { Uln = null, CourseCode = "C" });
-            _sessionServiceMock.Setup(s => s.GetUserDetailsAsync()).ReturnsAsync(new UserDetails { FamilyName = "F", DateOfBirth = new DateTime(1990,1,1) });
+            _httpContext.User = new ClaimsPrincipal(new ClaimsIdentity(new[] {
+                new Claim(ClaimTypes.Surname, "F"),
+                new Claim(ClaimTypes.DateOfBirth, "1990-01-01")
+            }, "Test"));
 
             var matches = new MatchesAndMasks { Matches = new List<SFA.DAS.DigitalCertificates.Domain.Models.Match>() };
             _cacheServiceMock.Setup(c => c.GetOrCreateMatchesAsync(govUkId, userId)).ReturnsAsync(matches);

@@ -32,8 +32,17 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
             var configuration = new DigitalCertificatesWebConfiguration
             {
                 ServiceBaseUrl = string.Empty,
+                OneLoginSettingsUrl = string.Empty,
                 RedisConnectionString = string.Empty,
-                DataProtectionKeysDatabase = string.Empty
+                DataProtectionKeysDatabase = string.Empty,
+                ContainerName = string.Empty,
+                AsposeLicenseContainerName = string.Empty,
+                StandardTemplateBlobName = string.Empty,
+                GreenStandardTemplateBlobName = string.Empty,
+                FrameworkTemplateBlobName = string.Empty,
+                LicenseBlobName = string.Empty,
+                MasterPassword = string.Empty,
+                StorageConnectionString = string.Empty
             };
             _sut = new CacheService(_cacheStorageMock.Object, _mediatorMock.Object, configuration);
         }
@@ -173,8 +182,17 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
             var configuration = new DigitalCertificatesWebConfiguration
             {
                 ServiceBaseUrl = string.Empty,
+                OneLoginSettingsUrl = string.Empty,
                 RedisConnectionString = string.Empty,
                 DataProtectionKeysDatabase = string.Empty,
+                ContainerName = string.Empty,
+                AsposeLicenseContainerName = string.Empty,
+                StandardTemplateBlobName = string.Empty,
+                GreenStandardTemplateBlobName = string.Empty,
+                FrameworkTemplateBlobName = string.Empty,
+                LicenseBlobName = string.Empty,
+                MasterPassword = string.Empty,
+                StorageConnectionString = string.Empty,
                 MatchesCacheExpiryDays = 7
             };
 
@@ -236,8 +254,17 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
             var configuration = new DigitalCertificatesWebConfiguration
             {
                 ServiceBaseUrl = string.Empty,
+                OneLoginSettingsUrl = string.Empty,
                 RedisConnectionString = string.Empty,
                 DataProtectionKeysDatabase = string.Empty,
+                ContainerName = string.Empty,
+                AsposeLicenseContainerName = string.Empty,
+                StandardTemplateBlobName = string.Empty,
+                GreenStandardTemplateBlobName = string.Empty,
+                FrameworkTemplateBlobName = string.Empty,
+                LicenseBlobName = string.Empty,
+                MasterPassword = string.Empty,
+                StorageConnectionString = string.Empty,
                 MatchesCacheExpiryDays = 5
             };
 
