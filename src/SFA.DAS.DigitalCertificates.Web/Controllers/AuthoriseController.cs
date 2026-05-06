@@ -265,8 +265,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
                 {
                     return RedirectToRoute(CertificatesController.CertificatesListRouteGet);
                 }
-
-                //return RedirectToRoute(NeedMoreInformationRouteGet);
             }
 
             var reference = await _authoriseOrchestrator.GetLatestUserActionReferenceAsync(ActionType.NotMatched);
@@ -286,8 +284,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
                 {
                     return RedirectToRoute(CertificatesController.CertificatesListRouteGet);
                 }
-
-               // return RedirectToRoute(NeedMoreInformationRouteGet);
             }
 
             var reference = await _authoriseOrchestrator.GetLatestUserActionReferenceAsync(ActionType.NotFound);

@@ -57,6 +57,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 .FindFirstValue(ClaimTypes.Email) ?? string.Empty;
         }
 
+        // TODO: Remove if not required, or fully implement if needed. The claim is not currently implemented.
         protected DateTime? GetUserDateOfBirth()
         {
             var dobString = _httpContextAccessor?

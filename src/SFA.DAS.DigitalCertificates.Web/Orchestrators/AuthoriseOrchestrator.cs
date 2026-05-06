@@ -178,6 +178,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 
             var selected = courseOptions.FirstOrDefault(c => c.CourseCode == answers.CourseCode);
             answers.CourseName = selected?.CourseName;
+            answers.CourseLevel = selected?.CourseLevel;
+            answers.CourseCertificateType = selected?.CertificateType;
 
             await _sessionService.SetAuthorisationAnswersAsync(answers);
 
@@ -230,7 +232,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 .GroupBy(c => (c.CourseCode ?? string.Empty).Trim() + "|" + (c.CourseName ?? string.Empty).Trim())
                 .Any(g => g.Count() > 1);
 
-            // TODO: Enable this if required
+            // TODO: After reviewing changes to the masks stored procedures, this filter may be removed or moved to the outer API if appropriate. Update the corresponding configuration as needed.
             // if (duplicateCourseExists || masksCount < minMasks) return  new List<SelectCourseViewModel.CourseOption>();
 
             var distinctCourses = courseOptions
@@ -344,7 +346,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 .GroupBy(p => (p.ProviderName ?? string.Empty).Trim())
                 .Any(g => g.Count() > 1);
 
-            // TODO: Enable this if required
+            // TODO: After reviewing changes to the masks stored procedures, this filter may be removed or moved to the outer API if appropriate. Update the corresponding configuration as needed.
             // if (duplicateProviderNameExists || masksCount < minMasks) return  new List<SelectProviderViewModel.ProviderOption>();
 
             var distinctProviders = providerOptions
@@ -414,6 +416,21 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 ? DisplayConstants.NotKnown
                 : answers.CourseName;
 
+            if (!string.IsNullOrWhiteSpace(answers.CourseLevel) && !string.IsNullOrWhiteSpace(answers.CourseName))
+            {
+                var levelText = string.Empty;
+                if (answers.CourseCertificateType == CertificateType.Framework)
+                {
+                    levelText = $" ({answers.CourseLevel} Level)";
+                }
+                else
+                {
+                    levelText = $" (Level {answers.CourseLevel})";
+                }
+
+                courseDisplay = string.Concat(answers.CourseName ?? string.Empty, levelText);
+            }
+
             return new CheckAnswersViewModel
             {
                 CourseDisplay = courseDisplay,
@@ -445,8 +462,9 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 
             var familyName = GetUserSurname();
             if (string.IsNullOrWhiteSpace(familyName)) throw new InvalidOperationException("FamilyName is required for submitting match");
-                // If the user's DOB claim is missing, assign a dummy DOB to allow submission flow to continue.This should be handled correctly
-                var dateOfBirth = GetUserDateOfBirth() ?? new DateTime(1900, 1, 1);
+
+            //// TODO: If the user's DOB claim is missing, assign a dummy DOB to allow submission flow to continue.This should be handled correctly
+            var dateOfBirth = GetUserDateOfBirth() ?? new DateTime(1900, 1, 1);
 
             var matchResult = FindMatch(
                 answers,
