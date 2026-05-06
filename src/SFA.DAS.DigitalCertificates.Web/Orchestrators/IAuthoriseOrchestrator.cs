@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using SFA.DAS.DigitalCertificates.Web.Models.Authorise;
 using SFA.DAS.DigitalCertificates.Web.Enums;
+using SFA.DAS.DigitalCertificates.Domain.Models;
 
 namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 {
@@ -25,5 +26,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         Task<MatchOutcome> GetUlnMatchOutcomeAsync(KnowYourUlnViewModel viewModel);
         Task<MatchOutcome> GetCourseMatchOutcomeAsync(SelectCourseViewModel viewModel);
         Task<MatchOutcome> SubmitCheckAnswersAsync();
+        Task<string?> CreateUserActionForCannotMatchAsync(ActionType actionType);
+        Task<string?> GetLatestUserActionReferenceAsync(ActionType actionType);
     }
 }

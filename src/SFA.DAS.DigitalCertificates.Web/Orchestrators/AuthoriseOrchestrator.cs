@@ -13,6 +13,7 @@ using System;
 using SFA.DAS.DigitalCertificates.Application.Commands.SubmitMatch;
 using SFA.DAS.DigitalCertificates.Application.Commands.AuthoriseUser;
 using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
+using SFA.DAS.DigitalCertificates.Application.Queries.GetUserActions;
 
 namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 {
@@ -597,6 +598,49 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 
             return MatchResult.None();
         }
+
+        public async Task<string?> CreateUserActionForCannotMatchAsync(ActionType actionType)
+        {
+            var userId = _userService.GetUserId();
+            if (userId == null) return null;
+
+            var userDetails = await _sessionService.GetUserDetailsAsync();
+            var family = userDetails?.FamilyName ?? string.Empty;
+            var given = userDetails?.GivenNames ?? string.Empty;
+
+            var result = await Mediator.Send(new Application.Commands.CreateUserAction.CreateUserActionCommand
+            {
+                UserId = userId.GetValueOrDefault(),
+                ActionType = actionType,
+                FamilyName = family,
+                GivenNames = given
+            });
+            return result?.ActionCode ?? string.Empty;
+        }
+
+        public async Task<string?> GetLatestUserActionReferenceAsync(ActionType actionType)
+        {
+            var userId = _userService.GetUserId();
+            if (userId == null) return null;
+
+            var existing = await Mediator.Send(new GetUserActionsQuery
+            {
+                UserId = userId.GetValueOrDefault()
+            });
+
+            var candidates = existing?.UserActions?
+                .Where(a => a.ActionType == actionType)
+                .ToList();
+
+            if (candidates == null || !candidates.Any()) return null;
+
+            var mostRecent = candidates
+                .OrderByDescending(a => a.ActionTime)
+                .FirstOrDefault();
+
+            return mostRecent?.ActionCode;
+        }
+
         private sealed class MatchResult
         {
             public MatchOutcome Outcome { get; }
