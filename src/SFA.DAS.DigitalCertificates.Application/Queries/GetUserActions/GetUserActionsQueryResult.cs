@@ -13,7 +13,7 @@ namespace SFA.DAS.DigitalCertificates.Application.Queries.GetUserActions
 
             return new GetUserActionsQueryResult
             {
-                UserActions = source?.UserActions?.Select(a => new SFA.DAS.DigitalCertificates.Domain.Models.UserActionDetail
+                UserActions = source?.UserActions?.Select(a => new UserActionDetail
                 {
                     Id = a.Id,
                     UserId = a.UserId,
@@ -26,12 +26,12 @@ namespace SFA.DAS.DigitalCertificates.Application.Queries.GetUserActions
                     CertificateType = !string.IsNullOrWhiteSpace(a.CertificateType) ? Enum.Parse<CertificateType>(a.CertificateType) as CertificateType? : null,
                     CourseName = a.CourseName ?? string.Empty,
                     ActionCode = a.ActionCode,
-                    AdminActions = a.AdminActions?.Select(ad => new SFA.DAS.DigitalCertificates.Domain.Models.AdminActionDetail
+                    AdminActions = a.AdminActions?.Select(ad => new AdminActionDetail
                     {
                         Username = ad.Username,
                         ActionTime = ad.ActionTime,
                         Action = Enum.Parse<AdminActionType>(ad.Action)
-                    }).ToList() ?? new List<SFA.DAS.DigitalCertificates.Domain.Models.AdminActionDetail>()
+                    }).ToList() ?? new List<AdminActionDetail>()
                 }).ToList()
             };
         }

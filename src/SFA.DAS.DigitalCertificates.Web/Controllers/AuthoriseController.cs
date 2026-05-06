@@ -7,8 +7,6 @@ using SFA.DAS.DigitalCertificates.Web.Orchestrators;
 using SFA.DAS.DigitalCertificates.Web.Enums;
 using System.Threading.Tasks;
 using SFA.DAS.DigitalCertificates.Web.Authentication;
-using System.Security.Claims;
-using SFA.DAS.GovUK.Auth.Authentication;
 using SFA.DAS.DigitalCertificates.Web.Models.Authorise;
 using SFA.DAS.DigitalCertificates.Web.Extensions;
 using SFA.DAS.DigitalCertificates.Domain.Models;
@@ -259,6 +257,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> CannotMatch()
         {
+            // TODO: Add unit test cases and complete any remaining changes
             if (User?.Identity?.IsAuthenticated == true)
             {
                 var ulnAuthorisation = await _sessionService.GetUlnAuthorisationAsync();
@@ -267,7 +266,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
                     return RedirectToRoute(CertificatesController.CertificatesListRouteGet);
                 }
 
-                return RedirectToRoute(NeedMoreInformationRouteGet);
+                //return RedirectToRoute(NeedMoreInformationRouteGet);
             }
 
             var reference = await _authoriseOrchestrator.GetLatestUserActionReferenceAsync(ActionType.NotMatched);
@@ -279,6 +278,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> NotFoundPage()
         {
+            // TODO: Add unit test cases and complete any remaining changes
             if (User?.Identity?.IsAuthenticated == true)
             {
                 var ulnAuthorisation = await _sessionService.GetUlnAuthorisationAsync();
@@ -287,7 +287,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
                     return RedirectToRoute(CertificatesController.CertificatesListRouteGet);
                 }
 
-                return RedirectToRoute(NeedMoreInformationRouteGet);
+               // return RedirectToRoute(NeedMoreInformationRouteGet);
             }
 
             var reference = await _authoriseOrchestrator.GetLatestUserActionReferenceAsync(ActionType.NotFound);
