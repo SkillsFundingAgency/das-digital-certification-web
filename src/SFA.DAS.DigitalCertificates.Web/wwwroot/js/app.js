@@ -100,16 +100,49 @@ if ($input.length > 0) {
 document.addEventListener('DOMContentLoaded', function () {
     var copyBtn = document.getElementById('copy-link-btn');
     var webLinkInput = document.getElementById('web-link');
-    copyBtn.style.display = 'inline-block';
-    copyBtn.addEventListener('click', function () {
-        webLinkInput.select();
-        webLinkInput.setSelectionRange(0, 99999); // For mobile devices
-        navigator.clipboard.writeText(webLinkInput.value)
-            .then(function () {
-                copyBtn.textContent = 'Copied!';
-                setTimeout(function () {
-                    copyBtn.textContent = 'Copy link';
-                }, 1500);
-            });
-    });
+    if (copyBtn && webLinkInput) {
+        copyBtn.style.display = 'inline-block';
+        copyBtn.addEventListener('click', function () {
+            webLinkInput.select();
+            webLinkInput.setSelectionRange(0, 99999); // For mobile devices
+            navigator.clipboard.writeText(webLinkInput.value)
+                .then(function () {
+                    copyBtn.textContent = 'Copied!';
+                    setTimeout(function () {
+                        copyBtn.textContent = 'Copy link';
+                    }, 1500);
+                });
+        });
+    }
 });
+
+
+// cookies
+function saveCookieSettings() {
+    let consentAnalyticsCookieRadioValue = document.querySelector(
+        "input[name=ConsentAnalyticsCookie]:checked"
+    ).value;    
+
+    createCookie("AnalyticsConsent", consentAnalyticsCookieRadioValue);    
+
+    if (consentAnalyticsCookieRadioValue === 'false') {
+        deleteCookie('_ga');
+        deleteCookie('_gid');
+        deleteCookie('_gat');
+    }
+
+    document.getElementById("confirmation-banner").removeAttribute("hidden");
+    window.scrollTo({ top: 0, behavior: "instant" });
+}
+
+function createCookie(cookiename, cookievalue) {
+    let date = new Date();
+    date.setFullYear(date.getFullYear() + 1);
+    let expires = "expires=" + date.toGMTString();
+    document.cookie =
+        cookiename + "=" + cookievalue + ";" + expires + ";path=/;Secure";
+}
+
+function deleteCookie(name) {
+    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+}

@@ -1,0 +1,7 @@
+﻿@using SFA.DAS.DigitalCertificates.Web.Models.Sharing
+@model PageViewModel
+
+@if (!string.IsNullOrWhiteSpace(Model.BackUrl))
+{    
+ <a href="@Model.BackUrl" class="govuk-back-link">Back</a>
+}
