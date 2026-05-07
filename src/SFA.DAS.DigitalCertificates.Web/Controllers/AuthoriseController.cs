@@ -257,6 +257,11 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> CannotMatch()
         {
+            if (User?.Identity?.IsAuthenticated != true)
+            {
+                return RedirectToAction(nameof(HomeController.AccessDenied), "Home");
+            }
+
             if (User?.Identity?.IsAuthenticated == true)
             {
                 var ulnAuthorisation = await _sessionService.GetUlnAuthorisationAsync();
@@ -275,6 +280,11 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> NotFoundPage()
         {
+            if (User?.Identity?.IsAuthenticated != true)
+            {
+                return RedirectToAction(nameof(HomeController.AccessDenied), "Home");
+            }
+
             if (User?.Identity?.IsAuthenticated == true)
             {
                 var ulnAuthorisation = await _sessionService.GetUlnAuthorisationAsync();
@@ -293,6 +303,11 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Locked()
         {
+            if (User?.Identity?.IsAuthenticated != true)
+            {
+                return RedirectToAction(nameof(HomeController.AccessDenied), "Home");
+            }
+
             if (User?.Identity?.IsAuthenticated == true)
             {
                 var ulnAuthorisation = await _sessionService.GetUlnAuthorisationAsync();

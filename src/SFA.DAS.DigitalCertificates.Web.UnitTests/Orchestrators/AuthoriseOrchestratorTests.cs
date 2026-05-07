@@ -14,6 +14,8 @@ using SFA.DAS.DigitalCertificates.Web.Models.Authorise;
 using SFA.DAS.DigitalCertificates.Domain.Models;
 using SFA.DAS.DigitalCertificates.Application.Commands.SubmitMatch;
 using SFA.DAS.DigitalCertificates.Application.Commands.AuthoriseUser;
+using SFA.DAS.DigitalCertificates.Application.Commands.CreateUserAction;
+using SFA.DAS.DigitalCertificates.Application.Queries.GetUserActions;
 using System.Threading;
 using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
 
@@ -427,6 +429,107 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         }
 
         [Test]
+        public void CreateUserActionForCannotMatchAsync_Throws_When_UserId_Null()
+        {
+            // Arrange
+            _userServiceMock.Setup(u => u.GetUserId()).Returns((Guid?)null);
+
+            // Act / Assert
+            Assert.ThrowsAsync<InvalidOperationException>(async () => await _sut.CreateUserActionForCannotMatchAsync(ActionType.NotFound));
+            _mediatorMock.Verify(m => m.Send(It.IsAny<CreateUserActionCommand>(), It.IsAny<CancellationToken>()), Times.Never);
+        }
+
+        [Test]
+        public async Task CreateUserActionForCannotMatchAsync_Calls_Mediator_And_Returns_ActionCode()
+        {
+            // Arrange
+            var userId = Guid.NewGuid();
+            _userServiceMock.Setup(u => u.GetUserId()).Returns(userId);
+
+            // add name claims
+            var identity = new ClaimsIdentity(new[] { new Claim(ClaimTypes.Surname, "Smith"), new Claim(ClaimTypes.GivenName, "John") });
+            _httpContext.User = new ClaimsPrincipal(identity);
+
+            var commandResult = new CreateUserActionCommandResult { ActionCode = "REF-1" };
+            _mediatorMock.Setup(m => m.Send(It.IsAny<CreateUserActionCommand>(), It.IsAny<CancellationToken>())).ReturnsAsync(commandResult);
+
+            // Act
+            var result = await _sut.CreateUserActionForCannotMatchAsync(ActionType.NotFound);
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.That(result, Is.EqualTo("REF-1"));
+            _mediatorMock.Verify(m => m.Send(It.Is<CreateUserActionCommand>(c => c.UserId == userId && c.ActionType == ActionType.NotFound && c.FamilyName == "Smith" && c.GivenNames == "John"), It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Test]
+        public void GetLatestUserActionReferenceAsync_Throws_When_UserId_Null()
+        {
+            // Arrange
+            _userServiceMock.Setup(u => u.GetUserId()).Returns((Guid?)null);
+
+            // Act / Assert
+            Assert.ThrowsAsync<InvalidOperationException>(async () => await _sut.GetLatestUserActionReferenceAsync(ActionType.NotFound));
+            _mediatorMock.Verify(m => m.Send(It.IsAny<GetUserActionsQuery>(), It.IsAny<CancellationToken>()), Times.Never);
+        }
+
+        [Test]
+        public async Task GetLatestUserActionReferenceAsync_Returns_Most_Recent_ActionCode_For_Specified_ActionType()
+        {
+            // Arrange
+            var userId = Guid.NewGuid();
+            _userServiceMock.Setup(u => u.GetUserId()).Returns(userId);
+
+            var older = new UserActionDetail
+            {
+                Id = 1,
+                UserId = userId,
+                ActionType = ActionType.NotFound,
+                ActionTime = DateTime.UtcNow.AddHours(-2),
+                ActionStatus = UserActionStatus.New,
+                FamilyName = "Smith",
+                GivenNames = "John",
+                ActionCode = "OLD"
+            };
+
+            var newer = new UserActionDetail
+            {
+                Id = 2,
+                UserId = userId,
+                ActionType = ActionType.NotFound,
+                ActionTime = DateTime.UtcNow,
+                ActionStatus = UserActionStatus.New,
+                FamilyName = "Smith",
+                GivenNames = "John",
+                ActionCode = "NEW"
+            };
+
+            var other = new UserActionDetail
+            {
+                Id = 3,
+                UserId = userId,
+                ActionType = ActionType.NotMatched,
+                ActionTime = DateTime.UtcNow,
+                ActionStatus = UserActionStatus.New,
+                FamilyName = "Jones",
+                GivenNames = "Anna",
+                ActionCode = "OTHER"
+            };
+
+            var queryResult = new GetUserActionsQueryResult { UserActions = new System.Collections.Generic.List<UserActionDetail> { older, newer, other } };
+
+            _mediatorMock.Setup(m => m.Send(It.IsAny<GetUserActionsQuery>(), It.IsAny<CancellationToken>())).ReturnsAsync(queryResult);
+
+            // Act
+            var result = await _sut.GetLatestUserActionReferenceAsync(ActionType.NotFound);
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.That(result, Is.EqualTo("NEW"));
+            _mediatorMock.Verify(m => m.Send(It.Is<GetUserActionsQuery>(q => q.UserId == userId), It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Test]
         public async Task GetCheckAnswersViewModelAsync_Returns_Null_When_No_Answers()
         {
             // Arrange
@@ -517,7 +620,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 new Claim(ClaimTypes.DateOfBirth, "1990-01-01")
             }, "Test"));
 
-            var matches = new MatchesAndMasks { Matches = new List<SFA.DAS.DigitalCertificates.Domain.Models.Match>() };
+            var matches = new MatchesAndMasks { Matches = new List<Domain.Models.Match>() };
             _cacheServiceMock.Setup(c => c.GetOrCreateMatchesAsync(govUkId, userId)).ReturnsAsync(matches);
 
             _cacheServiceMock.Setup(c => c.IncrementMatchFailCountAsync(govUkId)).ReturnsAsync(1);

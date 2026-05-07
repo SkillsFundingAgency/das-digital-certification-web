@@ -503,7 +503,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             }
 
             var govUkId = _userService.GetGovUkIdentifier();
-            var failedLimit = _digitalCertificatesWebConfiguration.FailedMatchesLimit ?? 1;
+            var failedLimit = _digitalCertificatesWebConfiguration.FailedMatchesLimit ?? 2;
             var updatedFailedCount = await _cacheService.IncrementMatchFailCountAsync(govUkId);
 
             await Mediator.Send(new SubmitMatchCommand
@@ -520,10 +520,10 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 ProviderName = answers.ProviderName,
                 Ukprn = answers.ProviderUkprn.HasValue ? (int?)answers.ProviderUkprn.Value : null,
                 IsMatched = false,
-                IsFailed = updatedFailedCount > failedLimit
+                IsFailed = updatedFailedCount >= failedLimit
             });
 
-            return updatedFailedCount > failedLimit
+            return updatedFailedCount >= failedLimit
                 ? MatchOutcome.Locked
                 : MatchOutcome.NoMatch;
         }
@@ -533,10 +533,10 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             var govUkId = _userService.GetGovUkIdentifier();
             if (string.IsNullOrWhiteSpace(govUkId)) return false;
 
-            var failedLimit = _digitalCertificatesWebConfiguration.FailedMatchesLimit ?? 1;
+            var failedLimit = _digitalCertificatesWebConfiguration.FailedMatchesLimit ?? 2 ;
             var failedCount = await _cacheService.GetMatchFailCountAsync(govUkId);
 
-            return failedCount > failedLimit;
+            return failedCount >= failedLimit;
         }
 
         private static MatchResult FindMatch(AuthorisationAnswers answers, IEnumerable<Match> matches)
@@ -622,7 +622,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         public async Task<string?> CreateUserActionForCannotMatchAsync(ActionType actionType)
         {
             var userId = _userService.GetUserId();
-            if (userId == null) return null;
+            if (userId == null) throw new InvalidOperationException("UserId is required for creating user action");
 
             var family = GetUserSurname();
             var given = GetUserGivenNames();
@@ -640,7 +640,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         public async Task<string?> GetLatestUserActionReferenceAsync(ActionType actionType)
         {
             var userId = _userService.GetUserId();
-            if (userId == null) return null;
+            if (userId == null) throw new InvalidOperationException("UserId is required for getting latest user action reference");
 
             var existing = await Mediator.Send(new GetUserActionsQuery
             {

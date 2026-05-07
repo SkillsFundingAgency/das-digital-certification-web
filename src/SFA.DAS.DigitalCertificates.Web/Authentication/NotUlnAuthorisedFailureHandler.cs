@@ -23,7 +23,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Authentication
             var isNotUlnRequirementInPolicy = policy.Requirements.OfType<NotUlnAuthorisedRequirement>().Any();
 
             var isNotUlnRequirementFailed =
-                result.AuthorizationFailure?.FailureReasons.Any(r => r.Message == DigitalCertificatesAuthorizationFailureMessages.NotUlnAuthorized) == true;
+                result.AuthorizationFailure?.FailureReasons.Any(r => r.Message == DigitalCertificatesAuthorizationFailureMessages.UlnAuthorized) == true;
 
             if (isNotUlnRequirementInPolicy && isNotUlnRequirementFailed)
             {

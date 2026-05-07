@@ -116,7 +116,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authentication
                 {
                     new AuthorizationFailureReason(
                         null,
-                        DigitalCertificatesAuthorizationFailureMessages.NotUlnAuthorized)
+                        DigitalCertificatesAuthorizationFailureMessages.UlnAuthorized)
                 });
 
             return PolicyAuthorizationResult.Forbid(failure);

@@ -22,7 +22,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Authentication
             }
             else
             {
-                context.Fail();
+                context.Fail(new AuthorizationFailureReason(this, DigitalCertificatesAuthorizationFailureMessages.UlnAuthorized));
             }
         }
     }
