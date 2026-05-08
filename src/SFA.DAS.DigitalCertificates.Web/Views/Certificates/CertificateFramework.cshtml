@@ -3,7 +3,7 @@
 @using SFA.DAS.DigitalCertificates.Web.ViewDataKeys
 @using SFA.DAS.DigitalCertificates.Web.Enums
 @{
-    ViewData[ViewDataKeys.Title] = ViewData[ViewDataKeys.ServiceName] + " Certificate Framework";
+    ViewData[ViewDataKeys.Title] = "Certificate Framework";
     ViewBag.GaData.Vpv = @ViewData[ViewDataKeys.GaDataVpvPrefix] + "certificate-framework";
     var certificateId = Model?.CertificateId;
 }
