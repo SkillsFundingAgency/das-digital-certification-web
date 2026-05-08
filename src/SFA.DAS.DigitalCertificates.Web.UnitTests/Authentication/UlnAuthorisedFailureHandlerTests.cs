@@ -67,20 +67,20 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authentication
             _linkGeneratorMock
                 .Setup(l => l.GetPathByAddress(
                     _httpContext,
-                    AuthoriseController.AuthoriseStartRouteGet,
+                    AuthoriseController.NeedMoreInformationRouteGet,
                     It.IsAny<RouteValueDictionary>(),
                     null,
                     null,
                     default,
                     null))
-                .Returns("/start-authorise");
+                .Returns("/need-more-information");
 
             // Act
             var handled = await _sut.HandleFailureAsync(_httpContext, policy, result);
 
             // Assert
             handled.Should().BeTrue();
-            _httpContext.Response.Headers.Location.Should().Contain("/start-authorise");
+            _httpContext.Response.Headers.Location.Should().Contain("/need-more-information");
             _httpContext.Response.StatusCode.Should().Be(StatusCodes.Status302Found);
         }
 
@@ -94,7 +94,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Authentication
             _linkGeneratorMock
                 .Setup(l => l.GetPathByAddress(
                     _httpContext,
-                    AuthoriseController.AuthoriseStartRouteGet,
+                    AuthoriseController.NeedMoreInformationRouteGet,
                     It.IsAny<RouteValueDictionary>(),
                     null,
                     null,

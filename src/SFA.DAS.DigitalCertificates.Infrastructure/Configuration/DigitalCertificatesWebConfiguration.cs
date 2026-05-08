@@ -23,6 +23,9 @@ namespace SFA.DAS.DigitalCertificates.Infrastructure.Configuration
         public required string StorageConnectionString { get; set; }
         public List<NotificationTemplate>? NotificationTemplates { get; set; }
         public DateTime? CutoverDate { get; set; }
+        public int? MatchesCacheExpiryDays { get; set; }
+        public int? FailedMatchesLimit { get; set; }
+        public int? MinimumMasksForSelection { get; set; }
     }
 
     [ExcludeFromCodeCoverage]

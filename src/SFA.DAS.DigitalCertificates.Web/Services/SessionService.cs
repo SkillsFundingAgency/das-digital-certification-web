@@ -20,6 +20,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
         private const string ShareEmailKey = "DigitalCertificates:ShareEmail";
         private const string OwnedCertificatesKeyPrefix = "DigitalCertificates:OwnedCertificates:";
         private const string UlnAuthorisationKeyPrefix = "DigitalCertificates:UlnAuthorisation:";
+        private const string AuthorisationAnswersKeyPrefix = "DigitalCertificates:AuthorisationAnswers:";
         private const string RecordedSharingAccessKey = "DigitalCertificates:RecordedSharingAccessCodes";
         private const string DeliveryAddressKeyPrefix = "DigitalCertificates:DeliveryAddress:";
         private const string ContactReferenceKey = "DigitalCertificates:ContactReference";
@@ -108,6 +109,28 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
             }
 
             return authorisation;
+        }
+
+        public async Task<AuthorisationAnswers?> GetAuthorisationAnswersAsync()
+        {
+            var json = await _sessionStorageService.GetAsync(AuthorisationAnswersKeyPrefix);
+            if (!string.IsNullOrEmpty(json))
+            {
+                return JsonSerializer.Deserialize<AuthorisationAnswers>(json);
+            }
+
+            return null;
+        }
+
+        public Task SetAuthorisationAnswersAsync(AuthorisationAnswers answers)
+        {
+            var json = JsonSerializer.Serialize(answers);
+            return _sessionStorageService.SetAsync(AuthorisationAnswersKeyPrefix, json);
+        }
+
+        public Task ClearAuthorisationAnswersAsync()
+        {
+            return _sessionStorageService.ClearAsync(AuthorisationAnswersKeyPrefix);
         }
         public async Task ClearSessionDataAsync()
         {

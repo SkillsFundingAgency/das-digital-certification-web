@@ -47,13 +47,16 @@ namespace SFA.DAS.DigitalCertificates.Web.StartupExtensions
             services.AddScoped<ISessionService, SessionService>();
 
             services.AddScoped<IAuthorizationHandler, UlnAuthorisedAuthorizationHandler>();
+            services.AddScoped<IAuthorizationHandler, NotUlnAuthorisedAuthorizationHandler>();
             services.AddSingleton<IAuthorizationFailureHandler, UlnAuthorisedFailureHandler>();
+            services.AddSingleton<IAuthorizationFailureHandler, NotUlnAuthorisedFailureHandler>();
             services.AddScoped<IAuthorizationHandler, CertificateOwnerAuthorizationHandler>();
             services.AddSingleton<IAuthorizationFailureHandler, CertificateOwnerFailureHandler>();
 
             services.AddTransient<ValidateRequiredQueryParametersAttribute>();
             services.AddTransient<IHomeOrchestrator, HomeOrchestrator>();
             services.AddTransient<ICertificatesOrchestrator, CertificatesOrchestrator>();
+            services.AddTransient<IAuthoriseOrchestrator, AuthoriseOrchestrator>();
             services.AddTransient<ISharingOrchestrator, SharingOrchestrator>();
             services.AddScoped<IDownloadCertificateService, DownloadCertificateService>();
             services.AddTransient<ILocationsOrchestrator, LocationsOrchestrator>();

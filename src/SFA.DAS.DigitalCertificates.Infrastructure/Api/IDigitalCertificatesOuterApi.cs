@@ -20,6 +20,15 @@ namespace SFA.DAS.DigitalCertificates.Domain.Interfaces
         [Get("/users/{userId}/certificates")]
         Task<CertificatesResponse> GetCertificates([Path] Guid userId);
 
+        [Get("/users/{userId}/match")]
+        Task<MatchesResponse> GetMatches([Path] Guid userId);
+
+        [Post("/users/{userId}/match")]
+        Task SubmitMatch([Path] Guid userId, [Body] SubmitMatchRequest request);
+
+        [Post("/users/{userId}/authorise")]
+        Task AuthoriseUser([Path] Guid userId, [Body] AuthoriseUserRequest request);
+
         [Get("/certificates/{certificateId}")]
         Task<GetStandardCertificateResponse> GetStandardCertificate([Path] Guid certificateId);
 
@@ -34,6 +43,9 @@ namespace SFA.DAS.DigitalCertificates.Domain.Interfaces
 
         [Post("/users/{userId}/actions")]
         Task<CreateUserActionResponse> CreateUserAction([Path] Guid userId, [Body] CreateUserActionRequest request);
+
+        [Get("/users/{userId}/actions")]
+        Task<GetUserActionsResponse> GetUserActions([Path] Guid userId);
 
         [Get("/sharing/{sharingId}")]
         Task<GetSharingByIdResponse> GetSharingById([Path] Guid sharingId, [Query("limit")] int? limit);

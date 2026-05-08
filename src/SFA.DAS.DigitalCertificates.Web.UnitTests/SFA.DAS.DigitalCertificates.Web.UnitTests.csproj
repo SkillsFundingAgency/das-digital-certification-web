@@ -9,12 +9,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Models\**" />
     <Compile Remove="StartupExtensions\**" />
     <Compile Remove="TagHelpers\**" />
     <Compile Remove="ValidatorInteceptors\**" />
+    <EmbeddedResource Remove="Models\**" />
     <EmbeddedResource Remove="StartupExtensions\**" />
     <EmbeddedResource Remove="TagHelpers\**" />
     <EmbeddedResource Remove="ValidatorInteceptors\**" />
+    <None Remove="Models\**" />
     <None Remove="StartupExtensions\**" />
     <None Remove="TagHelpers\**" />
     <None Remove="ValidatorInteceptors\**" />

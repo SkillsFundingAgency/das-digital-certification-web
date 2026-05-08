@@ -1,4 +1,6 @@
-﻿namespace SFA.DAS.DigitalCertificates.Domain.Models
+﻿using System;
+
+namespace SFA.DAS.DigitalCertificates.Domain.Models
 {
     public class UserDetails
     {
@@ -6,5 +8,6 @@
         public string FamilyName { get; set; } = string.Empty;
         public string FullName { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
+        public DateTime? DateOfBirth { get; set; }
     }
 }
