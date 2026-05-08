@@ -59,6 +59,16 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
                     .ToArray();
             }
 
+            var govUkIdentifier = _userService.GetGovUkIdentifier();
+
+            // TODO: Investigate where best to store user, cache or session
+            await _cacheService.Clear(govUkIdentifier);
+            
+            // TODO: Either this clear or the global clear below not both
+            await _sessionService.ClearSessionDataAsync();
+
+            // TODO: This has been added back in for testing as was removed by mistake
+            HttpContextAccessor.HttpContext?.Session?.Clear();
 
             return SignOut(
                 authenticationProperties,
