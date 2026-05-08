@@ -523,9 +523,13 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 IsFailed = updatedFailedCount >= failedLimit
             });
 
-            return updatedFailedCount >= failedLimit
-                ? MatchOutcome.Locked
-                : MatchOutcome.NoMatch;
+            if (updatedFailedCount >= failedLimit)
+            {
+                await _cacheService.Clear(govUkId);
+                return MatchOutcome.Locked;
+            }
+
+            return MatchOutcome.NoMatch;
         }
 
         private async Task<bool> IsFailedMatchLimitReachedAsync()
