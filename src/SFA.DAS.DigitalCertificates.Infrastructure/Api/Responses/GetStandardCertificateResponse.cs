@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace SFA.DAS.DigitalCertificates.Infrastructure.Api.Responses
 {
@@ -22,5 +23,7 @@ namespace SFA.DAS.DigitalCertificates.Infrastructure.Api.Responses
         public DateTime? StartDate { get; set; }
         public DateTime? PrintRequestedAt { get; set; }
         public string? PrintRequestedBy { get; set; }
+        public bool CoronationEmblem { get; set; }
+        public List<DeliveryInformationResponse>? DeliveryInformation { get; set; }
     }
 }

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Security.Claims;
-using System.Threading.Tasks;
-using FluentAssertions;
+﻿using FluentAssertions;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -12,11 +8,17 @@ using Moq;
 using NUnit.Framework;
 using SFA.DAS.DigitalCertificates.Web.Controllers;
 using SFA.DAS.DigitalCertificates.Web.Exceptions;
+using SFA.DAS.DigitalCertificates.Web.Infrastructure;
 using SFA.DAS.DigitalCertificates.Web.Models;
 using SFA.DAS.DigitalCertificates.Web.Models.Home;
+using SFA.DAS.DigitalCertificates.Web.Models.Sharing;
 using SFA.DAS.DigitalCertificates.Web.Orchestrators;
 using SFA.DAS.GovUK.Auth.Models;
 using SFA.DAS.GovUK.Auth.Services;
+using System;
+using System.Collections.Generic;
+using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
 {
@@ -94,14 +96,96 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             var result = _sut.Locked() as ViewResult;
             result.Should().NotBeNull();
         }
-
+       
         [Test]
-        public void Cookies_ShouldReturnView()
+        public void Cookies_WhenAnalyticsConsentCookieIsTrue_ReturnsViewWithConsentAnalyticsCookieTrue()
         {
-            var result = _sut.Cookies() as ViewResult;
-            result.Should().NotBeNull();
+            // Arrange
+            var controller = CreateControllerWithCookies(new Dictionary<string, string>
+        {
+            { CookieKeys.AnalyticsConsent, "true" }
+        });
+
+            // Act
+            var result = controller.Cookies();
+
+            // Assert
+            var viewResult = result.Should().BeOfType<ViewResult>().Subject;
+
+            var model = viewResult.Model.Should()
+                .BeOfType<CookiesViewModel>()
+                .Subject;
+
+            model.ConsentAnalyticsCookie.Should().BeTrue();
+            model.BackUrl.Should().BeEmpty();
         }
 
+        [Test]
+        public void Cookies_WhenAnalyticsConsentCookieIsFalse_ReturnsViewWithConsentAnalyticsCookieFalse()
+        {
+            // Arrange
+            var controller = CreateControllerWithCookies(new Dictionary<string, string>
+            {
+                { CookieKeys.AnalyticsConsent, "false" }
+            });
+
+            // Act
+            var result = controller.Cookies();
+
+            // Assert
+            var viewResult = result.Should().BeOfType<ViewResult>().Subject;
+
+            var model = viewResult.Model.Should()
+                .BeOfType<CookiesViewModel>()
+                .Subject;
+
+            model.ConsentAnalyticsCookie.Should().BeFalse();
+            model.BackUrl.Should().BeEmpty();
+        }
+
+        [Test]
+        public void Cookies_WhenAnalyticsConsentCookieIsMissing_ReturnsViewWithConsentAnalyticsCookieFalse()
+        {
+            // Arrange
+            var controller = CreateControllerWithCookies();
+
+            // Act
+            var result = controller.Cookies();
+
+            // Assert
+            var viewResult = result.Should().BeOfType<ViewResult>().Subject;
+
+            var model = viewResult.Model.Should()
+                .BeOfType<CookiesViewModel>()
+                .Subject;
+
+            model.ConsentAnalyticsCookie.Should().BeFalse();
+            model.BackUrl.Should().BeEmpty();
+        }
+
+        [Test]
+        public void Cookies_WhenAnalyticsConsentCookieIsInvalid_ReturnsViewWithConsentAnalyticsCookieFalse()
+        {
+            // Arrange
+            var controller = CreateControllerWithCookies(new Dictionary<string, string>
+            {
+                { CookieKeys.AnalyticsConsent, "not-a-valid-bool" }
+            });
+
+            // Act
+            var result = controller.Cookies();
+
+            // Assert
+            var viewResult = result.Should().BeOfType<ViewResult>().Subject;
+
+            var model = viewResult.Model.Should()
+                .BeOfType<CookiesViewModel>()
+                .Subject;
+
+            model.ConsentAnalyticsCookie.Should().BeFalse();
+            model.BackUrl.Should().BeEmpty();
+        }
+       
         [Test]
         public void CookieDetails_ShouldReturnView()
         {
@@ -250,6 +334,63 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             model.Should().NotBeNull();
             model!.RequestId.Should().Be("TestTraceIdentifier");
             model.ErrorMessage.Should().Be(errorMessage);
+        }
+
+        [Test]
+        public void AccessibilityStatement_ShouldReturnView_WithPageViewModel()
+        {
+            // Arrange
+            var returnUrl = "/previous-page";
+            var urlHelperMock = new Mock<IUrlHelper>();
+            urlHelperMock.Setup(u => u.IsLocalUrl(It.IsAny<string>())).Returns(true);
+            _sut.Url = urlHelperMock.Object;
+
+            // Act
+            var result = _sut.AccessibilityStatement(returnUrl) as ViewResult;
+
+            // Assert
+            result.Should().NotBeNull();
+
+            var model = result!.Model as PageViewModel;
+            model.Should().NotBeNull();           
+        }
+
+        private HomeController CreateControllerWithCookies(
+             Dictionary<string, string> cookies = null)
+        {
+            var requestCookieCollectionMock = new Mock<IRequestCookieCollection>();
+
+            if (cookies is not null)
+            {
+                foreach (var cookie in cookies)
+                {
+                    requestCookieCollectionMock
+                        .Setup(x => x[cookie.Key])
+                        .Returns(cookie.Value);
+                }
+            }
+
+            var httpContext = new DefaultHttpContext();
+            httpContext.Request.Cookies = requestCookieCollectionMock.Object;
+
+            _contextAccessorMock
+                .Setup(x => x.HttpContext)
+                .Returns(httpContext);
+
+            var controller = new HomeController(
+                _orchestratorMock.Object,
+                _configMock.Object,
+                _govUkAuthServiceMock.Object,
+                _contextAccessorMock.Object,
+                _loggerMock.Object)
+            {
+                ControllerContext = new ControllerContext
+                {
+                    HttpContext = httpContext
+                }
+            };
+
+            return controller;
         }
     }
 }

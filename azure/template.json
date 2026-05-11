@@ -17,6 +17,9 @@
         "configurationStorageConnectionString": {
             "type": "securestring"
         },
+        "sharedStorageAccountConnectionString": {
+            "type": "securestring"
+        },
         "loggingRedisConnectionString": {
             "type": "securestring"
         },
@@ -240,6 +243,10 @@
                                 {
                                     "name": "StubAuth",
                                     "value": "[parameters('stubAuth')]"
+                                },
+                                {
+                                    "name": "StorageConnectionString",
+                                    "value": "[parameters('sharedStorageAccountConnectionString')]"
                                 }
                             ]
                         }

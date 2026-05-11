@@ -13,17 +13,14 @@
     <Compile Remove="StartupExtensions\**" />
     <Compile Remove="TagHelpers\**" />
     <Compile Remove="ValidatorInteceptors\**" />
-    <Compile Remove="Validators\**" />
     <EmbeddedResource Remove="Models\**" />
     <EmbeddedResource Remove="StartupExtensions\**" />
     <EmbeddedResource Remove="TagHelpers\**" />
     <EmbeddedResource Remove="ValidatorInteceptors\**" />
-    <EmbeddedResource Remove="Validators\**" />
     <None Remove="Models\**" />
     <None Remove="StartupExtensions\**" />
     <None Remove="TagHelpers\**" />
     <None Remove="ValidatorInteceptors\**" />
-    <None Remove="Validators\**" />
   </ItemGroup>
 
   <ItemGroup>

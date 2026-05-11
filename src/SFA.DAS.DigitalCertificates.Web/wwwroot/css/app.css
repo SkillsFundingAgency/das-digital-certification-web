@@ -1,4 +1,4 @@
-.app-highlight {
+﻿.app-highlight {
     color: #fff;
     background: #1d70b8;
     padding: 15px;
@@ -326,7 +326,6 @@
     border-bottom-width: 5px;
 }
 
-
 .app-download-link {
     background-image: url("/assets/images/icon-document--black.svg");
     background-repeat: no-repeat;
@@ -339,4 +338,54 @@
 /* Additional autocomplete */
 .autocomplete__input--error {
     border-color: #d4351c; /* Same color as .govuk-input--error */
+}
+
+/* Status tag for certificate print status */
+.status-tag {
+    display: inline-block;
+    padding: 0.25em 0.5em;
+    border-radius: 4px;
+    font-weight: 600;
+}
+.status-tag--requested {
+    background-color: #b5d4f7; 
+    color: #005ea5; 
+}
+.status-tag--delivered {
+    background-color: #cfead5; 
+    color: #00703c; 
+}
+.status-tag--neutral {
+    background-color: #f3f2f1;
+    color: #0b0c0c;
+}
+
+/* Warning notification (override to a stronger red) */
+.das-notification.das-notification--warning {
+    box-sizing: border-box;
+    border: 6px solid #c62817;
+    background: transparent;
+    padding: 0;
+    max-width: 780px;
+    margin: 0 auto;
+}
+.das-notification.das-notification--warning .das-notification__heading {
+    background: #c62817;
+    color: #ffffff;
+    padding: 12px 16px;
+    margin: 0;
+    font-weight: 700;
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+.das-notification.das-notification--warning .das-notification__body {
+    background: #ffffff;
+    padding: 18px 20px;
+    color: #0b0c0c;
+    margin: 0; 
+    font-weight: 700;
+}
+.das-notification.das-notification--warning .govuk-body {
+    margin: 0 0 10px 0;
+    font-weight: 700;
 }

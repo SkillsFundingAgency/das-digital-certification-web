@@ -28,7 +28,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Authentication
 
             if (isUlnAuthorisedRequirementInPolicy && isUlnAuthorisedRequirementFailed)
             {
-                var route = _linkGenerator.GetPathByName(context, AuthoriseController.AuthoriseStartRouteGet, values: null);
+                var route = _linkGenerator.GetPathByName(context, AuthoriseController.NeedMoreInformationRouteGet, values: null);
 
                 if (!string.IsNullOrEmpty(route))
                 {
