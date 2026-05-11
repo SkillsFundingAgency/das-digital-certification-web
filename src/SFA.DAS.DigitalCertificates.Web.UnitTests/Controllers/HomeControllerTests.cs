@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
+using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
 using SFA.DAS.DigitalCertificates.Web.Controllers;
 using SFA.DAS.DigitalCertificates.Web.Exceptions;
 using SFA.DAS.DigitalCertificates.Web.Infrastructure;
@@ -30,6 +31,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
         private Mock<IGovUkAuthenticationService> _govUkAuthServiceMock;
         private Mock<IHttpContextAccessor> _contextAccessorMock;
         private Mock<ILogger<HomeController>> _loggerMock;
+        private DigitalCertificatesWebConfiguration _digitalCertificatesWebConfig;
         private HomeController _sut;
         private DefaultHttpContext _httpContext;
 
@@ -41,6 +43,21 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             _govUkAuthServiceMock = new Mock<IGovUkAuthenticationService>();
             _contextAccessorMock = new Mock<IHttpContextAccessor>();
             _loggerMock = new Mock<ILogger<HomeController>>();
+            _digitalCertificatesWebConfig = new DigitalCertificatesWebConfiguration
+            {
+                ServiceBaseUrl = "https://test.local",
+                OneLoginSettingsUrl = "http://settings.com",
+                RedisConnectionString = "UseDevelopmentStorage=true",
+                DataProtectionKeysDatabase = "TestDb",
+                StandardTemplateBlobName = "standard-template",
+                GreenStandardTemplateBlobName = "green-standard-template",
+                FrameworkTemplateBlobName = "framework-template",
+                MasterPassword = "master-password",
+                StorageConnectionString = "UseDevelopmentStorage=true",
+                ContainerName = "test-container",
+                AsposeLicenseContainerName = "aspose-license-container",
+                LicenseBlobName = "license-blob"               
+            };
 
             _httpContext = new DefaultHttpContext();
             _contextAccessorMock.Setup(c => c.HttpContext).Returns(_httpContext);
@@ -50,37 +67,36 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
                 _configMock.Object,
                 _govUkAuthServiceMock.Object,
                 _contextAccessorMock.Object,
-                _loggerMock.Object);
+                _loggerMock.Object,
+                _digitalCertificatesWebConfig);
         }
 
         [TearDown]
-        public void TearDown() => _sut.Dispose();
+        public void TearDown() => _sut.Dispose();        
 
         [Test]
-        public void Index_ShouldReturnView_WhenRunningLocallyOrDev()
+        public void Index_ShouldRedirect_To_ExternalStartPage_WhenConfigured()
         {
-            _configMock.Setup(c => c["EnvironmentName"]).Returns("LOCAL");
-            var localResult = _sut.Index() as ViewResult;
-            localResult.Should().NotBeNull();
-
-            _configMock.Setup(c => c["EnvironmentName"]).Returns("DEV");
-            var devResult = _sut.Index() as ViewResult;
-            devResult.Should().NotBeNull();
-        }
-
-        [Test]
-        public void Index_ShouldRedirect_WhenRunningInProd()
-        {
-            // Arrange
-            _configMock.Setup(c => c["EnvironmentName"]).Returns("PROD");
+            _digitalCertificatesWebConfig.ExternalStartPage = "https://external-start-page.com";
 
             // Act
             var result = _sut.Index();
 
             // Assert
-            var redirect = result as RedirectToRouteResult;
+            var redirect = result as RedirectResult;
             redirect.Should().NotBeNull();
-            redirect!.RouteName.Should().Be(HomeController.CheckRouteGet);
+            redirect.Url.Should().Be("https://external-start-page.com");
+        }
+
+        [Test]
+        public void Index_ShouldRedirect_To_View_When_ExternalStartPage_NotConfigured()
+        {
+            // Act
+            var result = _sut.Index();
+
+            // Assert
+            var viewResult = result as ViewResult;
+            viewResult.Should().NotBeNull();            
         }
 
         [Test]
@@ -382,7 +398,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
                 _configMock.Object,
                 _govUkAuthServiceMock.Object,
                 _contextAccessorMock.Object,
-                _loggerMock.Object)
+                _loggerMock.Object, 
+                _digitalCertificatesWebConfig)
             {
                 ControllerContext = new ControllerContext
                 {

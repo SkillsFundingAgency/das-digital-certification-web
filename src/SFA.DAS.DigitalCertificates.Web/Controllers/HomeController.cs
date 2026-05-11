@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using SFA.DAS.DigitalCertificates.Domain.Extensions;
+using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
 using SFA.DAS.DigitalCertificates.Web.Exceptions;
 using SFA.DAS.DigitalCertificates.Web.Extensions;
 using SFA.DAS.DigitalCertificates.Web.Infrastructure;
@@ -16,7 +17,6 @@ using SFA.DAS.DigitalCertificates.Web.Models;
 using SFA.DAS.DigitalCertificates.Web.Models.Home;
 using SFA.DAS.DigitalCertificates.Web.Models.Sharing;
 using SFA.DAS.DigitalCertificates.Web.Orchestrators;
-using SFA.DAS.DigitalCertificates.Web.StartupExtensions;
 using SFA.DAS.GovUK.Auth.Authentication;
 using SFA.DAS.GovUK.Auth.Services;
 
@@ -29,6 +29,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         private readonly IConfiguration _config;
         private readonly IGovUkAuthenticationService _govUkAuthenticationService;
         private readonly ILogger<HomeController> _logger;
+        private readonly DigitalCertificatesWebConfiguration _digitalCertificatesWebConfiguration;
 
         #region Routes
         public const string VerifiedRouteGet = nameof(VerifiedRouteGet);
@@ -46,25 +47,25 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
 
         public HomeController(IHomeOrchestrator homeOrchestrator,
             IConfiguration config, IGovUkAuthenticationService govUkAuthenticationService,
-            IHttpContextAccessor contextAccessor, ILogger<HomeController> logger)
+            IHttpContextAccessor contextAccessor, ILogger<HomeController> logger, DigitalCertificatesWebConfiguration digitalCertificatesWebConfiguration)
             : base(contextAccessor)
         {
             _homeOrchestrator = homeOrchestrator;
             _config = config;
             _govUkAuthenticationService = govUkAuthenticationService;
             _logger = logger;
+            _digitalCertificatesWebConfiguration = digitalCertificatesWebConfiguration;
         }
 
         [Route("start-page")]
         public IActionResult Index()
         {
-            if (!_config.IsRunningInProd())
+            if(!string.IsNullOrWhiteSpace(_digitalCertificatesWebConfiguration.ExternalStartPage))
             {
-                // this view is replaced with a public page on GOV.UK in production
-                return View();
+                return Redirect(_digitalCertificatesWebConfiguration.ExternalStartPage);                
             }
 
-            return RedirectToRoute(CheckRouteGet);
+            return View();
         }
 
         [Route("check", Name = CheckRouteGet)]

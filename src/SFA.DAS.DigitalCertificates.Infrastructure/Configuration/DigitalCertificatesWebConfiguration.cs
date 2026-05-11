@@ -26,6 +26,7 @@ namespace SFA.DAS.DigitalCertificates.Infrastructure.Configuration
         public int? MatchesCacheExpiryDays { get; set; }
         public int? FailedMatchesLimit { get; set; }
         public int? MinimumMasksForSelection { get; set; }
+        public string? ExternalStartPage { get; set; }
     }
 
     [ExcludeFromCodeCoverage]

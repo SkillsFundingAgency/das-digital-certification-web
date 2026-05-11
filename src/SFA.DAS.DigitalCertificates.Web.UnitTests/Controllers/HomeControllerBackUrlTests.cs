@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
+using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
 using SFA.DAS.DigitalCertificates.Web.Controllers;
 using SFA.DAS.DigitalCertificates.Web.Models.Sharing;
 using SFA.DAS.DigitalCertificates.Web.Orchestrators;
@@ -20,6 +21,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
         private Mock<IHttpContextAccessor> _contextAccessorMock;
         private Mock<ILogger<HomeController>> _loggerMock;
         private Mock<IUrlHelper> _urlHelperMock;
+        private Mock<DigitalCertificatesWebConfiguration> _digitalCertificatesWebConfigurationMock;
         private HomeController _sut;
         private DefaultHttpContext _httpContext;
 
@@ -32,6 +34,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             _contextAccessorMock = new Mock<IHttpContextAccessor>();
             _loggerMock = new Mock<ILogger<HomeController>>();
             _urlHelperMock = new Mock<IUrlHelper>();
+            _digitalCertificatesWebConfigurationMock = new Mock<DigitalCertificatesWebConfiguration>();
 
             _httpContext = new DefaultHttpContext();
             _contextAccessorMock.Setup(c => c.HttpContext).Returns(_httpContext);
@@ -42,7 +45,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
                 _configMock.Object,
                 _govUkAuthServiceMock.Object,
                 _contextAccessorMock.Object,
-                _loggerMock.Object)
+                _loggerMock.Object,
+                _digitalCertificatesWebConfigurationMock.Object)
             {
                 ControllerContext = new ControllerContext
                 {
