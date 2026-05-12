@@ -352,7 +352,6 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
                 CourseLevel = "1",
                 DateAwarded = DateTime.UtcNow.Date,
                 ProviderName = "Provider",
-                Ukprn = 10000000,
                 EmployerName = "Employer",
                 StartDate = DateTime.UtcNow.AddYears(-1),
                 PrintRequestedAt = null,
@@ -394,7 +393,6 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
             result.CourseLevel.Should().Be(mediatorResult.CourseLevel);
             result.DateAwarded.Should().Be(mediatorResult.DateAwarded);
             result.ProviderName.Should().Be(mediatorResult.ProviderName);
-            result.Ukprn.Should().Be(mediatorResult.Ukprn);
             result.EmployerName.Should().Be(mediatorResult.EmployerName);
             result.StartDate.Should().Be(mediatorResult.StartDate);
             result.QualificationsAndAwardingBodies.Should().BeEquivalentTo(mediatorResult.QualificationsAndAwardingBodies);

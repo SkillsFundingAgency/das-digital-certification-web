@@ -73,7 +73,6 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetFramework
             result.CourseLevel.Should().Be(response.CourseLevel);
             result.DateAwarded.Should().Be(response.DateAwarded);
             result.ProviderName.Should().Be(response.ProviderName);
-            result.Ukprn.Should().Be(response.Ukprn);
             result.EmployerName.Should().Be(response.EmployerName);
             result.StartDate.Should().Be(response.StartDate);
             result.PrintRequestedAt.Should().Be(response.PrintRequestedAt);
