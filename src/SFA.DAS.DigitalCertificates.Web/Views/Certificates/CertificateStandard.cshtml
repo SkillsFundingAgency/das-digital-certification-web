@@ -18,6 +18,12 @@
     <main class="govuk-main-wrapper" id="main-content">
         <div class="govuk-grid-row">
             <div class="govuk-grid-column-two-thirds">
+                @if (Model.ShowSuccessBanner)
+                {
+                    var bannerMessage = "We've matched your information to this course.";
+
+                    <partial name="_CertificateSuccessBanner" model="bannerMessage" />
+                }
 
                 <h1 class="govuk-heading-l">@Model?.CourseName</h1>
 
