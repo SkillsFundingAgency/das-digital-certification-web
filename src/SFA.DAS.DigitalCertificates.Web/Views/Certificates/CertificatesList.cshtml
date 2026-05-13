@@ -9,12 +9,7 @@
 <main class="govuk-main-wrapper govuk-main-wrapper--auto-spacing" id="main-content">
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
-            @if (Model.ShowSuccessBanner)
-            {
-                var bannerMessage = "We've matched your information to this course.";
-
-                <partial name="_CertificateSuccessBanner" model="bannerMessage" />
-            }
+            <partial name="_FlashMessagePartial" />
             <h1 class="govuk-label-wrapper">
                 <label class="govuk-label govuk-label--l" for="NumberOfApprentices">
                     @ViewData[ViewDataKeys.Title]

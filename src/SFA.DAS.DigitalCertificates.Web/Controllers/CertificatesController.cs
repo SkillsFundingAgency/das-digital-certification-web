@@ -1,7 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
-using FluentValidation;
+﻿using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -12,8 +9,10 @@ using SFA.DAS.DigitalCertificates.Web.Models.Certificates;
 using SFA.DAS.DigitalCertificates.Web.Models.Sharing;
 using SFA.DAS.DigitalCertificates.Web.Orchestrators;
 using SFA.DAS.DigitalCertificates.Web.Services;
-using SFA.DAS.DigitalCertificates.Web.ViewDataKeys;
 using SFA.DAS.GovUK.Auth.Authentication;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace SFA.DAS.DigitalCertificates.Web.Controllers
 {
@@ -198,9 +197,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             var certificates = viewModel?.Certificates;
             
             if (certificates == null || certificates.Count == 0)
-            {
-                viewModel.ShowSuccessBanner = false;
-                TempData.Remove(TempDataKeys.ShowCertificateSuccessBanner);
+            {                
                 return View(viewModel);
             }
                 
@@ -212,32 +209,29 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
 
             if (frameworks.Count == 1 && standards.Count == 0)
                 return RedirectToRoute(CertificateFrameworkRouteGet, new { certificateId = frameworks[0].CertificateId });
-
-            viewModel.ShowSuccessBanner = Convert.ToBoolean(TempData[TempDataKeys.ShowCertificateSuccessBanner]);
+                     
             return View(viewModel);
         }
 
         [HttpGet("{certificateId}/standard", Name = CertificateStandardRouteGet)]
         [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsCertificateOwner))]
         public async Task<IActionResult> CertificateStandard(Guid certificateId)
-        {
-            var showSuccessBanner = Convert.ToBoolean(TempData[TempDataKeys.ShowCertificateSuccessBanner]);
+        {            
             await _sessionService.ClearContactReferenceAsync();
 
             var model = await _certificatesOrchestrator.GetCertificateStandardViewModel(certificateId);
-            model.ShowSuccessBanner = showSuccessBanner;
+
             return View(model);
         }
 
         [HttpGet("{certificateId}/framework", Name = CertificateFrameworkRouteGet)]
         [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsCertificateOwner))]
         public async Task<IActionResult> CertificateFramework(Guid certificateId)
-        {
-            var showSuccessBanner = Convert.ToBoolean(TempData[TempDataKeys.ShowCertificateSuccessBanner]);
+        {            
             await _sessionService.ClearContactReferenceAsync();
 
             var model = await _certificatesOrchestrator.GetCertificateFrameworkViewModel(certificateId);
-            model.ShowSuccessBanner = showSuccessBanner;
+            
             return View(model);
         }
 

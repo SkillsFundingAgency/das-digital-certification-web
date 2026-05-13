@@ -1,20 +1,22 @@
-﻿using System;
-using System.Security.Claims;
-using System.Threading.Tasks;
-using SFA.DAS.DigitalCertificates.Domain.Models;
-using FluentAssertions;
+﻿using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Moq;
 using NUnit.Framework;
+using SFA.DAS.DigitalCertificates.Domain.Models;
 using SFA.DAS.DigitalCertificates.Web.Controllers;
+using SFA.DAS.DigitalCertificates.Web.Enums;
 using SFA.DAS.DigitalCertificates.Web.Extensions;
 using SFA.DAS.DigitalCertificates.Web.Models.Authorise;
 using SFA.DAS.DigitalCertificates.Web.Orchestrators;
 using SFA.DAS.DigitalCertificates.Web.Services;
-using SFA.DAS.DigitalCertificates.Web.Enums;
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
 {
@@ -439,6 +441,10 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
         public async Task CheckAnswersPost_SingleMatch_Redirects_To_Certificates()
         {
             // Arrange
+            _sut.TempData = new TempDataDictionary(
+                 new DefaultHttpContext(),
+                 Mock.Of<ITempDataProvider>());
+
             _orchestratorMock.Setup(o => o.SubmitCheckAnswersAsync()).ReturnsAsync(MatchOutcome.SingleMatch);
 
             // Act
@@ -448,6 +454,10 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             result.Should().BeOfType<RedirectToRouteResult>();
             var redirect = result as RedirectToRouteResult;
             redirect.RouteName.Should().Be(CertificatesController.CertificatesListRouteGet);
+            _sut.TempData.Values
+                .Select(x => x?.ToString())
+                .Should()
+                .Contain(x => x!.Contains("We've matched your information to this course."));
         }
 
         [Test]
@@ -486,6 +496,40 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             _sut.TempData.ContainsKey(TempDataDictionaryExtensions.FlashMessageBodyTempDataKey).Should().BeTrue();
             _sut.TempData.ContainsKey(TempDataDictionaryExtensions.FlashMessageTempDetailKey).Should().BeTrue();
             _sut.TempData.ContainsKey(TempDataDictionaryExtensions.FlashMessageLevelTempDataKey).Should().BeTrue();
+        }
+
+        [Test]
+        public async Task CheckAnswersPost_MultipleMatches_Adds_Success_Flash_To_TempData_And_Redirects_To_Certificates()
+        {
+            // Arrange
+            _sut.TempData = new TempDataDictionary(
+                 new DefaultHttpContext(),
+                 Mock.Of<ITempDataProvider>());
+
+            _orchestratorMock
+                .Setup(o => o.SubmitCheckAnswersAsync())
+                .ReturnsAsync(MatchOutcome.MultipleMatches);
+
+            // Act
+            var result = await _sut.CheckAnswersPost();
+
+            // Assert
+            result.Should().BeOfType<RedirectToRouteResult>();
+
+            var redirect = result as RedirectToRouteResult;
+            redirect!.RouteName.Should().Be(CertificatesController.CertificatesListRouteGet);
+
+            _sut.TempData.Values
+                .Select(x => x?.ToString())
+                .Should()
+                .Contain(x => x != null &&
+                              x.Contains("We've matched your information to these courses."));
+
+            _sut.TempData.Values
+                .Select(x => x?.ToString())
+                .Should()
+                .Contain(x => x != null &&
+                              x.Contains(TempDataDictionaryExtensions.FlashMessageLevel.Success.ToString()));
         }
 
         [Test]
