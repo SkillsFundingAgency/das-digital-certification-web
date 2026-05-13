@@ -86,6 +86,7 @@ namespace SFA.DAS.DigitalCertificates.Web
                 .AddCache(webConfiguration!, _environment)
                 .AddMemoryCache()
                 .AddCookieTempDataProvider()
+                .AddSecureSessionCookie()
                 .AddDasDataProtection(webConfiguration!, _environment)
                 .AddDasHealthChecks(webConfiguration!)
                 .AddEncodingService()
