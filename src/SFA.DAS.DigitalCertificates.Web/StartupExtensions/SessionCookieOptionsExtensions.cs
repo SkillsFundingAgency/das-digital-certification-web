@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.DependencyInjection;
 using System.Diagnostics.CodeAnalysis;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace SFA.DAS.DigitalCertificates.Web.StartupExtensions
 {
@@ -15,7 +15,7 @@ namespace SFA.DAS.DigitalCertificates.Web.StartupExtensions
                 options.Cookie.HttpOnly = true;
                 options.Cookie.IsEssential = true;
                 options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-                options.Cookie.SameSite = SameSiteMode.Lax;                
+                options.Cookie.SameSite = SameSiteMode.Strict;               
             });
 
             return services;
