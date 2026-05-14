@@ -454,10 +454,13 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             result.Should().BeOfType<RedirectToRouteResult>();
             var redirect = result as RedirectToRouteResult;
             redirect.RouteName.Should().Be(CertificatesController.CertificatesListRouteGet);
-            _sut.TempData.Values
-                .Select(x => x?.ToString())
+            _sut.TempData[TempDataDictionaryExtensions.FlashMessageTitleTempDataKey]
                 .Should()
-                .Contain(x => x!.Contains("We've matched your information to this course."));
+                .Be("We've matched your information to this course.");
+
+            _sut.TempData[TempDataDictionaryExtensions.FlashMessageLevelTempDataKey]
+                .Should()
+                .Be(TempDataDictionaryExtensions.FlashMessageLevel.Success.ToString());
         }
 
         [Test]
@@ -519,17 +522,13 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             var redirect = result as RedirectToRouteResult;
             redirect!.RouteName.Should().Be(CertificatesController.CertificatesListRouteGet);
 
-            _sut.TempData.Values
-                .Select(x => x?.ToString())
+            _sut.TempData[TempDataDictionaryExtensions.FlashMessageTitleTempDataKey]
                 .Should()
-                .Contain(x => x != null &&
-                              x.Contains("We've matched your information to these courses."));
+                .Be("We've matched your information to these courses.");
 
-            _sut.TempData.Values
-                .Select(x => x?.ToString())
+            _sut.TempData[TempDataDictionaryExtensions.FlashMessageLevelTempDataKey]
                 .Should()
-                .Contain(x => x != null &&
-                              x.Contains(TempDataDictionaryExtensions.FlashMessageLevel.Success.ToString()));
+                .Be(TempDataDictionaryExtensions.FlashMessageLevel.Success.ToString());           
         }
 
         [Test]

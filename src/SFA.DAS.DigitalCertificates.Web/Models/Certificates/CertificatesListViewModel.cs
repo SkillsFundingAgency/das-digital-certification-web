@@ -5,6 +5,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Models.Certificates
 {
     public class CertificatesListViewModel
     {
-        public List<Certificate>? Certificates { get; set; }       
+        public List<Certificate>? Certificates { get; set; }
     }
 }

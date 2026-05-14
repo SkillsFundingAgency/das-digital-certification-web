@@ -209,14 +209,14 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
 
             if (frameworks.Count == 1 && standards.Count == 0)
                 return RedirectToRoute(CertificateFrameworkRouteGet, new { certificateId = frameworks[0].CertificateId });
-                     
+
             return View(viewModel);
         }
 
         [HttpGet("{certificateId}/standard", Name = CertificateStandardRouteGet)]
         [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsCertificateOwner))]
         public async Task<IActionResult> CertificateStandard(Guid certificateId)
-        {            
+        {
             await _sessionService.ClearContactReferenceAsync();
 
             var model = await _certificatesOrchestrator.GetCertificateStandardViewModel(certificateId);
