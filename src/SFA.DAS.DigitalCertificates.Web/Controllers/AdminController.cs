@@ -1,9 +1,8 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
+using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
 using SFA.DAS.DigitalCertificates.Web.Services;
-using SFA.DAS.DigitalCertificates.Web.StartupExtensions;
 
 namespace SFA.DAS.DigitalCertificates.Web.Controllers
 {
@@ -12,7 +11,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
     {
         private readonly ICacheService _cacheService;
         private readonly IUserService _userService;
-        private readonly IConfiguration _config;
+        private readonly DigitalCertificatesWebConfiguration _digitalCertificatesWebConfiguration;
 
         #region Routes
         public const string ClearMatchesRouteGet = nameof(ClearMatchesRouteGet);
@@ -20,18 +19,18 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         #endregion Routes
 
         public AdminController(ICacheService cacheService, IUserService userService,
-            IConfiguration config, IHttpContextAccessor contextAccessor)
+            DigitalCertificatesWebConfiguration digitalCertificatesWebConfiguration, IHttpContextAccessor contextAccessor)
             : base(contextAccessor)
         {
             _cacheService = cacheService;
             _userService = userService;
-            _config = config;
+            _digitalCertificatesWebConfiguration = digitalCertificatesWebConfiguration;
         }
 
         [Route("clear-matches", Name = ClearMatchesRouteGet)]
         public async Task<IActionResult> RevertAuthorisation()
         {
-            if (!_config.IsRunningInProd())
+            if (_digitalCertificatesWebConfiguration.AdminIsEnabled)
             {
                 var govUkIdentifier = _userService.GetGovUkIdentifier();
                 await _cacheService.ClearMatches(govUkIdentifier);
@@ -43,7 +42,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         [Route("show-matches", Name = ShowMatchesRouteGet)]
         public async Task<IActionResult> ShowMatches()
         {
-            if (!_config.IsRunningInProd())
+            if (_digitalCertificatesWebConfiguration.AdminIsEnabled)
             {
                 var govUkIdentifier = _userService.GetGovUkIdentifier();
                 var matches = await _cacheService.GetOrCreateMatchesAsync(govUkIdentifier, 
