@@ -36,6 +36,5 @@ namespace SFA.DAS.DigitalCertificates.Web.Models.Certificates
         public string? PrintStatusDisplay { get; set; }
         public string? PrintStatusCssClass { get; set; }
         public bool ShowPrintHeader { get; set; }
-
     }
 }

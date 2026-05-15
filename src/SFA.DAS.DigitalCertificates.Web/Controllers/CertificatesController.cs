@@ -1,7 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
-using FluentValidation;
+﻿using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -13,6 +10,9 @@ using SFA.DAS.DigitalCertificates.Web.Models.Sharing;
 using SFA.DAS.DigitalCertificates.Web.Orchestrators;
 using SFA.DAS.DigitalCertificates.Web.Services;
 using SFA.DAS.GovUK.Auth.Authentication;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace SFA.DAS.DigitalCertificates.Web.Controllers
 {
@@ -195,9 +195,12 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             var viewModel = await _certificatesOrchestrator.GetCertificatesListViewModel();
 
             var certificates = viewModel?.Certificates;
+            
             if (certificates == null || certificates.Count == 0)
+            {                
                 return View(viewModel);
-
+            }
+                
             var standards = certificates.Where(c => c.CertificateType == CertificateType.Standard).ToList();
             var frameworks = certificates.Where(c => c.CertificateType == CertificateType.Framework).ToList();
 
@@ -224,10 +227,11 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         [HttpGet("{certificateId}/framework", Name = CertificateFrameworkRouteGet)]
         [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsCertificateOwner))]
         public async Task<IActionResult> CertificateFramework(Guid certificateId)
-        {
+        {            
             await _sessionService.ClearContactReferenceAsync();
 
             var model = await _certificatesOrchestrator.GetCertificateFrameworkViewModel(certificateId);
+            
             return View(model);
         }
 

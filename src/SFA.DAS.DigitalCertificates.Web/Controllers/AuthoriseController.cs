@@ -216,8 +216,10 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             switch (outcome)
             {
                 case MatchOutcome.SingleMatch:
+                    TempData.AddFlashMessage($"We've matched your information to this course.", string.Empty, TempDataDictionaryExtensions.FlashMessageLevel.Success);
                     return RedirectToRoute(CertificatesController.CertificatesListRouteGet);
                 case MatchOutcome.MultipleMatches:
+                    TempData.AddFlashMessage($"We've matched your information to these courses.", string.Empty, TempDataDictionaryExtensions.FlashMessageLevel.Success);
                     return RedirectToRoute(CertificatesController.CertificatesListRouteGet);
                 case MatchOutcome.Locked:
                     return await RedirectToCannotMatchAsync();
