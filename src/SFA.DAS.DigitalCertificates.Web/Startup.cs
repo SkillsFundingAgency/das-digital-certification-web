@@ -3,10 +3,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.CookiePolicy;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
@@ -79,19 +77,11 @@ namespace SFA.DAS.DigitalCertificates.Web
                 .AddControllersAsServices();
 
             services
-                .AddValidatorsFromAssemblyContaining<SignInStubViewModelValidator>();
-
-            services.Configure<CookiePolicyOptions>(options =>
-            {
-                options.Secure = CookieSecurePolicy.Always;
-                options.HttpOnly = HttpOnlyPolicy.Always;
-                options.MinimumSameSitePolicy = SameSiteMode.Strict;
-            });
+                .AddValidatorsFromAssemblyContaining<SignInStubViewModelValidator>();          
 
             services
                 .AddGovUkOneLoginAuthentication(webConfiguration!, _configuration)
-                .AddAuthorizationPolicies()
-                .AddSession()
+                .AddAuthorizationPolicies()                
                 .AddCache(webConfiguration!, _environment)
                 .AddMemoryCache()
                 .AddCookieTempDataProvider()
@@ -143,7 +133,6 @@ namespace SFA.DAS.DigitalCertificates.Web
             app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseDasHealthChecks();
-            app.UseCookiePolicy();
             app.UseRouting();
             app.UseSession();
             app.UseAuthentication();

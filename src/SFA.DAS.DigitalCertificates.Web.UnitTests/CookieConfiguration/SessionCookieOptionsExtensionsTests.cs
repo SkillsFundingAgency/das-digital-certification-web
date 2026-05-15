@@ -24,7 +24,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.CookieConfiguration
 
         [Test]
         public void AddSecureSessionCookie_SetsCookieName()
-            => _options.Cookie.Name.Should().Be(".AspNetCore.Session");
+            => _options.Cookie.Name.Should().Be(".DigitalCertificates.Session");
 
         [Test]
         public void AddSecureSessionCookie_SetsHttpOnly()
