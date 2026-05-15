@@ -8,6 +8,66 @@
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
             <h1 class="govuk-heading-xl">@ViewData[ViewDataKeys.Title]</h1>
+            <div class="govuk-inset-text">
+                <p class="govuk-body">
+                    This service is for apprenticeships awarded in England.
+                </p>
+
+                <p class="govuk-body">
+                    For other UK apprenticeships visit,
+                    <a class="govuk-link" href="https://www.nidirect.gov.uk/campaigns/apprenticeships" target="_blank" rel="noreferrer noopener">
+                        Apprenticeships Northern Ireland
+                    </a>,
+                    <a class="govuk-link" href="https://www.apprenticeships.scot/" target="_blank" rel="noreferrer noopener">
+                        Apprenticeships Scotland
+                    </a>,
+                    or
+                    <a class="govuk-link" href="https://www.gov.wales/apprenticeships" target="_blank" rel="noreferrer noopener">
+                        Apprenticeships Wales
+                    </a>.
+                </p>
+            </div>
+            <p class="govuk-body">
+                If you completed your apprenticeship after 2012, you can use this service to:
+            </p>
+
+            <ul class="govuk-list govuk-list--bullet">
+                <li>view your apprenticeship certificates</li>
+                <li>download and share your apprenticeship certificates</li>
+                <li>request a printed apprenticeship certificate</li>
+            </ul>
+
+            <details class="govuk-details" data-module="govuk-details">
+                <summary class="govuk-details__summary">
+                    <span class="govuk-details__summary-text">
+                        I completed my apprenticeship before 2012
+                    </span>
+                </summary>
+
+                <div class="govuk-details__text">
+                    If you completed your apprenticeship before 2012 and need a replacement certificate, you must contact your original awarding organisation. If you do not know which awarding organisation it is, the
+                    <a class="govuk-link" href="https://www.gov.uk/find-a-regulated-qualification" target="_blank" rel="noreferrer noopener">
+                        Register of Regulated Qualifications
+                    </a>
+                    may help you identify it. A fee is typically charged for replacement certificates, and the Department for Education (DfE) is unable to subsidise or reimburse this cost.
+                </div>
+            </details>
+
+            <h2 class="govuk-heading-m">
+                Sign in to view your certificates
+            </h2>
+
+            <p class="govuk-body">
+                The first time you use this service you'll need to answer some questions, so we can match your information to your results. If you have your unique learner number, we can match you more quickly. After matching, you'll be able to view your certificates straight away when signed in.
+            </p>
+
+            <p class="govuk-body">
+                You'll need a GOV.UK One Login to use this service. You'll be able to create a GOV.UK One Login if you do not already have one.
+            </p>
+
+            <p class="govuk-body">
+                You'll be told when you sign in if you need to prove your identity. This is to keep your details safe and normally involves using photo ID like a passport or driving licence.
+            </p>
             <a asp-route="@HomeController.CheckRouteGet" role="button" class="govuk-button govuk-button--start govuk-!-margin-top-5">
                 Start
                 <svg class="govuk-button__start-icon" xmlns="http://www.w3.org/2000/svg" width="17.5" height="19" viewBox="0 0 33 40" aria-hidden="true" focusable="false">
