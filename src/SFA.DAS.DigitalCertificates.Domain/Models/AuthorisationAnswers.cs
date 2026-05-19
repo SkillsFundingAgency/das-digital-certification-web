@@ -16,7 +16,7 @@
         public bool? ProviderUnknown { get; set; }
         public bool? CourseUnknown { get; set; }
         
-        // TODO: At present, we determine the long journey at this point.
+        // At present, we determine the long journey at this point.
         // This can be adjusted based on future requirements.
 
         private bool shortJourneyFromMatch = true;
