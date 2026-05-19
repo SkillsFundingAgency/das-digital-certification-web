@@ -22,7 +22,7 @@ namespace SFA.DAS.DigitalCertificates.UnitTests.Application.Commands.SubmitMatch
                 CourseCode = "C1",
                 CourseName = "Course One",
                 CourseLevel = "3",
-                DateAwarded = 2019,
+                YearAwarded = 2019,
                 ProviderName = "Provider A",
                 Ukprn = 12345,
                 IsMatched = true,
@@ -40,7 +40,7 @@ namespace SFA.DAS.DigitalCertificates.UnitTests.Application.Commands.SubmitMatch
             req.CourseCode.Should().Be(cmd.CourseCode);
             req.CourseName.Should().Be(cmd.CourseName);
             req.CourseLevel.Should().Be(cmd.CourseLevel);
-            req.DateAwarded.Should().Be(cmd.DateAwarded);
+            req.DateAwarded.Should().Be(cmd.YearAwarded);
             req.ProviderName.Should().Be(cmd.ProviderName);
             req.Ukprn.Should().Be(cmd.Ukprn);
             req.IsMatched.Should().Be(cmd.IsMatched);

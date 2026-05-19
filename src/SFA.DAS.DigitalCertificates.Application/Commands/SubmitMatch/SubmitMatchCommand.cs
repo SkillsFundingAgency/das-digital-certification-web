@@ -15,7 +15,7 @@ namespace SFA.DAS.DigitalCertificates.Application.Commands.SubmitMatch
         public string? CourseCode { get; set; }
         public string? CourseName { get; set; }
         public string? CourseLevel { get; set; }
-        public int? DateAwarded { get; set; }
+        public int? YearAwarded { get; set; }
 
         public string? ProviderName { get; set; }
         public int? Ukprn { get; set; }
@@ -34,7 +34,7 @@ namespace SFA.DAS.DigitalCertificates.Application.Commands.SubmitMatch
                 CourseCode = c.CourseCode,
                 CourseName = c.CourseName,
                 CourseLevel = c.CourseLevel,
-                DateAwarded = c.DateAwarded,
+                DateAwarded = c.YearAwarded,
                 ProviderName = c.ProviderName,
                 Ukprn = c.Ukprn,
                 IsMatched = c.IsMatched,
