@@ -273,7 +273,7 @@
         {
             "condition": "[not(empty(parameters('govukOneLoginKeyVaultName')))]",
             "apiVersion": "2021-04-01",
-            "name": "[concat(variables('appServiceName'), '-kv-crypto-user-role-assignment-', parameters('utcValue'))]",
+            "name": "[concat(variables('appServiceName'), '-kv-crypto-user-role-assignment-', substring(parameters('utcValue'), 0, 12))]",
             "type": "Microsoft.Resources/deployments",
             "resourceGroup": "[parameters('govukOneLoginKeyVaultResourceGroup')]",
             "properties": {
