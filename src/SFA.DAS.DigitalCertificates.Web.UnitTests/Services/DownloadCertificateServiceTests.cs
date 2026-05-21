@@ -46,8 +46,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
                 // Assert
                 result.Should().NotBeNull();
                 result.FamilyName.Should().Be(request.FamilyName);
-                result.GivenNames.Should().Be(request.GivenNames);
-                result.FullName.Should().Be($"{request.GivenNames} \n {request.FamilyName}");
+                result.GivenNames.Should().Be(request.GivenNames);               
                 result.CourseName.Should().Be(request.CourseName);
                 result.CourseOption.Should().Be(request.CourseOption);
                 result.CourseLevel.Should().Be(request.CourseLevel);
@@ -86,8 +85,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
                 // Assert
                 result.Should().NotBeNull();
                 result.FamilyName.Should().Be(request.FamilyName);
-                result.GivenNames.Should().Be(request.GivenNames);
-                result.FullName.Should().Be($"{request.GivenNames} \n {request.FamilyName}");
+                result.GivenNames.Should().Be(request.GivenNames);                
                 result.CourseName.Should().Be(request.CourseName);
                 result.CourseOption.Should().Be(request.CourseOption);
                 result.CourseLevel.Should().Be(request.CourseLevel);

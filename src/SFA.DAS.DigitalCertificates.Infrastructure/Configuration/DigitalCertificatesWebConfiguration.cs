@@ -27,6 +27,7 @@ namespace SFA.DAS.DigitalCertificates.Infrastructure.Configuration
         public int? FailedMatchesLimit { get; set; }
         public int? MinimumMasksForSelection { get; set; }
         public string? ExternalStartPage { get; set; }
+        public int MaxFullNameLengthOnOneLine { get; set; }
     }
 
     [ExcludeFromCodeCoverage]
