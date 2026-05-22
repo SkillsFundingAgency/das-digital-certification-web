@@ -1,0 +1,59 @@
+﻿@model SFA.DAS.DigitalCertificates.Web.Models.Authorise.CheckAnswersViewModel
+@using SFA.DAS.DigitalCertificates.Web.Controllers
+@using SFA.DAS.DigitalCertificates.Web.ViewDataKeys
+@{
+    ViewData[ViewDataKeys.Title] = "Check your answers";
+    ViewBag.GaData.Vpv = ViewData[ViewDataKeys.GaDataVpvPrefix] + "check-your-answers";
+}
+
+<div class="govuk-width-container">
+    <a asp-route="@Model?.BackLinkRouteName" class="govuk-back-link">Back</a>
+
+    <main class="govuk-main-wrapper" id="main-content">
+        <div class="govuk-grid-row">
+            <div class="govuk-grid-column-two-thirds">
+            <partial name="_FlashMessagePartial" />
+
+        <h1 class="govuk-heading-l">Check your answers</h1>
+
+        <dl class="govuk-summary-list">
+            
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">Unique learner number</dt>
+                <dd class="govuk-summary-list__value">@Model?.UlnDisplay</dd>
+                <dd class="govuk-summary-list__actions"><a asp-route="@AuthoriseController.KnowYourUlnRouteGet" aria-label="Change unique learner number">Change</a></dd>
+            </div>
+
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">Course</dt>
+                <dd class="govuk-summary-list__value">@Model?.CourseDisplay</dd>
+                <dd class="govuk-summary-list__actions"><a asp-route="@AuthoriseController.SelectCourseRouteGet" aria-label="Change course">Change</a></dd>
+            </div>
+
+            @if (!(Model?.IsShortJourney ?? false))
+            {
+
+                <div class="govuk-summary-list__row">
+                    <dt class="govuk-summary-list__key">Year of completion</dt>
+                    <dd class="govuk-summary-list__value">@Model?.YearDisplay</dd>
+                    <dd class="govuk-summary-list__actions"><a asp-route="@AuthoriseController.KnowYearRouteGet" aria-label="Change year of completion">Change</a></dd>
+                </div>
+
+                <div class="govuk-summary-list__row">
+                    <dt class="govuk-summary-list__key">Training provider</dt>
+                    <dd class="govuk-summary-list__value">@Model?.ProviderDisplay</dd>
+                    <dd class="govuk-summary-list__actions"><a asp-route="@AuthoriseController.SelectProviderRouteGet" aria-label="Change training provider">Change</a></dd>
+                </div>
+            }
+
+        </dl>
+
+        <form asp-action="CheckAnswers" method="post">
+            <button type="submit" class="govuk-button" data-module="govuk-button" data-prevent-double-click="true">Submit</button>
+        </form>
+
+            </div>
+        </div>
+
+    </main>
+</div>

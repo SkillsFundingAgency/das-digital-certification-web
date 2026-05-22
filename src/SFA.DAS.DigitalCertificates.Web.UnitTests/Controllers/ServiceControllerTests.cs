@@ -35,7 +35,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             _cacheServiceMock = new Mock<ICacheService>();
             _sessionServiceMock = new Mock<ISessionService>();
 
-            _sessionServiceMock.Setup(s => s.ClearSessionDataAsync(It.IsAny<string>())).Returns(Task.CompletedTask);
+            _sessionServiceMock.Setup(s => s.ClearSessionDataAsync()).Returns(Task.CompletedTask);
 
             _sut = new ServiceController(
                 _userServiceMock.Object,

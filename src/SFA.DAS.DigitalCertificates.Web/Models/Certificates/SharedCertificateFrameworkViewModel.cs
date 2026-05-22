@@ -6,6 +6,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Models.Certificates
     public class SharedCertificateFrameworkViewModel
     {
         public Guid CertificateId { get; set; }
+        public Guid SharingLinkCode { get; set; }
         public string? FamilyName { get; set; }
         public string? GivenNames { get; set; }
         public string? CertificateReference { get; set; }

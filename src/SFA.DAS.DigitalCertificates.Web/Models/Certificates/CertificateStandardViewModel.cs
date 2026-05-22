@@ -8,7 +8,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Models.Certificates
     {
         public Guid CertificateId { get; set; }
         public string? FamilyName { get; set; }
-        public string? GivenNames { get; set; }
+        public string? GivenNames { get; set; }    
         public long? Uln { get; set; }
         public CertificateType CertificateType { get; set; }
         public string? CertificateReference { get; set; }
@@ -28,6 +28,13 @@ namespace SFA.DAS.DigitalCertificates.Web.Models.Certificates
         public DateTime? StartDate { get; set; }
         public DateTime? PrintRequestedAt { get; set; }
         public string? PrintRequestedBy { get; set; }
+        public PrintStatus PrintStatus { get; set; } = PrintStatus.None;
+        public DateTime? PrintStatusDate { get; set; }
+        public string? PrintStatusMessage { get; set; }
+        public string? PrintStatusCssClass { get; set; }
+        public string? PrintStatusDisplay { get; set; }
         public bool ShowBackLink { get; set; } = true;
+        public bool ShowPrintHeader { get; set; }
+        public bool ShowRequestPrint { get; set; }
     }
 }

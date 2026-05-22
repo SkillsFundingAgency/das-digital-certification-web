@@ -52,7 +52,7 @@ namespace SFA.DAS.DigitalCertificates.Web
 
             if (!_configuration.TryGetSection<GovUkOidcConfiguration>(out var govUkOidcConfiguration))
                 throw new InvalidOperationException("Missing GovUkOidcConfiguration");
-
+            
             services.AddSingleton(webConfiguration!);
             services.AddSingleton(outerApiConfiguration!);
             services.AddSingleton(govUkOidcConfiguration!);
@@ -77,15 +77,15 @@ namespace SFA.DAS.DigitalCertificates.Web
                 .AddControllersAsServices();
 
             services
-                .AddValidatorsFromAssemblyContaining<SignInStubViewModelValidator>();
+                .AddValidatorsFromAssemblyContaining<SignInStubViewModelValidator>();          
 
             services
                 .AddGovUkOneLoginAuthentication(webConfiguration!, _configuration)
-                .AddAuthorizationPolicies()
-                .AddSession()
+                .AddAuthorizationPolicies()                
                 .AddCache(webConfiguration!, _environment)
                 .AddMemoryCache()
                 .AddCookieTempDataProvider()
+                .AddSecureSessionCookie()
                 .AddDasDataProtection(webConfiguration!, _environment)
                 .AddDasHealthChecks(webConfiguration!)
                 .AddEncodingService()

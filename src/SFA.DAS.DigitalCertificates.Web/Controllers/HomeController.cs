@@ -9,12 +9,14 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using SFA.DAS.DigitalCertificates.Domain.Extensions;
+using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
 using SFA.DAS.DigitalCertificates.Web.Exceptions;
 using SFA.DAS.DigitalCertificates.Web.Extensions;
+using SFA.DAS.DigitalCertificates.Web.Infrastructure;
 using SFA.DAS.DigitalCertificates.Web.Models;
 using SFA.DAS.DigitalCertificates.Web.Models.Home;
+using SFA.DAS.DigitalCertificates.Web.Models.Sharing;
 using SFA.DAS.DigitalCertificates.Web.Orchestrators;
-using SFA.DAS.DigitalCertificates.Web.StartupExtensions;
 using SFA.DAS.GovUK.Auth.Authentication;
 using SFA.DAS.GovUK.Auth.Services;
 
@@ -27,39 +29,43 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         private readonly IConfiguration _config;
         private readonly IGovUkAuthenticationService _govUkAuthenticationService;
         private readonly ILogger<HomeController> _logger;
+        private readonly DigitalCertificatesWebConfiguration _digitalCertificatesWebConfiguration;
 
         #region Routes
         public const string VerifiedRouteGet = nameof(VerifiedRouteGet);
         public const string CheckRouteGet = nameof(CheckRouteGet);
+        public const string HelpRouteGet = nameof(HelpRouteGet);
         public const string LockedRouteGet = nameof(LockedRouteGet);
         public const string CookiesRouteGet = nameof(CookiesRouteGet);
+        public const string CookiesRoutePost = nameof(CookiesRoutePost);
         public const string CookieDetailsRouteGet = nameof(CookieDetailsRouteGet);
         public const string ErrorRouteGet = nameof(ErrorRouteGet);
         public const string SignOutRouteGet = nameof(SignOutRouteGet);
         public const string UserSignedOutRouteGet = nameof(UserSignedOutRouteGet);
+        public const string AccessibilityStatementRouteGet = nameof(AccessibilityStatementRouteGet);
         #endregion Routes
 
         public HomeController(IHomeOrchestrator homeOrchestrator,
             IConfiguration config, IGovUkAuthenticationService govUkAuthenticationService,
-            IHttpContextAccessor contextAccessor, ILogger<HomeController> logger)
+            IHttpContextAccessor contextAccessor, ILogger<HomeController> logger, DigitalCertificatesWebConfiguration digitalCertificatesWebConfiguration)
             : base(contextAccessor)
         {
             _homeOrchestrator = homeOrchestrator;
             _config = config;
             _govUkAuthenticationService = govUkAuthenticationService;
             _logger = logger;
+            _digitalCertificatesWebConfiguration = digitalCertificatesWebConfiguration;
         }
 
         [Route("start-page")]
         public IActionResult Index()
         {
-            if (!_config.IsRunningInProd())
+            if(!string.IsNullOrWhiteSpace(_digitalCertificatesWebConfiguration.ExternalStartPage))
             {
-                // this view is replaced with a public page on GOV.UK in production
-                return View();
+                return Redirect(_digitalCertificatesWebConfiguration.ExternalStartPage);                
             }
 
-            return RedirectToRoute(CheckRouteGet);
+            return View();
         }
 
         [Route("check", Name = CheckRouteGet)]
@@ -113,16 +119,50 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             return View();
         }
 
+        [AllowAnonymous]        
         [Route("cookies", Name = CookiesRouteGet)]
-        public IActionResult Cookies()
+        public IActionResult Cookies(string? returnUrl = null)
         {
-            return View();
+            var analyticsCookieValue = Request.Cookies[CookieKeys.AnalyticsConsent];            
+
+            _ = bool.TryParse(analyticsCookieValue, out var isAnalyticsCookieConsentGiven);            
+
+            var cookieViewModel = new CookiesViewModel
+            {                
+                ConsentAnalyticsCookie = isAnalyticsCookieConsentGiven,
+                BackUrl = GetSafeReturnUrl(returnUrl)
+            };
+            return View(cookieViewModel);
+        }
+        
+        [AllowAnonymous]
+        [Route("help", Name = HelpRouteGet)]
+        public IActionResult Help(string? returnUrl = null)
+        {
+            var model = new PageViewModel
+            {
+                BackUrl = GetSafeReturnUrl(returnUrl)
+            };
+
+            return View(model);
         }
 
         [Route("cookie-details", Name = CookieDetailsRouteGet)]
         public IActionResult CookieDetails()
         {
             return View();
+        }
+
+        [AllowAnonymous]
+        [Route("accessibility-statement", Name = AccessibilityStatementRouteGet)]
+        public IActionResult AccessibilityStatement(string? returnUrl = null)
+        {
+            var model = new PageViewModel
+            {
+                BackUrl = GetSafeReturnUrl(returnUrl)
+            };
+
+            return View(model);
         }
 
         [Route("error/403")]
@@ -137,6 +177,18 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         {
             _logger.LogError(errorMessage.SanitizeLogData());
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContextAccessor?.HttpContext?.TraceIdentifier, ErrorMessage = errorMessage });
+        }
+
+        private string GetSafeReturnUrl(string? returnUrl, string fallbackUrl = "")
+        {
+            if (string.IsNullOrWhiteSpace(returnUrl))
+            {
+                return fallbackUrl;
+            }
+
+            return Url.IsLocalUrl(returnUrl)
+                ? returnUrl
+                : fallbackUrl;
         }
     }
 }

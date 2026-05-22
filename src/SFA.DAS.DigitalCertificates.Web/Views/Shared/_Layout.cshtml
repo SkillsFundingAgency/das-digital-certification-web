@@ -8,7 +8,7 @@
 <head>
     <partial name="_GoogleAnalytics" model="GoogleAnalyticsTag.Head" />
     <meta charset="utf-8" />
-    <title>@(ViewData[ViewDataKeys.ServiceName])</title>
+    <title>@(ViewData[ViewDataKeys.Title] ?? ViewData[ViewDataKeys.ServiceName])</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#0b0c0c" />
 
@@ -57,9 +57,10 @@
     <partial name="_GoogleAnalyticsInfo" />
 
     @* These javascripts are not included in the project they are loaded from the cdn *@
+    <script src="/libs/accessible-autocomplete/accessible-autocomplete.min.js"></script>
     <script src="libs/govuk-frontend/all.js"></script>
     <script src="libs/jquery/jquery.min.js"></script>
-    <script src="js/das-all.js"></script>
+    <script src="js/das-all.js"></script>     
     <script src="js/app.min.js"></script>
     
     @* This javascript is included in the project it is not loaded from the cdn *@

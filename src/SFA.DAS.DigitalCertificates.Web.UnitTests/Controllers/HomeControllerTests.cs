@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Security.Claims;
-using System.Threading.Tasks;
-using FluentAssertions;
+﻿using FluentAssertions;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -10,13 +6,20 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
+using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
 using SFA.DAS.DigitalCertificates.Web.Controllers;
 using SFA.DAS.DigitalCertificates.Web.Exceptions;
+using SFA.DAS.DigitalCertificates.Web.Infrastructure;
 using SFA.DAS.DigitalCertificates.Web.Models;
 using SFA.DAS.DigitalCertificates.Web.Models.Home;
+using SFA.DAS.DigitalCertificates.Web.Models.Sharing;
 using SFA.DAS.DigitalCertificates.Web.Orchestrators;
 using SFA.DAS.GovUK.Auth.Models;
 using SFA.DAS.GovUK.Auth.Services;
+using System;
+using System.Collections.Generic;
+using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
 {
@@ -28,6 +31,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
         private Mock<IGovUkAuthenticationService> _govUkAuthServiceMock;
         private Mock<IHttpContextAccessor> _contextAccessorMock;
         private Mock<ILogger<HomeController>> _loggerMock;
+        private DigitalCertificatesWebConfiguration _digitalCertificatesWebConfig;
         private HomeController _sut;
         private DefaultHttpContext _httpContext;
 
@@ -39,6 +43,21 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             _govUkAuthServiceMock = new Mock<IGovUkAuthenticationService>();
             _contextAccessorMock = new Mock<IHttpContextAccessor>();
             _loggerMock = new Mock<ILogger<HomeController>>();
+            _digitalCertificatesWebConfig = new DigitalCertificatesWebConfiguration
+            {
+                ServiceBaseUrl = "https://test.local",
+                OneLoginSettingsUrl = "http://settings.com",
+                RedisConnectionString = "UseDevelopmentStorage=true",
+                DataProtectionKeysDatabase = "TestDb",
+                StandardTemplateBlobName = "standard-template",
+                GreenStandardTemplateBlobName = "green-standard-template",
+                FrameworkTemplateBlobName = "framework-template",
+                MasterPassword = "master-password",
+                StorageConnectionString = "UseDevelopmentStorage=true",
+                ContainerName = "test-container",
+                AsposeLicenseContainerName = "aspose-license-container",
+                LicenseBlobName = "license-blob"               
+            };
 
             _httpContext = new DefaultHttpContext();
             _contextAccessorMock.Setup(c => c.HttpContext).Returns(_httpContext);
@@ -48,37 +67,36 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
                 _configMock.Object,
                 _govUkAuthServiceMock.Object,
                 _contextAccessorMock.Object,
-                _loggerMock.Object);
+                _loggerMock.Object,
+                _digitalCertificatesWebConfig);
         }
 
         [TearDown]
-        public void TearDown() => _sut.Dispose();
+        public void TearDown() => _sut.Dispose();        
 
         [Test]
-        public void Index_ShouldReturnView_WhenRunningLocallyOrDev()
+        public void Index_ShouldRedirect_To_ExternalStartPage_WhenConfigured()
         {
-            _configMock.Setup(c => c["EnvironmentName"]).Returns("LOCAL");
-            var localResult = _sut.Index() as ViewResult;
-            localResult.Should().NotBeNull();
-
-            _configMock.Setup(c => c["EnvironmentName"]).Returns("DEV");
-            var devResult = _sut.Index() as ViewResult;
-            devResult.Should().NotBeNull();
-        }
-
-        [Test]
-        public void Index_ShouldRedirect_WhenRunningInProd()
-        {
-            // Arrange
-            _configMock.Setup(c => c["EnvironmentName"]).Returns("PROD");
+            _digitalCertificatesWebConfig.ExternalStartPage = "https://external-start-page.com";
 
             // Act
             var result = _sut.Index();
 
             // Assert
-            var redirect = result as RedirectToRouteResult;
+            var redirect = result as RedirectResult;
             redirect.Should().NotBeNull();
-            redirect!.RouteName.Should().Be(HomeController.CheckRouteGet);
+            redirect.Url.Should().Be("https://external-start-page.com");
+        }
+
+        [Test]
+        public void Index_ShouldRedirect_To_View_When_ExternalStartPage_NotConfigured()
+        {
+            // Act
+            var result = _sut.Index();
+
+            // Assert
+            var viewResult = result as ViewResult;
+            viewResult.Should().NotBeNull();            
         }
 
         [Test]
@@ -94,14 +112,96 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             var result = _sut.Locked() as ViewResult;
             result.Should().NotBeNull();
         }
-
+       
         [Test]
-        public void Cookies_ShouldReturnView()
+        public void Cookies_WhenAnalyticsConsentCookieIsTrue_ReturnsViewWithConsentAnalyticsCookieTrue()
         {
-            var result = _sut.Cookies() as ViewResult;
-            result.Should().NotBeNull();
+            // Arrange
+            var controller = CreateControllerWithCookies(new Dictionary<string, string>
+        {
+            { CookieKeys.AnalyticsConsent, "true" }
+        });
+
+            // Act
+            var result = controller.Cookies();
+
+            // Assert
+            var viewResult = result.Should().BeOfType<ViewResult>().Subject;
+
+            var model = viewResult.Model.Should()
+                .BeOfType<CookiesViewModel>()
+                .Subject;
+
+            model.ConsentAnalyticsCookie.Should().BeTrue();
+            model.BackUrl.Should().BeEmpty();
         }
 
+        [Test]
+        public void Cookies_WhenAnalyticsConsentCookieIsFalse_ReturnsViewWithConsentAnalyticsCookieFalse()
+        {
+            // Arrange
+            var controller = CreateControllerWithCookies(new Dictionary<string, string>
+            {
+                { CookieKeys.AnalyticsConsent, "false" }
+            });
+
+            // Act
+            var result = controller.Cookies();
+
+            // Assert
+            var viewResult = result.Should().BeOfType<ViewResult>().Subject;
+
+            var model = viewResult.Model.Should()
+                .BeOfType<CookiesViewModel>()
+                .Subject;
+
+            model.ConsentAnalyticsCookie.Should().BeFalse();
+            model.BackUrl.Should().BeEmpty();
+        }
+
+        [Test]
+        public void Cookies_WhenAnalyticsConsentCookieIsMissing_ReturnsViewWithConsentAnalyticsCookieFalse()
+        {
+            // Arrange
+            var controller = CreateControllerWithCookies();
+
+            // Act
+            var result = controller.Cookies();
+
+            // Assert
+            var viewResult = result.Should().BeOfType<ViewResult>().Subject;
+
+            var model = viewResult.Model.Should()
+                .BeOfType<CookiesViewModel>()
+                .Subject;
+
+            model.ConsentAnalyticsCookie.Should().BeFalse();
+            model.BackUrl.Should().BeEmpty();
+        }
+
+        [Test]
+        public void Cookies_WhenAnalyticsConsentCookieIsInvalid_ReturnsViewWithConsentAnalyticsCookieFalse()
+        {
+            // Arrange
+            var controller = CreateControllerWithCookies(new Dictionary<string, string>
+            {
+                { CookieKeys.AnalyticsConsent, "not-a-valid-bool" }
+            });
+
+            // Act
+            var result = controller.Cookies();
+
+            // Assert
+            var viewResult = result.Should().BeOfType<ViewResult>().Subject;
+
+            var model = viewResult.Model.Should()
+                .BeOfType<CookiesViewModel>()
+                .Subject;
+
+            model.ConsentAnalyticsCookie.Should().BeFalse();
+            model.BackUrl.Should().BeEmpty();
+        }
+       
         [Test]
         public void CookieDetails_ShouldReturnView()
         {
@@ -250,6 +350,64 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             model.Should().NotBeNull();
             model!.RequestId.Should().Be("TestTraceIdentifier");
             model.ErrorMessage.Should().Be(errorMessage);
+        }
+
+        [Test]
+        public void AccessibilityStatement_ShouldReturnView_WithPageViewModel()
+        {
+            // Arrange
+            var returnUrl = "/previous-page";
+            var urlHelperMock = new Mock<IUrlHelper>();
+            urlHelperMock.Setup(u => u.IsLocalUrl(It.IsAny<string>())).Returns(true);
+            _sut.Url = urlHelperMock.Object;
+
+            // Act
+            var result = _sut.AccessibilityStatement(returnUrl) as ViewResult;
+
+            // Assert
+            result.Should().NotBeNull();
+
+            var model = result!.Model as PageViewModel;
+            model.Should().NotBeNull();           
+        }
+
+        private HomeController CreateControllerWithCookies(
+             Dictionary<string, string> cookies = null)
+        {
+            var requestCookieCollectionMock = new Mock<IRequestCookieCollection>();
+
+            if (cookies is not null)
+            {
+                foreach (var cookie in cookies)
+                {
+                    requestCookieCollectionMock
+                        .Setup(x => x[cookie.Key])
+                        .Returns(cookie.Value);
+                }
+            }
+
+            var httpContext = new DefaultHttpContext();
+            httpContext.Request.Cookies = requestCookieCollectionMock.Object;
+
+            _contextAccessorMock
+                .Setup(x => x.HttpContext)
+                .Returns(httpContext);
+
+            var controller = new HomeController(
+                _orchestratorMock.Object,
+                _configMock.Object,
+                _govUkAuthServiceMock.Object,
+                _contextAccessorMock.Object,
+                _loggerMock.Object, 
+                _digitalCertificatesWebConfig)
+            {
+                ControllerContext = new ControllerContext
+                {
+                    HttpContext = httpContext
+                }
+            };
+
+            return controller;
         }
     }
 }

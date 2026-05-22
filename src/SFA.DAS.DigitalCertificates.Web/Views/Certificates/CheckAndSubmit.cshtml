@@ -1,0 +1,46 @@
+﻿@model SFA.DAS.DigitalCertificates.Web.Models.Certificates.CheckAndSubmitViewModel
+@using SFA.DAS.DigitalCertificates.Web.Controllers
+@using SFA.DAS.DigitalCertificates.Web.ViewDataKeys
+@{
+    ViewData[ViewDataKeys.Title] = "Check and submit";
+    ViewBag.GaData.Vpv = @ViewData[ViewDataKeys.GaDataVpvPrefix] + "check-and-submit";
+}
+
+<div class="govuk-width-container">
+    <a asp-route="@Model.BackRoute" asp-route-certificateId="@Model.CertificateId" class="govuk-back-link">Back</a>
+
+    <main class="govuk-main-wrapper" id="main-content">
+        <div class="govuk-grid-row">
+            <div class="govuk-grid-column-two-thirds">
+                <h1 class="govuk-heading-l">
+                    <span class="govuk-caption-l">@Model.CourseName</span>
+                    Check and submit your details
+                </h1>
+
+                <h2 class="govuk-heading-s govuk-!-margin-top-5">Delivery details</h2>
+
+                <div class="govuk-summary-list">
+                    <div class="govuk-summary-list__row">
+                        <dt class="govuk-summary-list__key">Address</dt>
+                        <dd class="govuk-summary-list__value">
+                            @if (!string.IsNullOrWhiteSpace(Model.Organisation)) { <div>@Model.Organisation</div> }
+                            @if (!string.IsNullOrWhiteSpace(Model.AddressLine1)) { <div>@Model.AddressLine1</div> }
+                            @if (!string.IsNullOrWhiteSpace(Model.AddressLine2)) { <div>@Model.AddressLine2</div> }    
+                            @if (!string.IsNullOrWhiteSpace(Model.TownOrCity)) { <div>@Model.TownOrCity</div> }
+                            @if (!string.IsNullOrWhiteSpace(Model.County)) { <div>@Model.County</div> }
+                            @if (!string.IsNullOrWhiteSpace(Model.Postcode)) { <div>@Model.Postcode</div> }
+                        </dd>
+                        <dd class="govuk-summary-list__actions">
+                            <a asp-route="@CertificatesController.AddAddressRouteGet" asp-route-certificateId="@Model.CertificateId" asp-route-backRoute="@CertificatesController.CheckAndSubmitRouteGet" aria-label="Change the address">Change</a>
+                        </dd>
+                    </div>
+                </div>
+
+                <form asp-route="@CertificatesController.CheckAndSubmitRoutePost" method="post" asp-route-certificateId="@Model.CertificateId">
+                    <button type="submit" class="govuk-button govuk-!-margin-top-4">Submit</button>
+                </form>
+
+            </div>
+        </div>
+    </main>
+</div>

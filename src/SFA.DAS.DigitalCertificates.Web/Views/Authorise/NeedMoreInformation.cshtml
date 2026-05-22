@@ -1,0 +1,28 @@
+﻿@using SFA.DAS.DigitalCertificates.Web.ViewDataKeys
+@{
+    ViewData[ViewDataKeys.Title] = "We need more information to match results";
+    ViewBag.GaData.Vpv = @ViewData[ViewDataKeys.GaDataVpvPrefix] + "we-need-more-information-to-match-results";
+}
+
+<main class="govuk-main-wrapper govuk-main-wrapper--auto-spacing">
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+            <h1 class="govuk-heading-l">We need more information to match results</h1>
+
+            <p class="govuk-body">
+                We need you to answer some questions so that we can match your information to your apprenticeship results.
+            </p>
+
+            <p class="govuk-body">We can match your results quicker if you know your unique learner number.</p>
+
+            <p class="govuk-body">
+                Your unique learner number (ULN) is a 10 digit number. Your training provider can give you your ULN
+                reference, or it may be printed on your certificates or results slips.
+            </p>
+
+            <form asp-action="NeedMoreInformationContinue" method="post">
+                <button class="govuk-button" type="submit">Continue</button>
+            </form>
+        </div>
+    </div>
+</main>

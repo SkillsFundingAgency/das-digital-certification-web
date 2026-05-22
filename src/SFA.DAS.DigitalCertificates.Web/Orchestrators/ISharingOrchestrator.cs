@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using SFA.DAS.DigitalCertificates.Web.Models.Certificates;
 using SFA.DAS.DigitalCertificates.Web.Models.Sharing;
 
 namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
@@ -18,6 +19,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         Task<CheckQualificationViewModel?> GetCheckQualificationViewModel(Guid code);
         Task<Models.Certificates.SharedCertificateStandardViewModel?> GetSharedStandardCertificateViewModel(Guid code);
         Task<Models.Certificates.SharedCertificateFrameworkViewModel?> GetSharedFrameworkCertificateViewModel(Guid code);
-        
+        Task<DownloadCertificateViewModel?> GetDownloadSharedFrameworkCertificateViewModelAsync(Guid code);
+        Task<DownloadCertificateViewModel?> GetDownloadSharedStandardCertificateViewModelAsync(Guid code);
     }
 }

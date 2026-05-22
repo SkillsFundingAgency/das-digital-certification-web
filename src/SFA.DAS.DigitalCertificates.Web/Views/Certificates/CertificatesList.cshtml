@@ -9,6 +9,7 @@
 <main class="govuk-main-wrapper govuk-main-wrapper--auto-spacing" id="main-content">
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
+            <partial name="_FlashMessagePartial" />
             <h1 class="govuk-label-wrapper">
                 <label class="govuk-label govuk-label--l" for="NumberOfApprentices">
                     @ViewData[ViewDataKeys.Title]
@@ -43,7 +44,10 @@
                     }
                 </tbody>
             </table>
-            <p class="govuk-text">If you’re waiting for the result of your end-point assessment, contact your training provider.</p>
+            <p class="govuk-text">If you're waiting for the result of your end-point assessment, contact your training provider.</p>
+            <form asp-route="@CertificatesController.ContactUsCreateRoutePost" method="post">
+                <p class="govuk-body">If any of these details are incorrect, <button type="submit" class="das-button--inline-link" data-prevent-double-click="true" data-module="govuk-button">contact us</button>.</p>
+            </form>
         </div>
     </div>
 </main>
