@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using SFA.DAS.DigitalCertificates.Web.Orchestrators;
+using System;
 
 namespace SFA.DAS.DigitalCertificates.Web.Validators
 {
@@ -50,7 +51,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Validators
             RuleFor(x => x.Postcode)
                 .Cascade(CascadeMode.Stop)
                 .NotEmpty().WithMessage(PostcodeRequiredError)
-                .Matches(new Regex(PostcodeRegex, RegexOptions.IgnoreCase)).WithMessage(PostcodeInvalidError)
+                .Matches(new Regex(PostcodeRegex, RegexOptions.IgnoreCase, TimeSpan.FromSeconds(5))).WithMessage(PostcodeInvalidError)
                 .MustAsync(BeAValidPostcode).WithMessage(PostcodeInvalidError);
         }
 
