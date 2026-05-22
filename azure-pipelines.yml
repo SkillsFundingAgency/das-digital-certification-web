@@ -23,12 +23,12 @@ resources:
   - repository: das-platform-building-blocks
     type: github
     name: SkillsFundingAgency/das-platform-building-blocks
-    ref: refs/tags/3.0.14
+    ref: refs/tags/3.0.32
     endpoint: SkillsFundingAgency
   - repository: das-platform-automation
     type: github
     name: SkillsFundingAgency/das-platform-automation
-    ref: refs/tags/5.1.20
+    ref: refs/tags/5.1.24
     endpoint: SkillsFundingAgency
   pipelines:
   - pipeline: das-employer-config
@@ -121,6 +121,7 @@ stages:
   variables:
   - group: MO Management Resources
   - group: MO Shared Resources
+  - group: MO das-digital-certification-web
   jobs:
   - template: pipeline-templates/job/deploy.yml
     parameters:
