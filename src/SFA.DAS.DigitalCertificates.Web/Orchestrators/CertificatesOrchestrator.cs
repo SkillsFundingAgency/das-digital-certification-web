@@ -193,7 +193,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             byte[]? templateBytes = null;
             var fullName = $"{model.GivenNames} {model.FamilyName}";
 
-            if(fullName.Length >= _digitalCertificatesWebConfiguration.MaxFullNameLengthOnOneLine)
+            if(_digitalCertificatesWebConfiguration.MaxFullNameLengthOnOneLine.HasValue &&
+                    fullName.Length >= _digitalCertificatesWebConfiguration.MaxFullNameLengthOnOneLine.Value)
             {
                 fullName = $"{model.GivenNames}\n{model.FamilyName}";
             }
