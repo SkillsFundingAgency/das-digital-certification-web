@@ -40,6 +40,10 @@ namespace SFA.DAS.DigitalCertificates.Web
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddHttpContextAccessor();
+            services.AddHsts(options =>
+            {
+                options.MaxAge = TimeSpan.FromDays(90);
+            });
             services.AddConfigurationOptions(_configuration);
 
             services.AddOpenTelemetryRegistration(_configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"]!);
@@ -126,7 +130,7 @@ namespace SFA.DAS.DigitalCertificates.Web
                     });
                 });
 
-                // The default HSTS value is 30 days.
+                // HSTS configured to 90 days in ConfigureServices.
                 app.UseHsts();
             }
 
