@@ -6,11 +6,11 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
     public interface ICacheService
     {
         Task<User?> GetUserAsync(string govUkIdentifier);
-        Task Clear(string govUkIdentifier);
         Task<MatchesAndMasks?> GetOrCreateMatchesAsync(string govUkIdentifier, Guid userId);
-        Task<int> IncrementMatchFailCountAsync(string govUkIdentifier);
         Task<int> GetMatchFailCountAsync(string govUkIdentifier);
-
+        Task<int> IncrementMatchFailCountAsync(string govUkIdentifier);
+        Task ClearUser(string govUkIdentifier);
+        Task ClearMatchFailCountAsync(string govUkIdentifier);
         Task ClearMatches(string govUkIdentifier);
     }
 }

@@ -1,11 +1,12 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using MediatR;
-using SFA.DAS.DigitalCertificates.Application.Queries.GetUser;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetMatches;
+using SFA.DAS.DigitalCertificates.Application.Queries.GetUser;
 using SFA.DAS.DigitalCertificates.Domain.Models;
-using SFA.DAS.DigitalCertificates.Infrastructure.Services.CacheStorage;
 using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
+using SFA.DAS.DigitalCertificates.Infrastructure.Services.CacheStorage;
 
 namespace SFA.DAS.DigitalCertificates.Web.Services
 {
@@ -38,27 +39,40 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
             return user;
         }
 
-        public async Task Clear(string govUkIdentifier)
-        {
-            await _cacheStorageService.RemoveAsync(GetScopedKey(nameof(User), govUkIdentifier));
-        }
-
         public async Task<MatchesAndMasks?> GetOrCreateMatchesAsync(string govUkIdentifier, Guid userId)
         {
-            var days = _configuration?.MatchesCacheExpiryDays ?? 30;
-            var expiry = TimeSpan.FromDays(days);
+            var key = GetScopedKey(MatchesKey, govUkIdentifier);
+            var cached = await _cacheStorageService.GetAsync<MatchesAndMasks?>(key);
 
-            return await _cacheStorageService.GetOrCreateAsync(GetScopedKey(MatchesKey, govUkIdentifier), async e =>
+            if (cached != null)
             {
-                e.AbsoluteExpirationRelativeToNow = expiry;
-                return await _mediator.Send(new GetMatchesQuery { UserId = userId });
+                if (cached.Matches?.Any() == true)
+                {
+                    return cached;
+                }
+
+                await _cacheStorageService.RemoveAsync(key);
+            }
+
+            var matches = await _mediator.Send(new GetMatchesQuery { UserId = userId });
+            if (matches?.Matches?.Any() != true)
+            {
+                return null;
+            }
+
+            var days = _configuration?.MatchesCacheExpiryDays ?? 30;
+            return await _cacheStorageService.SetAsync(key, async e =>
+            {
+                e.AbsoluteExpirationRelativeToNow = TimeSpan.FromDays(days);
+                return await Task.FromResult(matches);
             });
         }
 
-        public async Task ClearMatches(string govUkIdentifier)
+        public async Task<int> GetMatchFailCountAsync(string govUkIdentifier)
         {
-            await _cacheStorageService.RemoveAsync(GetScopedKey(MatchesKey, govUkIdentifier));
-            await _cacheStorageService.RemoveAsync(GetScopedKey(MatchFailCountKey, govUkIdentifier));
+            var key = GetScopedKey(MatchFailCountKey, govUkIdentifier);
+            var current = await _cacheStorageService.GetAsync<int?>(key) ?? 0;
+            return current;
         }
 
         public async Task<int> IncrementMatchFailCountAsync(string govUkIdentifier)
@@ -78,11 +92,20 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
             return updated;
         }
 
-        public async Task<int> GetMatchFailCountAsync(string govUkIdentifier)
+        public async Task ClearUser(string govUkIdentifier)
         {
-            var key = GetScopedKey(MatchFailCountKey, govUkIdentifier);
-            var current = await _cacheStorageService.GetAsync<int?>(key) ?? 0;
-            return current;
+            await _cacheStorageService.RemoveAsync(GetScopedKey(nameof(User), govUkIdentifier));
+        }
+
+        public async Task ClearMatchFailCountAsync(string govUkIdentifier)
+        {
+            await _cacheStorageService.RemoveAsync(GetScopedKey(MatchFailCountKey, govUkIdentifier));
+        }
+
+        public async Task ClearMatches(string govUkIdentifier)
+        {
+            await _cacheStorageService.RemoveAsync(GetScopedKey(MatchesKey, govUkIdentifier));
+            await ClearMatchFailCountAsync(govUkIdentifier);
         }
 
         internal static string GetScopedKey(string key, string identifier)
