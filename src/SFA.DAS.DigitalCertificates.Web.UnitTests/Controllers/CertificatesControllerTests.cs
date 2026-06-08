@@ -1268,7 +1268,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
         {
             // Arrange
             var sharingLinkCode = Guid.NewGuid();
-            var pdfBytes = new byte[] { 1, 2, 3, 4 };            
+            var pdfBytes = new byte[] { 1, 2, 3, 4 };
 
             var model = new DownloadCertificateViewModel
             {
