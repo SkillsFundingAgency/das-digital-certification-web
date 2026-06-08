@@ -23,8 +23,9 @@ namespace SFA.DAS.DigitalCertificates.Web.Models.Certificates
             {
                 var safeGivenNames = Regex.Replace(GivenNames, "[^a-zA-Z0-9]+", "_", RegexOptions.None, TimeSpan.FromMilliseconds(100)).Trim('_');
                 var safeFamilyName = Regex.Replace(FamilyName, "[^a-zA-Z0-9]+", "_", RegexOptions.None, TimeSpan.FromMilliseconds(100)).Trim('_');
+                var safeCertificateNumber = Regex.Replace(CertificateNumber, "[^a-zA-Z0-9]+", "_", RegexOptions.None, TimeSpan.FromMilliseconds(100)).Trim('_');
 
-                return $"{safeGivenNames}_{safeFamilyName}_CertificateNumber{CertificateNumber}.pdf";
+                return $"{safeGivenNames}_{safeFamilyName}_CertificateNumber{safeCertificateNumber}.pdf";
             }
         }
     }
