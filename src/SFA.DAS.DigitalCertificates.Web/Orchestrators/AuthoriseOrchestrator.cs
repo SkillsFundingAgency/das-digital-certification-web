@@ -560,11 +560,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                         return MatchResult.Single(exactMatches[0]);
                     }
 
-                    var firstUln = exactMatches[0].Uln;
-                    var allSameUln = exactMatches.All(m => m.Uln == firstUln);
-                    return allSameUln
-                        ? MatchResult.Multiple(exactMatches[0])
-                        : MatchResult.NoData();
+                    return MatchResult.Multiple(exactMatches[0]);
                 }
             }
 
