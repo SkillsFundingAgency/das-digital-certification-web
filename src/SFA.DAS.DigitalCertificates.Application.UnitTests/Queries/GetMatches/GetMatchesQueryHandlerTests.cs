@@ -34,6 +34,8 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetMatches
                     new MatchResponse
                     {
                         Uln = 1234567890,
+                        FamilyName = "Smith",
+                        DateOfBirth = new DateTime(1980, 1, 1, 0, 0, 0,DateTimeKind.Unspecified),
                         CertificateType = "Standard",
                         CourseCode = "C1",
                         CourseName = "Course",
