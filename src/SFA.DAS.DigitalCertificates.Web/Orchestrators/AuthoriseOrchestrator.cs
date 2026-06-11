@@ -525,7 +525,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 
             if (updatedFailedCount >= failedLimit)
             {
-                await _cacheService.Clear(govUkId);
+                await _cacheService.ClearUser(govUkId);
+                await _cacheService.ClearMatchFailCountAsync(govUkId);
                 return MatchOutcome.Locked;
             }
 
