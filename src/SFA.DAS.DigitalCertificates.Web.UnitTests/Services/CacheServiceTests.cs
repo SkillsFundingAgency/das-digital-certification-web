@@ -167,7 +167,15 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
 
             var expected = new MatchesAndMasks
             {
-                Matches = { new Match { Uln = 111L } },
+                Matches =
+                {
+                    new Match 
+                    { 
+                        Uln = 111L,
+                        FamilyName = "Family",
+                        DateOfBirth = new DateTime(2002, 1, 1, 0, 0, 0, DateTimeKind.Unspecified), 
+                    } 
+                },
                 Masks = { new Mask { CourseCode = "C1" } }
             };
 
@@ -212,7 +220,15 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
 
             var expected = new MatchesAndMasks
             {
-                Matches = { new Match { Uln = 222 } }
+                Matches = 
+                { 
+                    new Match 
+                    { 
+                        Uln = 222, 
+                        FamilyName = "Family",
+                        DateOfBirth = new DateTime(2002, 1, 1, 0, 0, 0, DateTimeKind.Unspecified) 
+                    } 
+                }
             };
 
             Func<DistributedCacheEntryOptions, Task<MatchesAndMasks>> capturedDelegate = null;
@@ -279,7 +295,15 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
 
             var expected = new MatchesAndMasks
             {
-                Matches = { new Match { Uln = 123L } }
+                Matches = 
+                { 
+                    new Match 
+                    { 
+                        Uln = 123L, 
+                        FamilyName = "Family",
+                        DateOfBirth = new DateTime(2002, 1, 1, 0, 0, 0, DateTimeKind.Unspecified)  
+                    } 
+                }
             };
 
             _cacheStorageMock

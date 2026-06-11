@@ -439,7 +439,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 YearDisplay = yearDisplay,
                 ProviderDisplay = providerDisplay
             };
-
         }
 
         public async Task<MatchOutcome> SubmitCheckAnswersAsync()
@@ -452,51 +451,46 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 return MatchOutcome.Locked;
             }
 
+            var userId = _userService.GetUserId();
+            if (userId == null)
+            {
+                throw new InvalidOperationException("UserId is required for submitting match");
+            }
+
             var matches = await GetMatchesAsync();
-            if (matches == null)
+            if (matches?.Matches == null || matches.Matches.Count == 0)
             {
                 return MatchOutcome.NoData;
             }
 
-            var userId = _userService.GetUserId();
-
-            var familyName = GetUserSurname();
-            if (string.IsNullOrWhiteSpace(familyName)) throw new InvalidOperationException("FamilyName is required for submitting match");
-
-            //// TODO: If the user's DOB claim is missing, assign a dummy DOB to allow submission flow to continue.This should be handled correctly
-            var dateOfBirth = GetUserDateOfBirth() ?? new DateTime(1900, 1, 1);
-
             var matchResult = FindMatch(
                 answers,
-                matches.Matches ?? Enumerable.Empty<Match>());
+                matches.Matches);
 
             if (matchResult.Outcome == MatchOutcome.SingleMatch || matchResult.Outcome == MatchOutcome.MultipleMatches)
             {
-                var match = matchResult.Match!;
-
-                var userIdValue = userId ?? throw new InvalidOperationException("UserId is required for submitting match");
-
+                var matchResultMatch = matchResult.Match!;
                 await Mediator.Send(new SubmitMatchCommand
                 {
-                    UserId = userIdValue,
-                    Uln = match.Uln,
-                    FamilyName = familyName,
-                    DateOfBirth = dateOfBirth,
-                    CertificateType = match.CertificateType.ToString(),
-                    CourseCode = match.CourseCode,
-                    CourseName = match.CourseName,
-                    CourseLevel = match.CourseLevel,
-                    YearAwarded = match.DateAwarded?.Year,
-                    ProviderName = match.ProviderName,
-                    Ukprn = match.Ukprn.HasValue ? (int?)match.Ukprn.Value : null,
+                    UserId = userId.Value,
+                    Uln = matchResultMatch.Uln,
+                    FamilyName = matchResultMatch.FamilyName,
+                    DateOfBirth = matchResultMatch.DateOfBirth,
+                    CertificateType = matchResultMatch.CertificateType.ToString(),
+                    CourseCode = matchResultMatch.CourseCode,
+                    CourseName = matchResultMatch.CourseName,
+                    CourseLevel = matchResultMatch.CourseLevel,
+                    YearAwarded = matchResultMatch.DateAwarded?.Year,
+                    ProviderName = matchResultMatch.ProviderName,
+                    Ukprn = matchResultMatch.Ukprn.HasValue ? (int?)matchResultMatch.Ukprn.Value : null,
                     IsMatched = true,
                     IsFailed = false
                 });
 
                 await Mediator.Send(new AuthoriseUserCommand
                 {
-                    UserId = userIdValue,
-                    Uln = match.Uln
+                    UserId = userId.Value,
+                    Uln = matchResultMatch.Uln
                 });
 
                 return matchResult.Outcome;
@@ -506,12 +500,15 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             var failedLimit = _digitalCertificatesWebConfiguration.FailedMatchesLimit ?? 2;
             var updatedFailedCount = await _cacheService.IncrementMatchFailCountAsync(govUkId);
 
+            // take the first match as it is not known which match has failed if there are more than one
+            var firstMatch = matches.Matches[0];
+
             await Mediator.Send(new SubmitMatchCommand
             {
                 UserId = userId.GetValueOrDefault(),
                 Uln = answers.Uln,
-                FamilyName = familyName,
-                DateOfBirth = dateOfBirth,
+                FamilyName = firstMatch.FamilyName,
+                DateOfBirth = firstMatch.DateOfBirth,
                 CertificateType = null,
                 CourseCode = answers.CourseCode,
                 CourseName = answers.CourseName,
@@ -548,11 +545,9 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         {
             var selectedCourse = answers.CourseCode?.Trim();
 
-            List<Match> exactMatches = new List<Match>();
-
             if (!string.IsNullOrWhiteSpace(selectedCourse) && answers.Uln != null && answers.IsShortJourney)
             {
-                exactMatches = matches
+                var exactMatches = matches
                     .Where(m =>
                         string.Equals(m.CourseCode?.Trim(), selectedCourse, StringComparison.OrdinalIgnoreCase) &&
                         m.Uln == answers.Uln.Value)
@@ -562,14 +557,10 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 {
                     if (exactMatches.Count == 1)
                     {
-                        return MatchResult.Single(exactMatches.First());
+                        return MatchResult.Single(exactMatches[0]);
                     }
 
-                    var firstUln = exactMatches.First().Uln;
-                    var allSameUln = exactMatches.All(m => m.Uln == firstUln);
-                    return allSameUln
-                        ? MatchResult.Multiple(exactMatches.First())
-                        : MatchResult.NoData();
+                    return MatchResult.Multiple(exactMatches[0]);
                 }
             }
 
@@ -609,15 +600,15 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 
             if (candidates.Count == 1)
             {
-                return MatchResult.Single(candidates.First());
+                return MatchResult.Single(candidates[0]);
             }
 
             if (candidates.Count > 1)
             {
-                var firstUln = candidates.First().Uln;
+                var firstUln = candidates[0].Uln;
                 var allSameUln = candidates.All(c => c.Uln == firstUln);
                 return allSameUln
-                    ? MatchResult.Multiple(candidates.First())
+                    ? MatchResult.Multiple(candidates[0])
                     : MatchResult.NoData();
             }
 

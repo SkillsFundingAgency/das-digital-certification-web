@@ -57,31 +57,13 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 .FindFirstValue(ClaimTypes.Email) ?? string.Empty;
         }
 
-        // TODO: Remove if not required, or fully implement if needed. The claim is not currently implemented.
-        protected DateTime? GetUserDateOfBirth()
-        {
-            var dobString = _httpContextAccessor?
-                .HttpContext?
-                .User?
-                .FindFirstValue(ClaimTypes.DateOfBirth);
-
-            if (string.IsNullOrWhiteSpace(dobString)) return null;
-
-            if (DateTime.TryParse(dobString, out var dob))
-            {
-                return dob;
-            }
-
-            return null;
-        }
-
         protected static async Task<bool> ValidateViewModel<T>(IValidator<T> validator, T viewModel, ModelStateDictionary modelState)
         {
-            var result = await validator.ValidateAndAddModelErrorsAsync(viewModel, modelState);
+            await validator.ValidateAndAddModelErrorsAsync(viewModel, modelState);
             return modelState.IsValid;
         }
 
-        protected string GetTemplateId(DigitalCertificatesWebConfiguration digitalCertificatesWebConfiguration, string templateName)
+        protected static string GetTemplateId(DigitalCertificatesWebConfiguration digitalCertificatesWebConfiguration, string templateName)
         {
             if (digitalCertificatesWebConfiguration == null)
                 throw new ArgumentNullException(nameof(digitalCertificatesWebConfiguration));
