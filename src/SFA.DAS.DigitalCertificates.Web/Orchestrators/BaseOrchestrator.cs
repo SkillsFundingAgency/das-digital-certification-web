@@ -43,11 +43,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 
         protected string GetUserSurname()
         {
-            // get matches gets a certifcate based on each family name and date of brth
-            // lets say the user was called jones and now they call called smith
-            // they have a certifcyate for jones and then get the questions correct - but the match would be against smith - thats not correct is it?
-            // The surname claim contains ypur latest name
-            
             return _httpContextAccessor?
                 .HttpContext?
                 .User?
