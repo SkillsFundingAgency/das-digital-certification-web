@@ -7,8 +7,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Models.Certificates
     public class DownloadCertificateViewModel
     {
         public required string FamilyName { get; set; }
-        public required string GivenNames { get; set; }
-        public string FullName => $"{GivenNames} \n {FamilyName}";
+        public required string GivenNames { get; set; }        
         public required string CourseName { get; set; }
         public string? CourseOption { get; set; }
         public required string CourseLevel { get; set; }
@@ -27,6 +26,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Models.Certificates
 
                 return $"{safeGivenNames}_{safeFamilyName}_CertificateNumber{safeCertificateNumber}.pdf";
             }
-        }
+        }       
     }
 }
