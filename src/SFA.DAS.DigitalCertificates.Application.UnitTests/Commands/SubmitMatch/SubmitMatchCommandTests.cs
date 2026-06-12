@@ -40,7 +40,7 @@ namespace SFA.DAS.DigitalCertificates.UnitTests.Application.Commands.SubmitMatch
             req.CourseCode.Should().Be(cmd.CourseCode);
             req.CourseName.Should().Be(cmd.CourseName);
             req.CourseLevel.Should().Be(cmd.CourseLevel);
-            req.DateAwarded.Should().Be(cmd.YearAwarded);
+            req.YearAwarded.Should().Be(cmd.YearAwarded);
             req.ProviderName.Should().Be(cmd.ProviderName);
             req.Ukprn.Should().Be(cmd.Ukprn);
             req.IsMatched.Should().Be(cmd.IsMatched);

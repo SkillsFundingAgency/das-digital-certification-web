@@ -34,7 +34,7 @@ namespace SFA.DAS.DigitalCertificates.Application.Commands.SubmitMatch
                 CourseCode = c.CourseCode,
                 CourseName = c.CourseName,
                 CourseLevel = c.CourseLevel,
-                DateAwarded = c.YearAwarded,
+                YearAwarded = c.YearAwarded,
                 ProviderName = c.ProviderName,
                 Ukprn = c.Ukprn,
                 IsMatched = c.IsMatched,
