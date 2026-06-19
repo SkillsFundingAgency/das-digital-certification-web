@@ -592,7 +592,11 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 return MatchResult.None();
             }
 
-            candidates = candidates.Where(c => c.DateAwarded != null && c.DateAwarded.Value.Year == answers.YearCompleted).ToList();
+            candidates = candidates
+                .Where(c =>
+                    c.DateAwarded != null &&
+                    Math.Abs(c.DateAwarded.Value.Year - answers.YearCompleted!.Value) <= 1)
+                .ToList();
 
             if (answers.ProviderUkprn != null)
             {
