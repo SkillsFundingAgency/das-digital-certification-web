@@ -485,8 +485,10 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 a.ProviderUnknown == false)), Times.Once);
         }
 
-        [Test]
-        public async Task SubmitCheckAnswersAsync_LongJourney_Submits_When_YearAndProviderMatchSingleCandidate()
+        [TestCase(2022)]
+        [TestCase(2023)]
+        [TestCase(2024)]
+        public async Task SubmitCheckAnswersAsync_LongJourney_Submits_When_YearIsWithinOneYearOfAwardedDate(int yearCompleted)
         {
             // Arrange
             var govUkId = "gov-1";
@@ -556,6 +558,62 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                     c.Uln == 999999L),
                 It.IsAny<CancellationToken>()),
                 Times.Once);
+        }
+
+        [TestCase(2021)]
+        [TestCase(2025)]
+        public async Task SubmitCheckAnswersAsync_LongJourney_DoesNotSubmit_When_YearIsMoreThanOneYearFromAwardedDate(int yearCompleted)
+        {
+            // Arrange
+            var govUkId = "gov-1";
+            var userId = Guid.NewGuid();
+
+            _userServiceMock.Setup(u => u.GetGovUkIdentifier()).Returns(govUkId);
+            _userServiceMock.Setup(u => u.GetUserId()).Returns(userId);
+
+            var matches = new MatchesAndMasks();
+            matches.Matches.Add(new Domain.Models.Match
+            {
+                Uln = 999999L,
+                FamilyName = "Family",
+                DateOfBirth = new DateTime(2002, 1, 1, 0, 0, 0, DateTimeKind.Unspecified),
+                ProviderName = "Provider A",
+                Ukprn = 12345L,
+                CertificateType = CertificateType.Standard,
+                CourseCode = "C1",
+                DateAwarded = new DateTime(2023, 6, 1, 0, 0, 0, DateTimeKind.Unspecified)
+            });
+
+            _cacheServiceMock.Setup(c => c.GetOrCreateMatchesAsync(govUkId, userId))
+                .ReturnsAsync(matches);
+
+            _sessionServiceMock.Setup(s => s.GetAuthorisationAnswersAsync())
+                .ReturnsAsync(new AuthorisationAnswers
+                {
+                    Uln = 999999L,
+                    CourseCode = null,
+                    YearCompleted = yearCompleted,
+                    ProviderUkprn = 12345L,
+                    ProviderName = "Provider A"
+                });
+
+            _httpContext.User = new ClaimsPrincipal(new ClaimsIdentity(new[]
+            {
+                new Claim(ClaimTypes.Surname, "Family"),
+                new Claim(ClaimTypes.GivenName, "Given"),
+                new Claim(ClaimTypes.DateOfBirth, "1990-01-01")
+            }, "Test"));
+
+            _mediatorMock.Setup(m => m.Send(It.IsAny<IRequest<bool>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(true);
+
+            // Act
+            var result = await _sut.SubmitCheckAnswersAsync();
+
+            // Assert
+            Assert.That(result, Is.EqualTo(MatchOutcome.NoMatch));
+            _mediatorMock.Verify(m => m.Send(It.Is<SubmitMatchCommand>(c => !c.IsMatched), It.IsAny<CancellationToken>()), Times.Once);
+            _mediatorMock.Verify(m => m.Send(It.IsAny<AuthoriseUserCommand>(), It.IsAny<CancellationToken>()), Times.Never);
         }
 
         [Test]

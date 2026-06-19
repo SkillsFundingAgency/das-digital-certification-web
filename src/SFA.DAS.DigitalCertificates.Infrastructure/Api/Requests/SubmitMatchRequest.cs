@@ -12,7 +12,7 @@ namespace SFA.DAS.DigitalCertificates.Infrastructure.Api.Requests
         public string? CourseCode { get; set; }
         public string? CourseName { get; set; }
         public string? CourseLevel { get; set; }
-        public int? DateAwarded { get; set; }
+        public int? YearAwarded { get; set; }
 
         public string? ProviderName { get; set; }
         public int? Ukprn { get; set; }
