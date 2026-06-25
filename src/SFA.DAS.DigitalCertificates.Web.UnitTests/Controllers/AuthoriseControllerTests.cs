@@ -191,6 +191,39 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
         }
 
         [Test]
+        public async Task SelectCourse_Get_NoData_Redirects_To_NotFound_When_Model_Null()
+        {
+            // Arrange
+            _orchestratorMock.Setup(o => o.GetSelectCourseViewModelAsync()).ReturnsAsync((SelectCourseViewModel)null);
+
+            // Act
+            var result = await _sut.SelectCourse();
+
+            // Assert
+            _orchestratorMock.Verify(o => o.GetSelectCourseViewModelAsync(), Times.Once);
+            result.Should().BeOfType<RedirectToRouteResult>();
+            var redirect = result as RedirectToRouteResult;
+            redirect.RouteName.Should().Be(AuthoriseController.NotFoundRouteGet);
+        }
+
+        [Test]
+        public async Task SelectCourse_Get_NoData_Redirects_To_NotFound_When_No_Courses()
+        {
+            // Arrange
+            var model = new SelectCourseViewModel { SelectedCourseCode = "ABC123", Courses = new List<SelectCourseViewModel.CourseOption>() };
+            _orchestratorMock.Setup(o => o.GetSelectCourseViewModelAsync()).ReturnsAsync(model);
+
+            // Act
+            var result = await _sut.SelectCourse();
+
+            // Assert
+            _orchestratorMock.Verify(o => o.GetSelectCourseViewModelAsync(), Times.Once);
+            result.Should().BeOfType<RedirectToRouteResult>();
+            var redirect = result as RedirectToRouteResult;
+            redirect.RouteName.Should().Be(AuthoriseController.NotFoundRouteGet);
+        }
+
+        [Test]
         public async Task SelectCourse_Post_Invalid_Redirects_To_Get()
         {
             // Arrange
