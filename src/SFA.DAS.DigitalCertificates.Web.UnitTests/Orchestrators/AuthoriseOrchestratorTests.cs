@@ -143,6 +143,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             // Arrange
             var govUkId = "gov-1";
             var userId = Guid.NewGuid();
+            var userIdentityId = Guid.NewGuid();
 
             _userServiceMock.Setup(u => u.GetGovUkIdentifier()).Returns(govUkId);
             _userServiceMock.Setup(u => u.GetUserId()).Returns(userId);
@@ -158,8 +159,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             matches.Matches.Add(new Domain.Models.Match
             {
                 Uln = 0,
-                FamilyName = "Family",
-                DateOfBirth = new DateTime(2002, 1, 1, 0, 0, 0, DateTimeKind.Unspecified),
+                UserIdentityId = userIdentityId,
                 CourseCode = "R1",
                 CourseName = "RealName",
                 CourseLevel = "4",
@@ -202,6 +202,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             // Arrange
             var govUkId = "gov-1";
             var userId = Guid.NewGuid();
+            var userIdentityId = Guid.NewGuid();
 
             _userServiceMock.Setup(u => u.GetGovUkIdentifier()).Returns(govUkId);
             _userServiceMock.Setup(u => u.GetUserId()).Returns(userId);
@@ -210,8 +211,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             matches.Matches.Add(new Domain.Models.Match
             {
                 Uln = 0,
-                FamilyName = "Family",
-                DateOfBirth = new DateTime(2002, 1, 1, 0, 0, 0, DateTimeKind.Unspecified),
+                UserIdentityId = userIdentityId,
                 CourseCode = "C1",
                 CourseName = "Course One",
                 CourseLevel = "2",
@@ -384,6 +384,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             // Arrange
             var govUkId = "gov-1";
             var userId = Guid.NewGuid();
+            var userIdentityId = Guid.NewGuid();
 
             _userServiceMock.Setup(u => u.GetGovUkIdentifier()).Returns(govUkId);
             _userServiceMock.Setup(u => u.GetUserId()).Returns(userId);
@@ -392,8 +393,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             matches.Matches.Add(new Domain.Models.Match
             {
                 Uln = 0,
-                FamilyName = "Family",
-                DateOfBirth = new DateTime(2002, 1, 1, 0, 0, 0, DateTimeKind.Unspecified),
+                UserIdentityId = userIdentityId,
                 ProviderName = "Provider A",
                 Ukprn = 12345
             });
@@ -448,6 +448,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             // Arrange
             var govUkId = "gov-1";
             var userId = Guid.NewGuid();
+            var userIdentityId = Guid.NewGuid();
 
             _userServiceMock.Setup(u => u.GetGovUkIdentifier()).Returns(govUkId);
             _userServiceMock.Setup(u => u.GetUserId()).Returns(userId);
@@ -456,8 +457,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             matches.Matches.Add(new Domain.Models.Match
             {
                 Uln = 0,
-                FamilyName = "Family",
-                DateOfBirth = new DateTime(2002, 1, 1, 0, 0, 0, DateTimeKind.Unspecified),
+                UserIdentityId = userIdentityId,
                 ProviderName = "Provider A",
                 Ukprn = 12345
             });
@@ -493,6 +493,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             // Arrange
             var govUkId = "gov-1";
             var userId = Guid.NewGuid();
+            var userIdentityId = Guid.NewGuid();
             var matchedDateOfBirth = new DateTime(2002, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
 
             _userServiceMock.Setup(u => u.GetGovUkIdentifier()).Returns(govUkId);
@@ -502,8 +503,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             matches.Matches.Add(new Domain.Models.Match
             {
                 Uln = 999999L,
-                FamilyName = "MatchedFamily",
-                DateOfBirth = matchedDateOfBirth,
+                UserIdentityId = userIdentityId,
                 ProviderName = "Provider A",
                 Ukprn = 12345L,
                 CertificateType = CertificateType.Standard,
@@ -538,8 +538,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 It.Is<SubmitMatchCommand>(c =>
                     c.UserId == userId &&
                     c.Uln == 999999L &&
-                    c.FamilyName == "MatchedFamily" &&
-                    c.DateOfBirth == matchedDateOfBirth &&
+                    c.UserIdentityId == userIdentityId &&
                     c.CertificateType == CertificateType.Standard.ToString() &&
                     c.CourseCode == "C1" &&
                     c.CourseName == "Course One" &&
@@ -567,6 +566,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             // Arrange
             var govUkId = "gov-1";
             var userId = Guid.NewGuid();
+            var userIdentityId = Guid.NewGuid();
 
             _userServiceMock.Setup(u => u.GetGovUkIdentifier()).Returns(govUkId);
             _userServiceMock.Setup(u => u.GetUserId()).Returns(userId);
@@ -575,8 +575,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             matches.Matches.Add(new Domain.Models.Match
             {
                 Uln = 999999L,
-                FamilyName = "Family",
-                DateOfBirth = new DateTime(2002, 1, 1, 0, 0, 0, DateTimeKind.Unspecified),
+                UserIdentityId = userIdentityId,
                 ProviderName = "Provider A",
                 Ukprn = 12345L,
                 CertificateType = CertificateType.Standard,
@@ -920,6 +919,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             // Arrange
             var govUkId = "gov-1";
             var userId = Guid.NewGuid();
+            var userIdentityId = Guid.NewGuid();
             var matchedDateOfBirth = new DateTime(2002, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
 
             _userServiceMock.Setup(u => u.GetGovUkIdentifier()).Returns(govUkId);
@@ -929,8 +929,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             matches.Matches.Add(new Domain.Models.Match
             {
                 Uln = 111111L,
-                FamilyName = "MatchedFamily",
-                DateOfBirth = matchedDateOfBirth,
+                UserIdentityId = userIdentityId,
                 CourseCode = "OTHER",
                 CourseName = "Other Course",
                 ProviderName = "Provider A",
@@ -969,8 +968,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 It.Is<SubmitMatchCommand>(c =>
                     c.UserId == userId &&
                     c.Uln == null &&
-                    c.FamilyName == "MatchedFamily" &&
-                    c.DateOfBirth == matchedDateOfBirth &&
+                    c.UserIdentityId == userIdentityId &&
                     c.CertificateType == null &&
                     c.CourseCode == "C1" &&
                     c.CourseName == "Course One" &&
@@ -993,6 +991,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             // Arrange
             var govUkId = "gov-1";
             var userId = Guid.NewGuid();
+            var userIdentityId = Guid.NewGuid();
             var matchedDateOfBirth = new DateTime(2002, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
 
             _userServiceMock.Setup(u => u.GetGovUkIdentifier()).Returns(govUkId);
@@ -1002,8 +1001,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             matches.Matches.Add(new Domain.Models.Match
             {
                 Uln = 111111L,
-                FamilyName = "MatchedFamily",
-                DateOfBirth = matchedDateOfBirth,
+                UserIdentityId = userIdentityId,
                 CourseCode = "OTHER",
                 CourseName = "Other Course",
                 ProviderName = "Provider A",
@@ -1041,8 +1039,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             _mediatorMock.Verify(m => m.Send(
                 It.Is<SubmitMatchCommand>(c =>
                     c.UserId == userId &&
-                    c.FamilyName == "MatchedFamily" &&
-                    c.DateOfBirth == matchedDateOfBirth &&
+                    c.UserIdentityId == userIdentityId &&
                     !c.IsMatched &&
                     c.IsFailed),
                 It.IsAny<CancellationToken>()), Times.Once);
@@ -1067,6 +1064,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             // Arrange
             var govUkId = "gov-101";
             var userId = Guid.NewGuid();
+            var userIdentityId = Guid.NewGuid();
 
             _userServiceMock.Setup(u => u.GetGovUkIdentifier()).Returns(govUkId);
             _userServiceMock.Setup(u => u.GetUserId()).Returns(userId);
@@ -1075,8 +1073,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             matches.Matches.Add(new Domain.Models.Match
             {
                 Uln = 11111111L,
-                FamilyName = "Family",
-                DateOfBirth = new DateTime(2002, 1, 1, 0, 0, 0, DateTimeKind.Unspecified),
+                UserIdentityId = userIdentityId,
                 CourseCode = "C1",
                 CourseName = "Course 1",
                 DateAwarded = new DateTime(2019, 1, 1),
@@ -1119,6 +1116,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             // Arrange
             var govUkId = "gov-201";
             var userId = Guid.NewGuid();
+            var userIdentityId = Guid.NewGuid();
 
             _userServiceMock.Setup(u => u.GetGovUkIdentifier()).Returns(govUkId);
             _userServiceMock.Setup(u => u.GetUserId()).Returns(userId);
@@ -1127,8 +1125,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             matches.Matches.Add(new Domain.Models.Match
             {
                 Uln = 22222222L,
-                FamilyName = "Family",
-                DateOfBirth = new DateTime(2002, 1, 1, 0, 0, 0, DateTimeKind.Unspecified),
+                UserIdentityId = userIdentityId,
                 CourseCode = "C2",
                 CourseName = "Course 2",
                 DateAwarded = new DateTime(2018, 1, 1),

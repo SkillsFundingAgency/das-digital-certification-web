@@ -1,6 +1,4 @@
-﻿using SFA.DAS.DigitalCertificates.Infrastructure.Api.Types;
-using System;
-using System.Collections.Generic;
+﻿using System;
 
 namespace SFA.DAS.DigitalCertificates.Infrastructure.Api.Responses
 {
@@ -11,8 +9,6 @@ namespace SFA.DAS.DigitalCertificates.Infrastructure.Api.Responses
         public required string EmailAddress { get; set; }
         public string? PhoneNumber { get; set; }
         public DateTime? LastLoginAt { get; set; }
-        public DateTime? LockedAt { get; set; }
-        public List<Name>? Names { get; set; }
         public bool IsLocked { get; set; }
     }
 }

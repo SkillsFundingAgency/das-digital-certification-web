@@ -26,6 +26,7 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetMatches
         {
             // Arrange
             var userId = Guid.NewGuid();
+            var userIdentityId = Guid.NewGuid();
 
             var response = new MatchesResponse
             {
@@ -34,8 +35,7 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetMatches
                     new MatchResponse
                     {
                         Uln = 1234567890,
-                        FamilyName = "Smith",
-                        DateOfBirth = new DateTime(1980, 1, 1, 0, 0, 0,DateTimeKind.Unspecified),
+                        UserIdentityId = userIdentityId,
                         CertificateType = "Standard",
                         CourseCode = "C1",
                         CourseName = "Course",
@@ -73,6 +73,7 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetMatches
             var match = result.Matches[0];
             match.Uln.Should().Be(response.Matches[0].Uln);
             match.CertificateType.Should().Be(CertificateType.Standard);
+            match.UserIdentityId.Should().Be(response.Matches[0].UserIdentityId);
             match.CourseCode.Should().Be(response.Matches[0].CourseCode);
             match.CourseName.Should().Be(response.Matches[0].CourseName);
             match.CourseLevel.Should().Be(response.Matches[0].CourseLevel);

@@ -6,8 +6,7 @@ namespace SFA.DAS.DigitalCertificates.Domain.Models
     public class Match
     {
         public required long Uln { get; set; }
-        public required string FamilyName { get; set; }
-        public required DateTime DateOfBirth { get; set; }
+        public required Guid? UserIdentityId { get; set; }
         public CertificateType CertificateType { get; set; }
         public string? CourseCode { get; set; }
         public string? CourseName { get; set; }

@@ -2,11 +2,17 @@
 using System.Linq;
 using System.Threading.Tasks;
 using MediatR;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Http;
+using SFA.DAS.DigitalCertificates.Application.Commands.CreateOrUpdateUser;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetMatches;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetUser;
 using SFA.DAS.DigitalCertificates.Domain.Models;
 using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
 using SFA.DAS.DigitalCertificates.Infrastructure.Services.CacheStorage;
+using SFA.DAS.DigitalCertificates.Web.Exceptions;
+using SFA.DAS.DigitalCertificates.Web.Extensions;
+using SFA.DAS.GovUK.Auth.Services;
 
 namespace SFA.DAS.DigitalCertificates.Web.Services
 {
@@ -18,12 +24,18 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
 
         private readonly ICacheStorageService _cacheStorageService;
         private readonly IMediator _mediator;
+        private readonly IGovUkAuthenticationService _govUkAuthenticationService;
+        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly DigitalCertificatesWebConfiguration _configuration;
 
-        public CacheService(ICacheStorageService cacheStorageService, IMediator mediator, DigitalCertificatesWebConfiguration configuration)
+        public CacheService(ICacheStorageService cacheStorageService, IMediator mediator, 
+            IHttpContextAccessor httpContextAccessor, IGovUkAuthenticationService govUkAuthenticationService, 
+            DigitalCertificatesWebConfiguration configuration)
         {
             _cacheStorageService = cacheStorageService;
             _mediator = mediator;
+            _httpContextAccessor = httpContextAccessor;
+            _govUkAuthenticationService = govUkAuthenticationService;
             _configuration = configuration;
         }
 
@@ -46,7 +58,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
 
             if (cached != null)
             {
-                if (cached.Matches?.Any() == true)
+                if (cached.Matches?.Any() == true && cached.Matches.All(p => p.UserIdentityId != null))
                 {
                     return cached;
                 }
@@ -54,18 +66,44 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
                 await _cacheStorageService.RemoveAsync(key);
             }
 
-            var matches = await _mediator.Send(new GetMatchesQuery { UserId = userId });
-            if (matches?.Matches?.Any() != true)
+            if (_httpContextAccessor.HttpContext != null)
             {
-                return null;
+                var token = await _httpContextAccessor.HttpContext.GetTokenAsync("access_token");
+                var details = await _govUkAuthenticationService.GetAccountDetails(token);
+
+                if (details == null)
+                    throw new VerifyException("Unable to load verify details");
+
+                await _mediator.Send(new UpdateUserIdentityCommand
+                {
+                    UserId = userId,
+                    Names = details.CoreIdentityJwt.Vc.CredentialSubject
+                        .GetHistoricalNames().Select(x => new Name
+                        {
+                            ValidSince = x.ValidFrom,
+                            ValidUntil = x.ValidUntil,
+                            FamilyName = x.FamilyNames,
+                            GivenNames = x.GivenNames
+                        }).ToList(),
+                    DateOfBirth = details.CoreIdentityJwt.Vc.CredentialSubject.BirthDates
+                        .OrderByDescending(p => p.ValidUntil)
+                        .First().Value
+                        .ParseEnGbDateTime()
+                });
+
+                var matches = await _mediator.Send(new GetMatchesQuery { UserId = userId });
+                if (matches?.Matches?.Any() ?? false)
+                {
+                    var days = _configuration?.MatchesCacheExpiryDays ?? 30;
+                    return await _cacheStorageService.SetAsync(key, async e =>
+                    {
+                        e.AbsoluteExpirationRelativeToNow = TimeSpan.FromDays(days);
+                        return await Task.FromResult(matches);
+                    });
+                }
             }
 
-            var days = _configuration?.MatchesCacheExpiryDays ?? 30;
-            return await _cacheStorageService.SetAsync(key, async e =>
-            {
-                e.AbsoluteExpirationRelativeToNow = TimeSpan.FromDays(days);
-                return await Task.FromResult(matches);
-            });
+            return null;
         }
 
         public async Task<int> GetMatchFailCountAsync(string govUkIdentifier)

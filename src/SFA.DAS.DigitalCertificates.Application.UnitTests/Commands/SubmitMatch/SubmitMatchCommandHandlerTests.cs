@@ -26,12 +26,13 @@ namespace SFA.DAS.DigitalCertificates.UnitTests.Application.Commands.SubmitMatch
         {
             // Arrange
             var userId = Guid.NewGuid();
+            var userIdentityId = Guid.NewGuid();
+
             var command = new SubmitMatchCommand
             {
                 UserId = userId,
                 Uln = 11122233344L,
-                FamilyName = "Smith",
-                DateOfBirth = new DateTime(1990,1,1),
+                UserIdentityId = userIdentityId,
                 CourseCode = "C1",
                 CourseName = "Course One",
                 Ukprn = 12345,
@@ -47,7 +48,7 @@ namespace SFA.DAS.DigitalCertificates.UnitTests.Application.Commands.SubmitMatch
 
             // Assert
             result.Should().Be(Unit.Value);
-            _outerApiMock.Verify(x => x.SubmitMatch(userId, It.Is<SubmitMatchRequest>(r => r.FamilyName == command.FamilyName && r.Uln == command.Uln && r.IsMatched == command.IsMatched)), Times.Once);
+            _outerApiMock.Verify(x => x.SubmitMatch(userId, It.Is<SubmitMatchRequest>(r => r.UserIdentityId == command.UserIdentityId && r.Uln == command.Uln && r.IsMatched == command.IsMatched)), Times.Once);
         }
 
         [Test]
@@ -57,9 +58,7 @@ namespace SFA.DAS.DigitalCertificates.UnitTests.Application.Commands.SubmitMatch
             var userId = Guid.NewGuid();
             var command = new SubmitMatchCommand
             {
-                UserId = userId,
-                FamilyName = "Smith",
-                DateOfBirth = new DateTime(1980,1,1)
+                UserId = userId
             };
 
             _outerApiMock

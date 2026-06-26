@@ -7,6 +7,7 @@ using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
+using SFA.DAS.DigitalCertificates.Web.Authorization;
 using SFA.DAS.DigitalCertificates.Web.Helpers;
 
 namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
@@ -33,6 +34,22 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 .Name ?? string.Empty;
         }
 
+        protected string GetGovUkIdentifier()
+        {
+            return _httpContextAccessor?
+                .HttpContext?
+                .User?
+                .FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
+        }
+
+        protected string GetUserId()
+        {
+            return _httpContextAccessor?
+                .HttpContext?
+                .User?
+                .FindFirstValue(DigitalCertificateClaimsTypes.UserId) ?? string.Empty;
+        }
+
         protected string GetUserGivenNames()
         {
             return _httpContextAccessor?
@@ -55,6 +72,14 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 .HttpContext?
                 .User?
                 .FindFirstValue(ClaimTypes.Email) ?? string.Empty;
+        }
+
+        protected string GetUserPhoneNumber()
+        {
+            return _httpContextAccessor?
+                .HttpContext?
+                .User?
+                .FindFirstValue(ClaimTypes.MobilePhone) ?? string.Empty;
         }
 
         protected static async Task<bool> ValidateViewModel<T>(IValidator<T> validator, T viewModel, ModelStateDictionary modelState)

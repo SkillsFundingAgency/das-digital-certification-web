@@ -6,8 +6,7 @@ namespace SFA.DAS.DigitalCertificates.Infrastructure.Api.Responses
     public class MatchResponse
     {
         public required long Uln { get; set; }
-        public required string FamilyName { get; set; }
-        public required DateTime DateOfBirth { get; set; }
+        public required Guid UserIdentityId { get; set; }
         public required string CertificateType { get; set; }
         public string? CourseCode { get; set; }
         public string? CourseName { get; set; }

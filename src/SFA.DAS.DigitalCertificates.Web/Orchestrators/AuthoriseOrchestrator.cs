@@ -474,8 +474,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 {
                     UserId = userId.Value,
                     Uln = matchResultMatch.Uln,
-                    FamilyName = matchResultMatch.FamilyName,
-                    DateOfBirth = matchResultMatch.DateOfBirth,
+                    UserIdentityId = matchResultMatch.UserIdentityId,
                     CertificateType = matchResultMatch.CertificateType.ToString(),
                     CourseCode = matchResultMatch.CourseCode,
                     CourseName = matchResultMatch.CourseName,
@@ -507,8 +506,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             {
                 UserId = userId.GetValueOrDefault(),
                 Uln = answers.Uln,
-                FamilyName = firstMatch.FamilyName,
-                DateOfBirth = firstMatch.DateOfBirth,
+                UserIdentityId = firstMatch.UserIdentityId,
                 CertificateType = null,
                 CourseCode = answers.CourseCode,
                 CourseName = answers.CourseName,

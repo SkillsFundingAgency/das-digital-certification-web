@@ -19,17 +19,7 @@ namespace SFA.DAS.DigitalCertificates.Application.Commands.CreateOrUpdateUser
             {
                 GovUkIdentifier = command.GovUkIdentifier,
                 EmailAddress = command.EmailAddress,
-                PhoneNumber = command.PhoneNumber,
-                Names = command.Names?.Select(name =>
-                    new Infrastructure.Api.Types.Name
-                    {
-                        ValidSince = name.ValidSince,
-                        ValidUntil = name.ValidUntil,
-                        FamilyName = name.FamilyName,
-                        GivenNames = name.GivenNames
-                    })
-                    .ToList(),
-                DateOfBirth = command.DateOfBirth
+                PhoneNumber = command.PhoneNumber
             });
 
             return userId;

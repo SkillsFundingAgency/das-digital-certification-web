@@ -27,8 +27,7 @@ namespace SFA.DAS.DigitalCertificates.Application.Queries.GetMatches
                 result.Matches.Add(new Match
                 {
                     Uln = m.Uln,
-                    FamilyName = m.FamilyName,
-                    DateOfBirth = m.DateOfBirth,
+                    UserIdentityId = m.UserIdentityId,
                     CertificateType = ct,
                     CourseCode = m.CourseCode,
                     CourseName = m.CourseName,
