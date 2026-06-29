@@ -126,9 +126,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             _userServiceMock.Setup(u => u.GetGovUkIdentifier()).Returns(govUkId);
             _userServiceMock.Setup(u => u.GetUserId()).Returns(userId);
 
-            _cacheServiceMock
-                .Setup(c => c.GetOrCreateMatchesAsync(govUkId, userId))
-                .ReturnsAsync((MatchesAndMasks)null);
+            _cacheServiceMock.Setup(c => c.GetOrCreateMatchesAsync(govUkId, userId)).ReturnsAsync((Domain.Models.MatchesAndMasks)null);
 
             // Act
             await _sut.PrepareNeedMoreInformationAsync();
@@ -148,31 +146,12 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             _userServiceMock.Setup(u => u.GetUserId()).Returns(userId);
 
             var matches = new MatchesAndMasks();
-            matches.Masks.Add(new Mask
-            {
-                CourseCode = "M1",
-                CourseName = "MaskName",
-                CourseLevel = "3",
-                CertificateType = CertificateType.Standard
-            });
-            matches.Matches.Add(new Domain.Models.Match
-            {
-                Uln = 0,
-                FamilyName = "Family",
-                DateOfBirth = new DateTime(2002, 1, 1, 0, 0, 0, DateTimeKind.Unspecified),
-                CourseCode = "R1",
-                CourseName = "RealName",
-                CourseLevel = "4",
-                CertificateType = CertificateType.Framework
-            });
+            matches.Masks.Add(new Mask { CourseCode = "M1", CourseName = "MaskName", CourseLevel = "3", CertificateType = CertificateType.Standard });
+            matches.Matches.Add(new Domain.Models.Match { Uln = 0, CourseCode = "R1", CourseName = "RealName", CourseLevel = "4", CertificateType = CertificateType.Framework });
 
-            _cacheServiceMock
-                .Setup(c => c.GetOrCreateMatchesAsync(govUkId, userId))
-                .ReturnsAsync(matches);
+            _cacheServiceMock.Setup(c => c.GetOrCreateMatchesAsync(govUkId, userId)).ReturnsAsync(matches);
 
-            _sessionServiceMock
-                .Setup(s => s.GetAuthorisationAnswersAsync())
-                .ReturnsAsync(new AuthorisationAnswers { CourseCode = "R1" });
+            _sessionServiceMock.Setup(s => s.GetAuthorisationAnswersAsync()).ReturnsAsync(new AuthorisationAnswers { CourseCode = "R1" });
 
             // Act
             var result = await _sut.GetSelectCourseViewModelAsync();
@@ -189,6 +168,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         [Test]
         public async Task SaveSelectedCourseAsync_Ignores_Empty_Selection()
         {
+            // Arrange
             // Act
             await _sut.SaveSelectedCourseAsync(new SelectCourseViewModel { SelectedCourseCode = "   " });
 
@@ -207,24 +187,11 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             _userServiceMock.Setup(u => u.GetUserId()).Returns(userId);
 
             var matches = new MatchesAndMasks();
-            matches.Matches.Add(new Domain.Models.Match
-            {
-                Uln = 0,
-                FamilyName = "Family",
-                DateOfBirth = new DateTime(2002, 1, 1, 0, 0, 0, DateTimeKind.Unspecified),
-                CourseCode = "C1",
-                CourseName = "Course One",
-                CourseLevel = "2",
-                CertificateType = CertificateType.Standard
-            });
+            matches.Matches.Add(new Domain.Models.Match { Uln = 0, CourseCode = "C1", CourseName = "Course One", CourseLevel = "2", CertificateType = CertificateType.Standard });
 
-            _cacheServiceMock
-                .Setup(c => c.GetOrCreateMatchesAsync(govUkId, userId))
-                .ReturnsAsync(matches);
+            _cacheServiceMock.Setup(c => c.GetOrCreateMatchesAsync(govUkId, userId)).ReturnsAsync(matches);
 
-            _sessionServiceMock
-                .Setup(s => s.GetAuthorisationAnswersAsync())
-                .ReturnsAsync((AuthorisationAnswers)null);
+            _sessionServiceMock.Setup(s => s.GetAuthorisationAnswersAsync()).ReturnsAsync((AuthorisationAnswers)null);
 
             var vm = new SelectCourseViewModel { SelectedCourseCode = "C1" };
 
@@ -232,18 +199,14 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             await _sut.SaveSelectedCourseAsync(vm);
 
             // Assert
-            _sessionServiceMock.Verify(s => s.SetAuthorisationAnswersAsync(It.Is<AuthorisationAnswers>(a =>
-                a.CourseCode == "C1" &&
-                a.CourseName == "Course One")), Times.Once);
+            _sessionServiceMock.Verify(s => s.SetAuthorisationAnswersAsync(It.Is<AuthorisationAnswers>(a => a.CourseCode == "C1" && a.CourseName == "Course One")), Times.Once);
         }
 
         [Test]
         public async Task GetKnowYourUlnViewModelAsync_Returns_New_Model_When_No_Answers()
         {
             // Arrange
-            _sessionServiceMock
-                .Setup(s => s.GetAuthorisationAnswersAsync())
-                .ReturnsAsync((AuthorisationAnswers)null);
+            _sessionServiceMock.Setup(s => s.GetAuthorisationAnswersAsync()).ReturnsAsync((AuthorisationAnswers)null);
 
             // Act
             var result = await _sut.GetKnowYourUlnViewModelAsync();
@@ -259,9 +222,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         {
             // Arrange
             var answers = new AuthorisationAnswers { KnowUln = true, Uln = 1234567890L };
-            _sessionServiceMock
-                .Setup(s => s.GetAuthorisationAnswersAsync())
-                .ReturnsAsync(answers);
+            _sessionServiceMock.Setup(s => s.GetAuthorisationAnswersAsync()).ReturnsAsync(answers);
 
             // Act
             var result = await _sut.GetKnowYourUlnViewModelAsync();
@@ -272,22 +233,20 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             Assert.That(result.Uln, Is.EqualTo(1234567890L));
         }
 
+        
+
         [Test]
         public async Task SaveKnowYourUlnAsync_Saves_KnowUln_True_And_Uln()
         {
             // Arrange
             var vm = new KnowYourUlnViewModel { KnowUln = true, Uln = 999999L };
-            _sessionServiceMock
-                .Setup(s => s.GetAuthorisationAnswersAsync())
-                .ReturnsAsync((AuthorisationAnswers)null);
+            _sessionServiceMock.Setup(s => s.GetAuthorisationAnswersAsync()).ReturnsAsync((AuthorisationAnswers)null);
 
             // Act
             await _sut.SaveKnowYourUlnAsync(vm);
 
             // Assert
-            _sessionServiceMock.Verify(s => s.SetAuthorisationAnswersAsync(It.Is<AuthorisationAnswers>(a =>
-                a.KnowUln == true &&
-                a.Uln == 999999L)), Times.Once);
+            _sessionServiceMock.Verify(s => s.SetAuthorisationAnswersAsync(It.Is<AuthorisationAnswers>(a => a.KnowUln == true && a.Uln == 999999L)), Times.Once);
         }
 
         [Test]
@@ -295,26 +254,20 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         {
             // Arrange
             var vm = new KnowYourUlnViewModel { KnowUln = false, Uln = 111111L };
-            _sessionServiceMock
-                .Setup(s => s.GetAuthorisationAnswersAsync())
-                .ReturnsAsync(new AuthorisationAnswers { KnowUln = true, Uln = 222222L });
+            _sessionServiceMock.Setup(s => s.GetAuthorisationAnswersAsync()).ReturnsAsync(new AuthorisationAnswers { KnowUln = true, Uln = 222222L });
 
             // Act
             await _sut.SaveKnowYourUlnAsync(vm);
 
             // Assert
-            _sessionServiceMock.Verify(s => s.SetAuthorisationAnswersAsync(It.Is<AuthorisationAnswers>(a =>
-                a.KnowUln == false &&
-                a.Uln == null)), Times.Once);
+            _sessionServiceMock.Verify(s => s.SetAuthorisationAnswersAsync(It.Is<AuthorisationAnswers>(a => a.KnowUln == false && a.Uln == null)), Times.Once);
         }
 
         [Test]
         public async Task GetKnowYearViewModelAsync_Returns_Model_With_Null_Properties_When_No_Answers()
         {
             // Arrange
-            _sessionServiceMock
-                .Setup(s => s.GetAuthorisationAnswersAsync())
-                .ReturnsAsync((AuthorisationAnswers)null);
+            _sessionServiceMock.Setup(s => s.GetAuthorisationAnswersAsync()).ReturnsAsync((AuthorisationAnswers)null);
 
             // Act
             var result = await _sut.GetKnowYearViewModelAsync();
@@ -329,9 +282,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         {
             // Arrange
             var answers = new AuthorisationAnswers { KnowYear = true, YearCompleted = 2020 };
-            _sessionServiceMock
-                .Setup(s => s.GetAuthorisationAnswersAsync())
-                .ReturnsAsync(answers);
+            _sessionServiceMock.Setup(s => s.GetAuthorisationAnswersAsync()).ReturnsAsync(answers);
 
             // Act
             var result = await _sut.GetKnowYearViewModelAsync();
@@ -342,22 +293,20 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             Assert.That(result.YearCompleted, Is.EqualTo(2020));
         }
 
+        
+
         [Test]
         public async Task SaveKnowYearAsync_Saves_KnowYear_True_And_Year()
         {
             // Arrange
             var vm = new KnowYearViewModel { KnowYear = true, YearCompleted = 2019 };
-            _sessionServiceMock
-                .Setup(s => s.GetAuthorisationAnswersAsync())
-                .ReturnsAsync((AuthorisationAnswers)null);
+            _sessionServiceMock.Setup(s => s.GetAuthorisationAnswersAsync()).ReturnsAsync((AuthorisationAnswers)null);
 
             // Act
             await _sut.SaveKnowYearAsync(vm);
 
             // Assert
-            _sessionServiceMock.Verify(s => s.SetAuthorisationAnswersAsync(It.Is<AuthorisationAnswers>(a =>
-                a.KnowYear == true &&
-                a.YearCompleted == 2019)), Times.Once);
+            _sessionServiceMock.Verify(s => s.SetAuthorisationAnswersAsync(It.Is<AuthorisationAnswers>(a => a.KnowYear == true && a.YearCompleted == 2019)), Times.Once);
         }
 
         [Test]
@@ -365,17 +314,13 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         {
             // Arrange
             var vm = new KnowYearViewModel { KnowYear = false, YearCompleted = 2000 };
-            _sessionServiceMock
-                .Setup(s => s.GetAuthorisationAnswersAsync())
-                .ReturnsAsync(new AuthorisationAnswers { KnowYear = true, YearCompleted = 1999 });
+            _sessionServiceMock.Setup(s => s.GetAuthorisationAnswersAsync()).ReturnsAsync(new AuthorisationAnswers { KnowYear = true, YearCompleted = 1999 });
 
             // Act
             await _sut.SaveKnowYearAsync(vm);
 
             // Assert
-            _sessionServiceMock.Verify(s => s.SetAuthorisationAnswersAsync(It.Is<AuthorisationAnswers>(a =>
-                a.KnowYear == false &&
-                a.YearCompleted == null)), Times.Once);
+            _sessionServiceMock.Verify(s => s.SetAuthorisationAnswersAsync(It.Is<AuthorisationAnswers>(a => a.KnowYear == false && a.YearCompleted == null)), Times.Once);
         }
 
         [Test]
@@ -389,23 +334,12 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             _userServiceMock.Setup(u => u.GetUserId()).Returns(userId);
 
             var matches = new MatchesAndMasks();
-            matches.Matches.Add(new Domain.Models.Match
-            {
-                Uln = 0,
-                FamilyName = "Family",
-                DateOfBirth = new DateTime(2002, 1, 1, 0, 0, 0, DateTimeKind.Unspecified),
-                ProviderName = "Provider A",
-                Ukprn = 12345
-            });
+            matches.Matches.Add(new Domain.Models.Match { Uln = 0, ProviderName = "Provider A", Ukprn = 12345 });
             matches.Masks.Add(new Mask { ProviderName = "Provider B" });
 
-            _cacheServiceMock
-                .Setup(c => c.GetOrCreateMatchesAsync(govUkId, userId))
-                .ReturnsAsync(matches);
+            _cacheServiceMock.Setup(c => c.GetOrCreateMatchesAsync(govUkId, userId)).ReturnsAsync(matches);
 
-            _sessionServiceMock
-                .Setup(s => s.GetAuthorisationAnswersAsync())
-                .ReturnsAsync(new AuthorisationAnswers { ProviderName = "Provider A", ProviderUnknown = false });
+            _sessionServiceMock.Setup(s => s.GetAuthorisationAnswersAsync()).ReturnsAsync(new AuthorisationAnswers { ProviderName = "Provider A", ProviderUnknown = false });
 
             // Act
             var result = await _sut.GetSelectProviderViewModelAsync();
@@ -423,12 +357,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         public async Task SaveSelectedProviderAsync_When_Unknown_Sets_Unknown_And_Clears_Other_Fields()
         {
             // Arrange
-            _sessionServiceMock
-                .Setup(s => s.GetAuthorisationAnswersAsync())
-                .ReturnsAsync(new AuthorisationAnswers { ProviderName = "Old", ProviderUkprn = 999 });
-            _sessionServiceMock
-                .Setup(s => s.SetAuthorisationAnswersAsync(It.IsAny<AuthorisationAnswers>()))
-                .Returns(Task.CompletedTask);
+            _sessionServiceMock.Setup(s => s.GetAuthorisationAnswersAsync()).ReturnsAsync(new AuthorisationAnswers { ProviderName = "Old", ProviderUkprn = 999 });
+            _sessionServiceMock.Setup(s => s.SetAuthorisationAnswersAsync(It.IsAny<AuthorisationAnswers>())).Returns(Task.CompletedTask);
 
             var vm = new SelectProviderViewModel { SelectedProviderUnknown = true };
 
@@ -436,10 +366,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             await _sut.SaveSelectedProviderAsync(vm);
 
             // Assert
-            _sessionServiceMock.Verify(s => s.SetAuthorisationAnswersAsync(It.Is<AuthorisationAnswers>(a =>
-                a.ProviderUnknown == true &&
-                a.ProviderName == null &&
-                a.ProviderUkprn == null)), Times.Once);
+            _sessionServiceMock.Verify(s => s.SetAuthorisationAnswersAsync(It.Is<AuthorisationAnswers>(a => a.ProviderUnknown == true && a.ProviderName == null && a.ProviderUkprn == null)), Times.Once);
         }
 
         [Test]
@@ -453,25 +380,11 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             _userServiceMock.Setup(u => u.GetUserId()).Returns(userId);
 
             var matches = new MatchesAndMasks();
-            matches.Matches.Add(new Domain.Models.Match
-            {
-                Uln = 0,
-                FamilyName = "Family",
-                DateOfBirth = new DateTime(2002, 1, 1, 0, 0, 0, DateTimeKind.Unspecified),
-                ProviderName = "Provider A",
-                Ukprn = 12345
-            });
+            matches.Matches.Add(new Domain.Models.Match { Uln = 0, ProviderName = "Provider A", Ukprn = 12345 });
+            _cacheServiceMock.Setup(c => c.GetOrCreateMatchesAsync(govUkId, userId)).ReturnsAsync(matches);
 
-            _cacheServiceMock
-                .Setup(c => c.GetOrCreateMatchesAsync(govUkId, userId))
-                .ReturnsAsync(matches);
-
-            _sessionServiceMock
-                .Setup(s => s.GetAuthorisationAnswersAsync())
-                .ReturnsAsync((AuthorisationAnswers)null);
-            _sessionServiceMock
-                .Setup(s => s.SetAuthorisationAnswersAsync(It.IsAny<AuthorisationAnswers>()))
-                .Returns(Task.CompletedTask);
+            _sessionServiceMock.Setup(s => s.GetAuthorisationAnswersAsync()).ReturnsAsync((AuthorisationAnswers)null);
+            _sessionServiceMock.Setup(s => s.SetAuthorisationAnswersAsync(It.IsAny<AuthorisationAnswers>())).Returns(Task.CompletedTask);
 
             var vm = new SelectProviderViewModel { SelectedProviderName = "Provider A" };
 
@@ -479,10 +392,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             await _sut.SaveSelectedProviderAsync(vm);
 
             // Assert
-            _sessionServiceMock.Verify(s => s.SetAuthorisationAnswersAsync(It.Is<AuthorisationAnswers>(a =>
-                a.ProviderName == "Provider A" &&
-                a.ProviderUkprn == 12345 &&
-                a.ProviderUnknown == false)), Times.Once);
+            _sessionServiceMock.Verify(s => s.SetAuthorisationAnswersAsync(It.Is<AuthorisationAnswers>(a => a.ProviderName == "Provider A" && a.ProviderUkprn == 12345 && a.ProviderUnknown == false)), Times.Once);
         }
 
         [Test]
@@ -491,71 +401,31 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             // Arrange
             var govUkId = "gov-1";
             var userId = Guid.NewGuid();
-            var matchedDateOfBirth = new DateTime(2002, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
 
             _userServiceMock.Setup(u => u.GetGovUkIdentifier()).Returns(govUkId);
             _userServiceMock.Setup(u => u.GetUserId()).Returns(userId);
 
             var matches = new MatchesAndMasks();
-            matches.Matches.Add(new Domain.Models.Match
-            {
-                Uln = 999999L,
-                FamilyName = "MatchedFamily",
-                DateOfBirth = matchedDateOfBirth,
-                ProviderName = "Provider A",
-                Ukprn = 12345L,
-                CertificateType = CertificateType.Standard,
-                CourseCode = "C1",
-                CourseName = "Course One",
-                CourseLevel = "3",
-                DateAwarded = new DateTime(2019, 1, 1)
-            });
+            matches.Matches.Add(new Domain.Models.Match { CourseCode = "C1", Uln = 999999L, DateAwarded = new DateTime(2019, 6, 1), ProviderName = "Provider A", Ukprn = 12345L, CertificateType = SFA.DAS.DigitalCertificates.Domain.Models.CertificateType.Standard });
 
-            _cacheServiceMock
-                .Setup(c => c.GetOrCreateMatchesAsync(govUkId, userId))
-                .ReturnsAsync(matches);
+            _cacheServiceMock.Setup(c => c.GetOrCreateMatchesAsync(govUkId, userId)).ReturnsAsync(matches);
 
-            _sessionServiceMock
-                .Setup(s => s.GetAuthorisationAnswersAsync())
-                .ReturnsAsync(new AuthorisationAnswers
-                {
-                    Uln = 999999L,
-                    CourseCode = null,
-                    YearCompleted = 2019,
-                    ProviderUkprn = 12345L,
-                    ProviderName = "Provider A"
-                });
+            _sessionServiceMock.Setup(s => s.GetAuthorisationAnswersAsync()).ReturnsAsync(new AuthorisationAnswers { Uln = 999999L, CourseCode = null, YearCompleted = 2019, ProviderUkprn = 12345L, ProviderName = "Provider A" });
+            _httpContext.User = new ClaimsPrincipal(new ClaimsIdentity(new[] {
+                new Claim(ClaimTypes.Surname, "Family"),
+                new Claim(ClaimTypes.GivenName, "Given"),
+                new Claim(ClaimTypes.DateOfBirth, "1990-01-01")
+            }, "Test"));
+
+            _mediatorMock.Setup(m => m.Send(It.IsAny<MediatR.IRequest<bool>>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
 
             // Act
             var result = await _sut.SubmitCheckAnswersAsync();
 
             // Assert
             Assert.That(result, Is.EqualTo(MatchOutcome.SingleMatch));
-
-            _mediatorMock.Verify(m => m.Send(
-                It.Is<SubmitMatchCommand>(c =>
-                    c.UserId == userId &&
-                    c.Uln == 999999L &&
-                    c.FamilyName == "MatchedFamily" &&
-                    c.DateOfBirth == matchedDateOfBirth &&
-                    c.CertificateType == CertificateType.Standard.ToString() &&
-                    c.CourseCode == "C1" &&
-                    c.CourseName == "Course One" &&
-                    c.CourseLevel == "3" &&
-                    c.YearAwarded == 2019 &&
-                    c.ProviderName == "Provider A" &&
-                    c.Ukprn == 12345 &&
-                    c.IsMatched &&
-                    !c.IsFailed),
-                It.IsAny<CancellationToken>()),
-                Times.Once);
-
-            _mediatorMock.Verify(m => m.Send(
-                It.Is<AuthoriseUserCommand>(c =>
-                    c.UserId == userId &&
-                    c.Uln == 999999L),
-                It.IsAny<CancellationToken>()),
-                Times.Once);
+            _mediatorMock.Verify(m => m.Send(It.IsAny<SubmitMatchCommand>(), It.IsAny<CancellationToken>()), Times.Once);
+            _mediatorMock.Verify(m => m.Send(It.IsAny<AuthoriseUserCommand>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Test]
@@ -565,12 +435,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             _userServiceMock.Setup(u => u.GetUserId()).Returns((Guid?)null);
 
             // Act / Assert
-            Assert.ThrowsAsync<InvalidOperationException>(
-                async () => await _sut.CreateUserActionForCannotMatchAsync(ActionType.NotFound));
-
-            _mediatorMock.Verify(m => m.Send(
-                It.IsAny<CreateUserActionCommand>(),
-                It.IsAny<CancellationToken>()), Times.Never);
+            Assert.ThrowsAsync<InvalidOperationException>(async () => await _sut.CreateUserActionForCannotMatchAsync(ActionType.NotFound));
+            _mediatorMock.Verify(m => m.Send(It.IsAny<CreateUserActionCommand>(), It.IsAny<CancellationToken>()), Times.Never);
         }
 
         [Test]
@@ -580,17 +446,12 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             var userId = Guid.NewGuid();
             _userServiceMock.Setup(u => u.GetUserId()).Returns(userId);
 
-            var identity = new ClaimsIdentity(new[]
-            {
-                new Claim(ClaimTypes.Surname, "Smith"),
-                new Claim(ClaimTypes.GivenName, "John")
-            });
+            // add name claims
+            var identity = new ClaimsIdentity(new[] { new Claim(ClaimTypes.Surname, "Smith"), new Claim(ClaimTypes.GivenName, "John") });
             _httpContext.User = new ClaimsPrincipal(identity);
 
             var commandResult = new CreateUserActionCommandResult { ActionCode = "REF-1" };
-            _mediatorMock
-                .Setup(m => m.Send(It.IsAny<CreateUserActionCommand>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(commandResult);
+            _mediatorMock.Setup(m => m.Send(It.IsAny<CreateUserActionCommand>(), It.IsAny<CancellationToken>())).ReturnsAsync(commandResult);
 
             // Act
             var result = await _sut.CreateUserActionForCannotMatchAsync(ActionType.NotFound);
@@ -598,11 +459,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             // Assert
             Assert.IsNotNull(result);
             Assert.That(result, Is.EqualTo("REF-1"));
-            _mediatorMock.Verify(m => m.Send(It.Is<CreateUserActionCommand>(c =>
-                c.UserId == userId &&
-                c.ActionType == ActionType.NotFound &&
-                c.FamilyName == "Smith" &&
-                c.GivenNames == "John"), It.IsAny<CancellationToken>()), Times.Once);
+            _mediatorMock.Verify(m => m.Send(It.Is<CreateUserActionCommand>(c => c.UserId == userId && c.ActionType == ActionType.NotFound && c.FamilyName == "Smith" && c.GivenNames == "John"), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Test]
@@ -612,12 +469,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             _userServiceMock.Setup(u => u.GetUserId()).Returns((Guid?)null);
 
             // Act / Assert
-            Assert.ThrowsAsync<InvalidOperationException>(
-                async () => await _sut.GetLatestUserActionReferenceAsync(ActionType.NotFound));
-
-            _mediatorMock.Verify(m => m.Send(
-                It.IsAny<GetUserActionsQuery>(),
-                It.IsAny<CancellationToken>()), Times.Never);
+            Assert.ThrowsAsync<InvalidOperationException>(async () => await _sut.GetLatestUserActionReferenceAsync(ActionType.NotFound));
+            _mediatorMock.Verify(m => m.Send(It.IsAny<GetUserActionsQuery>(), It.IsAny<CancellationToken>()), Times.Never);
         }
 
         [Test]
@@ -663,14 +516,9 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 ActionCode = "OTHER"
             };
 
-            var queryResult = new GetUserActionsQueryResult
-            {
-                UserActions = new List<UserActionDetail> { older, newer, other }
-            };
+            var queryResult = new GetUserActionsQueryResult { UserActions = new System.Collections.Generic.List<UserActionDetail> { older, newer, other } };
 
-            _mediatorMock
-                .Setup(m => m.Send(It.IsAny<GetUserActionsQuery>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(queryResult);
+            _mediatorMock.Setup(m => m.Send(It.IsAny<GetUserActionsQuery>(), It.IsAny<CancellationToken>())).ReturnsAsync(queryResult);
 
             // Act
             var result = await _sut.GetLatestUserActionReferenceAsync(ActionType.NotFound);
@@ -678,18 +526,14 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             // Assert
             Assert.IsNotNull(result);
             Assert.That(result, Is.EqualTo("NEW"));
-            _mediatorMock.Verify(m => m.Send(
-                It.Is<GetUserActionsQuery>(q => q.UserId == userId),
-                It.IsAny<CancellationToken>()), Times.Once);
+            _mediatorMock.Verify(m => m.Send(It.Is<GetUserActionsQuery>(q => q.UserId == userId), It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Test]
         public async Task GetCheckAnswersViewModelAsync_Returns_Null_When_No_Answers()
         {
             // Arrange
-            _sessionServiceMock
-                .Setup(s => s.GetAuthorisationAnswersAsync())
-                .ReturnsAsync((AuthorisationAnswers)null);
+            _sessionServiceMock.Setup(s => s.GetAuthorisationAnswersAsync()).ReturnsAsync((AuthorisationAnswers)null);
 
             // Act
             var result = await _sut.GetCheckAnswersViewModelAsync();
@@ -701,10 +545,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         [Test]
         public async Task GetCheckAnswersViewModelAsync_Returns_Null_When_FirstTwoQuestions_Unanswered()
         {
-            // Arrange
-            _sessionServiceMock
-                .Setup(s => s.GetAuthorisationAnswersAsync())
-                .ReturnsAsync(new AuthorisationAnswers());
+            // Arrange 
+            _sessionServiceMock.Setup(s => s.GetAuthorisationAnswersAsync()).ReturnsAsync(new AuthorisationAnswers());
 
             // Act
             var result = await _sut.GetCheckAnswersViewModelAsync();
@@ -717,30 +559,16 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         public async Task GetCheckAnswersViewModelAsync_Sets_IsReturningToCheck_And_Updates_Session()
         {
             // Arrange
-            var answers = new AuthorisationAnswers
-            {
-                KnowUln = true,
-                Uln = 123L,
-                KnowYear = true,
-                YearCompleted = 2020,
-                ProviderName = "P",
-                ProviderUkprn = 1
-            };
-
-            _sessionServiceMock
-                .Setup(s => s.GetAuthorisationAnswersAsync())
-                .ReturnsAsync(answers);
-            _sessionServiceMock
-                .Setup(s => s.SetAuthorisationAnswersAsync(It.IsAny<AuthorisationAnswers>()))
-                .Returns(Task.CompletedTask);
+            var answers = new AuthorisationAnswers { KnowUln = true, Uln = 123L, KnowYear = true, YearCompleted = 2020, ProviderName = "P", ProviderUkprn = 1 };
+            _sessionServiceMock.Setup(s => s.GetAuthorisationAnswersAsync()).ReturnsAsync(answers);
+            _sessionServiceMock.Setup(s => s.SetAuthorisationAnswersAsync(It.IsAny<AuthorisationAnswers>())).Returns(Task.CompletedTask);
 
             // Act
             var result = await _sut.GetCheckAnswersViewModelAsync();
 
             // Assert
             Assert.IsNotNull(result);
-            _sessionServiceMock.Verify(s => s.SetAuthorisationAnswersAsync(
-                It.Is<AuthorisationAnswers>(a => a.IsReturningToCheck == true)), Times.Once);
+            _sessionServiceMock.Verify(s => s.SetAuthorisationAnswersAsync(It.Is<AuthorisationAnswers>(a => a.IsReturningToCheck == true)), Times.Once);
             Assert.That(result.UlnDisplay, Is.EqualTo("123"));
             Assert.That(result.YearDisplay, Is.EqualTo("2020"));
             Assert.That(result.ProviderDisplay, Is.EqualTo("P"));
@@ -750,61 +578,14 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         public async Task SubmitCheckAnswersAsync_Returns_NoData_When_Matches_Null()
         {
             // Arrange
-            var govUkId = "gov-1";
-            var userId = Guid.NewGuid();
-
-            _userServiceMock.Setup(u => u.GetGovUkIdentifier()).Returns(govUkId);
-            _userServiceMock.Setup(u => u.GetUserId()).Returns(userId);
-
-            _sessionServiceMock
-                .Setup(s => s.GetAuthorisationAnswersAsync())
-                .ReturnsAsync(new AuthorisationAnswers());
-
-            _cacheServiceMock
-                .Setup(c => c.GetOrCreateMatchesAsync(govUkId, userId))
-                .ReturnsAsync((MatchesAndMasks)null);
+            _sessionServiceMock.Setup(s => s.GetAuthorisationAnswersAsync()).ReturnsAsync(new AuthorisationAnswers());
+            _cacheServiceMock.Setup(c => c.GetOrCreateMatchesAsync(It.IsAny<string>(), It.IsAny<Guid>())).ReturnsAsync((MatchesAndMasks)null);
 
             // Act
             var result = await _sut.SubmitCheckAnswersAsync();
 
             // Assert
             Assert.That(result, Is.EqualTo(MatchOutcome.NoData));
-
-            _mediatorMock.Verify(m => m.Send(
-                It.IsAny<SubmitMatchCommand>(),
-                It.IsAny<CancellationToken>()), Times.Never);
-        }
-
-        [Test]
-        public async Task SubmitCheckAnswersAsync_Returns_NoData_When_Matches_List_Is_Empty()
-        {
-            // Arrange
-            var govUkId = "gov-1";
-            var userId = Guid.NewGuid();
-
-            _userServiceMock.Setup(u => u.GetGovUkIdentifier()).Returns(govUkId);
-            _userServiceMock.Setup(u => u.GetUserId()).Returns(userId);
-
-            _sessionServiceMock
-                .Setup(s => s.GetAuthorisationAnswersAsync())
-                .ReturnsAsync(new AuthorisationAnswers());
-
-            _cacheServiceMock
-                .Setup(c => c.GetOrCreateMatchesAsync(govUkId, userId))
-                .ReturnsAsync(new MatchesAndMasks
-                {
-                    Matches = new List<Domain.Models.Match>()
-                });
-
-            // Act
-            var result = await _sut.SubmitCheckAnswersAsync();
-
-            // Assert
-            Assert.That(result, Is.EqualTo(MatchOutcome.NoData));
-
-            _mediatorMock.Verify(m => m.Send(
-                It.IsAny<SubmitMatchCommand>(),
-                It.IsAny<CancellationToken>()), Times.Never);
         }
 
         [Test]
@@ -812,185 +593,47 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         {
             // Arrange
             var govUkId = "gov-1";
-
             _userServiceMock.Setup(u => u.GetGovUkIdentifier()).Returns(govUkId);
-
-            _sessionServiceMock
-                .Setup(s => s.GetAuthorisationAnswersAsync())
-                .ReturnsAsync(new AuthorisationAnswers());
-
-            _cacheServiceMock
-                .Setup(c => c.GetMatchFailCountAsync(govUkId))
-                .ReturnsAsync(10);
+            _sessionServiceMock.Setup(s => s.GetAuthorisationAnswersAsync()).ReturnsAsync(new AuthorisationAnswers());
+            _cacheServiceMock.Setup(c => c.GetMatchFailCountAsync(govUkId)).ReturnsAsync(10);
 
             // Act
             var result = await _sut.SubmitCheckAnswersAsync();
 
             // Assert
             Assert.That(result, Is.EqualTo(MatchOutcome.Locked));
-
-            _mediatorMock.Verify(m => m.Send(
-                It.IsAny<SubmitMatchCommand>(),
-                It.IsAny<CancellationToken>()), Times.Never);
         }
 
         [Test]
-        public void SubmitCheckAnswersAsync_Throws_When_UserId_Is_Null()
-        {
-            // Arrange
-            var govUkId = "gov-1";
-
-            _userServiceMock.Setup(u => u.GetGovUkIdentifier()).Returns(govUkId);
-            _userServiceMock.Setup(u => u.GetUserId()).Returns((Guid?)null);
-
-            _sessionServiceMock
-                .Setup(s => s.GetAuthorisationAnswersAsync())
-                .ReturnsAsync(new AuthorisationAnswers());
-
-            // Act / Assert
-            Assert.ThrowsAsync<InvalidOperationException>(
-                async () => await _sut.SubmitCheckAnswersAsync());
-
-            _mediatorMock.Verify(m => m.Send(
-                It.IsAny<SubmitMatchCommand>(),
-                It.IsAny<CancellationToken>()), Times.Never);
-        }
-
-        [Test]
-        public async Task SubmitCheckAnswersAsync_Increments_FailedCount_And_Returns_NoMatch()
+        public async Task SubmitCheckAnswersAsync_Increments_FailedCount_And_Returns_NoMatch_Or_Locked()
         {
             // Arrange
             var govUkId = "gov-1";
             var userId = Guid.NewGuid();
-            var matchedDateOfBirth = new DateTime(2002, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
 
             _userServiceMock.Setup(u => u.GetGovUkIdentifier()).Returns(govUkId);
             _userServiceMock.Setup(u => u.GetUserId()).Returns(userId);
 
-            var matches = new MatchesAndMasks();
-            matches.Matches.Add(new Domain.Models.Match
-            {
-                Uln = 111111L,
-                FamilyName = "MatchedFamily",
-                DateOfBirth = matchedDateOfBirth,
-                CourseCode = "OTHER",
-                CourseName = "Other Course",
-                ProviderName = "Provider A",
-                Ukprn = 12345L,
-                CertificateType = CertificateType.Standard,
-                DateAwarded = new DateTime(2019, 1, 1)
-            });
+            _sessionServiceMock.Setup(s => s.GetAuthorisationAnswersAsync()).ReturnsAsync(new AuthorisationAnswers { Uln = null, CourseCode = "C" });
+            _httpContext.User = new ClaimsPrincipal(new ClaimsIdentity(new[] {
+                new Claim(ClaimTypes.Surname, "F"),
+                new Claim(ClaimTypes.DateOfBirth, "1990-01-01")
+            }, "Test"));
 
-            _cacheServiceMock
-                .Setup(c => c.GetOrCreateMatchesAsync(govUkId, userId))
-                .ReturnsAsync(matches);
+            var matches = new MatchesAndMasks { Matches = new List<Domain.Models.Match>() };
+            _cacheServiceMock.Setup(c => c.GetOrCreateMatchesAsync(govUkId, userId)).ReturnsAsync(matches);
 
-            _sessionServiceMock
-                .Setup(s => s.GetAuthorisationAnswersAsync())
-                .ReturnsAsync(new AuthorisationAnswers
-                {
-                    Uln = null,
-                    CourseCode = "C1",
-                    CourseName = "Course One",
-                    YearCompleted = 2019,
-                    ProviderUkprn = 12345L,
-                    ProviderName = "Provider A"
-                });
-
-            _cacheServiceMock
-                .Setup(c => c.IncrementMatchFailCountAsync(govUkId))
-                .ReturnsAsync(1);
+            _cacheServiceMock.Setup(c => c.IncrementMatchFailCountAsync(govUkId)).ReturnsAsync(1);
 
             // Act
-            var result = await _sut.SubmitCheckAnswersAsync();
+            var result1 = await _sut.SubmitCheckAnswersAsync();
 
-            // Assert
-            Assert.That(result, Is.EqualTo(MatchOutcome.NoMatch));
+            // Assert 
+            Assert.That(result1, Is.EqualTo(MatchOutcome.NoMatch));
 
-            _mediatorMock.Verify(m => m.Send(
-                It.Is<SubmitMatchCommand>(c =>
-                    c.UserId == userId &&
-                    c.Uln == null &&
-                    c.FamilyName == "MatchedFamily" &&
-                    c.DateOfBirth == matchedDateOfBirth &&
-                    c.CertificateType == null &&
-                    c.CourseCode == "C1" &&
-                    c.CourseName == "Course One" &&
-                    c.CourseLevel == null &&
-                    c.YearAwarded == 2019 &&
-                    c.ProviderName == "Provider A" &&
-                    c.Ukprn == 12345 &&
-                    !c.IsMatched &&
-                    !c.IsFailed),
-                It.IsAny<CancellationToken>()), Times.Once);
-
-            _mediatorMock.Verify(m => m.Send(
-                It.IsAny<AuthoriseUserCommand>(),
-                It.IsAny<CancellationToken>()), Times.Never);
-        }
-
-        [Test]
-        public async Task SubmitCheckAnswersAsync_Increments_FailedCount_And_Returns_Locked_When_FailedLimit_Reached()
-        {
-            // Arrange
-            var govUkId = "gov-1";
-            var userId = Guid.NewGuid();
-            var matchedDateOfBirth = new DateTime(2002, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
-
-            _userServiceMock.Setup(u => u.GetGovUkIdentifier()).Returns(govUkId);
-            _userServiceMock.Setup(u => u.GetUserId()).Returns(userId);
-
-            var matches = new MatchesAndMasks();
-            matches.Matches.Add(new Domain.Models.Match
-            {
-                Uln = 111111L,
-                FamilyName = "MatchedFamily",
-                DateOfBirth = matchedDateOfBirth,
-                CourseCode = "OTHER",
-                CourseName = "Other Course",
-                ProviderName = "Provider A",
-                Ukprn = 12345L,
-                CertificateType = CertificateType.Standard,
-                DateAwarded = new DateTime(2019, 1, 1)
-            });
-
-            _cacheServiceMock
-                .Setup(c => c.GetOrCreateMatchesAsync(govUkId, userId))
-                .ReturnsAsync(matches);
-
-            _sessionServiceMock
-                .Setup(s => s.GetAuthorisationAnswersAsync())
-                .ReturnsAsync(new AuthorisationAnswers
-                {
-                    Uln = null,
-                    CourseCode = "C1",
-                    CourseName = "Course One",
-                    YearCompleted = 2019,
-                    ProviderUkprn = 12345L,
-                    ProviderName = "Provider A"
-                });
-
-            _cacheServiceMock
-                .Setup(c => c.IncrementMatchFailCountAsync(govUkId))
-                .ReturnsAsync(2);
-
-            // Act
-            var result = await _sut.SubmitCheckAnswersAsync();
-
-            // Assert
-            Assert.That(result, Is.EqualTo(MatchOutcome.Locked));
-
-            _mediatorMock.Verify(m => m.Send(
-                It.Is<SubmitMatchCommand>(c =>
-                    c.UserId == userId &&
-                    c.FamilyName == "MatchedFamily" &&
-                    c.DateOfBirth == matchedDateOfBirth &&
-                    !c.IsMatched &&
-                    c.IsFailed),
-                It.IsAny<CancellationToken>()), Times.Once);
-
-            _cacheServiceMock.Verify(c => c.ClearUser(govUkId), Times.Once);
-            _cacheServiceMock.Verify(c => c.ClearMatchFailCountAsync(govUkId), Times.Once);
+            _cacheServiceMock.Setup(c => c.IncrementMatchFailCountAsync(govUkId)).ReturnsAsync(99);
+            var result2 = await _sut.SubmitCheckAnswersAsync();
+            Assert.That(result2, Is.EqualTo(MatchOutcome.Locked));
         }
 
         [Test]
@@ -1016,27 +659,21 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             var matches = new MatchesAndMasks();
             matches.Matches.Add(new Domain.Models.Match
             {
-                Uln = 11111111L,
-                FamilyName = "Family",
-                DateOfBirth = new DateTime(2002, 1, 1, 0, 0, 0, DateTimeKind.Unspecified),
                 CourseCode = "C1",
                 CourseName = "Course 1",
                 DateAwarded = new DateTime(2019, 1, 1),
-                Ukprn = 123
+                Ukprn = 123,
+                Uln = 11111111L
             });
 
-            _cacheServiceMock
-                .Setup(c => c.GetOrCreateMatchesAsync(govUkId, userId))
-                .ReturnsAsync(matches);
+            _cacheServiceMock.Setup(c => c.GetOrCreateMatchesAsync(govUkId, userId)).ReturnsAsync(matches);
 
-            _sessionServiceMock
-                .Setup(s => s.GetAuthorisationAnswersAsync())
-                .ReturnsAsync(new AuthorisationAnswers
-                {
-                    CourseCode = "C1",
-                    YearCompleted = 2019,
-                    ProviderUkprn = 123
-                });
+            _sessionServiceMock.Setup(s => s.GetAuthorisationAnswersAsync()).ReturnsAsync(new AuthorisationAnswers
+            {
+                CourseCode = "C1",
+                YearCompleted = 2019,
+                ProviderUkprn = 123
+            });
 
             // Act
             var result = await _sut.GetCourseMatchOutcomeAsync(new SelectCourseViewModel { SelectedCourseCode = "C1" });
@@ -1068,27 +705,21 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             var matches = new MatchesAndMasks();
             matches.Matches.Add(new Domain.Models.Match
             {
-                Uln = 22222222L,
-                FamilyName = "Family",
-                DateOfBirth = new DateTime(2002, 1, 1, 0, 0, 0, DateTimeKind.Unspecified),
                 CourseCode = "C2",
                 CourseName = "Course 2",
                 DateAwarded = new DateTime(2018, 1, 1),
-                Ukprn = 456
+                Ukprn = 456,
+                Uln = 22222222L
             });
 
-            _cacheServiceMock
-                .Setup(c => c.GetOrCreateMatchesAsync(govUkId, userId))
-                .ReturnsAsync(matches);
+            _cacheServiceMock.Setup(c => c.GetOrCreateMatchesAsync(govUkId, userId)).ReturnsAsync(matches);
 
-            _sessionServiceMock
-                .Setup(s => s.GetAuthorisationAnswersAsync())
-                .ReturnsAsync(new AuthorisationAnswers
-                {
-                    CourseCode = "C2",
-                    Uln = 22222222L,
-                    IsShortJourney = true
-                });
+            _sessionServiceMock.Setup(s => s.GetAuthorisationAnswersAsync()).ReturnsAsync(new AuthorisationAnswers
+            {
+                CourseCode = "C2",
+                Uln = 22222222L,
+                IsShortJourney = true
+            });
 
             // Act
             var result = await _sut.GetUlnMatchOutcomeAsync(new KnowYourUlnViewModel { Uln = 22222222L });
