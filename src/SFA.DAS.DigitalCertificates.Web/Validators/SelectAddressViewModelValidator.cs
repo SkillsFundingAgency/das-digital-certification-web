@@ -9,12 +9,17 @@ namespace SFA.DAS.DigitalCertificates.Web.Validators
     {
         public const string EnterAddressErrorMessage = "Enter the first 3 letters of an address or postcode and select a location";
         public const string SelectValidAddressErrorMessage = "Select a valid address";
+        public const string SearchTermInvalidCharsError = "Search term contains invalid characters";
 
         private readonly ILocationsOrchestrator _locationsOrchestrator;
 
         public SelectAddressViewModelValidator(ILocationsOrchestrator locationsOrchestrator)
         {
             _locationsOrchestrator = locationsOrchestrator;
+
+            RuleFor(x => x.SearchTerm)
+                .MustNotContainHtmlTags(SearchTermInvalidCharsError)
+                .When(x => !string.IsNullOrWhiteSpace(x.SearchTerm));
 
             RuleFor(x => x).CustomAsync(async (model, context, cancellation) =>
             {

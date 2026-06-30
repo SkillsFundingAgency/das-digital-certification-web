@@ -67,5 +67,143 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Validators
             // Assert
             result.IsValid.Should().BeTrue();
         }
+
+        [Test]
+        public async Task Validate_Fails_When_Organisation_ContainsHtmlTags()
+        {
+            // Arrange
+            var model = new AddAddressManualViewModel
+            {
+                Organisation = "<Acme Corp>",
+                AddressLine1 = "Line1",
+                TownOrCity = "Town",
+                Postcode = "AB1 2BD"
+            };
+            _locationsOrchestrator.Setup(x => x.GetLocations("AB12BD")).ReturnsAsync(new GetLocationsQueryResult
+            {
+                Locations = new[] { new LocationResult { Name = "Addr", Postcode = "AB1 2BD" } }
+            });
+
+            // Act
+            var result = await _validator.ValidateAsync(model, CancellationToken.None);
+
+            // Assert
+            result.IsValid.Should().BeFalse();
+            result.Errors.Should().Contain(e => e.ErrorMessage == AddAddressManualViewModelValidator.OrganisationInvalidCharsError);
+        }
+
+        [Test]
+        public async Task Validate_Fails_When_AddressLine1_ContainsHtmlTags()
+        {
+            // Arrange
+            var model = new AddAddressManualViewModel
+            {
+                AddressLine1 = "<script>xss</script>",
+                TownOrCity = "Town",
+                Postcode = "AB1 2BD"
+            };
+            _locationsOrchestrator.Setup(x => x.GetLocations("AB12BD")).ReturnsAsync(new GetLocationsQueryResult
+            {
+                Locations = new[] { new LocationResult { Name = "Addr", Postcode = "AB1 2BD" } }
+            });
+
+            // Act
+            var result = await _validator.ValidateAsync(model, CancellationToken.None);
+
+            // Assert
+            result.IsValid.Should().BeFalse();
+            result.Errors.Should().Contain(e => e.ErrorMessage == AddAddressManualViewModelValidator.Address1InvalidCharsError);
+        }
+
+        [Test]
+        public async Task Validate_Fails_When_AddressLine2_ContainsHtmlTags()
+        {
+            // Arrange
+            var model = new AddAddressManualViewModel
+            {
+                AddressLine1 = "Line1",
+                AddressLine2 = "<Flat 2>",
+                TownOrCity = "Town",
+                Postcode = "AB1 2BD"
+            };
+            _locationsOrchestrator.Setup(x => x.GetLocations("AB12BD")).ReturnsAsync(new GetLocationsQueryResult
+            {
+                Locations = new[] { new LocationResult { Name = "Addr", Postcode = "AB1 2BD" } }
+            });
+
+            // Act
+            var result = await _validator.ValidateAsync(model, CancellationToken.None);
+
+            // Assert
+            result.IsValid.Should().BeFalse();
+            result.Errors.Should().Contain(e => e.ErrorMessage == AddAddressManualViewModelValidator.Address2InvalidCharsError);
+        }
+
+        [Test]
+        public async Task Validate_Fails_When_TownOrCity_ContainsHtmlTags()
+        {
+            // Arrange
+            var model = new AddAddressManualViewModel
+            {
+                AddressLine1 = "Line1",
+                TownOrCity = "<London>",
+                Postcode = "AB1 2BD"
+            };
+            _locationsOrchestrator.Setup(x => x.GetLocations("AB12BD")).ReturnsAsync(new GetLocationsQueryResult
+            {
+                Locations = new[] { new LocationResult { Name = "Addr", Postcode = "AB1 2BD" } }
+            });
+
+            // Act
+            var result = await _validator.ValidateAsync(model, CancellationToken.None);
+
+            // Assert
+            result.IsValid.Should().BeFalse();
+            result.Errors.Should().Contain(e => e.ErrorMessage == AddAddressManualViewModelValidator.TownInvalidCharsError);
+        }
+
+        [Test]
+        public async Task Validate_Fails_When_County_ContainsHtmlTags()
+        {
+            // Arrange
+            var model = new AddAddressManualViewModel
+            {
+                AddressLine1 = "Line1",
+                TownOrCity = "Town",
+                County = "<Surrey>",
+                Postcode = "AB1 2BD"
+            };
+            _locationsOrchestrator.Setup(x => x.GetLocations("AB12BD")).ReturnsAsync(new GetLocationsQueryResult
+            {
+                Locations = new[] { new LocationResult { Name = "Addr", Postcode = "AB1 2BD" } }
+            });
+
+            // Act
+            var result = await _validator.ValidateAsync(model, CancellationToken.None);
+
+            // Assert
+            result.IsValid.Should().BeFalse();
+            result.Errors.Should().Contain(e => e.ErrorMessage == AddAddressManualViewModelValidator.CountyInvalidCharsError);
+        }
+
+        [Test]
+        public async Task Validate_Fails_When_Postcode_ContainsHtmlTags()
+        {
+            // Arrange
+            var model = new AddAddressManualViewModel
+            {
+                AddressLine1 = "Line1",
+                TownOrCity = "Town",
+                Postcode = "<AB1 2BD>"
+            };
+
+            // Act
+            var result = await _validator.ValidateAsync(model, CancellationToken.None);
+
+            // Assert
+            result.IsValid.Should().BeFalse();
+            result.Errors.Should().Contain(e => e.ErrorMessage == AddAddressManualViewModelValidator.PostcodeInvalidCharsError);
+            result.Errors.Should().NotContain(e => e.ErrorMessage == AddAddressManualViewModelValidator.PostcodeInvalidError);
+        }
     }
 }
