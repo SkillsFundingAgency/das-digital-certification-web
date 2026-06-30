@@ -7,8 +7,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Models.Certificates
     public class DownloadCertificateViewModel
     {
         public required string FamilyName { get; set; }
-        public required string GivenNames { get; set; }
-        public string FullName => $"{GivenNames} \n {FamilyName}";
+        public required string GivenNames { get; set; }        
         public required string CourseName { get; set; }
         public string? CourseOption { get; set; }
         public required string CourseLevel { get; set; }
@@ -23,9 +22,10 @@ namespace SFA.DAS.DigitalCertificates.Web.Models.Certificates
             {
                 var safeGivenNames = Regex.Replace(GivenNames, "[^a-zA-Z0-9]+", "_", RegexOptions.None, TimeSpan.FromMilliseconds(100)).Trim('_');
                 var safeFamilyName = Regex.Replace(FamilyName, "[^a-zA-Z0-9]+", "_", RegexOptions.None, TimeSpan.FromMilliseconds(100)).Trim('_');
+                var safeCertificateNumber = Regex.Replace(CertificateNumber, "[^a-zA-Z0-9]+", "_", RegexOptions.None, TimeSpan.FromMilliseconds(100)).Trim('_');
 
-                return $"{safeGivenNames}_{safeFamilyName}_CertificateNumber{CertificateNumber}.pdf";
+                return $"{safeGivenNames}_{safeFamilyName}_CertificateNumber{safeCertificateNumber}.pdf";
             }
-        }
+        }       
     }
 }

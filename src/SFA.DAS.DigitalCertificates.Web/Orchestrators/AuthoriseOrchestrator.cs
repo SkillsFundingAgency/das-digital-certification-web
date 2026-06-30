@@ -463,8 +463,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             var familyName = GetUserSurname();
             if (string.IsNullOrWhiteSpace(familyName)) throw new InvalidOperationException("FamilyName is required for submitting match");
 
-            //// TODO: If the user's DOB claim is missing, assign a dummy DOB to allow submission flow to continue.This should be handled correctly
-            var dateOfBirth = GetUserDateOfBirth() ?? new DateTime(1900, 1, 1);
+            //// TO DO: Using a dummy DOB to allow submission flow to continue.This should be handled correctly
+            var dateOfBirth = new DateTime(1900, 1, 1);
 
             var matchResult = FindMatch(
                 answers,
@@ -565,11 +565,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                         return MatchResult.Single(exactMatches.First());
                     }
 
-                    var firstUln = exactMatches.First().Uln;
-                    var allSameUln = exactMatches.All(m => m.Uln == firstUln);
-                    return allSameUln
-                        ? MatchResult.Multiple(exactMatches.First())
-                        : MatchResult.NoData();
+                    return MatchResult.Multiple(exactMatches[0]);
                 }
             }
 

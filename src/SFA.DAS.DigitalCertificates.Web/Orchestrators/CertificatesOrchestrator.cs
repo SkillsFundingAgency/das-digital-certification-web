@@ -38,8 +38,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         private const string FullName = "Full Name";
         private const string PassedInfo = "Passed info";
         private const string AchievedGrade = "Achieved grade";
-        private const string AwardedOn = "Awarded on";
-        private const string DateFormat = "d MMMM yyyy";
+        private const string AwardedOn = "Awarded on";        
         private const string CertificateNumber = "Certificate no";
         private readonly IValidator<SelectAddressViewModel> _selectAddressValidator;
         private readonly IValidator<AddAddressManualViewModel> _addAddressValidator;
@@ -191,10 +190,18 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         public async Task<byte[]> GenerateCertificateAsync(DownloadCertificateViewModel model)
         {
             byte[]? templateBytes = null;
-            var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            var fullName = $"{model.GivenNames} {model.FamilyName}";
+
+            if(_digitalCertificatesWebConfiguration.MaxFullNameLengthOnOneLine.HasValue &&
+                    fullName.Length >= _digitalCertificatesWebConfiguration.MaxFullNameLengthOnOneLine.Value)
             {
-                [FullName] = model.FullName,                          
-                [AwardedOn] = model.DateAwarded.ToString(DateFormat, CultureInfo.InvariantCulture) ?? string.Empty,
+                fullName = $"{model.GivenNames}\n{model.FamilyName}";
+            }
+
+            var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {                             
+                [FullName] = fullName,
+                [AwardedOn] = $"{model.DateAwarded:dd} {model.DateAwarded.ToString("MMMM", CultureInfo.InvariantCulture).ToUpperInvariant()} {model.DateAwarded:yyyy}",
                 [CertificateNumber] = model.CertificateNumber
             };
 
@@ -202,13 +209,13 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             {
                 templateBytes = model.CoronationEmblem ? await _blob.GetBlobBytesAsync(_digitalCertificatesWebConfiguration.ContainerName, _digitalCertificatesWebConfiguration.GreenStandardTemplateBlobName)
                                                         : await _blob.GetBlobBytesAsync(_digitalCertificatesWebConfiguration.ContainerName, _digitalCertificatesWebConfiguration.StandardTemplateBlobName);
-                values.Add(AchievedGrade, model.OverallGrade ?? string.Empty);
+                values.Add(AchievedGrade, model.OverallGrade?.ToUpper() ?? string.Empty);
                 values.Add(PassedInfo, string.Join(Environment.NewLine,
                     new[]
                     {
-                model.CourseName,
-                model.CourseOption,
-                $"{Level} {model.CourseLevel}"
+                model.CourseName.ToUpper(),
+                model.CourseOption?.ToUpper(),
+                $"{Level} {model.CourseLevel.ToUpper()}"
                     }.Where(x => !string.IsNullOrWhiteSpace(x))));
             }
             else if (model.CertificateType == CertificateType.Framework)
@@ -217,9 +224,9 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 values.Add(PassedInfo, string.Join(Environment.NewLine,
                         new[]
                         {
-                model.CourseName,
-                model.CourseOption,
-                $"{model.CourseLevel}  {Level}"
+                model.CourseName.ToUpper(),
+                model.CourseOption?.ToUpper(),
+                $"{model.CourseLevel.ToUpper()}  {Level}"
                         }.Where(x => !string.IsNullOrWhiteSpace(x))));
             }
 
