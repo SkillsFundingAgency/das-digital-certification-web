@@ -35,7 +35,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Validators
                 }
 
                 var searchResult = await _locationsOrchestrator.GetLocations(model.SearchTerm ?? string.Empty);
-                if (searchResult == null || searchResult.Locations == null || !searchResult.Locations.Any())
+                if (searchResult?.Locations?.Any() != true)
                 {
                     context.AddFailure(nameof(model.SearchTerm), SelectValidAddressErrorMessage);
                     return;

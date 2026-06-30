@@ -22,7 +22,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Validators
         [TestCase("123 Main St")]
         [TestCase("")]
         [TestCase(null)]
-        public void Validate_Passes_When_ValueHasNoAngleBrackets(string? value)
+        public void Validate_Passes_When_ValueHasNoAngleBrackets(string value)
         {
             var result = _validator.Validate(new TestModel { Value = value });
             result.IsValid.Should().BeTrue();
@@ -42,7 +42,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Validators
 
         public class TestModel
         {
-            public string? Value { get; set; }
+            public string Value { get; set; }
         }
     }
 }
