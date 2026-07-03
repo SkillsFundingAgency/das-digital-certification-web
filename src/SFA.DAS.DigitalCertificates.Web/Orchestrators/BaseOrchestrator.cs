@@ -82,6 +82,14 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 .FindFirstValue(ClaimTypes.MobilePhone) ?? string.Empty;
         }
 
+        protected HttpContext? HttpContext
+        {
+            get
+            {
+                return _httpContextAccessor?.HttpContext;
+            }
+        }
+
         protected static async Task<bool> ValidateViewModel<T>(IValidator<T> validator, T viewModel, ModelStateDictionary modelState)
         {
             await validator.ValidateAndAddModelErrorsAsync(viewModel, modelState);

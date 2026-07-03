@@ -2,7 +2,7 @@
 using SFA.DAS.DigitalCertificates.Domain.Interfaces;
 using SFA.DAS.DigitalCertificates.Infrastructure.Api.Requests;
 
-namespace SFA.DAS.DigitalCertificates.Application.Commands.CreateOrUpdateUser
+namespace SFA.DAS.DigitalCertificates.Application.Commands.UpdateUserIdentity
 {
     public class UpdateUserIdentityCommandHandler : IRequestHandler<UpdateUserIdentityCommand, Unit>
     {

@@ -1,25 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using MediatR;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Distributed;
 using Moq;
 using NUnit.Framework;
-using SFA.DAS.DigitalCertificates.Application.Commands.CreateOrUpdateUser;
+using SFA.DAS.DigitalCertificates.Application.Commands.UpdateUserIdentity;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetMatches;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetUser;
 using SFA.DAS.DigitalCertificates.Domain.Models;
 using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
 using SFA.DAS.DigitalCertificates.Infrastructure.Services.CacheStorage;
-using SFA.DAS.DigitalCertificates.Web.Exceptions;
 using SFA.DAS.DigitalCertificates.Web.Services;
 using SFA.DAS.GovUK.Auth.Models;
-using SFA.DAS.GovUK.Auth.Services;
 using Match = SFA.DAS.DigitalCertificates.Domain.Models.Match;
 
 namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
@@ -29,8 +24,6 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
     {
         private Mock<ICacheStorageService> _cacheStorageMock = null!;
         private Mock<IMediator> _mediatorMock = null!;
-        private Mock<IHttpContextAccessor> _httpContextAccessMock = null!;
-        private Mock<IGovUkAuthenticationService> _govUkAuthenticationServiceMock = null!;
 
         private CacheService _sut = null!;
 
@@ -39,14 +32,10 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
         {
             _cacheStorageMock = new Mock<ICacheStorageService>();
             _mediatorMock = new Mock<IMediator>();
-            _httpContextAccessMock = new Mock<IHttpContextAccessor>();
-            _govUkAuthenticationServiceMock = new Mock<IGovUkAuthenticationService>();
 
             _sut = new CacheService(
                 _cacheStorageMock.Object,
                 _mediatorMock.Object,
-                _httpContextAccessMock.Object,
-                _govUkAuthenticationServiceMock.Object,
                 CreateConfiguration());
         }
 
@@ -93,7 +82,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
                 EmailAddress = "name@domain.com"
             };
 
-            Func<DistributedCacheEntryOptions, Task<User>> capturedDelegate = null;
+            Func<DistributedCacheEntryOptions, Task<User>> capturedDelegate = null!;
 
             _cacheStorageMock
                 .Setup(x => x.GetOrCreateAsync(
@@ -118,7 +107,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
             capturedDelegate.Should().NotBeNull();
 
             var options = new DistributedCacheEntryOptions();
-            var userFromDelegate = await capturedDelegate!(options);
+            var userFromDelegate = await capturedDelegate(options);
 
             userFromDelegate.Should().Be(expectedUser);
             options.AbsoluteExpirationRelativeToNow.Should().Be(TimeSpan.FromSeconds(60));
@@ -170,11 +159,10 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
         }
 
         [Test]
-        public async Task GetOrCreateMatchesAsync_WhenCachedMatchesExist_ReturnsCachedResult()
+        public async Task GetMatchesAsync_WhenCachedMatchesExist_ReturnsCachedResult()
         {
             // Arrange
             var gov = "gov-111";
-            var userId = Guid.NewGuid();
             var userIdentityId = Guid.NewGuid();
             var key = CacheService.GetScopedKey("Matches", gov);
 
@@ -202,16 +190,12 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
                 .ReturnsAsync(expected);
 
             // Act
-            var result = await _sut.GetOrCreateMatchesAsync(gov, userId);
+            var result = await _sut.GetMatchesAsync(gov);
 
             // Assert
             result.Should().Be(expected);
 
             _cacheStorageMock.Verify(x => x.GetAsync<MatchesAndMasks>(key), Times.Once);
-
-            _govUkAuthenticationServiceMock.Verify(x =>
-                x.GetAccountDetails(It.IsAny<string>()),
-                Times.Never);
 
             _mediatorMock.Verify(x =>
                 x.Send(It.IsAny<UpdateUserIdentityCommand>(), It.IsAny<CancellationToken>()),
@@ -232,7 +216,115 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
         }
 
         [Test]
-        public async Task GetOrCreateMatchesAsync_WhenNoCachedMatches_GetsVerifyDetails_UpdatesUserIdentity_GetsMatches_AndSetsExpiry()
+        public async Task GetMatchesAsync_WhenNoCachedMatches_ReturnsNull()
+        {
+            // Arrange
+            var gov = "gov-no-cache";
+            var key = CacheService.GetScopedKey("Matches", gov);
+
+            _cacheStorageMock
+                .Setup(x => x.GetAsync<MatchesAndMasks>(key))
+                .ReturnsAsync((MatchesAndMasks)null);
+
+            // Act
+            var result = await _sut.GetMatchesAsync(gov);
+
+            // Assert
+            result.Should().BeNull();
+
+            _cacheStorageMock.Verify(x => x.GetAsync<MatchesAndMasks>(key), Times.Once);
+            _cacheStorageMock.Verify(x => x.RemoveAsync(It.IsAny<string>()), Times.Never);
+
+            _mediatorMock.Verify(x =>
+                x.Send(It.IsAny<UpdateUserIdentityCommand>(), It.IsAny<CancellationToken>()),
+                Times.Never);
+
+            _mediatorMock.Verify(x =>
+                x.Send(It.IsAny<GetMatchesQuery>(), It.IsAny<CancellationToken>()),
+                Times.Never);
+        }
+
+        [Test]
+        public async Task GetMatchesAsync_WhenCachedValueHasNoMatches_RemovesCachedValue_AndReturnsNull()
+        {
+            // Arrange
+            var gov = "gov-empty-cache";
+            var key = CacheService.GetScopedKey("Matches", gov);
+
+            var cached = new MatchesAndMasks
+            {
+                Masks =
+                {
+                    new Mask
+                    {
+                        CourseCode = "MASK1"
+                    }
+                }
+            };
+
+            _cacheStorageMock
+                .Setup(x => x.GetAsync<MatchesAndMasks>(key))
+                .ReturnsAsync(cached);
+
+            // Act
+            var result = await _sut.GetMatchesAsync(gov);
+
+            // Assert
+            result.Should().BeNull();
+
+            _cacheStorageMock.Verify(x => x.RemoveAsync(key), Times.Once);
+
+            _mediatorMock.Verify(x =>
+                x.Send(It.IsAny<UpdateUserIdentityCommand>(), It.IsAny<CancellationToken>()),
+                Times.Never);
+
+            _mediatorMock.Verify(x =>
+                x.Send(It.IsAny<GetMatchesQuery>(), It.IsAny<CancellationToken>()),
+                Times.Never);
+        }
+
+        [Test]
+        public async Task GetMatchesAsync_WhenCachedMatchesHaveNullUserIdentityId_RemovesCachedValue_AndReturnsNull()
+        {
+            // Arrange
+            var gov = "gov-cache-with-old-matches";
+            var key = CacheService.GetScopedKey("Matches", gov);
+
+            var cached = new MatchesAndMasks
+            {
+                Matches =
+                {
+                    new Match
+                    {
+                        Uln = 111L,
+                        UserIdentityId = null
+                    }
+                }
+            };
+
+            _cacheStorageMock
+                .Setup(x => x.GetAsync<MatchesAndMasks>(key))
+                .ReturnsAsync(cached);
+
+            // Act
+            var result = await _sut.GetMatchesAsync(gov);
+
+            // Assert
+            result.Should().BeNull();
+
+            _cacheStorageMock.Verify(x => x.RemoveAsync(key), Times.Once);
+
+            _mediatorMock.Verify(x =>
+                x.Send(It.IsAny<UpdateUserIdentityCommand>(), It.IsAny<CancellationToken>()),
+                Times.Never);
+
+            _mediatorMock.Verify(x =>
+                x.Send(It.IsAny<GetMatchesQuery>(), It.IsAny<CancellationToken>()),
+                Times.Never);
+        }
+
+        [Test]
+        public async Task CreateMatchesAsync_UpdatesUserIdentity_GetsMatches_AndSetsExpiry()
         {
             // Arrange
             var configuration = CreateConfiguration();
@@ -241,14 +333,13 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
             var localSut = new CacheService(
                 _cacheStorageMock.Object,
                 _mediatorMock.Object,
-                _httpContextAccessMock.Object,
-                _govUkAuthenticationServiceMock.Object,
                 configuration);
 
             var gov = "gov-222";
             var userId = Guid.NewGuid();
             var userIdentityId = Guid.NewGuid();
             var key = CacheService.GetScopedKey("Matches", gov);
+            var govUkCredentialSubject = CreateGovUkCredentialSubject();
 
             var expected = new MatchesAndMasks
             {
@@ -262,13 +353,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
                 }
             };
 
-            Func<DistributedCacheEntryOptions, Task<MatchesAndMasks>> capturedDelegate = null;
-
-            SetupGovUkAuthDetails();
-
-            _cacheStorageMock
-                .Setup(x => x.GetAsync<MatchesAndMasks>(key))
-                .ReturnsAsync((MatchesAndMasks)null);
+            Func<DistributedCacheEntryOptions, Task<MatchesAndMasks>> capturedDelegate = null!;
 
             _mediatorMock
                 .Setup(x => x.Send(
@@ -292,14 +377,10 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
                 .ReturnsAsync(expected);
 
             // Act
-            var result = await localSut.GetOrCreateMatchesAsync(gov, userId);
+            var result = await localSut.CreateMatchesAsync(gov, userId, govUkCredentialSubject);
 
             // Assert
             result.Should().Be(expected);
-
-            _govUkAuthenticationServiceMock.Verify(x =>
-                x.GetAccountDetails("access-token"),
-                Times.Once);
 
             VerifyUpdateUserIdentityCommandWasSent(userId);
 
@@ -317,7 +398,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
             capturedDelegate.Should().NotBeNull();
 
             var options = new DistributedCacheEntryOptions();
-            var fromDelegate = await capturedDelegate!(options);
+            var fromDelegate = await capturedDelegate(options);
 
             fromDelegate.Should().Be(expected);
             options.AbsoluteExpirationRelativeToNow.Should()
@@ -325,171 +406,12 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
         }
 
         [Test]
-        public async Task GetOrCreateMatchesAsync_WhenCachedValueHasNoMatches_RemovesCachedValue_UpdatesUserIdentity_AndGetsFreshMatches()
-        {
-            // Arrange
-            var gov = "gov-empty-cache";
-            var userId = Guid.NewGuid();
-            var userIdentityId = Guid.NewGuid();
-            var key = CacheService.GetScopedKey("Matches", gov);
-
-            var cached = new MatchesAndMasks
-            {
-                Masks =
-                {
-                    new Mask
-                    {
-                        CourseCode = "MASK1"
-                    }
-                }
-            };
-
-            var expected = new MatchesAndMasks
-            {
-                Matches =
-                {
-                    new Match
-                    {
-                        Uln = 123L,
-                        UserIdentityId = userIdentityId
-                    }
-                }
-            };
-
-            SetupGovUkAuthDetails();
-
-            _cacheStorageMock
-                .Setup(x => x.GetAsync<MatchesAndMasks>(key))
-                .ReturnsAsync(cached);
-
-            _mediatorMock
-                .Setup(x => x.Send(
-                    It.IsAny<UpdateUserIdentityCommand>(),
-                    It.IsAny<CancellationToken>()))
-                .ReturnsAsync(Unit.Value);
-
-            _mediatorMock
-                .Setup(x => x.Send(
-                    It.Is<GetMatchesQuery>(q => q.UserId == userId),
-                    It.IsAny<CancellationToken>()))
-                .ReturnsAsync(expected);
-
-            _cacheStorageMock
-                .Setup(x => x.SetAsync(
-                    key,
-                    It.IsAny<Func<DistributedCacheEntryOptions, Task<MatchesAndMasks>>>(),
-                    It.IsAny<CancellationToken>()))
-                .ReturnsAsync(expected);
-
-            // Act
-            var result = await _sut.GetOrCreateMatchesAsync(gov, userId);
-
-            // Assert
-            result.Should().Be(expected);
-
-            _cacheStorageMock.Verify(x => x.RemoveAsync(key), Times.Once);
-
-            VerifyUpdateUserIdentityCommandWasSent(userId);
-
-            _mediatorMock.Verify(x => x.Send(
-                It.Is<GetMatchesQuery>(q => q.UserId == userId),
-                It.IsAny<CancellationToken>()),
-                Times.Once);
-
-            _cacheStorageMock.Verify(x => x.SetAsync(
-                key,
-                It.IsAny<Func<DistributedCacheEntryOptions, Task<MatchesAndMasks>>>(),
-                It.IsAny<CancellationToken>()),
-                Times.Once);
-        }
-
-        [Test]
-        public async Task GetOrCreateMatchesAsync_WhenCachedMatchesHaveNullUserIdentityId_RemovesCachedValue_UpdatesUserIdentity_AndGetsFreshMatches()
-        {
-            // Arrange
-            var gov = "gov-cache-with-old-matches";
-            var userId = Guid.NewGuid();
-            var userIdentityId = Guid.NewGuid();
-            var key = CacheService.GetScopedKey("Matches", gov);
-
-            var cached = new MatchesAndMasks
-            {
-                Matches =
-                {
-                    new Match
-                    {
-                        Uln = 111L,
-                        UserIdentityId = null
-                    }
-                }
-            };
-
-            var expected = new MatchesAndMasks
-            {
-                Matches =
-                {
-                    new Match
-                    {
-                        Uln = 222L,
-                        UserIdentityId = userIdentityId
-                    }
-                }
-            };
-
-            SetupGovUkAuthDetails();
-
-            _cacheStorageMock
-                .Setup(x => x.GetAsync<MatchesAndMasks>(key))
-                .ReturnsAsync(cached);
-            
-            _mediatorMock
-                .Setup(x => x.Send(
-                    It.IsAny<UpdateUserIdentityCommand>(),
-                    It.IsAny<CancellationToken>()))
-                .ReturnsAsync(Unit.Value);
-
-            _mediatorMock
-                .Setup(x => x.Send(
-                    It.Is<GetMatchesQuery>(q => q.UserId == userId),
-                    It.IsAny<CancellationToken>()))
-                .ReturnsAsync(expected);
-
-            _cacheStorageMock
-                .Setup(x => x.SetAsync(
-                    key,
-                    It.IsAny<Func<DistributedCacheEntryOptions, Task<MatchesAndMasks>>>(),
-                    It.IsAny<CancellationToken>()))
-                .ReturnsAsync(expected);
-
-            // Act
-            var result = await _sut.GetOrCreateMatchesAsync(gov, userId);
-
-            // Assert
-            result.Should().Be(expected);
-
-            _cacheStorageMock.Verify(x => x.RemoveAsync(key), Times.Once);
-
-            VerifyUpdateUserIdentityCommandWasSent(userId);
-
-            _mediatorMock.Verify(x => x.Send(
-                It.Is<GetMatchesQuery>(q => q.UserId == userId),
-                It.IsAny<CancellationToken>()),
-                Times.Once);
-
-            _cacheStorageMock.Verify(x => x.SetAsync(
-                key,
-                It.IsAny<Func<DistributedCacheEntryOptions, Task<MatchesAndMasks>>>(),
-                It.IsAny<CancellationToken>()),
-                Times.Once);
-        }
-
-        [Test]
-        public async Task GetOrCreateMatchesAsync_WhenMediatorReturnsNoMatches_ReturnsNull_AndDoesNotCache()
+        public async Task CreateMatchesAsync_WhenMediatorReturnsNoMatches_ReturnsNull_AndDoesNotCache()
         {
             // Arrange
             var gov = "gov-no-matches";
             var userId = Guid.NewGuid();
-            var key = CacheService.GetScopedKey("Matches", gov);
+            var govUkCredentialSubject = CreateGovUkCredentialSubject();
 
             var emptyResult = new MatchesAndMasks
             {
@@ -501,12 +423,6 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
                     }
                 }
             };
-
-            SetupGovUkAuthDetails();
-
-            _cacheStorageMock
-                .Setup(x => x.GetAsync<MatchesAndMasks>(key))
-                .ReturnsAsync((MatchesAndMasks)null);
 
             _mediatorMock
                 .Setup(x => x.Send(
@@ -521,7 +437,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
                 .ReturnsAsync(emptyResult);
 
             // Act
-            var result = await _sut.GetOrCreateMatchesAsync(gov, userId);
+            var result = await _sut.CreateMatchesAsync(gov, userId, govUkCredentialSubject);
 
             // Assert
             result.Should().BeNull();
@@ -534,23 +450,15 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
                     It.IsAny<Func<DistributedCacheEntryOptions, Task<MatchesAndMasks>>>(),
                     It.IsAny<CancellationToken>()),
                 Times.Never);
-
-            _cacheStorageMock.Verify(x => x.RemoveAsync(key), Times.Never);
         }
 
         [Test]
-        public async Task GetOrCreateMatchesAsync_WhenMediatorReturnsNull_ReturnsNull_AndDoesNotCache()
+        public async Task CreateMatchesAsync_WhenMediatorReturnsNull_ReturnsNull_AndDoesNotCache()
         {
             // Arrange
             var gov = "gov-null-matches";
             var userId = Guid.NewGuid();
-            var key = CacheService.GetScopedKey("Matches", gov);
-
-            SetupGovUkAuthDetails();
-
-            _cacheStorageMock
-                .Setup(x => x.GetAsync<MatchesAndMasks>(key))
-                .ReturnsAsync((MatchesAndMasks)null);
+            var govUkCredentialSubject = CreateGovUkCredentialSubject();
 
             _mediatorMock
                 .Setup(x => x.Send(
@@ -565,7 +473,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
                 .ReturnsAsync((MatchesAndMasks)null);
 
             // Act
-            var result = await _sut.GetOrCreateMatchesAsync(gov, userId);
+            var result = await _sut.CreateMatchesAsync(gov, userId, govUkCredentialSubject);
 
             // Assert
             result.Should().BeNull();
@@ -577,79 +485,6 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
                     It.IsAny<string>(),
                     It.IsAny<Func<DistributedCacheEntryOptions, Task<MatchesAndMasks>>>(),
                     It.IsAny<CancellationToken>()),
-                Times.Never);
-        }
-
-        [Test]
-        public async Task GetOrCreateMatchesAsync_WhenHttpContextIsNull_ReturnsNull_AndDoesNotGetVerifyDetails()
-        {
-            // Arrange
-            var gov = "gov-no-http-context";
-            var userId = Guid.NewGuid();
-            var key = CacheService.GetScopedKey("Matches", gov);
-
-            _httpContextAccessMock
-                .Setup(x => x.HttpContext)
-                .Returns((HttpContext)null);
-
-            _cacheStorageMock
-                .Setup(x => x.GetAsync<MatchesAndMasks>(key))
-                .ReturnsAsync((MatchesAndMasks)null);
-
-            // Act
-            var result = await _sut.GetOrCreateMatchesAsync(gov, userId);
-
-            // Assert
-            result.Should().BeNull();
-
-            _govUkAuthenticationServiceMock.Verify(x =>
-                x.GetAccountDetails(It.IsAny<string>()),
-                Times.Never);
-
-            _mediatorMock.Verify(x =>
-                x.Send(It.IsAny<UpdateUserIdentityCommand>(), It.IsAny<CancellationToken>()),
-                Times.Never);
-
-            _mediatorMock.Verify(x =>
-                x.Send(It.IsAny<GetMatchesQuery>(), It.IsAny<CancellationToken>()),
-                Times.Never);
-        }
-
-        [Test]
-        public async Task GetOrCreateMatchesAsync_WhenVerifyDetailsAreNull_ThrowsVerifyException()
-        {
-            // Arrange
-            var gov = "gov-no-verify-details";
-            var userId = Guid.NewGuid();
-            var key = CacheService.GetScopedKey("Matches", gov);
-            var accessToken = "access-token";
-
-            SetupGovUkAuthDetails(accessToken);
-
-            _govUkAuthenticationServiceMock
-                .Setup(x => x.GetAccountDetails(accessToken))
-                .ReturnsAsync((GovUkUser)null);
-
-            _cacheStorageMock
-                .Setup(x => x.GetAsync<MatchesAndMasks>(key))
-                .ReturnsAsync((MatchesAndMasks)null);
-
-            // Act
-            Func<Task> act = async () => await _sut.GetOrCreateMatchesAsync(gov, userId);
-
-            // Assert
-            await act.Should()
-                .ThrowAsync<VerifyException>()
-                .WithMessage("Unable to load verify details");
-
-            _mediatorMock.Verify(x => x.Send(
-                It.IsAny<UpdateUserIdentityCommand>(),
-                It.IsAny<CancellationToken>()),
-                Times.Never);
-
-            _mediatorMock.Verify(x => x.Send(
-                It.IsAny<GetMatchesQuery>(),
-                It.IsAny<CancellationToken>()),
                 Times.Never);
         }
 
@@ -697,8 +532,6 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
             var localSut = new CacheService(
                 _cacheStorageMock.Object,
                 _mediatorMock.Object,
-                _httpContextAccessMock.Object,
-                _govUkAuthenticationServiceMock.Object,
                 configuration);
 
             var gov = "gov-444";
@@ -708,7 +541,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
                 .Setup(x => x.GetAsync<int?>(key))
                 .ReturnsAsync((int?)null);
 
-            Func<DistributedCacheEntryOptions, Task<int>> capturedDelegate = null;
+            Func<DistributedCacheEntryOptions, Task<int>> capturedDelegate = null!;
 
             _cacheStorageMock
                 .Setup(x => x.SetAsync(
@@ -727,7 +560,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
             capturedDelegate.Should().NotBeNull();
 
             var options = new DistributedCacheEntryOptions();
-            var setValue = await capturedDelegate!(options);
+            var setValue = await capturedDelegate(options);
 
             setValue.Should().Be(1);
             options.AbsoluteExpirationRelativeToNow.Should()
@@ -770,51 +603,6 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
             result.Should().Be(0);
         }
 
-        private void SetupGovUkAuthDetails(string accessToken = "access-token")
-        {
-            var authProperties = new AuthenticationProperties();
-
-            authProperties.StoreTokens(new[]
-            {
-                new AuthenticationToken
-                {
-                    Name = "access_token",
-                    Value = accessToken
-                }
-            });
-
-            var authServiceMock = new Mock<IAuthenticationService>();
-
-            authServiceMock
-                .Setup(x => x.AuthenticateAsync(
-                    It.IsAny<HttpContext>(),
-                    It.IsAny<string>()))
-                .ReturnsAsync(AuthenticateResult.Success(
-                    new AuthenticationTicket(
-                        new ClaimsPrincipal(),
-                        authProperties,
-                        "Cookies")));
-
-            var serviceProviderMock = new Mock<IServiceProvider>();
-
-            serviceProviderMock
-                .Setup(x => x.GetService(typeof(IAuthenticationService)))
-                .Returns(authServiceMock.Object);
-
-            var httpContext = new DefaultHttpContext
-            {
-                RequestServices = serviceProviderMock.Object
-            };
-
-            _httpContextAccessMock
-                .Setup(x => x.HttpContext)
-                .Returns(httpContext);
-
-            _govUkAuthenticationServiceMock
-                .Setup(x => x.GetAccountDetails(accessToken))
-                .ReturnsAsync(CreateGovUkUser());
-        }
-
         private void VerifyUpdateUserIdentityCommandWasSent(Guid userId)
         {
             _mediatorMock.Verify(x => x.Send(
@@ -830,49 +618,35 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
                 Times.Once);
         }
 
-        private static GovUkUser CreateGovUkUser()
+        private static GovUkCredentialSubject CreateGovUkCredentialSubject()
         {
-            return new GovUkUser
+            return new GovUkCredentialSubject
             {
-                Sub = "sub-123",
-                Email = "user@example.com",
-                PhoneNumber = "07123",
-                CoreIdentityJwt = new GovUkCoreIdentityJwt
+                BirthDates = new List<GovUkBirthDateEntry>
                 {
-                    Sub = "sub-123",
-                    Vot = "P2",
-                    Vc = new GovUkCoreIdentityCredential
+                    new GovUkBirthDateEntry
                     {
-                        CredentialSubject = new GovUkCredentialSubject
+                        Value = "1990-01-01",
+                        ValidUntilRaw = "2025-01-01"
+                    }
+                },
+                Names = new List<GovUkName>
+                {
+                    new GovUkName
+                    {
+                        ValidFromRaw = "2020-01-01",
+                        ValidUntilRaw = "2022-01-01",
+                        NameParts = new List<GovUkNamePart>
                         {
-                            BirthDates = new List<GovUkBirthDateEntry>
+                            new GovUkNamePart
                             {
-                                new GovUkBirthDateEntry
-                                {
-                                    Value = "1990-01-01",
-                                    ValidUntilRaw = "2025-01-01"
-                                }
+                                Type = "GivenName",
+                                Value = "John"
                             },
-                            Names = new List<GovUkName>
+                            new GovUkNamePart
                             {
-                                new GovUkName
-                                {
-                                    ValidFromRaw = "2020-01-01",
-                                    ValidUntilRaw = "2022-01-01",
-                                    NameParts = new List<GovUkNamePart>
-                                    {
-                                        new GovUkNamePart
-                                        {
-                                            Type = "GivenName",
-                                            Value = "John"
-                                        },
-                                        new GovUkNamePart
-                                        {
-                                            Type = "FamilyName",
-                                            Value = "Smith"
-                                        }
-                                    }
-                                }
+                                Type = "FamilyName",
+                                Value = "Smith"
                             }
                         }
                     }

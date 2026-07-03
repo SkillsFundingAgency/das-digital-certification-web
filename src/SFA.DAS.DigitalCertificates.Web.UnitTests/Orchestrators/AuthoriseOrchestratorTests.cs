@@ -18,6 +18,8 @@ using SFA.DAS.DigitalCertificates.Application.Commands.CreateUserAction;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetUserActions;
 using System.Threading;
 using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
+using SFA.DAS.GovUK.Auth.Models;
+using SFA.DAS.GovUK.Auth.Services;
 
 namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
 {
@@ -30,6 +32,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         private Mock<IUserService> _userServiceMock;
         private Mock<ICacheService> _cacheServiceMock;
         private Mock<ISessionService> _sessionServiceMock;
+        private Mock<IGovUkAuthenticationService> _govUkAuthenticationServiceMock;
         private Mock<IValidator<KnowYourUlnViewModel>> _knowUlnValidatorMock;
         private Mock<IValidator<KnowYearViewModel>> _knowYearValidatorMock;
         private Mock<IValidator<SelectCourseViewModel>> _selectCourseValidatorMock;
@@ -46,6 +49,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             _userServiceMock = new Mock<IUserService>();
             _cacheServiceMock = new Mock<ICacheService>();
             _sessionServiceMock = new Mock<ISessionService>();
+            _govUkAuthenticationServiceMock = new Mock<IGovUkAuthenticationService>();
             _knowUlnValidatorMock = new Mock<IValidator<KnowYourUlnViewModel>>();
             _knowYearValidatorMock = new Mock<IValidator<KnowYearViewModel>>();
             _selectCourseValidatorMock = new Mock<IValidator<SelectCourseViewModel>>();
@@ -57,6 +61,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 _sessionServiceMock.Object,
                 _userServiceMock.Object,
                 _cacheServiceMock.Object,
+                _govUkAuthenticationServiceMock.Object,
                 _knowUlnValidatorMock.Object,
                 _knowYearValidatorMock.Object,
                 _selectCourseValidatorMock.Object,
@@ -87,6 +92,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             _selectCourseValidatorMock = null;
             _selectProviderValidatorMock = null;
             _sessionServiceMock = null;
+            _govUkAuthenticationServiceMock = null;
         }
 
         [Test]
@@ -99,7 +105,11 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             await _sut.PrepareNeedMoreInformationAsync();
 
             // Assert
-            _cacheServiceMock.Verify(c => c.GetOrCreateMatchesAsync(It.IsAny<string>(), It.IsAny<Guid>()), Times.Never);
+            _cacheServiceMock.Verify(c => c.GetMatchesAsync(It.IsAny<string>()), Times.Never);
+            _cacheServiceMock.Verify(c => c.CreateMatchesAsync(
+                It.IsAny<string>(),
+                It.IsAny<Guid>(),
+                It.IsAny<GovUkCredentialSubject>()), Times.Never);
         }
 
         [Test]
@@ -113,26 +123,50 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             await _sut.PrepareNeedMoreInformationAsync();
 
             // Assert
-            _cacheServiceMock.Verify(c => c.GetOrCreateMatchesAsync(It.IsAny<string>(), It.IsAny<Guid>()), Times.Never);
+            _cacheServiceMock.Verify(c => c.GetMatchesAsync(It.IsAny<string>()), Times.Never);
+            _cacheServiceMock.Verify(c => c.CreateMatchesAsync(
+                It.IsAny<string>(),
+                It.IsAny<Guid>(),
+                It.IsAny<GovUkCredentialSubject>()), Times.Never);
         }
 
         [Test]
-        public async Task PrepareNeedMoreInformationAsync_When_Identifiers_Present_Calls_CacheService()
+        public async Task PrepareNeedMoreInformationAsync_When_Cached_Matches_Exist_Uses_Cached_Matches()
         {
             // Arrange
             var govUkId = "gov-123";
             var userId = Guid.NewGuid();
 
+            var matches = new MatchesAndMasks();
+            matches.Matches.Add(new Domain.Models.Match
+            {
+                Uln = 1234567890,
+                UserIdentityId = Guid.NewGuid()
+            });
+            matches.Masks.Add(new Mask
+            {
+                CourseCode = "M1",
+                CourseName = "Mask Course"
+            });
+
             _userServiceMock.Setup(u => u.GetGovUkIdentifier()).Returns(govUkId);
             _userServiceMock.Setup(u => u.GetUserId()).Returns(userId);
 
-            _cacheServiceMock.Setup(c => c.GetOrCreateMatchesAsync(govUkId, userId)).ReturnsAsync((Domain.Models.MatchesAndMasks)null);
+            _cacheServiceMock
+                .Setup(c => c.GetMatchesAsync(govUkId))
+                .ReturnsAsync(matches);
 
             // Act
-            await _sut.PrepareNeedMoreInformationAsync();
+            var result = await _sut.PrepareNeedMoreInformationAsync();
 
             // Assert
-            _cacheServiceMock.Verify(c => c.GetOrCreateMatchesAsync(govUkId, userId), Times.Once);
+            Assert.That(result, Is.True);
+
+            _cacheServiceMock.Verify(c => c.GetMatchesAsync(govUkId), Times.Once);
+            _cacheServiceMock.Verify(c => c.CreateMatchesAsync(
+                It.IsAny<string>(),
+                It.IsAny<Guid>(),
+                It.IsAny<GovUkCredentialSubject>()), Times.Never);
         }
 
         [Test]
@@ -165,7 +199,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             });
 
             _cacheServiceMock
-                .Setup(c => c.GetOrCreateMatchesAsync(govUkId, userId))
+                .Setup(c => c.GetMatchesAsync(govUkId))
                 .ReturnsAsync(matches);
 
             _sessionServiceMock
@@ -187,7 +221,6 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         [Test]
         public async Task SaveSelectedCourseAsync_Ignores_Empty_Selection()
         {
-            // Arrange
             // Act
             await _sut.SaveSelectedCourseAsync(new SelectCourseViewModel { SelectedCourseCode = "   " });
 
@@ -218,7 +251,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             });
 
             _cacheServiceMock
-                .Setup(c => c.GetOrCreateMatchesAsync(govUkId, userId))
+                .Setup(c => c.GetMatchesAsync(govUkId))
                 .ReturnsAsync(matches);
 
             _sessionServiceMock
@@ -308,7 +341,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         }
 
         [Test]
-        public async Task GetKnowYearViewModelAsync_Returns_Model_With_Null_Properties_When_No_Answers()
+        public async Task GetKnowYearViewModelAsync_Returns_Null_When_No_Answers()
         {
             // Arrange
             _sessionServiceMock
@@ -319,8 +352,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             var result = await _sut.GetKnowYearViewModelAsync();
 
             // Assert
-            Assert.That(result?.KnowYear, Is.Null);
-            Assert.That(result?.YearCompleted, Is.Null);
+            Assert.IsNull(result);
         }
 
         [Test]
@@ -399,7 +431,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             matches.Masks.Add(new Mask { ProviderName = "Provider B" });
 
             _cacheServiceMock
-                .Setup(c => c.GetOrCreateMatchesAsync(govUkId, userId))
+                .Setup(c => c.GetMatchesAsync(govUkId))
                 .ReturnsAsync(matches);
 
             _sessionServiceMock
@@ -462,7 +494,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             });
 
             _cacheServiceMock
-                .Setup(c => c.GetOrCreateMatchesAsync(govUkId, userId))
+                .Setup(c => c.GetMatchesAsync(govUkId))
                 .ReturnsAsync(matches);
 
             var vm = new SelectProviderViewModel { SelectedProviderName = "Provider A" };
@@ -486,7 +518,6 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             var govUkId = "gov-1";
             var userId = Guid.NewGuid();
             var userIdentityId = Guid.NewGuid();
-            var matchedDateOfBirth = new DateTime(2002, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
 
             _userServiceMock.Setup(u => u.GetGovUkIdentifier()).Returns(govUkId);
             _userServiceMock.Setup(u => u.GetUserId()).Returns(userId);
@@ -502,11 +533,11 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 CourseCode = "C1",
                 CourseName = "Course One",
                 CourseLevel = "3",
-                DateAwarded = new DateTime(2019, 1, 1)
+                DateAwarded = new DateTime(2023, 1, 1)
             });
 
             _cacheServiceMock
-                .Setup(c => c.GetOrCreateMatchesAsync(govUkId, userId))
+                .Setup(c => c.GetMatchesAsync(govUkId))
                 .ReturnsAsync(matches);
 
             _sessionServiceMock
@@ -515,7 +546,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 {
                     Uln = 999999L,
                     CourseCode = null,
-                    YearCompleted = 2019,
+                    YearCompleted = yearCompleted,
                     ProviderUkprn = 12345L,
                     ProviderName = "Provider A"
                 });
@@ -535,7 +566,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                     c.CourseCode == "C1" &&
                     c.CourseName == "Course One" &&
                     c.CourseLevel == "3" &&
-                    c.YearAwarded == 2019 &&
+                    c.YearAwarded == 2023 &&
                     c.ProviderName == "Provider A" &&
                     c.Ukprn == 12345 &&
                     c.IsMatched &&
@@ -575,10 +606,12 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 DateAwarded = new DateTime(2023, 6, 1, 0, 0, 0, DateTimeKind.Unspecified)
             });
 
-            _cacheServiceMock.Setup(c => c.GetOrCreateMatchesAsync(govUkId, userId))
+            _cacheServiceMock
+                .Setup(c => c.GetMatchesAsync(govUkId))
                 .ReturnsAsync(matches);
 
-            _sessionServiceMock.Setup(s => s.GetAuthorisationAnswersAsync())
+            _sessionServiceMock
+                .Setup(s => s.GetAuthorisationAnswersAsync())
                 .ReturnsAsync(new AuthorisationAnswers
                 {
                     Uln = 999999L,
@@ -588,15 +621,16 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                     ProviderName = "Provider A"
                 });
 
+            _cacheServiceMock
+                .Setup(c => c.IncrementMatchFailCountAsync(govUkId))
+                .ReturnsAsync(1);
+
             _httpContext.User = new ClaimsPrincipal(new ClaimsIdentity(new[]
             {
                 new Claim(ClaimTypes.Surname, "Family"),
                 new Claim(ClaimTypes.GivenName, "Given"),
                 new Claim(ClaimTypes.DateOfBirth, "1990-01-01")
             }, "Test"));
-
-            _mediatorMock.Setup(m => m.Send(It.IsAny<IRequest<bool>>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(true);
 
             // Act
             var result = await _sut.SubmitCheckAnswersAsync();
@@ -810,8 +844,11 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 .ReturnsAsync(new AuthorisationAnswers());
 
             _cacheServiceMock
-                .Setup(c => c.GetOrCreateMatchesAsync(govUkId, userId))
-                .ReturnsAsync((MatchesAndMasks)null);
+                .Setup(c => c.GetMatchesAsync(govUkId))
+                .ReturnsAsync(new MatchesAndMasks
+                {
+                    Matches = null
+                });
 
             // Act
             var result = await _sut.SubmitCheckAnswersAsync();
@@ -839,7 +876,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 .ReturnsAsync(new AuthorisationAnswers());
 
             _cacheServiceMock
-                .Setup(c => c.GetOrCreateMatchesAsync(govUkId, userId))
+                .Setup(c => c.GetMatchesAsync(govUkId))
                 .ReturnsAsync(new MatchesAndMasks
                 {
                     Matches = new List<Domain.Models.Match>()
@@ -861,7 +898,10 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         {
             // Arrange
             var govUkId = "gov-1";
+            var userId = Guid.NewGuid();
+
             _userServiceMock.Setup(u => u.GetGovUkIdentifier()).Returns(govUkId);
+            _userServiceMock.Setup(u => u.GetUserId()).Returns(userId);
 
             _sessionServiceMock
                 .Setup(s => s.GetAuthorisationAnswersAsync())
@@ -911,7 +951,6 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             var govUkId = "gov-1";
             var userId = Guid.NewGuid();
             var userIdentityId = Guid.NewGuid();
-            var matchedDateOfBirth = new DateTime(2002, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
 
             _userServiceMock.Setup(u => u.GetGovUkIdentifier()).Returns(govUkId);
             _userServiceMock.Setup(u => u.GetUserId()).Returns(userId);
@@ -926,11 +965,11 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 ProviderName = "Provider A",
                 Ukprn = 12345L,
                 CertificateType = CertificateType.Standard,
-                DateAwarded = new DateTime(2019, 1, 1)
+                DateAwarded = new DateTime(2019, 1, 1, 0, 0, 0, DateTimeKind.Unspecified)
             });
 
             _cacheServiceMock
-                .Setup(c => c.GetOrCreateMatchesAsync(govUkId, userId))
+                .Setup(c => c.GetMatchesAsync(govUkId))
                 .ReturnsAsync(matches);
 
             _sessionServiceMock
@@ -959,7 +998,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 It.Is<SubmitMatchCommand>(c =>
                     c.UserId == userId &&
                     c.Uln == null &&
-                    c.UserIdentityId == userIdentityId &&
+                    c.UserIdentityId == null &&
                     c.CertificateType == null &&
                     c.CourseCode == "C1" &&
                     c.CourseName == "Course One" &&
@@ -969,11 +1008,13 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                     c.Ukprn == 12345 &&
                     !c.IsMatched &&
                     !c.IsFailed),
-                It.IsAny<CancellationToken>()), Times.Once);
+                It.IsAny<CancellationToken>()),
+                Times.Once);
 
             _mediatorMock.Verify(m => m.Send(
                 It.IsAny<AuthoriseUserCommand>(),
-                It.IsAny<CancellationToken>()), Times.Never);
+                It.IsAny<CancellationToken>()),
+                Times.Never);
         }
 
         [Test]
@@ -983,7 +1024,6 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             var govUkId = "gov-1";
             var userId = Guid.NewGuid();
             var userIdentityId = Guid.NewGuid();
-            var matchedDateOfBirth = new DateTime(2002, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
 
             _userServiceMock.Setup(u => u.GetGovUkIdentifier()).Returns(govUkId);
             _userServiceMock.Setup(u => u.GetUserId()).Returns(userId);
@@ -998,11 +1038,11 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 ProviderName = "Provider A",
                 Ukprn = 12345L,
                 CertificateType = CertificateType.Standard,
-                DateAwarded = new DateTime(2019, 1, 1)
+                DateAwarded = new DateTime(2019, 1, 1, 0, 0, 0, DateTimeKind.Unspecified)
             });
 
             _cacheServiceMock
-                .Setup(c => c.GetOrCreateMatchesAsync(govUkId, userId))
+                .Setup(c => c.GetMatchesAsync(govUkId))
                 .ReturnsAsync(matches);
 
             _sessionServiceMock
@@ -1030,10 +1070,11 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             _mediatorMock.Verify(m => m.Send(
                 It.Is<SubmitMatchCommand>(c =>
                     c.UserId == userId &&
-                    c.UserIdentityId == userIdentityId &&
+                    c.UserIdentityId == null &&
                     !c.IsMatched &&
                     c.IsFailed),
-                It.IsAny<CancellationToken>()), Times.Once);
+                It.IsAny<CancellationToken>()),
+                Times.Once);
 
             _cacheServiceMock.Verify(c => c.ClearUser(govUkId), Times.Once);
             _cacheServiceMock.Verify(c => c.ClearMatchFailCountAsync(govUkId), Times.Once);
@@ -1072,7 +1113,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             });
 
             _cacheServiceMock
-                .Setup(c => c.GetOrCreateMatchesAsync(govUkId, userId))
+                .Setup(c => c.GetMatchesAsync(govUkId))
                 .ReturnsAsync(matches);
 
             _sessionServiceMock
@@ -1124,7 +1165,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             });
 
             _cacheServiceMock
-                .Setup(c => c.GetOrCreateMatchesAsync(govUkId, userId))
+                .Setup(c => c.GetMatchesAsync(govUkId))
                 .ReturnsAsync(matches);
 
             _sessionServiceMock

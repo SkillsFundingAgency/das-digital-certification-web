@@ -49,7 +49,7 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Commands.UpdateUserI
                 .Setup(x => x.UpdateUserIdentity(
                     It.IsAny<Guid>(),
                     It.IsAny<UpdateUserIdentityRequest>()))
-                .ReturnsAsync(Guid.NewGuid());
+                .Returns(Task.CompletedTask);
 
             // Act
             var result = await _sut.Handle(command, CancellationToken.None);
@@ -87,7 +87,7 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Commands.UpdateUserI
                 .Setup(x => x.UpdateUserIdentity(
                     It.IsAny<Guid>(),
                     It.IsAny<UpdateUserIdentityRequest>()))
-                .ReturnsAsync(Guid.NewGuid());
+                .Returns(Task.CompletedTask);
 
             // Act
             var result = await _sut.Handle(command, CancellationToken.None);
@@ -120,7 +120,7 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Commands.UpdateUserI
                 .Setup(x => x.UpdateUserIdentity(
                     It.IsAny<Guid>(),
                     It.IsAny<UpdateUserIdentityRequest>()))
-                .ReturnsAsync(Guid.NewGuid());
+                .Returns(Task.CompletedTask);
 
             // Act
             var result = await _sut.Handle(command, CancellationToken.None);

@@ -1,35 +1,41 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using FluentValidation;
 using MediatR;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
-using SFA.DAS.DigitalCertificates.Web.Models.Authorise;
+using SFA.DAS.DigitalCertificates.Application.Commands.AuthoriseUser;
+using SFA.DAS.DigitalCertificates.Application.Commands.SubmitMatch;
+using SFA.DAS.DigitalCertificates.Application.Queries.GetUserActions;
+using SFA.DAS.DigitalCertificates.Domain.Models;
+using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
 using SFA.DAS.DigitalCertificates.Web.Constants;
 using SFA.DAS.DigitalCertificates.Web.Enums;
+using SFA.DAS.DigitalCertificates.Web.Exceptions;
+using SFA.DAS.DigitalCertificates.Web.Models.Authorise;
 using SFA.DAS.DigitalCertificates.Web.Services;
-using Microsoft.AspNetCore.Http;
-using SFA.DAS.DigitalCertificates.Domain.Models;
-using System.Collections.Generic;
-using System;
-using SFA.DAS.DigitalCertificates.Application.Commands.SubmitMatch;
-using SFA.DAS.DigitalCertificates.Application.Commands.AuthoriseUser;
-using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
-using SFA.DAS.DigitalCertificates.Application.Queries.GetUserActions;
+using SFA.DAS.GovUK.Auth.Models;
+using SFA.DAS.GovUK.Auth.Services;
 
 namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 {
     public class AuthoriseOrchestrator : BaseOrchestrator, IAuthoriseOrchestrator
     {
+        private readonly ISessionService _sessionService;
         private readonly IUserService _userService;
         private readonly ICacheService _cacheService;
-        private readonly ISessionService _sessionService;
+        private readonly IGovUkAuthenticationService _govUkAuthenticationService;
         private readonly IValidator<KnowYourUlnViewModel> _knowUlnValidator;
         private readonly IValidator<KnowYearViewModel> _knowYearValidator;
         private readonly IValidator<SelectCourseViewModel> _selectCourseValidator;
         private readonly IValidator<SelectProviderViewModel> _selectProviderValidator;
         private readonly DigitalCertificatesWebConfiguration _digitalCertificatesWebConfiguration;
 
-        public AuthoriseOrchestrator(IMediator mediator, IHttpContextAccessor httpContextAccessor, ISessionService sessionService, IUserService userService, ICacheService cacheService,
+        public AuthoriseOrchestrator(IMediator mediator, IHttpContextAccessor httpContextAccessor, ISessionService sessionService, IUserService userService, 
+            ICacheService cacheService, IGovUkAuthenticationService govUkAuthenticationService,
                 IValidator<KnowYourUlnViewModel> knowUlnValidator,
                 IValidator<KnowYearViewModel> knowYearValidator,
                 IValidator<SelectCourseViewModel> selectCourseValidator,
@@ -40,6 +46,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             _sessionService = sessionService;
             _userService = userService;
             _cacheService = cacheService;
+            _govUkAuthenticationService = govUkAuthenticationService;
             _knowUlnValidator = knowUlnValidator;
             _knowYearValidator = knowYearValidator;
             _selectCourseValidator = selectCourseValidator;
@@ -131,7 +138,16 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             var userId = _userService.GetUserId();
             if (userId == null) return null;
 
-            var matches = await _cacheService.GetOrCreateMatchesAsync(govUkId, userId.Value);
+            var matches = await _cacheService.GetMatchesAsync(govUkId);
+            if(matches == null)
+            {
+                var govUkCredentialSubject = await GetVerifyDetails();
+                if (govUkCredentialSubject != null)
+                {
+                    matches = await _cacheService.CreateMatchesAsync(govUkId, userId.Value, govUkCredentialSubject);
+                }
+            }
+
             return matches;
         }
 
@@ -231,9 +247,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             var duplicateCourseExists = courseOptions
                 .GroupBy(c => (c.CourseCode ?? string.Empty).Trim() + "|" + (c.CourseName ?? string.Empty).Trim())
                 .Any(g => g.Count() > 1);
-
-            // TODO: After reviewing changes to the masks stored procedures, this filter may be removed or moved to the outer API if appropriate. Update the corresponding configuration as needed.
-            // if (duplicateCourseExists || masksCount < minMasks) return  new List<SelectCourseViewModel.CourseOption>();
 
             var distinctCourses = courseOptions
                 .OrderBy(c => c.CourseName)
@@ -346,9 +359,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 .GroupBy(p => (p.ProviderName ?? string.Empty).Trim())
                 .Any(g => g.Count() > 1);
 
-            // TODO: After reviewing changes to the masks stored procedures, this filter may be removed or moved to the outer API if appropriate. Update the corresponding configuration as needed.
-            // if (duplicateProviderNameExists || masksCount < minMasks) return  new List<SelectProviderViewModel.ProviderOption>();
-
             var distinctProviders = providerOptions
                 .OrderBy(p => p.ProviderName)
                 .ToList();
@@ -443,6 +453,9 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 
         public async Task<MatchOutcome> SubmitCheckAnswersAsync()
         {
+            var userId = _userService.GetUserId();
+            if (userId == null) throw new InvalidOperationException("UserId is required for submiting authorisation");
+
             var answers = await _sessionService.GetAuthorisationAnswersAsync()
                           ?? new AuthorisationAnswers();
 
@@ -497,7 +510,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             {
                 UserId = userId.GetValueOrDefault(),
                 Uln = answers.Uln,
-                UserIdentityId = firstMatch.UserIdentityId,
+                UserIdentityId = null,
                 CertificateType = null,
                 CourseCode = answers.CourseCode,
                 CourseName = answers.CourseName,
@@ -647,6 +660,24 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 .FirstOrDefault();
 
             return mostRecent?.ActionCode;
+        }
+
+        private async Task<GovUkCredentialSubject> GetVerifyDetails()
+        {
+            if (HttpContext != null)
+            {
+                var token = await HttpContext.GetTokenAsync("access_token");
+                var details = await _govUkAuthenticationService.GetAccountDetails(token);
+
+                if (details == null)
+                {
+                    throw new VerifyException("Unable to load verify details");
+                }
+
+                return details.CoreIdentityJwt.Vc.CredentialSubject;
+            }
+
+            return null;
         }
 
         private sealed class MatchResult

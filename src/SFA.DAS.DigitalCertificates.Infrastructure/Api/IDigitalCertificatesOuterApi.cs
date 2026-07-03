@@ -15,7 +15,7 @@ namespace SFA.DAS.DigitalCertificates.Domain.Interfaces
         Task<Guid> CreateOrUpdateUser([Body] CreateOrUpdateUserRequest request);
 
         [Post("/users/{userId}/identity")]
-        Task<Guid> UpdateUserIdentity([Path] Guid userId, [Body] UpdateUserIdentityRequest request);
+        Task UpdateUserIdentity([Path] Guid userId, [Body] UpdateUserIdentityRequest request);
 
         [Get("/ping")]
         Task Ping();

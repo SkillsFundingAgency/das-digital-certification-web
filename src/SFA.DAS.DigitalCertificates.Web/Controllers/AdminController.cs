@@ -46,9 +46,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             if (!_config.IsRunningInProd())
             {
                 var govUkIdentifier = _userService.GetGovUkIdentifier();
-                var matches = await _cacheService.GetOrCreateMatchesAsync(govUkIdentifier, 
-                    _userService.GetUserId().GetValueOrDefault());
-
+                
+                var matches = await _cacheService.GetMatchesAsync(govUkIdentifier);
                 var matchFailCount = await _cacheService.GetMatchFailCountAsync(govUkIdentifier);
 
                 return Json(new

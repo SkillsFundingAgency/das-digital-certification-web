@@ -1,7 +1,7 @@
 ﻿using MediatR;
 using SFA.DAS.DigitalCertificates.Domain.Models;
 
-namespace SFA.DAS.DigitalCertificates.Application.Commands.CreateOrUpdateUser
+namespace SFA.DAS.DigitalCertificates.Application.Commands.UpdateUserIdentity
 {
     public class UpdateUserIdentityCommand : IRequest<Unit>
     {
