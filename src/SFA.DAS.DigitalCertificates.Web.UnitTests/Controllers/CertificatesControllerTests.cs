@@ -1103,7 +1103,27 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
         }
 
         [Test]
-        public async Task DownloadSharedCertificateFrameworkPdf_Returns_Pdf_File_When_Model_Found()
+        [TestCase("TestGivenName", "Test", "678123", "TestGivenName_Test_CertificateNumber678123.pdf")]
+        [TestCase("John Paul", "Smith", "678123", "John_Paul_Smith_CertificateNumber678123.pdf")]
+        [TestCase("John-Paul", "O'Connor", "678123", "John_Paul_O_Connor_CertificateNumber678123.pdf")]
+        [TestCase(" John   Paul ", " O'Connor-Smith ", "678123", "John_Paul_O_Connor_Smith_CertificateNumber678123.pdf")]
+        [TestCase("Anne.Marie", "Van der Berg", "678123", "Anne_Marie_Van_der_Berg_CertificateNumber678123.pdf")]
+        [TestCase("John-Michael", "Smith-Jones", "ABC-123", "John_Michael_Smith_Jones_CertificateNumberABC_123.pdf")]
+        [TestCase("John@@Michael", "Smith!!Jones", "ABC###123", "John_Michael_Smith_Jones_CertificateNumberABC_123.pdf")]
+        [TestCase("John___Michael", "Smith___Jones", "ABC___123", "John_Michael_Smith_Jones_CertificateNumberABC_123.pdf")]
+        [TestCase("John.Michael", "Smith,Jones", "ABC/123", "John_Michael_Smith_Jones_CertificateNumberABC_123.pdf")]
+        [TestCase("123", "456", "789", "123_456_CertificateNumber789.pdf")]
+        [TestCase("John", "Smith", "ABC-123-XYZ", "John_Smith_CertificateNumberABC_123_XYZ.pdf")]
+        [TestCase("!!!John!!!", "@@Smith@@", "##ABC123##", "John_Smith_CertificateNumberABC123.pdf")]
+        [TestCase("John & Michael", "Smith & Jones", "ABC & 123", "John_Michael_Smith_Jones_CertificateNumberABC_123.pdf")]
+        [TestCase("Jöhn", "Smíth", "ÄBC123", "J_hn_Sm_th_CertificateNumberBC123.pdf")]
+        [TestCase("李", "王", "证书123", "__CertificateNumber123.pdf")]
+        [TestCase("!!!", "@@@", "###", "__CertificateNumber.pdf")]
+        public async Task DownloadSharedCertificateFrameworkPdf_Returns_Pdf_File_When_Model_Found(
+            string givenNames,
+            string familyName,
+            string certificateNumber,
+            string expectedFileName)
         {
             // Arrange
             var sharingLinkCode = Guid.NewGuid();
@@ -1111,9 +1131,9 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
 
             var model = new DownloadCertificateViewModel
             {
-                CertificateNumber = "678123",
-                FamilyName = "Test",
-                GivenNames = "TestGivenName",
+                CertificateNumber = certificateNumber,
+                FamilyName = familyName,
+                GivenNames = givenNames,
                 CourseOption = "Software developer",
                 CourseLevel = "3",
                 OverallGrade = "Pass",
@@ -1140,7 +1160,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             var fileResult = result as FileContentResult;
             fileResult.Should().NotBeNull();
             fileResult!.ContentType.Should().Be("application/pdf");
-            fileResult.FileDownloadName.Should().Be("TestGivenName_Test_CertificateNumber678123.pdf");
+            fileResult.FileDownloadName.Should().Be(expectedFileName);
             fileResult.FileContents.Should().BeEquivalentTo(pdfBytes);
 
             _sharingOrchestratorMock.Verify(
@@ -1224,14 +1244,26 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
                 Times.Never);
         }
 
-        [TestCase("TestGivenName", "Test", "TestGivenName_Test_CertificateNumber678123.pdf")]
-        [TestCase("John Paul", "Smith", "John_Paul_Smith_CertificateNumber678123.pdf")]
-        [TestCase("John-Paul", "O'Connor", "John_Paul_O_Connor_CertificateNumber678123.pdf")]
-        [TestCase(" John   Paul ", " O'Connor-Smith ", "John_Paul_O_Connor_Smith_CertificateNumber678123.pdf")]
-        [TestCase("Anne.Marie", "Van der Berg", "Anne_Marie_Van_der_Berg_CertificateNumber678123.pdf")]
+        [TestCase("TestGivenName", "Test", "678123", "TestGivenName_Test_CertificateNumber678123.pdf")]
+        [TestCase("John Paul", "Smith", "678123", "John_Paul_Smith_CertificateNumber678123.pdf")]
+        [TestCase("John-Paul", "O'Connor", "678123", "John_Paul_O_Connor_CertificateNumber678123.pdf")]
+        [TestCase(" John   Paul ", " O'Connor-Smith ", "678123", "John_Paul_O_Connor_Smith_CertificateNumber678123.pdf")]
+        [TestCase("Anne.Marie", "Van der Berg", "678123", "Anne_Marie_Van_der_Berg_CertificateNumber678123.pdf")]
+        [TestCase("John-Michael", "Smith-Jones", "ABC-123", "John_Michael_Smith_Jones_CertificateNumberABC_123.pdf")]
+        [TestCase("John@@Michael", "Smith!!Jones", "ABC###123", "John_Michael_Smith_Jones_CertificateNumberABC_123.pdf")]
+        [TestCase("John___Michael", "Smith___Jones", "ABC___123", "John_Michael_Smith_Jones_CertificateNumberABC_123.pdf")]
+        [TestCase("John.Michael", "Smith,Jones", "ABC/123", "John_Michael_Smith_Jones_CertificateNumberABC_123.pdf")]
+        [TestCase("123", "456", "789", "123_456_CertificateNumber789.pdf")]
+        [TestCase("John", "Smith", "ABC-123-XYZ", "John_Smith_CertificateNumberABC_123_XYZ.pdf")]
+        [TestCase("!!!John!!!", "@@Smith@@", "##ABC123##", "John_Smith_CertificateNumberABC123.pdf")]
+        [TestCase("John & Michael", "Smith & Jones", "ABC & 123", "John_Michael_Smith_Jones_CertificateNumberABC_123.pdf")]
+        [TestCase("Jöhn", "Smíth", "ÄBC123", "J_hn_Sm_th_CertificateNumberBC123.pdf")]
+        [TestCase("李", "王", "证书123", "__CertificateNumber123.pdf")]
+        [TestCase("!!!", "@@@", "###", "__CertificateNumber.pdf")]
         public async Task DownloadSharedCertificateStandardPdf_Returns_Pdf_File_When_Model_Found(
         string givenNames,
         string familyName,
+        string certificateNumber,
         string expectedFileName)
         {
             // Arrange
@@ -1240,7 +1272,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
 
             var model = new DownloadCertificateViewModel
             {
-                CertificateNumber = "678123",
+                CertificateNumber = certificateNumber,
                 FamilyName = familyName,
                 GivenNames = givenNames,
                 CourseOption = "Software developer",

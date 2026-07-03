@@ -126,9 +126,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             _userServiceMock.Setup(u => u.GetGovUkIdentifier()).Returns(govUkId);
             _userServiceMock.Setup(u => u.GetUserId()).Returns(userId);
 
-            _cacheServiceMock
-                .Setup(c => c.GetOrCreateMatchesAsync(govUkId, userId))
-                .ReturnsAsync((MatchesAndMasks)null);
+            _cacheServiceMock.Setup(c => c.GetOrCreateMatchesAsync(govUkId, userId)).ReturnsAsync((Domain.Models.MatchesAndMasks)null);
 
             // Act
             await _sut.PrepareNeedMoreInformationAsync();
@@ -189,6 +187,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         [Test]
         public async Task SaveSelectedCourseAsync_Ignores_Empty_Selection()
         {
+            // Arrange
             // Act
             await _sut.SaveSelectedCourseAsync(new SelectCourseViewModel { SelectedCourseCode = "   " });
 
@@ -465,13 +464,6 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             _cacheServiceMock
                 .Setup(c => c.GetOrCreateMatchesAsync(govUkId, userId))
                 .ReturnsAsync(matches);
-
-            _sessionServiceMock
-                .Setup(s => s.GetAuthorisationAnswersAsync())
-                .ReturnsAsync((AuthorisationAnswers)null);
-            _sessionServiceMock
-                .Setup(s => s.SetAuthorisationAnswersAsync(It.IsAny<AuthorisationAnswers>()))
-                .Returns(Task.CompletedTask);
 
             var vm = new SelectProviderViewModel { SelectedProviderName = "Provider A" };
 
@@ -869,7 +861,6 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         {
             // Arrange
             var govUkId = "gov-1";
-
             _userServiceMock.Setup(u => u.GetGovUkIdentifier()).Returns(govUkId);
 
             _sessionServiceMock

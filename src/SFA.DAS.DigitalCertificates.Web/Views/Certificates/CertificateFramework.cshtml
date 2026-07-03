@@ -169,17 +169,17 @@
                             </dd>
                         </div>
                     </dl>
-
                     <p class="govuk-body">@Model?.PrintStatusMessage</p>
-                    <form asp-route="@CertificatesController.ContactUsForCertificateCreateRoutePost"
-                          asp-route-certificateId="@certificateId"
-                          method="post">
-                        <p class="govuk-body">
-                            If your certificate has been lost, 
-                            <button type="submit" name="actionType" value="Reprint" class="das-button--inline-link" data-prevent-double-click="true" data-module="govuk-button">contact us for a replacement printed certificate</button>.
-                        </p>
-                    </form>
                 }
+
+                <form asp-route="@CertificatesController.ContactUsForCertificateCreateRoutePost"
+                        asp-route-certificateId="@certificateId"
+                        method="post">
+                    <p class="govuk-body">
+                        If your certificate has been lost, 
+                        <button type="submit" name="actionType" value="Reprint" class="das-button--inline-link" data-prevent-double-click="true" data-module="govuk-button">contact us for a replacement printed certificate</button>.
+                    </p>
+                </form>
             </div>
         </div>
     </main>

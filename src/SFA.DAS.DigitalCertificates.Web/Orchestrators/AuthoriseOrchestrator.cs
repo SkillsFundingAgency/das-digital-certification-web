@@ -451,12 +451,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 return MatchOutcome.Locked;
             }
 
-            var userId = _userService.GetUserId();
-            if (userId == null)
-            {
-                throw new InvalidOperationException("UserId is required for submitting match");
-            }
-
             var matches = await GetMatchesAsync();
             if (matches?.Matches == null || matches.Matches.Count == 0)
             {
@@ -498,9 +492,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             var govUkId = _userService.GetGovUkIdentifier();
             var failedLimit = _digitalCertificatesWebConfiguration.FailedMatchesLimit ?? 2;
             var updatedFailedCount = await _cacheService.IncrementMatchFailCountAsync(govUkId);
-
-            // take the first match as it is not known which match has failed if there are more than one
-            var firstMatch = matches.Matches[0];
 
             await Mediator.Send(new SubmitMatchCommand
             {
