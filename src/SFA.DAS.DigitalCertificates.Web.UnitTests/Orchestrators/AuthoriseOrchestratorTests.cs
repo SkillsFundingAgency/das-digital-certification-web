@@ -1081,6 +1081,180 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         }
 
         [Test]
+        public async Task PrepareNeedMoreInformationAsync_When_Matches_Not_Cached_And_HttpContext_Is_Null_Does_Not_Create_Matches()
+        {
+            // Arrange
+            var govUkId = "gov-1";
+            var userId = Guid.NewGuid();
+
+            _userServiceMock.Setup(x => x.GetGovUkIdentifier()).Returns(govUkId);
+            _userServiceMock.Setup(x => x.GetUserId()).Returns(userId);
+
+            _httpContextAccessorMock
+                .Setup(x => x.HttpContext)
+                .Returns((HttpContext)null);
+
+            _cacheServiceMock
+                .Setup(x => x.GetMatchesAsync(govUkId))
+                .ReturnsAsync((MatchesAndMasks)null);
+
+            // Act
+            var result = await _sut.PrepareNeedMoreInformationAsync();
+
+            // Assert
+            Assert.That(result, Is.False);
+
+            _cacheServiceMock.Verify(x => x.GetMatchesAsync(govUkId), Times.Once);
+            _cacheServiceMock.Verify(x => x.CreateMatchesAsync(
+                It.IsAny<string>(),
+                It.IsAny<Guid>(),
+                It.IsAny<GovUkCredentialSubject>()), Times.Never);
+        }
+
+        [Test]
+        public async Task SubmitCheckAnswersAsync_When_SingleMatch_Found_Submits_UserIdentityId_From_Match()
+        {
+            // Arrange
+            var govUkId = "gov-1";
+            var userId = Guid.NewGuid();
+            var userIdentityId = Guid.NewGuid();
+
+            _userServiceMock.Setup(x => x.GetGovUkIdentifier()).Returns(govUkId);
+            _userServiceMock.Setup(x => x.GetUserId()).Returns(userId);
+
+            var matches = new MatchesAndMasks();
+            matches.Matches.Add(new Domain.Models.Match
+            {
+                Uln = 1234567890,
+                UserIdentityId = userIdentityId,
+                CertificateType = CertificateType.Standard,
+                CourseCode = "C1",
+                CourseName = "Course One",
+                CourseLevel = "3",
+                ProviderName = "Provider One",
+                Ukprn = 12345678,
+                DateAwarded = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Unspecified)
+            });
+
+            _cacheServiceMock
+                .Setup(x => x.GetMatchesAsync(govUkId))
+                .ReturnsAsync(matches);
+
+            _sessionServiceMock
+                .Setup(x => x.GetAuthorisationAnswersAsync())
+                .ReturnsAsync(new AuthorisationAnswers
+                {
+                    Uln = 1234567890,
+                    CourseCode = "C1",
+                    YearCompleted = 2023,
+                    ProviderUkprn = 12345678,
+                    ProviderName = "Provider One"
+                });
+
+            // Act
+            var result = await _sut.SubmitCheckAnswersAsync();
+
+            // Assert
+            Assert.That(result, Is.EqualTo(MatchOutcome.SingleMatch));
+
+            _mediatorMock.Verify(x => x.Send(
+                It.Is<SubmitMatchCommand>(command =>
+                    command.UserId == userId &&
+                    command.Uln == 1234567890 &&
+                    command.UserIdentityId == userIdentityId &&
+                    command.CertificateType == CertificateType.Standard.ToString() &&
+                    command.CourseCode == "C1" &&
+                    command.CourseName == "Course One" &&
+                    command.CourseLevel == "3" &&
+                    command.YearAwarded == 2023 &&
+                    command.ProviderName == "Provider One" &&
+                    command.Ukprn == 12345678 &&
+                    command.IsMatched &&
+                    !command.IsFailed),
+                It.IsAny<CancellationToken>()),
+                Times.Once);
+
+            _mediatorMock.Verify(x => x.Send(
+                It.Is<AuthoriseUserCommand>(command =>
+                    command.UserId == userId &&
+                    command.Uln == 1234567890),
+                It.IsAny<CancellationToken>()),
+                Times.Once);
+        }
+
+        [Test]
+        public async Task SubmitCheckAnswersAsync_When_NoMatch_Submits_Null_UserIdentityId()
+        {
+            // Arrange
+            var govUkId = "gov-1";
+            var userId = Guid.NewGuid();
+
+            _userServiceMock.Setup(x => x.GetGovUkIdentifier()).Returns(govUkId);
+            _userServiceMock.Setup(x => x.GetUserId()).Returns(userId);
+
+            var matches = new MatchesAndMasks();
+            matches.Matches.Add(new Domain.Models.Match
+            {
+                Uln = 9999999999,
+                UserIdentityId = Guid.NewGuid(),
+                CertificateType = CertificateType.Standard,
+                CourseCode = "OTHER",
+                CourseName = "Other Course",
+                ProviderName = "Other Provider",
+                Ukprn = 87654321,
+                DateAwarded = new DateTime(2020, 1, 1, 0, 0, 0, DateTimeKind.Unspecified)
+            });
+
+            _cacheServiceMock
+                .Setup(x => x.GetMatchesAsync(govUkId))
+                .ReturnsAsync(matches);
+
+            _cacheServiceMock
+                .Setup(x => x.IncrementMatchFailCountAsync(govUkId))
+                .ReturnsAsync(1);
+
+            _sessionServiceMock
+                .Setup(x => x.GetAuthorisationAnswersAsync())
+                .ReturnsAsync(new AuthorisationAnswers
+                {
+                    Uln = 1234567890,
+                    CourseCode = "C1",
+                    CourseName = "Course One",
+                    YearCompleted = 2023,
+                    ProviderUkprn = 12345678,
+                    ProviderName = "Provider One"
+                });
+
+            // Act
+            var result = await _sut.SubmitCheckAnswersAsync();
+
+            // Assert
+            Assert.That(result, Is.EqualTo(MatchOutcome.NoMatch));
+
+            _mediatorMock.Verify(x => x.Send(
+                It.Is<SubmitMatchCommand>(command =>
+                    command.UserId == userId &&
+                    command.Uln == 1234567890 &&
+                    command.UserIdentityId == null &&
+                    command.CertificateType == null &&
+                    command.CourseCode == "C1" &&
+                    command.CourseName == "Course One" &&
+                    command.CourseLevel == null &&
+                    command.YearAwarded == 2023 &&
+                    command.ProviderName == "Provider One" &&
+                    command.Ukprn == 12345678 &&
+                    !command.IsMatched &&
+                    !command.IsFailed),
+                It.IsAny<CancellationToken>()),
+                Times.Once);
+
+            _mediatorMock.Verify(x => x.Send(
+                It.IsAny<AuthoriseUserCommand>(),
+                It.IsAny<CancellationToken>()),
+                Times.Never);
+        }
+
+        [Test]
         public async Task GetCourseMatchOutcomeAsync_Returns_NoData_When_ViewModel_Null()
         {
             // Act
