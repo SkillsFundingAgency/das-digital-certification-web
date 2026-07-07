@@ -66,5 +66,21 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Validators
             // Assert
             result.IsValid.Should().BeTrue();
         }
+
+        [Test]
+        public async Task Validate_Fails_When_SearchTerm_ContainsHtmlTags()
+        {
+            // Arrange
+            // Single "<" is non-whitespace (triggers the SearchTerm rule) but length < 3
+            // (so the custom rule adds EnterAddressErrorMessage without calling GetLocations)
+            var model = new SelectAddressViewModel { SearchTerm = "<" };
+
+            // Act
+            var result = await _validator.ValidateAsync(model);
+
+            // Assert
+            result.IsValid.Should().BeFalse();
+            result.Errors.Should().Contain(e => e.ErrorMessage == SelectAddressViewModelValidator.SearchTermInvalidCharsError);
+        }
     }
 }
