@@ -1,24 +1,16 @@
-﻿using System;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Diagnostics;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using SFA.DAS.DigitalCertificates.Domain.Extensions;
 using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
-using SFA.DAS.DigitalCertificates.Web.Exceptions;
-using SFA.DAS.DigitalCertificates.Web.Extensions;
 using SFA.DAS.DigitalCertificates.Web.Infrastructure;
 using SFA.DAS.DigitalCertificates.Web.Models;
-using SFA.DAS.DigitalCertificates.Web.Models.Home;
 using SFA.DAS.DigitalCertificates.Web.Models.Sharing;
 using SFA.DAS.DigitalCertificates.Web.Orchestrators;
 using SFA.DAS.GovUK.Auth.Authentication;
-using SFA.DAS.GovUK.Auth.Services;
 
 namespace SFA.DAS.DigitalCertificates.Web.Controllers
 {
@@ -26,8 +18,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
     public class HomeController : BaseController
     {
         private readonly IHomeOrchestrator _homeOrchestrator;
-        private readonly IConfiguration _config;
-        private readonly IGovUkAuthenticationService _govUkAuthenticationService;
         private readonly ILogger<HomeController> _logger;
         private readonly DigitalCertificatesWebConfiguration _digitalCertificatesWebConfiguration;
 
@@ -45,14 +35,10 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         public const string AccessibilityStatementRouteGet = nameof(AccessibilityStatementRouteGet);
         #endregion Routes
 
-        public HomeController(IHomeOrchestrator homeOrchestrator,
-            IConfiguration config, IGovUkAuthenticationService govUkAuthenticationService,
-            IHttpContextAccessor contextAccessor, ILogger<HomeController> logger, DigitalCertificatesWebConfiguration digitalCertificatesWebConfiguration)
+        public HomeController(IHttpContextAccessor contextAccessor, IHomeOrchestrator homeOrchestrator, ILogger<HomeController> logger, DigitalCertificatesWebConfiguration digitalCertificatesWebConfiguration)
             : base(contextAccessor)
         {
             _homeOrchestrator = homeOrchestrator;
-            _config = config;
-            _govUkAuthenticationService = govUkAuthenticationService;
             _logger = logger;
             _digitalCertificatesWebConfiguration = digitalCertificatesWebConfiguration;
         }
@@ -62,7 +48,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         {
             if(!string.IsNullOrWhiteSpace(_digitalCertificatesWebConfiguration.ExternalStartPage))
             {
-                return Redirect(_digitalCertificatesWebConfiguration.ExternalStartPage);                
+                return Redirect(_digitalCertificatesWebConfiguration.ExternalStartPage);
             }
 
             return View();
@@ -79,36 +65,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         [Authorize(Policy = nameof(PolicyNames.IsVerified))]
         public async Task<IActionResult> Verified()
         {
-            if (HttpContextAccessor?.HttpContext == null)
-            {
-                throw new InvalidOperationException("No HttpContext available.");
-            }
-
-            var token = await HttpContextAccessor.HttpContext.GetTokenAsync("access_token");
-            var details = await _govUkAuthenticationService.GetAccountDetails(token);
-
-            if (details == null)
-                throw new VerifyException("Unable to load verify details");
-
-            await _homeOrchestrator.CreateOrUpdateUser(new CreateOrUpdateUserModel
-            {
-                GovUkIdentifier = details.Sub,
-                EmailAddress = details.Email,
-                PhoneNumber = details.PhoneNumber,
-                Names = details.CoreIdentityJwt.Vc.CredentialSubject
-                    .GetHistoricalNames().Select(x => new NameModel
-                    {
-                        ValidSince = x.ValidFrom,
-                        ValidUntil = x.ValidUntil,
-                        FamilyName = x.FamilyNames,
-                        GivenNames = x.GivenNames
-                    }).ToList(),
-                DateOfBirth = details.CoreIdentityJwt.Vc.CredentialSubject.BirthDates
-                        .OrderByDescending(p => p.ValidUntil)
-                        .First().Value
-                        .ParseEnGbDateTime()
-            });
-
             return RedirectToRoute(CertificatesController.CertificatesListRouteGet);
         }
 
@@ -119,7 +75,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             return View();
         }
 
-        [AllowAnonymous]        
+        [AllowAnonymous]
         [Route("cookies", Name = CookiesRouteGet)]
         public IActionResult Cookies(string? returnUrl = null)
         {

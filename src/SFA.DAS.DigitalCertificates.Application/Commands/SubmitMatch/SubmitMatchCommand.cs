@@ -8,8 +8,7 @@ namespace SFA.DAS.DigitalCertificates.Application.Commands.SubmitMatch
         public required Guid UserId { get; set; }
 
         public long? Uln { get; set; }
-        public required string FamilyName { get; set; }
-        public required DateTime DateOfBirth { get; set; }
+        public Guid? UserIdentityId { get; set; }
 
         public string? CertificateType { get; set; }
         public string? CourseCode { get; set; }
@@ -28,8 +27,7 @@ namespace SFA.DAS.DigitalCertificates.Application.Commands.SubmitMatch
             return new SubmitMatchRequest
             {
                 Uln = c.Uln,
-                FamilyName = c.FamilyName,
-                DateOfBirth = c.DateOfBirth,
+                UserIdentityId = c.UserIdentityId,
                 CertificateType = c.CertificateType,
                 CourseCode = c.CourseCode,
                 CourseName = c.CourseName,

@@ -23,7 +23,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
             {
                 // Arrange
                 var certificateId = Guid.NewGuid();
-                var dateAwarded = new DateTime(2025, 3, 24);
+                var dateAwarded = new DateTime(2025, 3, 24, 0, 0, 0, DateTimeKind.Unspecified);
 
                 var request = new DownloadCertificateRequestViewModel
                 {
@@ -62,7 +62,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
             {
                 // Arrange
                 var certificateId = Guid.NewGuid();
-                var dateAwarded = new DateTime(2025, 4, 10);
+                var dateAwarded = new DateTime(2025, 4, 10, 0, 0, 0, DateTimeKind.Unspecified);
 
                 var request = new DownloadCertificateRequestViewModel
                 {
@@ -100,7 +100,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
             [TestCase(null)]
             [TestCase("")]
             [TestCase("   ")]
-            public void CreateDownloadCertificateViewModel_WhenFamilyNameIsMissing_ThrowsInvalidOperationException(string familyName)
+            public void CreateDownloadCertificateViewModel_WhenFamilyNameIsMissing_ThrowsInvalidOperationException(
+                string familyName)
             {
                 // Arrange
                 var certificateId = Guid.NewGuid();
@@ -121,7 +122,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
             [TestCase(null)]
             [TestCase("")]
             [TestCase("   ")]
-            public void CreateDownloadCertificateViewModel_WhenGivenNamesIsMissing_ThrowsInvalidOperationException(string givenNames)
+            public void CreateDownloadCertificateViewModel_WhenGivenNamesIsMissing_ThrowsInvalidOperationException(
+                string givenNames)
             {
                 // Arrange
                 var certificateId = Guid.NewGuid();
@@ -142,7 +144,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
             [TestCase(null)]
             [TestCase("")]
             [TestCase("   ")]
-            public void CreateDownloadCertificateViewModel_WhenCourseNameIsMissing_ThrowsInvalidOperationException(string courseName)
+            public void CreateDownloadCertificateViewModel_WhenCourseNameIsMissing_ThrowsInvalidOperationException(
+                string courseName)
             {
                 // Arrange
                 var certificateId = Guid.NewGuid();
@@ -163,7 +166,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
             [TestCase(null)]
             [TestCase("")]
             [TestCase("   ")]
-            public void CreateDownloadCertificateViewModel_WhenCourseLevelIsMissing_ThrowsInvalidOperationException(string courseLevel)
+            public void CreateDownloadCertificateViewModel_WhenCourseLevelIsMissing_ThrowsInvalidOperationException(
+                string courseLevel)
             {
                 // Arrange
                 var certificateId = Guid.NewGuid();
@@ -202,7 +206,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
             [TestCase(null)]
             [TestCase("")]
             [TestCase("   ")]
-            public void CreateDownloadCertificateViewModel_WhenStandardOverallGradeIsMissing_ThrowsInvalidOperationException(string overallGrade)
+            public void CreateDownloadCertificateViewModel_WhenStandardOverallGradeIsMissing_ThrowsInvalidOperationException(
+                string overallGrade)
             {
                 // Arrange
                 var certificateId = Guid.NewGuid();
@@ -223,7 +228,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
             [TestCase(null)]
             [TestCase("")]
             [TestCase("   ")]
-            public void CreateDownloadCertificateViewModel_WhenStandardCertificateNumberIsMissing_ThrowsInvalidOperationException(string certificateNumber)
+            public void CreateDownloadCertificateViewModel_WhenStandardCertificateNumberIsMissing_ThrowsInvalidOperationException(
+                string certificateNumber)
             {
                 // Arrange
                 var certificateId = Guid.NewGuid();
@@ -244,7 +250,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
             [TestCase(null)]
             [TestCase("")]
             [TestCase("   ")]
-            public void CreateDownloadCertificateViewModel_WhenFrameworkCertificateNumberIsMissing_ThrowsInvalidOperationException(string certificateNumber)
+            public void CreateDownloadCertificateViewModel_WhenFrameworkCertificateNumberIsMissing_ThrowsInvalidOperationException(
+                string certificateNumber)
             {
                 // Arrange
                 var certificateId = Guid.NewGuid();
@@ -291,7 +298,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
                     CourseOption = "Frontend",
                     CourseLevel = "3",
                     OverallGrade = "Distinction",
-                    DateAwarded = new DateTime(2025, 3, 24),
+                    DateAwarded = new DateTime(2025, 3, 24, 0, 0, 0, DateTimeKind.Unspecified),
                     CertificateNumber = "CERT-12345",
                     CoronationEmblem = true
                 };
@@ -309,7 +316,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
                     CourseOption = "Mechanical",
                     CourseLevel = "Level 3",
                     OverallGrade = null,
-                    DateAwarded = new DateTime(2025, 4, 10),
+                    DateAwarded = new DateTime(2025, 4, 10, 0, 0, 0, DateTimeKind.Unspecified),
                     CertificateNumber = "FW-98765",
                     CoronationEmblem = false
                 };

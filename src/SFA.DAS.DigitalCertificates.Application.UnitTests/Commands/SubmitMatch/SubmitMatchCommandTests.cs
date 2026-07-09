@@ -16,8 +16,7 @@ namespace SFA.DAS.DigitalCertificates.UnitTests.Application.Commands.SubmitMatch
             {
                 UserId = Guid.NewGuid(),
                 Uln = 1234567890L,
-                FamilyName = "Smith",
-                DateOfBirth = new DateTime(1990,1,2),
+                UserIdentityId = Guid.NewGuid(),
                 CertificateType = "Standard",
                 CourseCode = "C1",
                 CourseName = "Course One",
@@ -34,8 +33,7 @@ namespace SFA.DAS.DigitalCertificates.UnitTests.Application.Commands.SubmitMatch
 
             // Assert
             req.Uln.Should().Be(cmd.Uln);
-            req.FamilyName.Should().Be(cmd.FamilyName);
-            req.DateOfBirth.Should().Be(cmd.DateOfBirth);
+            req.UserIdentityId.Should().Be(cmd.UserIdentityId);
             req.CertificateType.Should().Be(cmd.CertificateType);
             req.CourseCode.Should().Be(cmd.CourseCode);
             req.CourseName.Should().Be(cmd.CourseName);
