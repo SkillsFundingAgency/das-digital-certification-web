@@ -1,4 +1,8 @@
-﻿using FluentAssertions;
+﻿using System;
+using System.Collections.Generic;
+using System.Security.Claims;
+using System.Threading.Tasks;
+using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
@@ -12,11 +16,6 @@ using SFA.DAS.DigitalCertificates.Web.Extensions;
 using SFA.DAS.DigitalCertificates.Web.Models.Authorise;
 using SFA.DAS.DigitalCertificates.Web.Orchestrators;
 using SFA.DAS.DigitalCertificates.Web.Services;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Claims;
-using System.Threading.Tasks;
 
 namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
 {
@@ -610,7 +609,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             httpContext.User = principal;
             _sut.ControllerContext = new ControllerContext { HttpContext = httpContext };
 
-            _sessionServiceMock.Setup(s => s.GetUlnAuthorisationAsync()).ReturnsAsync((UlnAuthorisation?)null);
+            _sessionServiceMock.Setup(s => s.GetUlnAuthorisationAsync()).ReturnsAsync((UlnAuthorisation)null);
             _orchestratorMock.Setup(o => o.GetLatestUserActionReferenceAsync(ActionType.NotMatched)).ReturnsAsync("REF123");
 
             // Act
@@ -671,7 +670,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             httpContext.User = principal;
             _sut.ControllerContext = new ControllerContext { HttpContext = httpContext };
 
-            _sessionServiceMock.Setup(s => s.GetUlnAuthorisationAsync()).ReturnsAsync((UlnAuthorisation?)null);
+            _sessionServiceMock.Setup(s => s.GetUlnAuthorisationAsync()).ReturnsAsync((UlnAuthorisation)null);
             _orchestratorMock.Setup(o => o.GetLatestUserActionReferenceAsync(ActionType.NotFound)).ReturnsAsync("NF-REF");
 
             // Act
@@ -732,7 +731,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             httpContext.User = principal;
             _sut.ControllerContext = new ControllerContext { HttpContext = httpContext };
 
-            _sessionServiceMock.Setup(s => s.GetUlnAuthorisationAsync()).ReturnsAsync((UlnAuthorisation?)null);
+            _sessionServiceMock.Setup(s => s.GetUlnAuthorisationAsync()).ReturnsAsync((UlnAuthorisation)null);
             _orchestratorMock.Setup(o => o.GetLatestUserActionReferenceAsync(ActionType.NotMatched)).ReturnsAsync("LOCK-REF");
 
             // Act
@@ -755,7 +754,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             httpContext.User = principal;
             _sut.ControllerContext = new ControllerContext { HttpContext = httpContext };
 
-            _sessionServiceMock.Setup(s => s.GetUlnAuthorisationAsync()).ReturnsAsync((UlnAuthorisation?)null);
+            _sessionServiceMock.Setup(s => s.GetUlnAuthorisationAsync()).ReturnsAsync((UlnAuthorisation)null);
             _orchestratorMock.Setup(o => o.GetLatestUserActionReferenceAsync(ActionType.NotMatched)).ReturnsAsync(string.Empty);
             _orchestratorMock.Setup(o => o.CreateUserActionForCannotMatchAsync(ActionType.NotMatched)).ReturnsAsync("CREATED-REF");
 

@@ -5,9 +5,7 @@ namespace SFA.DAS.DigitalCertificates.Infrastructure.Api.Requests
     public class SubmitMatchRequest
     {
         public long? Uln { get; set; }
-        public required string FamilyName { get; set; }
-        public required DateTime DateOfBirth { get; set; }
-
+        public Guid? UserIdentityId { get; set; }
         public string? CertificateType { get; set; }
         public string? CourseCode { get; set; }
         public string? CourseName { get; set; }
