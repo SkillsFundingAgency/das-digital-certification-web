@@ -44,10 +44,10 @@ namespace SFA.DAS.DigitalCertificates.Domain.Interfaces
         [Post("/sharing")]
         Task<CreateSharingResponse> CreateSharing([Body] CreateSharingRequest request);
 
-        [Post("/users/{userId}/actions")]
+        [Post("/users/{userId}/user-actions")]
         Task<CreateUserActionResponse> CreateUserAction([Path] Guid userId, [Body] CreateUserActionRequest request);
 
-        [Get("/users/{userId}/actions")]
+        [Get("/users/{userId}/user-actions")]
         Task<GetUserActionsResponse> GetUserActions([Path] Guid userId);
 
         [Get("/sharing/{sharingId}")]
