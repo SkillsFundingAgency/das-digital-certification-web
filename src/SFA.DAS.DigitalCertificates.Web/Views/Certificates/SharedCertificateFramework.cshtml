@@ -77,20 +77,28 @@
                             </div>
                         }
 
-                        @if (Model.QualificationsAndAwardingBodies != null && Model.QualificationsAndAwardingBodies.Any())
-                        {
-                            <div class="govuk-summary-list__row">
-                                <dt class="govuk-summary-list__key">Qualifications and awarding bodies</dt>
-                                <dd class="govuk-summary-list__value">
+                    @if (Model.QualificationsAndAwardingBodies != null && Model.QualificationsAndAwardingBodies.Any())
+                    {
+                        <div class="govuk-summary-list__row">
+                            <dt class="govuk-summary-list__key">Qualifications and awarding bodies</dt>
+                            <dd class="govuk-summary-list__value">
+                                @if (Model.QualificationsAndAwardingBodies.Count == 1)
+                                {
+                                    @Model.QualificationsAndAwardingBodies.First()
+                                }
+                                else
+                                {
                                     <ul class="govuk-list govuk-list--bullet">
+
                                         @foreach (var q in Model.QualificationsAndAwardingBodies)
                                         {
                                             <li>@q</li>
                                         }
                                     </ul>
-                                </dd>
-                            </div>
-                        }
+                                }
+                            </dd>
+                        </div>
+                    }
 
                         @if (!string.IsNullOrEmpty(Model.ProviderName))
                         {
