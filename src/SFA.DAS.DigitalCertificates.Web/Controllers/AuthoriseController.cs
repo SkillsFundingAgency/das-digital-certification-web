@@ -249,7 +249,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         {
             TempData.AddFlashMessageWithDetail(
                 "We cannot match your information to any results.",
-                "Check your answers. If you need to make changes we can try to match your results, or you can submit again.",
+                "Ask your training provider to give you your unique learner number so we can match you to your results. Or you may find your ULN on your exam certificates or results slips.",
                 TempDataDictionaryExtensions.FlashMessageLevel.Warning);
 
             return RedirectToRoute(CheckAnswersRouteGet);
