@@ -81,7 +81,11 @@
                     <table class="govuk-table">
                         <caption class="govuk-table__caption">
                             <h2 class="govuk-table__caption--m">Link history</h2>
-                            <p class="govuk-body">When your link has been viewed, you'll see the time and date here.</p>
+                            @if (Model?.AccessHistory?.Any() != true)
+                            {
+                                    <p class="govuk-body">When your link has been viewed, you'll see the time and date here.</p>                                
+                            }
+                            
                         </caption>
                         <thead class="govuk-table__head">
                             <tr class="govuk-table__row">
@@ -90,7 +94,7 @@
                             </tr>
                         </thead>
                         <tbody class="govuk-table__body">
-                            @if (Model.AccessHistory != null && Model.AccessHistory.Any())
+                            @if (Model?.AccessHistory != null && Model.AccessHistory.Any())
                             {
                                 foreach (var item in Model.AccessHistory)
                                 {
