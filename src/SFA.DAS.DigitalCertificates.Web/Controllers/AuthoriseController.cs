@@ -257,7 +257,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
 
         [HttpGet("contact-support", Name = ContactSupportRouteGet)]
         [AllowAnonymous]
-        public async Task<IActionResult> CannotSupport()
+        public async Task<IActionResult> ContactSupport()
         {
             if (User?.Identity?.IsAuthenticated != true)
             {
