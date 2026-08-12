@@ -114,7 +114,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             var model = await _authoriseOrchestrator.GetSelectCourseViewModelAsync();
             if (model == null || model.Courses == null || !model.Courses.Any())
             {
-                return await RedirectToCannotMatchAsync();
+                return await RedirectToNotFoundAsync();
             }
 
             return View(model);
