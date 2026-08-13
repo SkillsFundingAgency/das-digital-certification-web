@@ -225,7 +225,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
                     return await RedirectToCannotMatchAsync();
                 case MatchOutcome.NoMatch:
                 default:
-                    return HandleNoMatch();
+                    var answers = await _sessionService.GetAuthorisationAnswersAsync() ?? new AuthorisationAnswers();
+                    return HandleNoMatch(answers.Uln);
             }
         }
 
@@ -245,11 +246,17 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             return RedirectToRoute(NotFoundRouteGet);
         }
 
-        private IActionResult HandleNoMatch()
+        private IActionResult HandleNoMatch(long? uln)
         {
+            const string title = "We cannot match your information to any results.";
+
+            var detail = uln.HasValue
+                ? "Check your answers, you might need to search for the correct information in your documents or emails. If you need to make changes we can try to match your results, or you can submit again."
+                : "Ask your training provider to give you your unique learner number so we can match you to your results. Or you may find your ULN on your exam certificates or results slips.";
+
             TempData.AddFlashMessageWithDetail(
-                "We cannot match your information to any results.",
-                "Ask your training provider to give you your unique learner number so we can match you to your results. Or you may find your ULN on your exam certificates or results slips.",
+                title,
+                detail,
                 TempDataDictionaryExtensions.FlashMessageLevel.Warning);
 
             return RedirectToRoute(CheckAnswersRouteGet);
