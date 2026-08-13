@@ -1637,5 +1637,44 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             result.Should().NotBeNull();
             result!.RouteName.Should().Be(CertificatesController.CertificatesListRouteGet);
         }
+        
+
+        [Test]
+        public void LinkAccessed_ReturnsTrueWhenAccessHistoryContainsBothDirectAndEmailLinks()
+        {
+            // Arrange
+            var viewModel = new CertificateSharingLinkViewModel
+            {
+                CourseName = "Course",
+                AccessHistory = new List<SharingAccessHistoryItem>
+                {
+                    new SharingAccessHistoryItem { AccessType = AccessType.DirectLink },
+                    new SharingAccessHistoryItem { AccessType = AccessType.EmailLink }
+                }
+            };
+
+            // Act
+            var result = viewModel.LinkAccessed;
+
+            // Assert
+            Assert.That(result, Is.True);
+        }
+
+        [Test]
+        public void LinkAccessed_ReturnsFalseWhenAccessHistoryIsEmpty()
+        {
+            // Arrange
+            var viewModel = new CertificateSharingLinkViewModel
+            {
+                CourseName = "Course",
+                AccessHistory = new List<SharingAccessHistoryItem>()
+            };
+
+            // Act
+            var result = viewModel.LinkAccessed;
+
+            // Assert
+            Assert.That(result, Is.False);
+        }       
     }
 }
