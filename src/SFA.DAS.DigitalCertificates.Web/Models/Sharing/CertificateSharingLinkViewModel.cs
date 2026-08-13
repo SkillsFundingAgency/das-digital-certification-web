@@ -23,7 +23,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Models.Sharing
 
         public List<SharingAccessHistoryItem> AccessHistory { get; set; } = new List<SharingAccessHistoryItem>();
 
-        public bool LinkAccessed => AccessHistory.Exists(x => x.AccessType == AccessType.DirectLink || x.AccessType == AccessType.EmailLink);
+        public bool LinkAccessed => AccessHistory != null && AccessHistory.Exists(x => x.AccessType == AccessType.DirectLink || x.AccessType == AccessType.EmailLink);
     }
 
     public class SharingAccessHistoryItem
