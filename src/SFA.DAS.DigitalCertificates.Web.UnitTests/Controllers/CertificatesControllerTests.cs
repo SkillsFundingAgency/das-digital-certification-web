@@ -1637,5 +1637,135 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             result.Should().NotBeNull();
             result!.RouteName.Should().Be(CertificatesController.CertificatesListRouteGet);
         }
+
+        [Test]
+        public void LinkAccessed_WhenAccessHistoryIsNull_ReturnsFalse()
+        {
+            // Arrange           
+            var viewModel = new CertificateSharingLinkViewModel
+            {
+                CourseName = "Course",
+                AccessHistory =null
+            };
+
+            // Act
+            var result = viewModel.LinkAccessed;
+
+            // Assert
+            Assert.False(result);
+        }
+
+        [Test]
+        public void LinkAccessed_WhenAccessHistoryIsEmpty_ReturnsFalse()
+        {
+            // Arrange            
+            var viewModel = new CertificateSharingLinkViewModel
+            {
+                CourseName = "Course",
+                AccessHistory = new()
+            };
+
+
+            // Act
+            var result = viewModel.LinkAccessed;
+
+            // Assert
+            Assert.False(result);
+        }
+
+        [Test]
+        public void LinkAccessed_WhenAccessHistoryContainsDirectLink_ReturnsTrue()
+        {
+            // Arrange
+            var viewModel = new CertificateSharingLinkViewModel
+            {
+                CourseName = "Course",
+                AccessHistory = new() { new() { AccessType = AccessType.DirectLink } }
+            };
+           
+            // Act
+            var result = viewModel.LinkAccessed;
+
+            // Assert
+            Assert.True(result);
+        }
+
+        [Test]
+        public void LinkAccessed_WhenAccessHistoryContainsEmailLink_ReturnsTrue()
+        {
+            // Arrange
+            var viewModel = new CertificateSharingLinkViewModel
+            {
+                CourseName = "Course",
+                AccessHistory = new() { new() { AccessType = AccessType.EmailLink } }
+            };
+
+            // Act
+            var result = viewModel.LinkAccessed;
+
+            // Assert
+            Assert.True(result);
+        }
+       
+        [Test]
+        public void LinkAccessed_WhenAccessHistoryContainsMixedAccessTypes_ReturnsTrue()
+        {
+            // Arrange
+            var viewModel = new CertificateSharingLinkViewModel
+            {
+                CourseName = "Course",
+                AccessHistory = new()
+            {
+                new() { AccessType = AccessType.EmailLink },
+                new() { AccessType = AccessType.DirectLink },
+                new() { AccessType = AccessType.Created },
+                new() { AccessType = AccessType.EmailSent }
+            }
+            };
+
+            // Act
+            var result = viewModel.LinkAccessed;
+
+            // Assert
+            Assert.True(result);
+        }
+
+        [Test]
+        public void LinkAccessed_ReturnsTrueWhenAccessHistoryContainsBothDirectAndEmailLinks()
+        {
+            // Arrange
+            var viewModel = new CertificateSharingLinkViewModel
+            {
+                CourseName = "Course",
+                AccessHistory = new List<SharingAccessHistoryItem>
+                {
+                    new SharingAccessHistoryItem { AccessType = AccessType.DirectLink },
+                    new SharingAccessHistoryItem { AccessType = AccessType.EmailLink }
+                }
+            };
+
+            // Act
+            var result = viewModel.LinkAccessed;
+
+            // Assert
+            Assert.That(result, Is.True);
+        }
+
+        [Test]
+        public void LinkAccessed_ReturnsFalseWhenAccessHistoryIsEmpty()
+        {
+            // Arrange
+            var viewModel = new CertificateSharingLinkViewModel
+            {
+                CourseName = "Course",
+                AccessHistory = new List<SharingAccessHistoryItem>()
+            };
+
+            // Act
+            var result = viewModel.LinkAccessed;
+
+            // Assert
+            Assert.That(result, Is.False);
+        }       
     }
 }
