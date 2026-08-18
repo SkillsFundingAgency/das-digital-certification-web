@@ -33,6 +33,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         public const string SignOutRouteGet = nameof(SignOutRouteGet);
         public const string UserSignedOutRouteGet = nameof(UserSignedOutRouteGet);
         public const string AccessibilityStatementRouteGet = nameof(AccessibilityStatementRouteGet);
+        public const string StartPageRouteGet = nameof(StartPageRouteGet);
         #endregion Routes
 
         public HomeController(IHttpContextAccessor contextAccessor, IHomeOrchestrator homeOrchestrator, ILogger<HomeController> logger, DigitalCertificatesWebConfiguration digitalCertificatesWebConfiguration)
@@ -43,7 +44,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             _digitalCertificatesWebConfiguration = digitalCertificatesWebConfiguration;
         }
 
-        [Route("start-page")]
+        [Route("start-page", Name = StartPageRouteGet)]
         public IActionResult Index()
         {
             if(!string.IsNullOrWhiteSpace(_digitalCertificatesWebConfiguration.ExternalStartPage))
