@@ -1,10 +1,13 @@
-﻿@using SFA.DAS.DigitalCertificates.Web.ViewDataKeys
+﻿@using SFA.DAS.DigitalCertificates.Web.Controllers
+@using SFA.DAS.DigitalCertificates.Web.ViewDataKeys
 <section aria-label="Service information" class="govuk-service-navigation das-header__navigation">
     <div class="govuk-width-container">
         <div class="govuk-service-navigation__container das-header__navigation__container">
-            <div class="das-header__service-user-name-wrap">
+            <div class="das-header__service-user-name-wrap">                
                 <span class="govuk-service-navigation__service-name">
-                    <span class="govuk-service-navigation__text">@ViewData[ViewDataKeys.ServiceName]</span>
+                    <a asp-route="@CertificatesController.CertificatesListRouteGet" class="govuk-service-navigation__link">
+                        @ViewData[ViewDataKeys.ServiceName]
+                    </a>
                 </span>
                 @if (User!.Identity!.IsAuthenticated)
                 {

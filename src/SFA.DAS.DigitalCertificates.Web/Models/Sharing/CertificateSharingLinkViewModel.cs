@@ -19,9 +19,11 @@ namespace SFA.DAS.DigitalCertificates.Web.Models.Sharing
         public string? FormattedExpiry { get; set; }
 
         public string? SecureLink { get; set; }
-        public string EmailAddress { get; set; } = string.Empty;
+        public string EmailAddress { get; set; } = string.Empty;       
 
         public List<SharingAccessHistoryItem> AccessHistory { get; set; } = new List<SharingAccessHistoryItem>();
+
+        public bool LinkAccessed => AccessHistory != null && AccessHistory.Exists(x => x.AccessType == AccessType.DirectLink || x.AccessType == AccessType.EmailLink);
     }
 
     public class SharingAccessHistoryItem
