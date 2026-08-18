@@ -4,6 +4,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -47,7 +48,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
                 StorageConnectionString = "UseDevelopmentStorage=true",
                 ContainerName = "test-container",
                 AsposeLicenseContainerName = "aspose-license-container",
-                LicenseBlobName = "license-blob"               
+                LicenseBlobName = "license-blob"
             };
 
             _httpContext = new DefaultHttpContext();
@@ -57,11 +58,17 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
                 _contextAccessorMock.Object,
                 _orchestratorMock.Object,
                 _loggerMock.Object,
-                _digitalCertificatesWebConfig);
+                _digitalCertificatesWebConfig)
+            {
+                ControllerContext = new ControllerContext
+                {
+                    HttpContext = _httpContext
+                }
+            };
         }
 
         [TearDown]
-        public void TearDown() => _sut.Dispose();        
+        public void TearDown() => _sut.Dispose();
 
         [Test]
         public void Index_ShouldRedirect_To_ExternalStartPage_WhenConfigured()
@@ -85,7 +92,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
 
             // Assert
             var viewResult = result as ViewResult;
-            viewResult.Should().NotBeNull();            
+            viewResult.Should().NotBeNull();
         }
 
         [Test]
@@ -237,29 +244,95 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
         }
 
         [Test]
-        public void Error_ShouldLogError_And_ReturnView()
+        public void Error_WhenExceptionExists_ShouldReturn500WithProblemReference()
         {
             // Arrange
-            var errorMessage = "Test error message";
-            var httpContext = new DefaultHttpContext { TraceIdentifier = "TestTraceIdentifier" };
-            _contextAccessorMock.Setup(c => c.HttpContext).Returns(httpContext);
+            const string problemReference = "TestTraceIdentifier";
+
+            _httpContext.TraceIdentifier = problemReference;
+
+            _httpContext.Features.Set<IExceptionHandlerPathFeature>(
+                new ExceptionHandlerFeature
+                {
+                    Error = new InvalidOperationException("Sensitive internal message"),
+                    Path = "/certificates/list"
+                });
 
             // Act
-            var result = _sut.Error(errorMessage) as ViewResult;
+            var result = _sut.Error();
 
             // Assert
-            _loggerMock.Verify(l => l.Log(
-                LogLevel.Error,
-                It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, _) => v.ToString().Contains(errorMessage)),
-                null,
-                It.IsAny<Func<It.IsAnyType, Exception, string>>()), Times.Once);
+            var viewResult = result.Should()
+                .BeOfType<ViewResult>()
+                .Subject;
 
-            result.Should().NotBeNull();
-            var model = result.Model as ErrorViewModel;
-            model.Should().NotBeNull();
-            model!.RequestId.Should().Be("TestTraceIdentifier");
-            model.ErrorMessage.Should().Be(errorMessage);
+            var model = viewResult.Model.Should()
+                .BeOfType<ErrorViewModel>()
+                .Subject;
+
+            _httpContext.Response.StatusCode.Should()
+                .Be(StatusCodes.Status500InternalServerError);
+
+            model.ProblemReference.Should().Be(problemReference);
+        }
+
+        [Test]
+        public void Error_WhenExceptionExists_ShouldLogExceptionAndProblemReference()
+        {
+            // Arrange
+            const string problemReference = "TestTraceIdentifier";
+
+            var exception = new InvalidOperationException(
+                "Sensitive internal message");
+
+            _httpContext.TraceIdentifier = problemReference;
+
+            _httpContext.Features.Set<IExceptionHandlerPathFeature>(
+                new ExceptionHandlerFeature
+                {
+                    Error = exception,
+                    Path = "/certificates/list"
+                });
+
+            // Act
+            _sut.Error();
+
+            // Assert
+            _loggerMock.Verify(
+                logger => logger.Log(
+                    LogLevel.Error,
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((value, _) =>
+                        value.ToString()!.Contains("/certificates/list") &&
+                        value.ToString()!.Contains(problemReference)),
+                    exception,
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+                Times.Once);
+        }
+
+        [Test]
+        public void Error_WhenNoExceptionFeatureExists_ShouldStillReturn500()
+        {
+            // Arrange
+            _httpContext.TraceIdentifier = "TestTraceIdentifier";
+
+            // Act
+            var result = _sut.Error();
+
+            // Assert
+            result.Should().BeOfType<ViewResult>();
+
+            _httpContext.Response.StatusCode.Should()
+                .Be(StatusCodes.Status500InternalServerError);
+
+            _loggerMock.Verify(
+                logger => logger.Log(
+                    It.IsAny<LogLevel>(),
+                    It.IsAny<EventId>(),
+                    It.IsAny<It.IsAnyType>(),
+                    It.IsAny<Exception?>(),
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+                Times.Never);
         }
 
         [Test]

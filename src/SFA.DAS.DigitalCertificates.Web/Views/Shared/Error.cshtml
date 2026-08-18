@@ -1,15 +1,51 @@
 ﻿@using SFA.DAS.DigitalCertificates.Web.ViewDataKeys
 @model ErrorViewModel
+
 @{
-    ViewData[ViewDataKeys.Title] = "Sorry";
+    ViewData[ViewDataKeys.Title] =
+        "Sorry, there is a problem with the service";
 }
 
 <div class="govuk-width-container">
-    <main class="govuk-main-wrapper govuk-main-wrapper--l" id="main-content" role="main">
+    <main class="govuk-main-wrapper govuk-main-wrapper--l"
+          id="main-content"
+          role="main">
+
         <div class="govuk-grid-row">
             <div class="govuk-grid-column-two-thirds">
-                <h1 class="govuk-heading-l">Sorry, this service is in testing</h1>
-                <p class="govuk-body">You'll be able to use the service from 9am on Monday 9 September 2026.</p>
+                <h1 class="govuk-heading-l">
+                    Sorry, there is a problem with the service
+                </h1>
+
+                <p class="govuk-body">
+                    Try again later.
+                </p>
+
+                <p class="govuk-body">
+                    You can contact us for support about your Apprenticeship certificates.
+                </p>
+
+                <p class="govuk-body">
+                    <strong>Email</strong><br />
+
+                    <a class="govuk-link"
+                       href="@Model.SupportEmailUrl">
+                        @ErrorViewModel.SupportEmailAddress
+                    </a>
+                </p>
+
+                <p class="govuk-body">
+                    <strong>Phone</strong><br />
+
+                    Phone: 0800 0150 600<br />
+                    Monday to Friday, 9am to 6pm<br />
+                </p>
+                <p class="govuk-body">
+                    <a class="govuk-link"
+                       href="https://www.gov.uk/call-charges">
+                        Find out about call charges
+                    </a>
+                </p>
             </div>
         </div>
     </main>
