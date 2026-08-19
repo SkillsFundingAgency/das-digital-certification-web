@@ -132,7 +132,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         }
 
         [AllowAnonymous]
-        [IgnoreAntiforgeryToken]
         [Route("error", Name = ErrorRouteGet)]
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
