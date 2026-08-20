@@ -99,7 +99,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             _configMock.Setup(c => c["StubAuth"]).Returns("false");
 
             // Act
-            var actionResult = await _sut.SigningOut();
+            var actionResult = await _sut.ServiceSignOut();
 
             // Assert
             var signOut = actionResult as SignOutResult;
@@ -113,26 +113,6 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
 
             signOut.Properties.Parameters.Should().ContainKey(OpenIdConnectParameterNames.IdTokenHint);
             signOut.Properties.Parameters[OpenIdConnectParameterNames.IdTokenHint].Should().Be(idToken);
-        }
-
-        [Test]
-        public void SignedOut_ShouldDeleteAuthCookie()
-        {
-            // Arrange
-            var httpContext = new Mock<HttpContext>();
-            var responseMock = new Mock<HttpResponse>();
-            var responseCookiesMock = new Mock<IResponseCookies>();
-
-            httpContext.Setup(c => c.Response).Returns(responseMock.Object);
-            responseMock.Setup(r => r.Cookies).Returns(responseCookiesMock.Object);
-
-            _contextAccessorMock.Setup(c => c.HttpContext).Returns(httpContext.Object);
-
-            // Act
-            _sut.SignedOut();
-
-            // Assert
-            responseCookiesMock.Verify(c => c.Delete("SFA.DAS.DigitalCertificates.Web.Auth"), Times.Once);
         }
     }
 }

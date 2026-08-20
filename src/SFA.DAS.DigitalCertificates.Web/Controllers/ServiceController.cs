@@ -23,11 +23,12 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         private readonly IConfiguration _config;
 
         #region Routes
-        public const string SigningOutRouteGet = nameof(SigningOutRouteGet);
+        public const string SignOutRouteGet = nameof(SignOutRouteGet);
         public const string SignedOutRouteGet = nameof(SignedOutRouteGet);
         #endregion Routes
 
-        public ServiceController(IUserService userService, ICacheService cacheService, ISessionService sessionService, IConfiguration config, IHttpContextAccessor contextAccessor)
+        public ServiceController(IUserService userService, ICacheService cacheService, ISessionService sessionService, 
+            IConfiguration config, IHttpContextAccessor contextAccessor)
             : base(contextAccessor)
         {
             _userService = userService;
@@ -36,9 +37,9 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             _config = config;
         }
 
-        [Route("signout", Name = SigningOutRouteGet)]
+        [Route("signout", Name = SignOutRouteGet)]
         [Authorize(Policy = nameof(PolicyNames.IsAuthenticated))]
-        public async Task<IActionResult> SigningOut()
+        public async Task<IActionResult> ServiceSignOut()
         {
             if (HttpContextAccessor?.HttpContext == null)
             {
@@ -61,14 +62,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
 
             var govUkIdentifier = _userService.GetGovUkIdentifier();
 
-            // TODO: Investigate where best to store user, cache or session
             await _cacheService.ClearUser(govUkIdentifier);
-            
-            // TODO: Either this clear or the global clear below not both
             await _sessionService.ClearSessionDataAsync();
-
-            // TODO: This has been added back in for testing as was removed by mistake
-            HttpContextAccessor.HttpContext?.Session?.Clear();
 
             return SignOut(
                 authenticationProperties,
@@ -78,13 +73,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         [Route("signed-out", Name = SignedOutRouteGet)]
         public IActionResult SignedOut()
         {
-            if (HttpContextAccessor?.HttpContext == null)
-            {
-                throw new InvalidOperationException("No HttpContext available.");
-            }
-
-            HttpContextAccessor.HttpContext.Response.Cookies.Delete("SFA.DAS.DigitalCertificates.Web.Auth");
-
             return View();
         }
     }
