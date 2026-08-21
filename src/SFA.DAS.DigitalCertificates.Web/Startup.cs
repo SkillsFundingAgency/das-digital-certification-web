@@ -102,7 +102,7 @@ namespace SFA.DAS.DigitalCertificates.Web
 #endif
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, LinkGenerator linkGenerator)
+        public static void Configure(IApplicationBuilder app, IWebHostEnvironment env, LinkGenerator linkGenerator)
         {
             if (env.IsDevelopment())
             {
@@ -110,26 +110,7 @@ namespace SFA.DAS.DigitalCertificates.Web
             }
             else
             {
-                app.UseExceptionHandler(errorApp =>
-                {
-                    errorApp.Run(async context =>
-                    {
-                        var exceptionFeature = context.Features.Get<IExceptionHandlerFeature>();
-                        var exception = exceptionFeature?.Error;
-                        var errorMessage = exception?.Message ?? "An unexpected error occurred";
-
-                        var query = new RouteValueDictionary(new { errorMessage = errorMessage });
-                        var url = linkGenerator.GetPathByName(HomeController.ErrorRouteGet, query);
-
-                        if (url != null)
-                        {
-                            context.Response.Redirect(url);
-                        }
-
-                        await Task.CompletedTask;
-                    });
-                });
-
+                app.UseExceptionHandler("/error");
                 // HSTS configured to 90 days in ConfigureServices.
                 app.UseHsts();
             }
