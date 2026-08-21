@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Moq;
 using NUnit.Framework;
@@ -19,21 +20,24 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
     [TestFixture]
     public class ServiceControllerTests
     {
-        private Mock<IConfiguration> _configMock;
-        private Mock<IHttpContextAccessor> _contextAccessorMock;
         private Mock<IUserService> _userServiceMock;
         private Mock<ICacheService> _cacheServiceMock;
         private Mock<ISessionService> _sessionServiceMock;
+        private Mock<IConfiguration> _configMock;
+        private Mock<ILogger<ServiceController>> _loggerMock;
+        private Mock<IHttpContextAccessor> _contextAccessorMock;
+
         private ServiceController _sut;
 
         [SetUp]
         public void Setup()
         {
-            _configMock = new Mock<IConfiguration>();
-            _contextAccessorMock = new Mock<IHttpContextAccessor>();
             _userServiceMock = new Mock<IUserService>();
             _cacheServiceMock = new Mock<ICacheService>();
             _sessionServiceMock = new Mock<ISessionService>();
+            _configMock = new Mock<IConfiguration>();
+            _loggerMock = new Mock<ILogger<ServiceController>>();
+            _contextAccessorMock = new Mock<IHttpContextAccessor>();
 
             _sessionServiceMock.Setup(s => s.ClearSessionDataAsync()).Returns(Task.CompletedTask);
 
@@ -42,6 +46,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
                 _cacheServiceMock.Object,
                 _sessionServiceMock.Object,
                 _configMock.Object,
+                _loggerMock.Object,
                 _contextAccessorMock.Object
             );
         }

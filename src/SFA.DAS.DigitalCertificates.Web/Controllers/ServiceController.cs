@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using SFA.DAS.DigitalCertificates.Web.Services;
 using SFA.DAS.GovUK.Auth.Authentication;
@@ -21,6 +22,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         private readonly ICacheService _cacheService;
         private readonly ISessionService _sessionService;
         private readonly IConfiguration _config;
+        private readonly ILogger<ServiceController> _logger;
 
         #region Routes
         public const string SignOutRouteGet = nameof(SignOutRouteGet);
@@ -28,29 +30,40 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         #endregion Routes
 
         public ServiceController(IUserService userService, ICacheService cacheService, ISessionService sessionService, 
-            IConfiguration config, IHttpContextAccessor contextAccessor)
+            IConfiguration config, ILogger<ServiceController> logger, IHttpContextAccessor contextAccessor)
             : base(contextAccessor)
         {
             _userService = userService;
             _cacheService = cacheService;
             _sessionService = sessionService;
             _config = config;
+            _logger = logger;
         }
 
         [Route("signout", Name = SignOutRouteGet)]
         [Authorize(Policy = nameof(PolicyNames.IsAuthenticated))]
         public async Task<IActionResult> ServiceSignOut()
         {
-            if (HttpContextAccessor?.HttpContext == null)
+            var govUkIdentifier = _userService.GetGovUkIdentifier();
+            if (govUkIdentifier != null)
             {
-                throw new InvalidOperationException("No HttpContext available.");
+                await TryCleanupAsync(
+                    () => _cacheService.ClearUser(govUkIdentifier),
+                    "Failed to clear the user cache during sign out.");
             }
 
-
-            var idToken = await HttpContextAccessor.HttpContext.GetTokenAsync(OpenIdConnectParameterNames.IdToken);
+            await TryCleanupAsync(
+                () => _sessionService.ClearSessionDataAsync(),
+                "Failed to clear session data during sign out.");
 
             var authenticationProperties = new AuthenticationProperties();
-            authenticationProperties.Parameters[OpenIdConnectParameterNames.IdTokenHint] = idToken;
+
+            var idToken = await HttpContext.GetTokenAsync(OpenIdConnectParameterNames.IdToken);
+            if (!string.IsNullOrWhiteSpace(idToken))
+            {
+                authenticationProperties.Parameters[
+                    OpenIdConnectParameterNames.IdTokenHint] = idToken;
+            }
 
             var authenticationSchemes = new[] { CookieAuthenticationDefaults.AuthenticationScheme };
             if (!bool.TryParse(_config["StubAuth"], out var stubAuth) || !stubAuth)
@@ -59,11 +72,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
                     .Append(OpenIdConnectDefaults.AuthenticationScheme)
                     .ToArray();
             }
-
-            var govUkIdentifier = _userService.GetGovUkIdentifier();
-
-            await _cacheService.ClearUser(govUkIdentifier);
-            await _sessionService.ClearSessionDataAsync();
 
             return SignOut(
                 authenticationProperties,
@@ -74,6 +82,18 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         public IActionResult SignedOut()
         {
             return View();
+        }
+
+        private async Task TryCleanupAsync(Func<Task> cleanup, string warningMessage)
+        {
+            try
+            {
+                await cleanup();
+            }
+            catch (Exception exception)
+            {
+                _logger.LogWarning(exception, "{WarningMessage}", warningMessage);
+            }
         }
     }
 }
