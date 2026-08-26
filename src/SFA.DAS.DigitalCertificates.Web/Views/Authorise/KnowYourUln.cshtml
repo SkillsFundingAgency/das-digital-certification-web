@@ -28,8 +28,20 @@
                                 <h1 class="govuk-fieldset__heading">Do you know your unique learner number?</h1>
                             </legend>
 
-                            <div id="KnowUln-hint" class="govuk-hint">
-                                Your unique learner number is 10 digits and made of only numbers.
+                            <div>
+                                <details class="govuk-details" data-module="govuk-details">
+                                    <summary class="govuk-details__summary">
+                                        <span class="govuk-details__summary-text">How to find your unique learner number</span>
+                                    </summary>
+                                    <div class="govuk-details__text">
+                                        Your training provider can give you your unique learner number, or it may be printed on your exam certificates or results slips.
+                                        If you do not have your unique learner number, you can answer more questions so that we can match your information.
+                                    </div>
+                                </details>
+
+                                <div id="KnowUln-hint" class="govuk-hint">
+                                    Your unique learner number is 10 digits and made of only numbers.
+                                </div>
                             </div>
 
                             <div class="govuk-radios" data-module="govuk-radios">
@@ -59,7 +71,7 @@
                                 <div class="govuk-radios__item">
                                     <input asp-for="KnowUln" id="KnowUln-No" class="govuk-radios__input" type="radio"
                                            value="false" aria-describedby="KnowUln-error" />
-                                    <label class="govuk-label govuk-radios__label" for="KnowUln-No">No</label>
+                                    <label class="govuk-label govuk-radios__label" for="KnowUln-No">No, I'll answer more questions</label>
                                 </div>
 
                             </div>
