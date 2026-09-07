@@ -165,7 +165,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             var model = new SelectCourseViewModel
             {
                 SelectedCourseCode = answers?.CourseCode,
-                SelectedCourseUnknown = answers?.CourseUnknown,
                 Courses = courseOptions,
                 IsReturningToCheck = answers?.IsReturningToCheck == true,
                 IsShortJourney = answers?.IsShortJourney == true
@@ -177,17 +176,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         public async Task<SelectCourseViewModel> SaveSelectedCourseAsync(SelectCourseViewModel viewModel)
         {
             var answers = await _sessionService.GetAuthorisationAnswersAsync() ?? new AuthorisationAnswers();
-            if (viewModel.SelectedCourseUnknown == true)
-            {
-                answers.CourseUnknown = true;
-                answers.CourseCode = null;
-                answers.CourseName = null;
-            }
-            else
-            {
-                answers.CourseUnknown = false;
-                answers.CourseCode = viewModel.SelectedCourseCode?.Trim();
-            }
+            answers.CourseUnknown = false;
+            answers.CourseCode = viewModel.SelectedCourseCode?.Trim();
 
             var matches = await GetMatchesAsync();
             var courseOptions = MapMatchesToCourseOptions(matches);
