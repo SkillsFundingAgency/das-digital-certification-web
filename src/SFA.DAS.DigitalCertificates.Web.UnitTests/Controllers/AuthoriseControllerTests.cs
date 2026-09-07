@@ -686,67 +686,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
         }
 
         [Test]
-        public async Task Locked_Unauthenticated_Redirects_To_AccessDenied()
-        {
-            // Arrange
-            var httpContext = new DefaultHttpContext();
-            _sut.ControllerContext = new ControllerContext { HttpContext = httpContext };
-
-            // Act
-            var result = await _sut.Locked();
-
-            // Assert
-            result.Should().BeOfType<RedirectToActionResult>();
-            var redirect = result as RedirectToActionResult;
-            redirect.ActionName.Should().Be(nameof(HomeController.AccessDenied));
-            redirect.ControllerName.Should().Be("Home");
-        }
-
-        [Test]
-        public async Task Locked_Authenticated_With_UlnAuthorisation_Redirects_To_Certificates()
-        {
-            // Arrange
-            var httpContext = new DefaultHttpContext();
-            var principal = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, "1") }, "TestAuth"));
-            httpContext.User = principal;
-            _sut.ControllerContext = new ControllerContext { HttpContext = httpContext };
-
-            _sessionServiceMock.Setup(s => s.GetUlnAuthorisationAsync()).ReturnsAsync(new UlnAuthorisation { AuthorisationId = Guid.NewGuid(), AuthorisedAt = DateTime.UtcNow, Uln = "123" });
-
-            // Act
-            var result = await _sut.Locked();
-
-            // Assert
-            result.Should().BeOfType<RedirectToRouteResult>();
-            var redirect = result as RedirectToRouteResult;
-            redirect.RouteName.Should().Be(CertificatesController.CertificatesListRouteGet);
-        }
-
-        [Test]
-        public async Task Locked_Authenticated_No_Uln_With_Existing_Reference_Returns_Shutter()
-        {
-            // Arrange
-            var httpContext = new DefaultHttpContext();
-            var principal = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, "1") }, "TestAuth"));
-            httpContext.User = principal;
-            _sut.ControllerContext = new ControllerContext { HttpContext = httpContext };
-
-            _sessionServiceMock.Setup(s => s.GetUlnAuthorisationAsync()).ReturnsAsync((UlnAuthorisation)null);
-            _orchestratorMock.Setup(o => o.GetLatestUserActionReferenceAsync(ActionType.NotMatched)).ReturnsAsync("LOCK-REF");
-
-            // Act
-            var result = await _sut.Locked();
-
-            // Assert
-            result.Should().BeOfType<ViewResult>();
-            var view = result as ViewResult;
-            view.ViewName.Should().Be("ShutterPage");
-            var model = view.Model as CannotMatchViewModel;
-            model.ReferenceNumber.Should().Be("LOCK-REF");
-        }
-
-        [Test]
-        public async Task Locked_Authenticated_No_Uln_With_NoExistingReference_Creates_And_Returns_Shutter()
+        public async Task CannotMatch_Authenticated_No_Uln_With_NoExistingReference_Creates_And_Returns_Shutter()
         {
             // Arrange
             var httpContext = new DefaultHttpContext();
@@ -759,7 +699,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             _orchestratorMock.Setup(o => o.CreateUserActionForCannotMatchAsync(ActionType.NotMatched)).ReturnsAsync("CREATED-REF");
 
             // Act
-            var result = await _sut.Locked();
+            var result = await _sut.CannotMatch();
 
             // Assert
             _orchestratorMock.Verify(o => o.CreateUserActionForCannotMatchAsync(ActionType.NotMatched), Times.Once);
