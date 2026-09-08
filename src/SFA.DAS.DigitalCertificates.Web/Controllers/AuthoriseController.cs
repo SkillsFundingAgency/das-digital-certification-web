@@ -29,7 +29,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         public const string CheckAnswersRoutePost = nameof(CheckAnswersRoutePost);
         public const string KnowYearRouteGet = nameof(KnowYearRouteGet);
         public const string KnowYearRoutePost = nameof(KnowYearRoutePost);
-        public const string CannotMatchRouteGet = nameof(CannotMatchRouteGet);
+        public const string ContactSupportRouteGet = nameof(ContactSupportRouteGet);
         public const string LockedOutRouteGet = nameof(LockedOutRouteGet);
         public const string NotFoundRouteGet = nameof(NotFoundRouteGet);
         #endregion
@@ -114,7 +114,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             var model = await _authoriseOrchestrator.GetSelectCourseViewModelAsync();
             if (model == null || model.Courses == null || !model.Courses.Any())
             {
-                return await RedirectToNotFoundAsync();
+                return await RedirectToContactSupportAsync();
             }
 
             return View(model);
@@ -222,7 +222,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
                     TempData.AddFlashMessage($"We've matched your information to these courses.", string.Empty, TempDataDictionaryExtensions.FlashMessageLevel.Success);
                     return RedirectToRoute(CertificatesController.CertificatesListRouteGet);
                 case MatchOutcome.Locked:
-                    return await RedirectToCannotMatchAsync();
+                    return await RedirectToContactSupportAsync();
                 case MatchOutcome.NoMatch:
                 default:
                     var answers = await _sessionService.GetAuthorisationAnswersAsync() ?? new AuthorisationAnswers();
@@ -230,12 +230,12 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             }
         }
 
-        private async Task<IActionResult> RedirectToCannotMatchAsync()
+        private async Task<IActionResult> RedirectToContactSupportAsync()
         {
             await _authoriseOrchestrator.CreateUserActionForCannotMatchAsync(ActionType.NotMatched);
             await _sessionService.ClearAuthorisationAnswersAsync();
 
-            return RedirectToRoute(CannotMatchRouteGet);
+            return RedirectToRoute(ContactSupportRouteGet);
         }
 
         private async Task<IActionResult> RedirectToNotFoundAsync()
@@ -262,9 +262,9 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             return RedirectToRoute(CheckAnswersRouteGet);
         }
 
-        [HttpGet("cannot-match", Name = CannotMatchRouteGet)]
+        [HttpGet("contact-support", Name = ContactSupportRouteGet)]
         [AllowAnonymous]
-        public async Task<IActionResult> CannotMatch()
+        public async Task<IActionResult> ContactSupport()
         {
             if (User?.Identity?.IsAuthenticated != true)
             {

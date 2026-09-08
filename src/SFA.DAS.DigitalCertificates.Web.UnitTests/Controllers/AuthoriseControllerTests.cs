@@ -202,7 +202,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             _orchestratorMock.Verify(o => o.GetSelectCourseViewModelAsync(), Times.Once);
             result.Should().BeOfType<RedirectToRouteResult>();
             var redirect = result as RedirectToRouteResult;
-            redirect.RouteName.Should().Be(AuthoriseController.NotFoundRouteGet);
+            redirect.RouteName.Should().Be(AuthoriseController.ContactSupportRouteGet);
         }
 
         [Test]
@@ -219,7 +219,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             _orchestratorMock.Verify(o => o.GetSelectCourseViewModelAsync(), Times.Once);
             result.Should().BeOfType<RedirectToRouteResult>();
             var redirect = result as RedirectToRouteResult;
-            redirect.RouteName.Should().Be(AuthoriseController.NotFoundRouteGet);
+            redirect.RouteName.Should().Be(AuthoriseController.ContactSupportRouteGet);
         }
 
         [Test]
@@ -496,7 +496,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
         }
 
         [Test]
-        public async Task CheckAnswersPost_Locked_Clears_Session_And_Redirects_To_CannotMatch()
+        public async Task CheckAnswersPost_Locked_Clears_Session_And_Redirects_To_ContactSupport()
         {
             // Arrange
             _orchestratorMock.Setup(o => o.SubmitCheckAnswersAsync()).ReturnsAsync(MatchOutcome.Locked);
@@ -509,7 +509,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             _sessionServiceMock.Verify(s => s.ClearAuthorisationAnswersAsync(), Times.Once);
             result.Should().BeOfType<RedirectToRouteResult>();
             var redirect = result as RedirectToRouteResult;
-            redirect.RouteName.Should().Be(AuthoriseController.CannotMatchRouteGet);
+            redirect.RouteName.Should().Be(AuthoriseController.ContactSupportRouteGet);
         }
 
         [Test]
@@ -571,7 +571,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             _sut.ControllerContext = new ControllerContext { HttpContext = httpContext };
 
             // Act
-            var result = await _sut.CannotMatch();
+            var result = await _sut.ContactSupport();
 
             // Assert
             result.Should().BeOfType<RedirectToActionResult>();
@@ -592,7 +592,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             _sessionServiceMock.Setup(s => s.GetUlnAuthorisationAsync()).ReturnsAsync(new UlnAuthorisation { AuthorisationId = Guid.NewGuid(), AuthorisedAt = DateTime.UtcNow, Uln = "123" });
 
             // Act
-            var result = await _sut.CannotMatch();
+            var result = await _sut.ContactSupport();
 
             // Assert
             result.Should().BeOfType<RedirectToRouteResult>();
@@ -613,7 +613,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             _orchestratorMock.Setup(o => o.GetLatestUserActionReferenceAsync(ActionType.NotMatched)).ReturnsAsync("REF123");
 
             // Act
-            var result = await _sut.CannotMatch();
+            var result = await _sut.ContactSupport();
 
             // Assert
             result.Should().BeOfType<ViewResult>();
