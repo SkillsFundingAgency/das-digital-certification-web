@@ -1,7 +1,8 @@
 ﻿@using SFA.DAS.DigitalCertificates.Web.Controllers
+@using SFA.DAS.DigitalCertificates.Web.ViewDataKeys
 @model SFA.DAS.DigitalCertificates.Web.Models.Sharing.CookiesViewModel;
 @{
-    ViewBag.Title = "Cookie settings";
+    ViewData[ViewDataKeys.Title] = "Cookies";
     ViewBag.PageID = "page-cookie-settings";
     ViewBag.GaData.Vpv = "/page-cookie-settings";
 }
@@ -29,7 +30,7 @@
                 </div>
             </div>        
         
-        <h1 class="govuk-heading-xl govuk-!-margin-bottom-8">Cookies</h1>
+        <h1 class="govuk-heading-xl govuk-!-margin-bottom-8">@ViewData[ViewDataKeys.Title]</h1>
         <p class="govuk-body">
             Cookies are small files saved on your phone, tablet or computer when you visit a website.
         </p>

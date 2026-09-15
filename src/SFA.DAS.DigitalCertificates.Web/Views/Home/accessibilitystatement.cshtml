@@ -1,5 +1,9 @@
 ﻿@using SFA.DAS.DigitalCertificates.Web.Models.Sharing
+@using SFA.DAS.DigitalCertificates.Web.ViewDataKeys
 @model PageViewModel
+@{
+    ViewData[ViewDataKeys.Title] = "Accessibility statement for Apprenticeship certificates";
+}
 
 @await Html.PartialAsync("_BackLink", Model)
 
@@ -7,7 +11,7 @@
 <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
         <h1 class="govuk-heading-xl">
-            Accessibility statement for Apprenticeship certificates
+            @ViewData[ViewDataKeys.Title]
         </h1>
 
         <p class="govuk-body">

@@ -1,5 +1,9 @@
 ﻿@using SFA.DAS.DigitalCertificates.Web.Models.Sharing
+@using SFA.DAS.DigitalCertificates.Web.ViewDataKeys
 @model PageViewModel
+@{
+    ViewData[ViewDataKeys.Title] = "Get help with apprenticeship certificates";
+}
 
 @await Html.PartialAsync("_BackLink", Model)
 
