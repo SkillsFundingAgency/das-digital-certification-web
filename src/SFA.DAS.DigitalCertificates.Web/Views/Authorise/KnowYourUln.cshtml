@@ -23,7 +23,7 @@
 
                         <span class="govuk-caption-l">Matching your information</span>
                         
-                        <fieldset class="govuk-fieldset" aria-describedby="KnowUln-hint">
+                        <fieldset class="govuk-fieldset" aria-describedby="KnowUln-hint KnowUln-error">
                             <legend class="govuk-fieldset__legend govuk-fieldset__legend--l">
                                 <h1 class="govuk-fieldset__heading">Do you know your unique learner number?</h1>
                             </legend>
@@ -37,8 +37,7 @@
 
                                 <div class="govuk-radios__item">
                                     <input asp-for="KnowUln" id="KnowUln" class="govuk-radios__input" type="radio"
-                                           value="true" data-aria-controls="conditional-KnowUln"
-                                           aria-describedby="KnowUln-error" />
+                                           value="true" data-aria-controls="conditional-KnowUln" />
                                     <label class="govuk-label govuk-radios__label" for="KnowUln">Yes</label>
                                 </div>
 
@@ -50,6 +49,7 @@
                                         <p id="Uln-error" das-validation-for="Uln" class="govuk-error-message"></p>
                                         <input asp-for="Uln" data-default-value="@Model?.Uln"
                                               aria-describedby="Uln-error" class="govuk-input govuk-!-width-two-thirds"
+                                              type="text"
                                               maxlength="10"
                                               inputmode="numeric"
                                               pattern="[0-9]*" />
@@ -58,7 +58,7 @@
 
                                 <div class="govuk-radios__item">
                                     <input asp-for="KnowUln" id="KnowUln-No" class="govuk-radios__input" type="radio"
-                                           value="false" aria-describedby="KnowUln-error" />
+                                           value="false" />
                                     <label class="govuk-label govuk-radios__label" for="KnowUln-No">No</label>
                                 </div>
 
