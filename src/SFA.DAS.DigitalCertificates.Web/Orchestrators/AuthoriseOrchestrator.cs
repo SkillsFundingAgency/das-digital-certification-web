@@ -477,6 +477,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             if (matchResult.Outcome == MatchOutcome.SingleMatch || matchResult.Outcome == MatchOutcome.MultipleMatches)
             {
                 var matchResultMatch = matchResult.Match!;
+                var isUlnMatched = answers.Uln != null && matchResultMatch.Uln == answers.Uln.Value;
+
                 await Mediator.Send(new SubmitMatchCommand
                 {
                     UserId = userId.Value,
@@ -490,7 +492,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                     ProviderName = matchResultMatch.ProviderName,
                     Ukprn = matchResultMatch.Ukprn.HasValue ? (int?)matchResultMatch.Ukprn.Value : null,
                     IsMatched = true,
-                    IsFailed = false
+                    IsFailed = false,
+                    IsUlnMatched = isUlnMatched
                 });
 
                 await Mediator.Send(new AuthoriseUserCommand
@@ -519,7 +522,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 ProviderName = answers.ProviderName,
                 Ukprn = answers.ProviderUkprn.HasValue ? (int?)answers.ProviderUkprn.Value : null,
                 IsMatched = false,
-                IsFailed = updatedFailedCount >= failedLimit
+                IsFailed = updatedFailedCount >= failedLimit,
+                IsUlnMatched = answers.Uln != null && matches.Matches.Any(m => m.Uln == answers.Uln.Value)
             });
 
             if (updatedFailedCount >= failedLimit)
