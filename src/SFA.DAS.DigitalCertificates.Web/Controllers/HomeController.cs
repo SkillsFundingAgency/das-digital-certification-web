@@ -133,7 +133,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         public IActionResult Error(string errorMessage)
         {
             _logger.LogError(errorMessage.SanitizeLogData());
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContextAccessor?.HttpContext?.TraceIdentifier, ErrorMessage = errorMessage });
+            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext?.TraceIdentifier, ErrorMessage = errorMessage });
         }
 
         private string GetSafeReturnUrl(string? returnUrl, string fallbackUrl = "")

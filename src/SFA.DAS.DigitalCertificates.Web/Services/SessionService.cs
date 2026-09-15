@@ -54,6 +54,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
             {
                 return JsonSerializer.Deserialize<List<Certificate>>(json);
             }
+
             Guid? userId = _userService.GetUserId();
             if (userId == null)
             {
@@ -67,8 +68,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
             }
 
             var response = await _mediator.Send(new GetCertificatesQuery { UserId = userId.Value });
-            var result = response as GetCertificatesQueryResult;
-            var certificates = result?.Certificates;
+            var certificates = response?.Certificates;
 
             if (certificates != null)
             {
@@ -86,6 +86,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
             {
                 return JsonSerializer.Deserialize<UlnAuthorisation>(json);
             }
+
             Guid? userId = _userService.GetUserId();
             if (userId == null)
             {
@@ -99,8 +100,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
             }
 
             var response = await _mediator.Send(new GetCertificatesQuery { UserId = userId.Value });
-            var result = response as GetCertificatesQueryResult;
-            var authorisation = result?.Authorisation;
+            var authorisation = response?.Authorisation;
 
             if (authorisation != null)
             {
@@ -137,6 +137,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
             await _sessionStorageService.ClearAsync(ShareEmailKey);
             await _sessionStorageService.ClearAsync(OwnedCertificatesKeyPrefix);
             await _sessionStorageService.ClearAsync(UlnAuthorisationKeyPrefix);
+            await _sessionStorageService.ClearAsync(AuthorisationAnswersKeyPrefix);
             await _sessionStorageService.ClearAsync(RecordedSharingAccessKey);
             await _sessionStorageService.ClearAsync(DeliveryAddressKeyPrefix);
             await _sessionStorageService.ClearAsync(ContactReferenceKey);
