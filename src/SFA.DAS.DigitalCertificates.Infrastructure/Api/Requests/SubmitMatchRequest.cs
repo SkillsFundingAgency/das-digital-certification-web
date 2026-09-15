@@ -17,5 +17,6 @@ namespace SFA.DAS.DigitalCertificates.Infrastructure.Api.Requests
 
         public bool IsMatched { get; set; }
         public bool IsFailed { get; set; }
+        public bool IsUlnMatched { get; set; }
     }
 }
