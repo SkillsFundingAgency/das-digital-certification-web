@@ -13,9 +13,11 @@
     <main class="govuk-main-wrapper" id="main-content">
         <div class="govuk-grid-row">
             <div class="govuk-grid-column-two-thirds">
-                <h1 class="govuk-heading-l">
+                <h1 class="govuk-label-wrapper">
                     <span class="govuk-caption-l">@Model.CourseName</span>
-                    Select the address that you’d like us to send your certificate to
+                    <label class="govuk-label govuk-label--l" for="SearchTerm">
+                        Select the address that you’d like us to send your certificate to
+                    </label>
                 </h1>
 
                 <div class="govuk-inset-text">It will be addressed to @Model.FullName</div>
