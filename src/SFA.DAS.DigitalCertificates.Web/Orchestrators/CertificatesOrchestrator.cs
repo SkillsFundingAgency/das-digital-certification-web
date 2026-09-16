@@ -11,6 +11,7 @@ using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using SFA.DAS.DigitalCertificates.Application.Commands.CreateUserAction;
+using Microsoft.Extensions.Logging;
 using SFA.DAS.DigitalCertificates.Application.Commands.RequestPrintCertificate;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetFrameworkCertificate;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetLocations;
@@ -34,6 +35,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         private readonly IBlobService _blob;
         private readonly IAsposeLicenseService _asposeLicenseService;   
         private readonly IDownloadCertificateService _downloadCertificateService;
+        private readonly ILogger<CertificatesOrchestrator> _logger;
         private const string Level = "Level";
         private const string FullName = "Full Name";
         private const string PassedInfo = "Passed info";
@@ -43,16 +45,17 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         private readonly IValidator<SelectAddressViewModel> _selectAddressValidator;
         private readonly IValidator<AddAddressManualViewModel> _addAddressValidator;
 
-        public CertificatesOrchestrator(IMediator mediator, 
-            IHttpContextAccessor httpContextAccessor, 
-            ISessionService sessionService, 
+        public CertificatesOrchestrator(IMediator mediator,
+            IHttpContextAccessor httpContextAccessor,
+            ISessionService sessionService,
             IUserService userService,
             IValidator<SelectAddressViewModel> selectAddressValidator,
             IValidator<AddAddressManualViewModel> addAddressValidator,
             IBlobService blob,
             IAsposeLicenseService apposeLicenseService,
             DigitalCertificatesWebConfiguration digitalCertificatesPdfConfiguration,
-            IDownloadCertificateService downloadCertificateService)
+            IDownloadCertificateService downloadCertificateService,
+            ILogger<CertificatesOrchestrator> logger)
             : base(mediator, httpContextAccessor)
         {
             _sessionService = sessionService;
@@ -63,6 +66,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             _downloadCertificateService = downloadCertificateService;
             _selectAddressValidator = selectAddressValidator;
             _addAddressValidator = addAddressValidator;
+            _logger = logger;
         }
 
         public async Task<CertificatesListViewModel> GetCertificatesListViewModel()
@@ -205,10 +209,11 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 [CertificateNumber] = model.CertificateNumber
             };
 
+            string? templateBlobName = null;
             if (model.CertificateType == CertificateType.Standard)
             {
-                templateBytes = model.CoronationEmblem ? await _blob.GetBlobBytesAsync(_digitalCertificatesWebConfiguration.ContainerName, _digitalCertificatesWebConfiguration.GreenStandardTemplateBlobName)
-                                                        : await _blob.GetBlobBytesAsync(_digitalCertificatesWebConfiguration.ContainerName, _digitalCertificatesWebConfiguration.StandardTemplateBlobName);
+                templateBlobName = model.CoronationEmblem ? _digitalCertificatesWebConfiguration.GreenStandardTemplateBlobName : _digitalCertificatesWebConfiguration.StandardTemplateBlobName;
+                templateBytes = await _blob.GetBlobBytesAsync(_digitalCertificatesWebConfiguration.ContainerName, templateBlobName);
                 values.Add(AchievedGrade, model.OverallGrade?.ToUpper() ?? string.Empty);
                 values.Add(PassedInfo, string.Join(Environment.NewLine,
                     new[]
@@ -220,7 +225,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             }
             else if (model.CertificateType == CertificateType.Framework)
             {
-                templateBytes = await _blob.GetBlobBytesAsync(_digitalCertificatesWebConfiguration.ContainerName, _digitalCertificatesWebConfiguration.FrameworkTemplateBlobName);
+                templateBlobName = _digitalCertificatesWebConfiguration.FrameworkTemplateBlobName;
+                templateBytes = await _blob.GetBlobBytesAsync(_digitalCertificatesWebConfiguration.ContainerName, templateBlobName);
                 values.Add(PassedInfo, string.Join(Environment.NewLine,
                         new[]
                         {
@@ -234,7 +240,12 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             {
                 throw new InvalidOperationException("Template bytes were not loaded.");
             }
-                       
+
+            if (!string.IsNullOrWhiteSpace(templateBlobName))
+            {
+                _logger.LogInformation("Generating certificate for CertificateNumber={CertificateNumber} using templateBlob={TemplateBlob}", model.CertificateNumber, templateBlobName);
+            }
+
             var output = await CreatePDFMemoryStream(templateBytes, values);
             return output.ToArray();
         }

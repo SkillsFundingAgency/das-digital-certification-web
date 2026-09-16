@@ -7,6 +7,7 @@ using FluentAssertions;
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
 using SFA.DAS.DigitalCertificates.Application.Commands.CreateUserAction;
@@ -34,6 +35,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
         private Mock<IBlobService> _blobServiceMock;
         private Mock<IAsposeLicenseService> _asposeLicenseServiceMock;
         private Mock<IDownloadCertificateService> _downloadCertificateServiceMock;
+        private Mock<ILogger<CertificatesOrchestrator>> _loggerMock;
         private DigitalCertificatesWebConfiguration _digitalCertificatesWebConfig;
 
         private CertificatesOrchestrator _sut;
@@ -51,6 +53,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
             _blobServiceMock = new Mock<IBlobService>();
             _asposeLicenseServiceMock = new Mock<IAsposeLicenseService>();
             _downloadCertificateServiceMock = new Mock<IDownloadCertificateService>();
+            _loggerMock = new Mock<ILogger<CertificatesOrchestrator>>();
             _digitalCertificatesWebConfig = new DigitalCertificatesWebConfiguration
             {
                 ServiceBaseUrl = "https://test.local",
@@ -86,7 +89,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
                 _blobServiceMock.Object,
                 _asposeLicenseServiceMock.Object,
                 _digitalCertificatesWebConfig,
-                _downloadCertificateServiceMock.Object);
+                _downloadCertificateServiceMock.Object,
+                _loggerMock.Object);
         }
 
         private void SetupUserClaims(
