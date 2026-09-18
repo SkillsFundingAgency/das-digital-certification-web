@@ -25,7 +25,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         public const string VerifiedRouteGet = nameof(VerifiedRouteGet);
         public const string CheckRouteGet = nameof(CheckRouteGet);
         public const string HelpRouteGet = nameof(HelpRouteGet);
-        public const string LockedRouteGet = nameof(LockedRouteGet);
         public const string CookiesRouteGet = nameof(CookiesRouteGet);
         public const string CookiesRoutePost = nameof(CookiesRoutePost);
         public const string CookieDetailsRouteGet = nameof(CookieDetailsRouteGet);
@@ -69,12 +68,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             return RedirectToRoute(CertificatesController.CertificatesListRouteGet);
         }
 
-        [Route("locked", Name = LockedRouteGet)]
-        [Authorize(Policy = nameof(PolicyNames.IsAuthenticated))]
-        public IActionResult Locked()
-        {
-            return View();
-        }
+        
 
         [AllowAnonymous]
         [Route("cookies", Name = CookiesRouteGet)]

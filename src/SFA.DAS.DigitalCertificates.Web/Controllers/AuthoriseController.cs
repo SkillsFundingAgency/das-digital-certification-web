@@ -281,6 +281,10 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             }
 
             var reference = await _authoriseOrchestrator.GetLatestUserActionReferenceAsync(ActionType.NotMatched);
+            if (string.IsNullOrWhiteSpace(reference))
+            {
+                reference = await _authoriseOrchestrator.CreateUserActionForCannotMatchAsync(ActionType.NotMatched);
+            }
             var model = new CannotMatchViewModel { ReferenceNumber = reference };
             return View("ShutterPage", model);
         }
@@ -308,32 +312,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             return View("ShutterPage", model);
         }
 
-        [HttpGet("locked", Name = LockedOutRouteGet)]
-        [AllowAnonymous]
-        public async Task<IActionResult> Locked()
-        {
-            if (User?.Identity?.IsAuthenticated != true)
-            {
-                return RedirectToAction(nameof(HomeController.AccessDenied), "Home");
-            }
-
-            if (User?.Identity?.IsAuthenticated == true)
-            {
-                var ulnAuthorisation = await _sessionService.GetUlnAuthorisationAsync();
-                if (ulnAuthorisation != null)
-                {
-                    return RedirectToRoute(CertificatesController.CertificatesListRouteGet);
-                }
-            }
-
-            var reference = await _authoriseOrchestrator.GetLatestUserActionReferenceAsync(ActionType.NotMatched);
-            if (string.IsNullOrWhiteSpace(reference))
-            {
-                reference = await _authoriseOrchestrator.CreateUserActionForCannotMatchAsync(ActionType.NotMatched);
-            }
-            var model = new CannotMatchViewModel { ReferenceNumber = reference };
-            return View("ShutterPage", model);
-        }
+        
 
         [HttpGet("know-year", Name = KnowYearRouteGet)]
         [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.VerifiedAndNotUlnAuthorised))]
