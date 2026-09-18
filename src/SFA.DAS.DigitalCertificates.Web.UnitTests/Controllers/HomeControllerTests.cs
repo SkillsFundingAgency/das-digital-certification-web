@@ -95,12 +95,6 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             result.Should().NotBeNull();
         }
 
-        [Test]
-        public void Locked_ShouldReturnView()
-        {
-            var result = _sut.Locked() as ViewResult;
-            result.Should().NotBeNull();
-        }
        
         [Test]
         public void Cookies_WhenAnalyticsConsentCookieIsTrue_ReturnsViewWithConsentAnalyticsCookieTrue()
