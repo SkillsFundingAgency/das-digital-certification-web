@@ -441,6 +441,13 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             };
         }
 
+        public async Task<bool> HasSingleOwnedCertificateAsync()
+        {
+            var ownedCertificates = await _sessionService.GetOwnedCertificatesAsync();
+
+            return ownedCertificates?.Count == 1;
+        }
+
         public async Task<MatchOutcome> SubmitCheckAnswersAsync()
         {
             var userId = _userService.GetUserId();

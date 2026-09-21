@@ -462,6 +462,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
                  Mock.Of<ITempDataProvider>());
 
             _orchestratorMock.Setup(o => o.SubmitCheckAnswersAsync()).ReturnsAsync(MatchOutcome.SingleMatch);
+            _orchestratorMock.Setup(o => o.HasSingleOwnedCertificateAsync()).ReturnsAsync(true);
 
             // Act
             var result = await _sut.CheckAnswersPost();
@@ -528,6 +529,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             _orchestratorMock
                 .Setup(o => o.SubmitCheckAnswersAsync())
                 .ReturnsAsync(MatchOutcome.MultipleMatches);
+            _orchestratorMock.Setup(o => o.HasSingleOwnedCertificateAsync()).ReturnsAsync(false);
 
             // Act
             var result = await _sut.CheckAnswersPost();
