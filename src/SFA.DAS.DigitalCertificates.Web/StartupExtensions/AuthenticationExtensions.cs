@@ -24,6 +24,7 @@ namespace SFA.DAS.DigitalCertificates.Web.StartupExtensions
                 {
                     SuspendedRedirectUrl = "/authorise/locked",
                     SignedOutRedirectUrl = "/service/signed-out",
+                    VerifyIdentityInformationUrl = "/check",
                     LoginRedirect = webConfiguration.ServiceBaseUrl + "/stub/sign-in-stub",
                     LocalStubLoginPath = "/stub/sign-in-Stub",
                     CookieDomain = uri.Host
