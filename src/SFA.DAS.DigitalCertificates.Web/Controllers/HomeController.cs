@@ -58,7 +58,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             return View();
         }
 
-        [Route("check", Name = CheckRouteGet)]
+        [HttpGet("check", Name = CheckRouteGet)]
         [Authorize(Policy = nameof(PolicyNames.IsActiveAccount))]
         public IActionResult Check(string returnUrl = "/")
         {
