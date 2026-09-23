@@ -1,6 +1,8 @@
-﻿@using SFA.DAS.DigitalCertificates.Web.ViewDataKeys;
+﻿@using Microsoft.Extensions.Options
+@using SFA.DAS.DigitalCertificates.Infrastructure.Configuration
+@inject IOptions<DigitalCertificatesWebConfiguration> Config
 @{
-    ViewData[ViewDataKeys.Title] = $"You have been signed out of {ViewData[ViewDataKeys.ServiceName]}";
+    ViewData[ViewDataKeys.Title] = $"You have successfully signed out of GOV.UK One Login";
     ViewBag.GaData.Vpv = "/service/signed-out";
 }
 
