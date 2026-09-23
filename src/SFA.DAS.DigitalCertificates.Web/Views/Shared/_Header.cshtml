@@ -6,6 +6,8 @@
 @{
     var showServiceNavigation = !bool.TryParse(ViewData[ViewDataKeys.HideServiceNavigation]?.ToString(), 
         out bool hideServiceNavigation) || !hideServiceNavigation;
+
+    var oneLoginSettingsUrl = Config.Value.OneLoginBaseUrl + Config.Value.OneLoginSettingsPath;
 }
 <header class="rebranded-cross-service-header dfe-branding" data-module="one-login-header">
     <div class="rebranded-one-login-header" data-one-login-header-nav>
@@ -26,7 +28,7 @@
                  id="one-login-header__nav">
                 <ul class="rebranded-one-login-header__nav__list">
                     <li class="rebranded-one-login-header__nav__list-item das-header__nav__list-item">
-                            <a class="rebranded-one-login-header__nav__link mu-signin" href="@Config.Value.OneLoginSettingsUrl">
+                            <a class="rebranded-one-login-header__nav__link mu-signin" href="@oneLoginSettingsUrl">
                             <span class="rebranded-one-login-header__nav__link-content">
                                 <svg focusable="false"
                                      xmlns="http://www.w3.org/2000/svg"
@@ -44,7 +46,7 @@
                         </a>
                     </li>   
                     <li class="rebranded-one-login-header__nav__list-item das-header__nav__list-item">
-                        <a class="rebranded-one-login-header__nav__link" asp-route="@ServiceController.SigningOutRouteGet">
+                        <a class="rebranded-one-login-header__nav__link" asp-route="@ServiceController.SignOutRouteGet">
                             <span class="rebranded-one-login-header__nav__link-content das-header__nav__link-content">Sign out</span>
                         </a>
                     </li>
