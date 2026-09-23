@@ -1,20 +1,22 @@
 ﻿@using Microsoft.Extensions.Options
 @using SFA.DAS.DigitalCertificates.Infrastructure.Configuration
+@using SFA.DAS.DigitalCertificates.Web.ViewDataKeys
 @inject IOptions<DigitalCertificatesWebConfiguration> Config
 @{
-    ViewData["Title"] = "Signed out";
+    ViewData[ViewDataKeys.Title] = $"You have successfully signed out of GOV.UK One Login";
     ViewBag.GaData.Vpv = "/service/signed-out";
 }
 
-<div class="govuk-grid-row">
-    <div class="govuk-grid-column-two-thirds">
-        <h1 class="govuk-heading-l">
-            You have successfully signed out of GOV.UK One Login
-        </h1>
-    </div>
-    <div class="govuk-grid-column-two-thirds">
-        <p><a class="govuk-link" href="https://gov.uk/">Go to the GOV.UK homepage</a></p>
-        <p><a class="govuk-link" href="@Config.Value.OneLoginBaseUrl">Sign back in to GOV.UK One Login</a></p>
-    </div>
+<main class="govuk-main-wrapper" id="main-content">
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+            <h1 class="govuk-heading-l">
+                @ViewData[ViewDataKeys.Title]
+            </h1>
+        </div>
+        <div class="govuk-grid-column-two-thirds">
+            <p><a class="govuk-link" href="https://gov.uk/">Go to the GOV.UK homepage</a></p>
+        </div>
 
-</div>
+    </div>
+</main>

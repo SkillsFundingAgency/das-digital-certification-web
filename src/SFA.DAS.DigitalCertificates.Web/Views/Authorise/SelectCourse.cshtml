@@ -23,7 +23,7 @@
 
                         <span class="govuk-caption-l">Matching your information</span>
 
-                        <fieldset class="govuk-fieldset" aria-describedby="SelectCourse-hint">
+                        <fieldset class="govuk-fieldset" aria-describedby="SelectCourse-hint SelectedCourseCode-error">
                             <legend class="govuk-fieldset__legend govuk-fieldset__legend--l">
                                 <h1 class="govuk-fieldset__heading">Select your course</h1>
                             </legend>
@@ -47,7 +47,6 @@
                                                   class="govuk-radios__input"
                                                   type="radio"
                                                   value="@c.CourseCode"
-                                                  aria-describedby="SelectedCourseCode-error"
                                                   @( (Model?.SelectedCourseCode != null && System.String.Equals(c.CourseCode?.Trim(), Model.SelectedCourseCode?.Trim(), System.StringComparison.OrdinalIgnoreCase)) ? "checked=\"checked\"" : "" ) />
                                             <label class="govuk-label govuk-radios__label" for="@inputId">@c.DisplayName</label>
                                         </div>
