@@ -24,7 +24,7 @@
 		<PackageReference Include="RestEase.HttpClientFactory" Version="1.6.4" />
 		<PackageReference Include="SFA.DAS.Configuration.AzureTableStorage" Version="17.1.165" />
 		<PackageReference Include="SFA.DAS.Encoding" Version="1.1.94" />
-		<PackageReference Include="SFA.DAS.GovUK.Auth" Version="17.1.199" />
+		<PackageReference Include="SFA.DAS.GovUK.Auth" Version="17.1.211-prerelease-8" />
 		<PackageReference Include="SFA.DAS.Http" Version="3.2.69" />
 		<PackageReference Include="SFA.DAS.Validation" Version="6.0.31" />
 		<PackageReference Include="SFA.DAS.Validation.Mvc" Version="6.0.31" />

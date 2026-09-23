@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -11,6 +12,7 @@ using SFA.DAS.DigitalCertificates.Web.Models;
 using SFA.DAS.DigitalCertificates.Web.Models.Sharing;
 using SFA.DAS.DigitalCertificates.Web.Orchestrators;
 using SFA.DAS.GovUK.Auth.Authentication;
+using SFA.DAS.GovUK.Auth.Controllers.Routes;
 
 namespace SFA.DAS.DigitalCertificates.Web.Controllers
 {
@@ -24,6 +26,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         #region Routes
         public const string VerifiedRouteGet = nameof(VerifiedRouteGet);
         public const string CheckRouteGet = nameof(CheckRouteGet);
+        public const string CheckRoutePost = nameof(CheckRoutePost);
         public const string HelpRouteGet = nameof(HelpRouteGet);
         public const string CookiesRouteGet = nameof(CookiesRouteGet);
         public const string CookiesRoutePost = nameof(CookiesRoutePost);
@@ -54,11 +57,29 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             return View();
         }
 
-        [Route("check", Name = CheckRouteGet)]
+        [HttpGet("check", Name = CheckRouteGet)]
         [Authorize(Policy = nameof(PolicyNames.IsActiveAccount))]
-        public IActionResult Check()
+        public IActionResult Check(string returnUrl = "/")
         {
-            return View();
+            if (!Url.IsLocalUrl(returnUrl))
+            {
+                returnUrl = "/";
+            }
+
+            return View(model: returnUrl);
+        }
+
+        [HttpPost("check", Name = CheckRoutePost)]
+        [Authorize(Policy = nameof(PolicyNames.IsActiveAccount))]
+        [ValidateAntiForgeryToken]
+        public IActionResult CheckContinue(string returnUrl = "/")
+        {
+            if (!Url.IsLocalUrl(returnUrl))
+            {
+                returnUrl = "/";
+            }
+
+            return Redirect($"{ServiceRoutes.Paths.VerifyIdentity.ServiceControllerPath()}?returnUrl={Uri.EscapeDataString(returnUrl)}");
         }
 
         [Route("verified", Name = VerifiedRouteGet)]
