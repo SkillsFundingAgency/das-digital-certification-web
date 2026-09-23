@@ -70,6 +70,7 @@ namespace SFA.DAS.DigitalCertificates.Web
                 {
                     options.AddValidation();
                     options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
+                    options.Filters.AddService<AntiforgeryValidationFailedResultFilter>();
 
                     if (_configuration.TryGetSection<GoogleAnalytics>(out var googleAnalyticsSection))
                     {
@@ -79,6 +80,8 @@ namespace SFA.DAS.DigitalCertificates.Web
                     options.Filters.Add(new GoogleAnalyticsFilterAttribute());
                 })
                 .AddControllersAsServices();
+
+            services.AddScoped<AntiforgeryValidationFailedResultFilter>();
 
             services
                 .AddValidatorsFromAssemblyContaining<SignInStubViewModelValidator>();          
