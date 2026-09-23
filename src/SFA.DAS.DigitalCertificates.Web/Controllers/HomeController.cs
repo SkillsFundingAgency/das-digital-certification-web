@@ -28,7 +28,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         public const string CheckRouteGet = nameof(CheckRouteGet);
         public const string CheckRoutePost = nameof(CheckRoutePost);
         public const string HelpRouteGet = nameof(HelpRouteGet);
-        public const string LockedRouteGet = nameof(LockedRouteGet);
         public const string CookiesRouteGet = nameof(CookiesRouteGet);
         public const string CookiesRoutePost = nameof(CookiesRoutePost);
         public const string CookieDetailsRouteGet = nameof(CookieDetailsRouteGet);
@@ -90,12 +89,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             return RedirectToRoute(CertificatesController.CertificatesListRouteGet);
         }
 
-        [Route("locked", Name = LockedRouteGet)]
-        [Authorize(Policy = nameof(PolicyNames.IsAuthenticated))]
-        public IActionResult Locked()
-        {
-            return View();
-        }
+        
 
         [AllowAnonymous]
         [Route("cookies", Name = CookiesRouteGet)]
@@ -154,7 +148,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         public IActionResult Error(string errorMessage)
         {
             _logger.LogError(errorMessage.SanitizeLogData());
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContextAccessor?.HttpContext?.TraceIdentifier, ErrorMessage = errorMessage });
+            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext?.TraceIdentifier, ErrorMessage = errorMessage });
         }
 
         private string GetSafeReturnUrl(string? returnUrl, string fallbackUrl = "")

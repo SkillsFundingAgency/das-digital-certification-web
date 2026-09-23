@@ -124,11 +124,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.VerifiedAndNotUlnAuthorised))]
         public async Task<IActionResult> SelectCourse(SelectCourseViewModel model)
         {
-            if (string.Equals(model.SelectedCourseCode?.Trim(), SelectCourseViewModel.UnknownCourseSentinel, System.StringComparison.OrdinalIgnoreCase))
-            {
-                model.SelectedCourseUnknown = true;
-                model.SelectedCourseCode = null;
-            }
             if (!await _authoriseOrchestrator.ValidateSelectCourseViewModel(model, ModelState))
             {
                 return RedirectToRoute(SelectCourseRouteGet);
@@ -216,10 +211,17 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             switch (outcome)
             {
                 case MatchOutcome.SingleMatch:
-                    TempData.AddFlashMessage($"We've matched your information to this course.", string.Empty, TempDataDictionaryExtensions.FlashMessageLevel.Success);
-                    return RedirectToRoute(CertificatesController.CertificatesListRouteGet);
                 case MatchOutcome.MultipleMatches:
-                    TempData.AddFlashMessage($"We've matched your information to these courses.", string.Empty, TempDataDictionaryExtensions.FlashMessageLevel.Success);
+                    var isSingle = await _authoriseOrchestrator.HasSingleOwnedCertificateAsync();
+                    if (isSingle)
+                    {
+                        TempData.AddFlashMessage("We've matched your information to this course.", string.Empty, TempDataDictionaryExtensions.FlashMessageLevel.Success);
+                    }
+                    else
+                    {
+                        TempData.AddFlashMessage("We've matched your information to these courses.", string.Empty, TempDataDictionaryExtensions.FlashMessageLevel.Success);
+                    }
+
                     return RedirectToRoute(CertificatesController.CertificatesListRouteGet);
                 case MatchOutcome.Locked:
                     return await RedirectToCannotMatchAsync();
@@ -281,6 +283,10 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             }
 
             var reference = await _authoriseOrchestrator.GetLatestUserActionReferenceAsync(ActionType.NotMatched);
+            if (string.IsNullOrWhiteSpace(reference))
+            {
+                reference = await _authoriseOrchestrator.CreateUserActionForCannotMatchAsync(ActionType.NotMatched);
+            }
             var model = new CannotMatchViewModel { ReferenceNumber = reference };
             return View("ShutterPage", model);
         }
@@ -308,32 +314,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             return View("ShutterPage", model);
         }
 
-        [HttpGet("locked", Name = LockedOutRouteGet)]
-        [AllowAnonymous]
-        public async Task<IActionResult> Locked()
-        {
-            if (User?.Identity?.IsAuthenticated != true)
-            {
-                return RedirectToAction(nameof(HomeController.AccessDenied), "Home");
-            }
-
-            if (User?.Identity?.IsAuthenticated == true)
-            {
-                var ulnAuthorisation = await _sessionService.GetUlnAuthorisationAsync();
-                if (ulnAuthorisation != null)
-                {
-                    return RedirectToRoute(CertificatesController.CertificatesListRouteGet);
-                }
-            }
-
-            var reference = await _authoriseOrchestrator.GetLatestUserActionReferenceAsync(ActionType.NotMatched);
-            if (string.IsNullOrWhiteSpace(reference))
-            {
-                reference = await _authoriseOrchestrator.CreateUserActionForCannotMatchAsync(ActionType.NotMatched);
-            }
-            var model = new CannotMatchViewModel { ReferenceNumber = reference };
-            return View("ShutterPage", model);
-        }
+        
 
         [HttpGet("know-year", Name = KnowYearRouteGet)]
         [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.VerifiedAndNotUlnAuthorised))]

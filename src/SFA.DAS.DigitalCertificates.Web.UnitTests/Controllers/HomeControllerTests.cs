@@ -33,23 +33,22 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             _orchestratorMock = new Mock<IHomeOrchestrator>();
             _contextAccessorMock = new Mock<IHttpContextAccessor>();
             _loggerMock = new Mock<ILogger<HomeController>>();
-
-            _digitalCertificatesWebConfig =
-                new DigitalCertificatesWebConfiguration
-                {
-                    ServiceBaseUrl = "https://test.local",
-                    OneLoginSettingsUrl = "http://settings.com",
-                    RedisConnectionString = "UseDevelopmentStorage=true",
-                    DataProtectionKeysDatabase = "TestDb",
-                    StandardTemplateBlobName = "standard-template",
-                    GreenStandardTemplateBlobName = "green-standard-template",
-                    FrameworkTemplateBlobName = "framework-template",
-                    MasterPassword = "master-password",
-                    StorageConnectionString = "UseDevelopmentStorage=true",
-                    ContainerName = "test-container",
-                    AsposeLicenseContainerName = "aspose-license-container",
-                    LicenseBlobName = "license-blob"
-                };
+            _digitalCertificatesWebConfig = new DigitalCertificatesWebConfiguration
+            {
+                ServiceBaseUrl = "https://test.local",
+                OneLoginBaseUrl = "http://onelogin/",
+                OneLoginSettingsPath = "settings",
+                RedisConnectionString = "UseDevelopmentStorage=true",
+                DataProtectionKeysDatabase = "TestDb",
+                StandardTemplateBlobName = "standard-template",
+                GreenStandardTemplateBlobName = "green-standard-template",
+                FrameworkTemplateBlobName = "framework-template",
+                MasterPassword = "master-password",
+                StorageConnectionString = "UseDevelopmentStorage=true",
+                ContainerName = "test-container",
+                AsposeLicenseContainerName = "aspose-license-container",
+                LicenseBlobName = "license-blob"
+            };
 
             _httpContext = new DefaultHttpContext();
 
@@ -239,16 +238,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
                 .Be(CertificatesController.CertificatesListRouteGet);
         }
 
-        [Test]
-        public void Locked_ShouldReturnView()
-        {
-            // Act
-            var result = _sut.Locked();
-
-            // Assert
-            result.Should().BeOfType<ViewResult>();
-        }
-
+       
         [Test]
         public void Cookies_WhenAnalyticsConsentCookieIsTrue_ReturnsExpectedModel()
         {

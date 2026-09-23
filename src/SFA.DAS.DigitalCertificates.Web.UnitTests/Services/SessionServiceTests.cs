@@ -19,211 +19,568 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
     [TestFixture]
     public class SessionServiceTests
     {
-        private Mock<ISessionStorageService> _sessionStorageMock = null!;
-        private Mock<IMediator> _mediatorMock = null!;
-        private Mock<IUserService> _userServiceMock = null!;
-        private SessionService _sut = null!;
-
         private const string ShareEmailKey = "DigitalCertificates:ShareEmail";
-        private const string OwnedCertificatesKeyPrefix = "DigitalCertificates:OwnedCertificates:";
-        private const string UlnAuthorisationKeyPrefix = "DigitalCertificates:UlnAuthorisation:";
+        private const string OwnedCertificatesKey = "DigitalCertificates:OwnedCertificates:";
+        private const string UlnAuthorisationKey = "DigitalCertificates:UlnAuthorisation:";
+        private const string AuthorisationAnswersKey = "DigitalCertificates:AuthorisationAnswers:";
         private const string RecordedSharingAccessKey = "DigitalCertificates:RecordedSharingAccessCodes";
-        private const string DeliveryAddressKeyPrefix = "DigitalCertificates:DeliveryAddress:";
-        private const string AuthorisationAnswersKeyPrefix = "DigitalCertificates:AuthorisationAnswers:";
+        private const string DeliveryAddressKey = "DigitalCertificates:DeliveryAddress:";
+        private const string ContactReferenceKey = "DigitalCertificates:ContactReference";
+
+        private Mock<ISessionStorageService> _sessionStorageService = null!;
+        private Mock<IMediator> _mediator = null!;
+        private Mock<IUserService> _userService = null!;
+        private SessionService _sut = null!;
 
         [SetUp]
         public void SetUp()
         {
-            _sessionStorageMock = new Mock<ISessionStorageService>();
-            _mediatorMock = new Mock<IMediator>();
-            _userServiceMock = new Mock<IUserService>();
+            _sessionStorageService = new Mock<ISessionStorageService>();
+            _mediator = new Mock<IMediator>();
+            _userService = new Mock<IUserService>();
 
-            _sut = new SessionService(_sessionStorageMock.Object, _mediatorMock.Object, _userServiceMock.Object);
+            _sut = new SessionService(
+                _sessionStorageService.Object,
+                _mediator.Object,
+                _userService.Object);
         }
 
         [Test]
-        public async Task SetShareEmailAsync_Calls_Storage_With_Correct_Key()
+        public async Task SetShareEmailAsync_ShouldStoreEmail()
         {
+            // Act
             await _sut.SetShareEmailAsync("a@b.com");
 
-            _sessionStorageMock.Verify(s => s.SetAsync(ShareEmailKey, "a@b.com"), Times.Once);
+            // Assert
+            _sessionStorageService.Verify(x => x.SetAsync(ShareEmailKey, "a@b.com"), Times.Once);
         }
 
         [Test]
-        public async Task GetShareEmailAsync_Returns_Value_From_Storage()
+        public async Task GetShareEmailAsync_ShouldReturnStoredEmail()
         {
-            _sessionStorageMock.Setup(s => s.GetAsync(ShareEmailKey)).ReturnsAsync("x@y.com");
+            // Arrange
+            _sessionStorageService
+                .Setup(x => x.GetAsync(ShareEmailKey))
+                .ReturnsAsync("x@y.com");
 
+            // Act
             var result = await _sut.GetShareEmailAsync();
 
+            // Assert
             result.Should().Be("x@y.com");
         }
 
         [Test]
-        public async Task ClearSessionDataAsync_Clears_Namespaced_Keys_When_Id_Provided()
+        public async Task ClearShareEmailAsync_ShouldClearEmail()
         {
-            await _sut.ClearSessionDataAsync();
+            // Act
+            await _sut.ClearShareEmailAsync();
 
-            _sessionStorageMock.Verify(s => s.ClearAsync(ShareEmailKey), Times.Once);
-            _sessionStorageMock.Verify(s => s.ClearAsync(OwnedCertificatesKeyPrefix), Times.Once);
-            _sessionStorageMock.Verify(s => s.ClearAsync(UlnAuthorisationKeyPrefix), Times.Once);
+            // Assert
+            _sessionStorageService.Verify(x => x.ClearAsync(ShareEmailKey), Times.Once);
         }
 
         [Test]
-        public async Task GetOwnedCertificatesAsync_Returns_From_Session_If_Present()
+        public async Task GetOwnedCertificatesAsync_ShouldReturnCertificatesFromSession_WhenPresent()
         {
-            var expected = new List<Certificate> { new Certificate { CertificateId = Guid.NewGuid(), CertificateType = CertificateType.Standard, CourseName = "C", CourseLevel = "1" } };
-            var json = JsonSerializer.Serialize(expected);
+            // Arrange
+            var expected = CreateCertificates();
+            SetupSessionValue(OwnedCertificatesKey, expected);
 
-            _sessionStorageMock.Setup(s => s.GetAsync(OwnedCertificatesKeyPrefix)).ReturnsAsync(json);
-
+            // Act
             var result = await _sut.GetOwnedCertificatesAsync();
 
+            // Assert
             result.Should().BeEquivalentTo(expected);
-            _mediatorMock.Verify(m => m.Send(It.IsAny<GetUserQuery>(), It.IsAny<CancellationToken>()), Times.Never);
+            _mediator.Verify(
+                x => x.Send(It.IsAny<GetUserQuery>(), It.IsAny<CancellationToken>()),
+                Times.Never);
+            _mediator.Verify(
+                x => x.Send(It.IsAny<GetCertificatesQuery>(), It.IsAny<CancellationToken>()),
+                Times.Never);
         }
 
         [Test]
-        public async Task GetOwnedCertificatesAsync_Returns_Null_If_User_Not_Found()
+        public async Task GetOwnedCertificatesAsync_ShouldUseKnownUserId_AndCacheCertificates()
         {
-            var govId = "gov-2";
+            // Arrange
+            var userId = Guid.NewGuid();
+            var expected = CreateCertificates();
+            var response = new GetCertificatesQueryResult { Certificates = expected };
+            string storedJson = null;
 
-            _sessionStorageMock.Setup(s => s.GetAsync(OwnedCertificatesKeyPrefix)).ReturnsAsync((string)null);
-            _userServiceMock.Setup(u => u.GetUserId()).Returns((Guid?)null);
-            _userServiceMock.Setup(u => u.GetGovUkIdentifier()).Returns(govId);
-            _mediatorMock.Setup(m => m.Send(It.Is<GetUserQuery>(q => q.GovUkIdentifier == govId), It.IsAny<CancellationToken>()))
-                .ReturnsAsync((User)null);
+            _userService.Setup(x => x.GetUserId()).Returns(userId);
+            _mediator
+                .Setup(x => x.Send(
+                    It.Is<GetCertificatesQuery>(q => q.UserId == userId),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(response);
+            _sessionStorageService
+                .Setup(x => x.SetAsync(OwnedCertificatesKey, It.IsAny<string>()))
+                .Callback<string, string>((_, value) => storedJson = value)
+                .Returns(Task.CompletedTask);
 
+            // Act
             var result = await _sut.GetOwnedCertificatesAsync();
 
+            // Assert
+            result.Should().BeEquivalentTo(expected);
+            JsonSerializer.Deserialize<List<Certificate>>(storedJson).Should().BeEquivalentTo(expected);
+            _mediator.Verify(
+                x => x.Send(It.IsAny<GetUserQuery>(), It.IsAny<CancellationToken>()),
+                Times.Never);
+        }
+
+        [Test]
+        public async Task GetOwnedCertificatesAsync_ShouldResolveUserFromGovUkIdentifier_AndCacheCertificates()
+        {
+            // Arrange
+            var govUkIdentifier = "gov-3";
+            var user = CreateUser(govUkIdentifier);
+            var expected = CreateCertificates();
+            var response = new GetCertificatesQueryResult { Certificates = expected };
+            string storedJson = null;
+
+            SetupUserLookup(govUkIdentifier, user);
+            _mediator
+                .Setup(x => x.Send(
+                    It.Is<GetCertificatesQuery>(q => q.UserId == user.Id),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(response);
+            _sessionStorageService
+                .Setup(x => x.SetAsync(OwnedCertificatesKey, It.IsAny<string>()))
+                .Callback<string, string>((_, value) => storedJson = value)
+                .Returns(Task.CompletedTask);
+
+            // Act
+            var result = await _sut.GetOwnedCertificatesAsync();
+
+            // Assert
+            result.Should().BeEquivalentTo(expected);
+            JsonSerializer.Deserialize<List<Certificate>>(storedJson).Should().BeEquivalentTo(expected);
+        }
+
+        [Test]
+        public async Task GetOwnedCertificatesAsync_ShouldReturnNull_WhenGovUkIdentifierIsMissing()
+        {
+            // Arrange
+            _userService.Setup(x => x.GetUserId()).Returns((Guid?)null);
+            _userService.Setup(x => x.GetGovUkIdentifier()).Returns((string)null);
+
+            // Act
+            var result = await _sut.GetOwnedCertificatesAsync();
+
+            // Assert
             result.Should().BeNull();
-            _mediatorMock.Verify(m => m.Send(It.Is<GetUserQuery>(q => q.GovUkIdentifier == govId), It.IsAny<CancellationToken>()), Times.Once);
+            _mediator.Verify(
+                x => x.Send(It.IsAny<GetUserQuery>(), It.IsAny<CancellationToken>()),
+                Times.Never);
+            _mediator.Verify(
+                x => x.Send(It.IsAny<GetCertificatesQuery>(), It.IsAny<CancellationToken>()),
+                Times.Never);
         }
 
         [Test]
-        public async Task GetOwnedCertificatesAsync_Calls_Api_And_Stores_In_Session_When_Missing()
+        public async Task GetOwnedCertificatesAsync_ShouldReturnNull_WhenUserCannotBeResolved()
         {
-            var govId = "gov-3";
-            var user = new User { Id = Guid.NewGuid(), GovUkIdentifier = govId, EmailAddress = "user@test.com" };
-            var expectedCertificates = new List<Certificate> { new Certificate { CertificateId = Guid.NewGuid(), CertificateType = CertificateType.Standard, CourseName = "Course", CourseLevel = "1" } };
+            // Arrange
+            const string govUkIdentifier = "gov-2";
+            SetupUserLookup(govUkIdentifier, null);
 
-            _sessionStorageMock.Setup(s => s.GetAsync(OwnedCertificatesKeyPrefix)).ReturnsAsync((string)null);
-            _userServiceMock.Setup(u => u.GetUserId()).Returns((Guid?)null);
-            _userServiceMock.Setup(u => u.GetGovUkIdentifier()).Returns(govId);
-            _mediatorMock.Setup(m => m.Send(It.Is<GetUserQuery>(q => q.GovUkIdentifier == govId), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(user);
-
-            var response = new GetCertificatesQueryResult { Certificates = expectedCertificates };
-            _mediatorMock.Setup(m => m.Send(It.Is<GetCertificatesQuery>(q => q.UserId == user.Id), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(response);
-
-            string storedJson = null!;
-            _sessionStorageMock.Setup(s => s.SetAsync(OwnedCertificatesKeyPrefix, It.IsAny<string>()))
-                .Callback<string, string>((k, v) => storedJson = v)
-                .Returns(Task.CompletedTask);
-
+            // Act
             var result = await _sut.GetOwnedCertificatesAsync();
 
-            result.Should().BeEquivalentTo(expectedCertificates);
-            storedJson.Should().NotBeNullOrEmpty();
-            var des = JsonSerializer.Deserialize<List<Certificate>>(storedJson!);
-            des.Should().BeEquivalentTo(expectedCertificates);
+            // Assert
+            result.Should().BeNull();
+            _mediator.Verify(
+                x => x.Send(It.IsAny<GetCertificatesQuery>(), It.IsAny<CancellationToken>()),
+                Times.Never);
         }
 
         [Test]
-        public async Task GetUlnAuthorisationAsync_Returns_From_Session_If_Present()
+        public async Task GetOwnedCertificatesAsync_ShouldNotCache_WhenQueryReturnsNoCertificates()
         {
-            var expected = new UlnAuthorisation { AuthorisationId = Guid.NewGuid(), Uln = "123", AuthorisedAt = DateTime.UtcNow };
-            var json = JsonSerializer.Serialize(expected);
+            // Arrange
+            var userId = Guid.NewGuid();
+            _userService.Setup(x => x.GetUserId()).Returns(userId);
+            _mediator
+                .Setup(x => x.Send(
+                    It.Is<GetCertificatesQuery>(q => q.UserId == userId),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new GetCertificatesQueryResult { Certificates = null });
 
+            // Act
+            var result = await _sut.GetOwnedCertificatesAsync();
 
-            _sessionStorageMock.Setup(s => s.GetAsync(UlnAuthorisationKeyPrefix)).ReturnsAsync(json);
+            // Assert
+            result.Should().BeNull();
+            _sessionStorageService.Verify(
+                x => x.SetAsync(OwnedCertificatesKey, It.IsAny<string>()),
+                Times.Never);
+        }
 
+        [Test]
+        public async Task GetUlnAuthorisationAsync_ShouldReturnAuthorisationFromSession_WhenPresent()
+        {
+            // Arrange
+            var expected = CreateAuthorisation();
+            SetupSessionValue(UlnAuthorisationKey, expected);
+
+            // Act
             var result = await _sut.GetUlnAuthorisationAsync();
 
-            result.Should().NotBeNull();
+            // Assert
             result.Should().BeEquivalentTo(expected);
-            _mediatorMock.Verify(m => m.Send(It.IsAny<GetUserQuery>(), It.IsAny<CancellationToken>()), Times.Never);
+            _mediator.Verify(
+                x => x.Send(It.IsAny<GetUserQuery>(), It.IsAny<CancellationToken>()),
+                Times.Never);
+            _mediator.Verify(
+                x => x.Send(It.IsAny<GetCertificatesQuery>(), It.IsAny<CancellationToken>()),
+                Times.Never);
         }
 
         [Test]
-        public async Task GetUlnAuthorisationAsync_Calls_Api_And_Stores_In_Session_When_Missing()
+        public async Task GetUlnAuthorisationAsync_ShouldUseKnownUserId_AndCacheAuthorisation()
         {
-            var govId = "gov-u-2";
-            var user = new User { Id = Guid.NewGuid(), GovUkIdentifier = govId, EmailAddress = "user@test.com" };
-            var expectedAuth = new UlnAuthorisation { AuthorisationId = Guid.NewGuid(), Uln = "999", AuthorisedAt = DateTime.UtcNow };
+            // Arrange
+            var userId = Guid.NewGuid();
+            var expected = CreateAuthorisation();
+            var response = new GetCertificatesQueryResult { Authorisation = expected };
+            string storedJson = null;
 
-            _sessionStorageMock.Setup(s => s.GetAsync(UlnAuthorisationKeyPrefix)).ReturnsAsync((string)null);
-            _userServiceMock.Setup(u => u.GetUserId()).Returns((Guid?)null);
-            _userServiceMock.Setup(u => u.GetGovUkIdentifier()).Returns(govId);
-            _mediatorMock.Setup(m => m.Send(It.Is<GetUserQuery>(q => q.GovUkIdentifier == govId), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(user);
-
-            var response = new GetCertificatesQueryResult { Authorisation = expectedAuth };
-            _mediatorMock.Setup(m => m.Send(It.Is<GetCertificatesQuery>(q => q.UserId == user.Id), It.IsAny<CancellationToken>()))
+            _userService.Setup(x => x.GetUserId()).Returns(userId);
+            _mediator
+                .Setup(x => x.Send(
+                    It.Is<GetCertificatesQuery>(q => q.UserId == userId),
+                    It.IsAny<CancellationToken>()))
                 .ReturnsAsync(response);
-
-            string storedJson = null!;
-            _sessionStorageMock.Setup(s => s.SetAsync(UlnAuthorisationKeyPrefix, It.IsAny<string>()))
-                .Callback<string, string>((k, v) => storedJson = v)
+            _sessionStorageService
+                .Setup(x => x.SetAsync(UlnAuthorisationKey, It.IsAny<string>()))
+                .Callback<string, string>((_, value) => storedJson = value)
                 .Returns(Task.CompletedTask);
 
+            // Act
             var result = await _sut.GetUlnAuthorisationAsync();
 
-            result.Should().BeEquivalentTo(expectedAuth);
-            storedJson.Should().NotBeNullOrEmpty();
-            var des = JsonSerializer.Deserialize<UlnAuthorisation>(storedJson!);
-            des.Should().BeEquivalentTo(expectedAuth);
+            // Assert
+            result.Should().BeEquivalentTo(expected);
+            JsonSerializer.Deserialize<UlnAuthorisation>(storedJson).Should().BeEquivalentTo(expected);
+            _mediator.Verify(
+                x => x.Send(It.IsAny<GetUserQuery>(), It.IsAny<CancellationToken>()),
+                Times.Never);
         }
 
         [Test]
-        public async Task AddRecordedSharingAccessCodeAsync_Adds_Code_When_Not_Present()
+        public async Task GetUlnAuthorisationAsync_ShouldResolveUserFromGovUkIdentifier_AndCacheAuthorisation()
+        {
+            // Arrange
+            const string govUkIdentifier = "gov-u-2";
+            var user = CreateUser(govUkIdentifier);
+            var expected = CreateAuthorisation();
+            var response = new GetCertificatesQueryResult { Authorisation = expected };
+            string storedJson = null;
+
+            SetupUserLookup(govUkIdentifier, user);
+            _mediator
+                .Setup(x => x.Send(
+                    It.Is<GetCertificatesQuery>(q => q.UserId == user.Id),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(response);
+            _sessionStorageService
+                .Setup(x => x.SetAsync(UlnAuthorisationKey, It.IsAny<string>()))
+                .Callback<string, string>((_, value) => storedJson = value)
+                .Returns(Task.CompletedTask);
+
+            // Act
+            var result = await _sut.GetUlnAuthorisationAsync();
+
+            // Assert
+            result.Should().BeEquivalentTo(expected);
+            JsonSerializer.Deserialize<UlnAuthorisation>(storedJson!).Should().BeEquivalentTo(expected);
+        }
+
+        [Test]
+        public async Task GetUlnAuthorisationAsync_ShouldReturnNull_WhenGovUkIdentifierIsMissing()
+        {
+            // Arrange
+            _userService.Setup(x => x.GetUserId()).Returns((Guid?)null);
+            _userService.Setup(x => x.GetGovUkIdentifier()).Returns(string.Empty);
+
+            // Act
+            var result = await _sut.GetUlnAuthorisationAsync();
+
+            // Assert
+            result.Should().BeNull();
+            _mediator.Verify(
+                x => x.Send(It.IsAny<GetUserQuery>(), It.IsAny<CancellationToken>()),
+                Times.Never);
+            _mediator.Verify(
+                x => x.Send(It.IsAny<GetCertificatesQuery>(), It.IsAny<CancellationToken>()),
+                Times.Never);
+        }
+
+        [Test]
+        public async Task GetUlnAuthorisationAsync_ShouldReturnNull_WhenUserCannotBeResolved()
+        {
+            // Arrange
+            const string govUkIdentifier = "missing-user";
+            SetupUserLookup(govUkIdentifier, null);
+
+            // Act
+            var result = await _sut.GetUlnAuthorisationAsync();
+
+            // Assert
+            result.Should().BeNull();
+            _mediator.Verify(
+                x => x.Send(It.IsAny<GetCertificatesQuery>(), It.IsAny<CancellationToken>()),
+                Times.Never);
+        }
+
+        [Test]
+        public async Task GetUlnAuthorisationAsync_ShouldNotCache_WhenQueryReturnsNoAuthorisation()
+        {
+            // Arrange
+            var userId = Guid.NewGuid();
+            _userService.Setup(x => x.GetUserId()).Returns(userId);
+            _mediator
+                .Setup(x => x.Send(
+                    It.Is<GetCertificatesQuery>(q => q.UserId == userId),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new GetCertificatesQueryResult { Authorisation = null });
+
+            // Act
+            var result = await _sut.GetUlnAuthorisationAsync();
+
+            // Assert
+            result.Should().BeNull();
+            _sessionStorageService.Verify(
+                x => x.SetAsync(UlnAuthorisationKey, It.IsAny<string>()),
+                Times.Never);
+        }
+
+        [Test]
+        public async Task SetAuthorisationAnswersAsync_ShouldStoreSerialisedAnswers()
+        {
+            // Arrange
+            var expected = new AuthorisationAnswers { KnowUln = true, Uln = 1234567890L };
+            string storedJson = null;
+            _sessionStorageService
+                .Setup(x => x.SetAsync(AuthorisationAnswersKey, It.IsAny<string>()))
+                .Callback<string, string>((_, value) => storedJson = value)
+                .Returns(Task.CompletedTask);
+
+            // Act
+            await _sut.SetAuthorisationAnswersAsync(expected);
+
+            // Assert
+            JsonSerializer.Deserialize<AuthorisationAnswers>(storedJson).Should().BeEquivalentTo(expected);
+        }
+
+        [Test]
+        public async Task GetAuthorisationAnswersAsync_ShouldReturnStoredAnswers()
+        {
+            // Arrange
+            var expected = new AuthorisationAnswers { KnowUln = false, Uln = null };
+            SetupSessionValue(AuthorisationAnswersKey, expected);
+
+            // Act
+            var result = await _sut.GetAuthorisationAnswersAsync();
+
+            // Assert
+            result.Should().BeEquivalentTo(expected);
+        }
+
+        [Test]
+        public async Task GetAuthorisationAnswersAsync_ShouldReturnNull_WhenAnswersAreNotStored()
+        {
+            // Arrange
+            _sessionStorageService
+                .Setup(x => x.GetAsync(AuthorisationAnswersKey))
+                .ReturnsAsync((string)null);
+
+            // Act
+            var result = await _sut.GetAuthorisationAnswersAsync();
+
+            // Assert
+            result.Should().BeNull();
+        }
+
+        [Test]
+        public async Task ClearAuthorisationAnswersAsync_ShouldClearAnswers()
+        {
+            // Arrange
+
+            // Act
+            await _sut.ClearAuthorisationAnswersAsync();
+
+            // Assert
+            _sessionStorageService.Verify(x => x.ClearAsync(AuthorisationAnswersKey), Times.Once);
+        }
+
+        [Test]
+        public async Task SetDeliveryAddressAsync_ShouldStoreSerialisedAddress()
+        {
+            // Arrange
+            var expected = CreateAddress();
+            string? storedJson = null;
+            _sessionStorageService
+                .Setup(x => x.SetAsync(DeliveryAddressKey, It.IsAny<string>()))
+                .Callback<string, string>((_, value) => storedJson = value)
+                .Returns(Task.CompletedTask);
+
+            // Act
+            await _sut.SetDeliveryAddressAsync(expected);
+
+            // Assert
+            JsonSerializer.Deserialize<CheckAndSubmitViewModel>(storedJson!).Should().BeEquivalentTo(expected);
+        }
+
+        [Test]
+        public async Task GetDeliveryAddressAsync_ShouldReturnStoredAddress()
+        {
+            // Arrange
+            var expected = CreateAddress();
+            SetupSessionValue(DeliveryAddressKey, expected);
+
+            // Act
+            var result = await _sut.GetDeliveryAddressAsync();
+
+            // Assert
+            result.Should().BeEquivalentTo(expected);
+        }
+
+        [TestCase(null)]
+        [TestCase("")]
+        [TestCase(" ")]
+        public async Task GetDeliveryAddressAsync_ShouldReturnNull_WhenAddressIsNotStored(string? storedValue)
+        {
+            // Arrange
+            _sessionStorageService
+                .Setup(x => x.GetAsync(DeliveryAddressKey))
+                .ReturnsAsync(storedValue);
+
+            // Act
+            var result = await _sut.GetDeliveryAddressAsync();
+
+            // Assert
+            result.Should().BeNull();
+        }
+
+        [Test]
+        public async Task ClearDeliveryAddressAsync_ShouldClearAddress()
+        {
+            // Arrange
+
+            // Act
+            await _sut.ClearDeliveryAddressAsync();
+
+            // Assert
+            _sessionStorageService.Verify(x => x.ClearAsync(DeliveryAddressKey), Times.Once);
+        }
+
+        [Test]
+        public async Task SetContactReferenceAsync_ShouldStoreReference()
+        {
+            // Arrange
+
+            // Act
+            await _sut.SetContactReferenceAsync("reference-1");
+
+            // Assert
+            _sessionStorageService.Verify(
+                x => x.SetAsync(ContactReferenceKey, "reference-1"),
+                Times.Once);
+        }
+
+        [Test]
+        public async Task GetContactReferenceAsync_ShouldReturnStoredReference()
+        {
+            // Arrange
+            _sessionStorageService
+                .Setup(x => x.GetAsync(ContactReferenceKey))
+                .ReturnsAsync("reference-2");
+
+            // Act
+            var result = await _sut.GetContactReferenceAsync();
+
+            // Assert
+            result.Should().Be("reference-2");
+        }
+
+        [Test]
+        public async Task ClearContactReferenceAsync_ShouldClearReference()
+        {
+            // Arrange
+
+            // Act
+            await _sut.ClearContactReferenceAsync();
+
+            // Assert
+            _sessionStorageService.Verify(x => x.ClearAsync(ContactReferenceKey), Times.Once);
+        }
+
+        [Test]
+        public async Task AddRecordedSharingAccessCodeAsync_ShouldStoreCode_WhenNoCodesExist()
         {
             // Arrange
             var code = Guid.NewGuid();
-            string storedJson = null!;
-
-            _sessionStorageMock.Setup(s => s.GetAsync(RecordedSharingAccessKey)).ReturnsAsync((string)null);
-            _sessionStorageMock.Setup(s => s.SetAsync(RecordedSharingAccessKey, It.IsAny<string>()))
-                .Callback<string, string>((k, v) => storedJson = v)
+            string storedJson = null;
+            _sessionStorageService
+                .Setup(x => x.SetAsync(RecordedSharingAccessKey, It.IsAny<string>()))
+                .Callback<string, string>((_, value) => storedJson = value)
                 .Returns(Task.CompletedTask);
 
             // Act
             await _sut.AddRecordedSharingAccessCodeAsync(code);
 
             // Assert
-            storedJson.Should().NotBeNullOrEmpty();
-            var list = JsonSerializer.Deserialize<List<string>>(storedJson!);
-            list.Should().Contain(code.ToString());
-            _sessionStorageMock.Verify(s => s.SetAsync(RecordedSharingAccessKey, It.IsAny<string>()), Times.Once);
+            JsonSerializer.Deserialize<List<string>>(storedJson).Should().Equal(code.ToString());
         }
 
         [Test]
-        public async Task AddRecordedSharingAccessCodeAsync_Does_Not_Add_When_Already_Present()
+        public async Task AddRecordedSharingAccessCodeAsync_ShouldAppendCode_AndPreserveExistingCodes()
+        {
+            // Arrange
+            var existingCode = Guid.NewGuid();
+            var newCode = Guid.NewGuid();
+            string? storedJson = null;
+            SetupSessionValue(RecordedSharingAccessKey, new List<string> { existingCode.ToString() });
+            _sessionStorageService
+                .Setup(x => x.SetAsync(RecordedSharingAccessKey, It.IsAny<string>()))
+                .Callback<string, string>((_, value) => storedJson = value)
+                .Returns(Task.CompletedTask);
+
+            // Act
+            await _sut.AddRecordedSharingAccessCodeAsync(newCode);
+
+            // Assert
+            JsonSerializer.Deserialize<List<string>>(storedJson!).Should().Equal(
+                existingCode.ToString(),
+                newCode.ToString());
+        }
+
+        [Test]
+        public async Task AddRecordedSharingAccessCodeAsync_ShouldNotStoreCode_WhenAlreadyPresent()
         {
             // Arrange
             var code = Guid.NewGuid();
-            var existing = new List<string> { code.ToString() };
-            var json = JsonSerializer.Serialize(existing);
-
-            _sessionStorageMock.Setup(s => s.GetAsync(RecordedSharingAccessKey)).ReturnsAsync(json);
+            SetupSessionValue(RecordedSharingAccessKey, new List<string> { code.ToString() });
 
             // Act
             await _sut.AddRecordedSharingAccessCodeAsync(code);
 
             // Assert
-            _sessionStorageMock.Verify(s => s.SetAsync(RecordedSharingAccessKey, It.IsAny<string>()), Times.Never);
+            _sessionStorageService.Verify(
+                x => x.SetAsync(RecordedSharingAccessKey, It.IsAny<string>()),
+                Times.Never);
         }
 
         [Test]
-        public async Task IsSharingAccessCodeRecordedAsync_Returns_True_When_Present()
+        public async Task IsSharingAccessCodeRecordedAsync_ShouldReturnTrue_WhenCodeIsPresent()
         {
             // Arrange
             var code = Guid.NewGuid();
-            var existing = new List<string> { code.ToString() };
-            var json = JsonSerializer.Serialize(existing);
-
-            _sessionStorageMock.Setup(s => s.GetAsync(RecordedSharingAccessKey)).ReturnsAsync(json);
+            SetupSessionValue(RecordedSharingAccessKey, new List<string> { code.ToString() });
 
             // Act
             var result = await _sut.IsSharingAccessCodeRecordedAsync(code);
@@ -233,97 +590,112 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
         }
 
         [Test]
-        public async Task IsSharingAccessCodeRecordedAsync_Returns_False_When_Not_Present()
+        public async Task IsSharingAccessCodeRecordedAsync_ShouldReturnFalse_WhenCodeIsNotPresent()
         {
             // Arrange
-            var code = Guid.NewGuid();
-
-            _sessionStorageMock.Setup(s => s.GetAsync(RecordedSharingAccessKey)).ReturnsAsync((string)null);
+            SetupSessionValue(
+                RecordedSharingAccessKey,
+                new List<string> { Guid.NewGuid().ToString() });
 
             // Act
-            var result = await _sut.IsSharingAccessCodeRecordedAsync(code);
+            var result = await _sut.IsSharingAccessCodeRecordedAsync(Guid.NewGuid());
 
             // Assert
             result.Should().BeFalse();
         }
 
         [Test]
-        public async Task SetDeliveryAddressAsync_Calls_Storage_With_Correct_Key()
+        public async Task IsSharingAccessCodeRecordedAsync_ShouldReturnFalse_WhenNoCodesAreStored()
         {
-            var addr = new CheckAndSubmitViewModel
+            // Arrange
+
+            // Act
+            var result = await _sut.IsSharingAccessCodeRecordedAsync(Guid.NewGuid());
+
+            // Assert
+            result.Should().BeFalse();
+        }
+
+        [Test]
+        public async Task ClearSessionDataAsync_ShouldClearAllSessionValues()
+        {
+            // Arrange
+
+            // Act
+            await _sut.ClearSessionDataAsync();
+
+            // Assert
+            _sessionStorageService.Verify(x => x.ClearAsync(ShareEmailKey), Times.Once);
+            _sessionStorageService.Verify(x => x.ClearAsync(OwnedCertificatesKey), Times.Once);
+            _sessionStorageService.Verify(x => x.ClearAsync(UlnAuthorisationKey), Times.Once);
+            _sessionStorageService.Verify(x => x.ClearAsync(AuthorisationAnswersKey), Times.Once);
+            _sessionStorageService.Verify(x => x.ClearAsync(RecordedSharingAccessKey), Times.Once);
+            _sessionStorageService.Verify(x => x.ClearAsync(DeliveryAddressKey), Times.Once);
+            _sessionStorageService.Verify(x => x.ClearAsync(ContactReferenceKey), Times.Once);
+            _sessionStorageService.Verify(x => x.ClearAsync(It.IsAny<string>()), Times.Exactly(7));
+        }
+
+        private void SetupUserLookup(string govUkIdentifier, User? user)
+        {
+            _userService.Setup(x => x.GetUserId()).Returns((Guid?)null);
+            _userService.Setup(x => x.GetGovUkIdentifier()).Returns(govUkIdentifier);
+            _mediator
+                .Setup(x => x.Send(
+                    It.Is<GetUserQuery>(q => q.GovUkIdentifier == govUkIdentifier),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(user);
+        }
+
+        private void SetupSessionValue<T>(string key, T value)
+        {
+            _sessionStorageService
+                .Setup(x => x.GetAsync(key))
+                .ReturnsAsync(JsonSerializer.Serialize(value));
+        }
+
+        private static User CreateUser(string govUkIdentifier)
+        {
+            return new User
+            {
+                Id = Guid.NewGuid(),
+                GovUkIdentifier = govUkIdentifier,
+                EmailAddress = "user@test.com"
+            };
+        }
+
+        private static List<Certificate> CreateCertificates()
+        {
+            return new List<Certificate>
+            {
+                new Certificate
+                {
+                    CertificateId = Guid.NewGuid(),
+                    CertificateType = CertificateType.Standard,
+                    CourseName = "Course",
+                    CourseLevel = "1"
+                }
+            };
+        }
+
+        private static UlnAuthorisation CreateAuthorisation()
+        {
+            return new UlnAuthorisation
+            {
+                AuthorisationId = Guid.NewGuid(),
+                Uln = "1234567890",
+                AuthorisedAt = new DateTime(2026, 8, 20, 12, 0, 0, DateTimeKind.Utc)
+            };
+        }
+
+        private static CheckAndSubmitViewModel CreateAddress()
+        {
+            return new CheckAndSubmitViewModel
             {
                 CertificateId = Guid.NewGuid(),
-                Organisation = "Org",
-                AddressLine1 = "L1",
-                Postcode = "PC1"
+                Organisation = "Organisation",
+                AddressLine1 = "1 Test Street",
+                Postcode = "AA1 1AA"
             };
-
-            await _sut.SetDeliveryAddressAsync(addr);
-
-            _sessionStorageMock.Verify(s => s.SetAsync(DeliveryAddressKeyPrefix, It.IsAny<string>()), Times.Once);
-        }
-
-        [Test]
-        public async Task GetDeliveryAddressAsync_Returns_Value_From_Storage()
-        {
-            var addr = new CheckAndSubmitViewModel
-            {
-                CertificateId = Guid.NewGuid(),
-                Organisation = "Org",
-                AddressLine1 = "L1",
-                Postcode = "PC1"
-            };
-            var json = JsonSerializer.Serialize(addr);
-
-            _sessionStorageMock.Setup(s => s.GetAsync(DeliveryAddressKeyPrefix)).ReturnsAsync(json);
-
-            var result = await _sut.GetDeliveryAddressAsync();
-
-            result.Should().NotBeNull();
-            result!.Organisation.Should().Be("Org");
-            result.AddressLine1.Should().Be("L1");
-            result.Postcode.Should().Be("PC1");
-        }
-
-        [Test]
-        public async Task ClearDeliveryAddressAsync_Calls_ClearAsync_With_Correct_Key()
-        {
-            await _sut.ClearDeliveryAddressAsync();
-
-            _sessionStorageMock.Verify(s => s.ClearAsync(DeliveryAddressKeyPrefix), Times.Once);
-        }
-
-        [Test]
-        public async Task SetAuthorisationAnswersAsync_Calls_Storage_With_Correct_Key()
-        {
-            var answers = new AuthorisationAnswers { KnowUln = true, Uln = 1234567890L };
-
-            await _sut.SetAuthorisationAnswersAsync(answers);
-
-            _sessionStorageMock.Verify(s => s.SetAsync(AuthorisationAnswersKeyPrefix, It.IsAny<string>()), Times.Once);
-        }
-
-        [Test]
-        public async Task GetAuthorisationAnswersAsync_Returns_Value_From_Storage()
-        {
-            var answers = new AuthorisationAnswers { KnowUln = false, Uln = (long?)null };
-            var json = JsonSerializer.Serialize(answers);
-
-            _sessionStorageMock.Setup(s => s.GetAsync(AuthorisationAnswersKeyPrefix)).ReturnsAsync(json);
-
-            var result = await _sut.GetAuthorisationAnswersAsync();
-
-            result.Should().NotBeNull();
-            result!.KnowUln.Should().BeFalse();
-            result.Uln.Should().BeNull();
-        }
-
-        [Test]
-        public async Task ClearAuthorisationAnswersAsync_Calls_ClearAsync_With_Correct_Key()
-        {
-            await _sut.ClearAuthorisationAnswersAsync();
-
-            _sessionStorageMock.Verify(s => s.ClearAsync(AuthorisationAnswersKeyPrefix), Times.Once);
         }
     }
 }
