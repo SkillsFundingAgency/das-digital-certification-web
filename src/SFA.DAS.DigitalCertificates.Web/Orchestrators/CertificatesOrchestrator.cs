@@ -221,11 +221,16 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             else if (model.CertificateType == CertificateType.Framework)
             {
                 templateBytes = await _blob.GetBlobBytesAsync(_digitalCertificatesWebConfiguration.ContainerName, _digitalCertificatesWebConfiguration.FrameworkTemplateBlobName);
+                var fwCourseName = model.CourseName ?? string.Empty;
+                var fwCourseOption = model.CourseOption;
+                var includeFwCourseOption = !string.IsNullOrWhiteSpace(fwCourseOption) &&
+                                            !string.Equals(NormaliseForComparison(fwCourseName), NormaliseForComparison(fwCourseOption), StringComparison.OrdinalIgnoreCase);
+
                 values.Add(PassedInfo, string.Join(Environment.NewLine,
                         new[]
                         {
-                model.CourseName.ToUpper(),
-                model.CourseOption?.ToUpper(),
+                fwCourseName.ToUpper(),
+                includeFwCourseOption ? fwCourseOption?.ToUpper() : null,
                 $"{model.CourseLevel.ToUpper()}  {Level}"
                         }.Where(x => !string.IsNullOrWhiteSpace(x))));
             }
@@ -305,6 +310,21 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             return fields.FirstOrDefault(f =>
                 string.Equals(f.PartialName, key, StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(f.FullName, key, StringComparison.OrdinalIgnoreCase));
+        }
+
+        private static string NormaliseForComparison(string? input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+            {
+                return string.Empty;
+            }
+
+            return string.Join(
+                " ",
+                input.Split(
+                    (char[]?)null,
+                    StringSplitOptions.RemoveEmptyEntries))
+                .ToLowerInvariant();
         }
    
         public async Task<CreateUserActionForCertificateResult> CreateUserActionForCertificate(Guid certificateId, ActionType actionType)
