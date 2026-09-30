@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using FluentValidation;
 using MediatR;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using SFA.DAS.DigitalCertificates.Application.Commands.AuthoriseUser;
@@ -141,7 +140,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             var matches = await _cacheService.GetMatchesAsync(govUkId);
             if(matches == null)
             {
-                var govUkCredentialSubject = await GetVerifyDetails();
+                var govUkCredentialSubject = GetVerifyDetails();
                 if (govUkCredentialSubject != null)
                 {
                     matches = await _cacheService.CreateMatchesAsync(govUkId, userId.Value, govUkCredentialSubject);
@@ -659,22 +658,16 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             return mostRecent?.ActionCode;
         }
 
-        private async Task<GovUkCredentialSubject> GetVerifyDetails()
+        private GovUkCredentialSubject GetVerifyDetails()
         {
-            if (HttpContext != null)
-            {
-                var token = await HttpContext.GetTokenAsync("access_token");
-                var details = await _govUkAuthenticationService.GetAccountDetails(token);
+            var credentialSubject = _govUkAuthenticationService
+                .GetAccountDetails()?
+                .CoreIdentityJwt?
+                .Vc?
+                .CredentialSubject;
 
-                if (details == null)
-                {
-                    throw new VerifyException("Unable to load verify details");
-                }
-
-                return details.CoreIdentityJwt.Vc.CredentialSubject;
-            }
-
-            return null;
+            return credentialSubject
+                ?? throw new VerifyException("Unable to load identity details from GOV.UK verify");
         }
 
         private sealed class MatchResult
