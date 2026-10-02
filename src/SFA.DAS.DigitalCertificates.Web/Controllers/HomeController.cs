@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
 using SFA.DAS.DigitalCertificates.Domain.Extensions;
 using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
@@ -22,6 +23,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         private readonly IHomeOrchestrator _homeOrchestrator;
         private readonly ILogger<HomeController> _logger;
         private readonly DigitalCertificatesWebConfiguration _digitalCertificatesWebConfiguration;
+        private readonly LinkGenerator _linkGenerator;
 
         #region Routes
         public const string VerifiedRouteGet = nameof(VerifiedRouteGet);
@@ -38,12 +40,14 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         public const string StartPageRouteGet = nameof(StartPageRouteGet);
         #endregion Routes
 
-        public HomeController(IHttpContextAccessor contextAccessor, IHomeOrchestrator homeOrchestrator, ILogger<HomeController> logger, DigitalCertificatesWebConfiguration digitalCertificatesWebConfiguration)
+        public HomeController(IHttpContextAccessor contextAccessor, IHomeOrchestrator homeOrchestrator, 
+            ILogger<HomeController> logger, DigitalCertificatesWebConfiguration digitalCertificatesWebConfiguration, LinkGenerator linkGenerator)
             : base(contextAccessor)
         {
             _homeOrchestrator = homeOrchestrator;
             _logger = logger;
             _digitalCertificatesWebConfiguration = digitalCertificatesWebConfiguration;
+            _linkGenerator = linkGenerator;
         }
 
         [Route("start-page", Name = StartPageRouteGet)]
@@ -72,14 +76,16 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         [HttpPost("check", Name = CheckRoutePost)]
         [Authorize(Policy = nameof(PolicyNames.IsActiveAccount))]
         [ValidateAntiForgeryToken]
-        public IActionResult CheckContinue(string returnUrl = "/")
+        public IActionResult CheckContinue(string? returnUrl)
         {
-            if (!Url.IsLocalUrl(returnUrl))
+            if (returnUrl == null || !Url.IsLocalUrl(returnUrl))
             {
-                returnUrl = "/";
+                returnUrl = _linkGenerator.GetPathByName(
+                    HttpContext,
+                    CertificatesController.CertificatesListRouteGet);
             }
 
-            return Redirect($"{ServiceRoutes.Paths.VerifyIdentity.ServiceControllerPath()}?returnUrl={Uri.EscapeDataString(returnUrl)}");
+            return Redirect($"{ServiceRoutes.Paths.VerifyIdentity.ServiceControllerPath()}?returnUrl={Uri.EscapeDataString(returnUrl!)}");
         }
 
         [Route("verified", Name = VerifiedRouteGet)]

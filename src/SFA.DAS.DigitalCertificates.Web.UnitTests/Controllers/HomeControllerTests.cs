@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
@@ -24,6 +25,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
         private Mock<IHttpContextAccessor> _contextAccessorMock;
         private Mock<ILogger<HomeController>> _loggerMock;
         private DigitalCertificatesWebConfiguration _digitalCertificatesWebConfig;
+        private Mock<LinkGenerator> _linkGeneratorMock;
         private HomeController _sut;
         private DefaultHttpContext _httpContext;
 
@@ -49,6 +51,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
                 AsposeLicenseContainerName = "aspose-license-container",
                 LicenseBlobName = "license-blob"
             };
+            _linkGeneratorMock = new Mock<LinkGenerator>();
 
             _httpContext = new DefaultHttpContext();
 
@@ -60,7 +63,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
                 _contextAccessorMock.Object,
                 _orchestratorMock.Object,
                 _loggerMock.Object,
-                _digitalCertificatesWebConfig);
+                _digitalCertificatesWebConfig,
+                _linkGeneratorMock.Object);
         }
 
         [TearDown]
@@ -176,17 +180,35 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             redirectResult.Url.Should().Be(expectedUrl);
         }
 
-        [Test]
-        public void CheckContinue_WithExternalReturnUrl_ShouldUseRootReturnUrl()
+        [TestCase(null)]
+        [TestCase("https://malicious.example.com")]
+        public void CheckContinue_WithMissingOrExternalReturnUrl_ShouldUseCertificatesListUrl(string returnUrl)
         {
             // Arrange
-            const string returnUrl = "https://malicious.example.com";
+            const string certificatesListUrl = "/certificates/list";
 
-            SetUrlIsLocal(returnUrl, false);
+            if (returnUrl != null)
+            {
+                SetUrlIsLocal(returnUrl, false);
+            }
+
+            // Ensure the controller has a context if not already set in SetUp.
+            _sut.ControllerContext.HttpContext ??= new DefaultHttpContext();
+
+            _linkGeneratorMock
+                .Setup(x => x.GetPathByAddress<string>(
+                    It.IsAny<HttpContext>(),
+                    CertificatesController.CertificatesListRouteGet,
+                    It.IsAny<RouteValueDictionary>(),
+                    It.IsAny<RouteValueDictionary>(),
+                    It.IsAny<PathString?>(),
+                    It.IsAny<FragmentString>(),
+                    It.IsAny<LinkOptions>()))
+                .Returns(certificatesListUrl);
 
             var expectedUrl =
                 $"{ServiceRoutes.Paths.VerifyIdentity.ServiceControllerPath()}" +
-                $"?returnUrl={Uri.EscapeDataString("/")}";
+                $"?returnUrl={Uri.EscapeDataString(certificatesListUrl)}";
 
             // Act
             var result = _sut.CheckContinue(returnUrl);
@@ -464,7 +486,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
                 _contextAccessorMock.Object,
                 _orchestratorMock.Object,
                 _loggerMock.Object,
-                _digitalCertificatesWebConfig)
+                _digitalCertificatesWebConfig,
+                _linkGeneratorMock.Object)
             {
                 ControllerContext = new ControllerContext
                 {
