@@ -21,6 +21,7 @@ namespace SFA.DAS.DigitalCertificates.Application.Commands.SubmitMatch
 
         public bool IsMatched { get; set; }
         public bool IsFailed { get; set; }
+        public bool IsUlnMatched { get; set; }
 
         public static implicit operator SubmitMatchRequest(SubmitMatchCommand c)
         {
@@ -36,7 +37,8 @@ namespace SFA.DAS.DigitalCertificates.Application.Commands.SubmitMatch
                 ProviderName = c.ProviderName,
                 Ukprn = c.Ukprn,
                 IsMatched = c.IsMatched,
-                IsFailed = c.IsFailed
+                IsFailed = c.IsFailed,
+                IsUlnMatched = c.IsUlnMatched
             };
         }
     }

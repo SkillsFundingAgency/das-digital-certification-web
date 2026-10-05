@@ -23,6 +23,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         Task<SelectProviderViewModel?> GetSelectProviderViewModelAsync();
         Task<SelectProviderViewModel> SaveSelectedProviderAsync(SelectProviderViewModel viewModel);
         Task<CheckAnswersViewModel?> GetCheckAnswersViewModelAsync();
+        Task<bool> HasSingleOwnedCertificateAsync();
         Task<MatchOutcome> GetUlnMatchOutcomeAsync(KnowYourUlnViewModel viewModel);
         Task<MatchOutcome> GetCourseMatchOutcomeAsync(SelectCourseViewModel viewModel);
         Task<MatchOutcome> SubmitCheckAnswersAsync();

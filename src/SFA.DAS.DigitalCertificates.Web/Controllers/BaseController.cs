@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using System;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using SFA.DAS.DigitalCertificates.Web.Authorization;
 
 namespace SFA.DAS.DigitalCertificates.Web.Controllers
 {
@@ -12,14 +12,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             _contextAccessor = contextAccessor;
         }
 
-        public IHttpContextAccessor? HttpContextAccessor => _contextAccessor;
-
-        public string? UserId
-        {
-            get
-            {
-                return HttpContextAccessor?.HttpContext?.User.FindFirst(DigitalCertificateClaimsTypes.UserId)?.Value;
-            }
-        }
+        public new HttpContext HttpContext =>
+            _contextAccessor?.HttpContext
+            ?? throw new InvalidOperationException("No HttpContext available.");
     }
 }

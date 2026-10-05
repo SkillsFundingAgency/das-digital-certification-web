@@ -46,10 +46,5 @@ namespace SFA.DAS.DigitalCertificates.Web.StartupExtensions
         {
             return configuration["EnvironmentName"]?.Equals("DEV", StringComparison.CurrentCultureIgnoreCase) ?? false;
         }
-
-        public static bool IsRunningInProd(this IConfiguration configuration)
-        {
-            return configuration["EnvironmentName"]?.Equals("PROD", StringComparison.CurrentCultureIgnoreCase) ?? false;
-        }
     }
 }

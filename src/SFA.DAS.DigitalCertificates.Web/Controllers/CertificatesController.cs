@@ -360,6 +360,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         {
             var result = await _sharingOrchestrator.CreateSharing(certificateId);
 
+            await _sessionService.ClearShareEmailAsync();
+
             return RedirectToRoute(CertificateSharingLinkRouteGet, new { certificateId, sharingId = result });
         }
 
@@ -426,7 +428,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
 
             if (!await _sharingOrchestrator.ValidateShareByEmailViewModel(model, ModelState))
             {
-                await _sessionService.SetShareEmailAsync(model.EmailAddress ?? string.Empty);
                 return RedirectToRoute(CertificateSharingLinkRouteGet, new { certificateId, sharingId, emailAddress = model.EmailAddress ?? string.Empty });
             }
 

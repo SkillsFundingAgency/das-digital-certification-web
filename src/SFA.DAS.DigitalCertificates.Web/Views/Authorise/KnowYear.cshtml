@@ -22,7 +22,7 @@
 
                         <span class="govuk-caption-l">Matching your information</span>
 
-                        <fieldset class="govuk-fieldset" aria-describedby="KnowYear-hint">
+                        <fieldset class="govuk-fieldset" aria-describedby="KnowYear-hint KnowYear-error">
                             <legend class="govuk-fieldset__legend govuk-fieldset__legend--l">
                                 <h1 class="govuk-fieldset__heading">Do you know the year you completed your apprenticeship?</h1>
                             </legend>
@@ -35,7 +35,7 @@
                                 <p id="KnowYear-error" das-validation-for="KnowYear" class="govuk-error-message"></p>
 
                                 <div class="govuk-radios__item">
-                                    <input asp-for="KnowYear" id="KnowYear" class="govuk-radios__input" type="radio" value="true" data-aria-controls="conditional-KnowYear" aria-describedby="KnowYear-error" />
+                                    <input asp-for="KnowYear" id="KnowYear" class="govuk-radios__input" type="radio" value="true" data-aria-controls="conditional-KnowYear" />
                                     <label class="govuk-label govuk-radios__label" for="KnowYear">Yes</label>
                                 </div>
 
@@ -48,7 +48,7 @@
                                 </div>
 
                                 <div class="govuk-radios__item">
-                                    <input asp-for="KnowYear" id="KnowYear-No" class="govuk-radios__input" type="radio" value="false" aria-describedby="KnowYear-error" />
+                                    <input asp-for="KnowYear" id="KnowYear-No" class="govuk-radios__input" type="radio" value="false" />
                                     <label class="govuk-label govuk-radios__label" for="KnowYear-No">No</label>
                                 </div>
 

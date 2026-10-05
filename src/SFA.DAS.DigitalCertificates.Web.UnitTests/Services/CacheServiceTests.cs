@@ -659,7 +659,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
             return new DigitalCertificatesWebConfiguration
             {
                 ServiceBaseUrl = string.Empty,
-                OneLoginSettingsUrl = string.Empty,
+                OneLoginBaseUrl = string.Empty,
+                OneLoginSettingsPath = string.Empty,
                 RedisConnectionString = string.Empty,
                 DataProtectionKeysDatabase = string.Empty,
                 ContainerName = string.Empty,

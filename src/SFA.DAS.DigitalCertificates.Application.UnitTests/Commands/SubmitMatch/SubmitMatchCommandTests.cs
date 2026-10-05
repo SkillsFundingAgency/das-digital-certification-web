@@ -25,7 +25,8 @@ namespace SFA.DAS.DigitalCertificates.UnitTests.Application.Commands.SubmitMatch
                 ProviderName = "Provider A",
                 Ukprn = 12345,
                 IsMatched = true,
-                IsFailed = false
+                IsFailed = false,
+                IsUlnMatched = true
             };
 
             // Act
@@ -43,6 +44,7 @@ namespace SFA.DAS.DigitalCertificates.UnitTests.Application.Commands.SubmitMatch
             req.Ukprn.Should().Be(cmd.Ukprn);
             req.IsMatched.Should().Be(cmd.IsMatched);
             req.IsFailed.Should().Be(cmd.IsFailed);
+            req.IsUlnMatched.Should().Be(cmd.IsUlnMatched);
         }
     }
 }
