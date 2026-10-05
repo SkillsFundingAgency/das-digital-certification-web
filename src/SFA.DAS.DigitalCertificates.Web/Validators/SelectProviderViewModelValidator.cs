@@ -5,7 +5,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Validators
 {
     public class SelectProviderViewModelValidator : AbstractValidator<SelectProviderViewModel>
     {
-        public const string SelectProviderErrorMessage = "Select your training provider or 'I don't know'";
+        public const string SelectProviderErrorMessage = "Select your training provider or 'None of these'";
 
         public SelectProviderViewModelValidator()
         {

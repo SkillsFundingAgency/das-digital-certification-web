@@ -6,8 +6,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Models.Authorise
     public class SelectCourseViewModel : AuthoriseViewModelBase
     {
         public string? SelectedCourseCode { get; set; }
-        public const string UnknownCourseSentinel = "UNKNOWN";
-        public bool? SelectedCourseUnknown { get; set; }
         public List<CourseOption>? Courses { get; set; }
 
         public class CourseOption

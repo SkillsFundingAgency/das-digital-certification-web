@@ -296,6 +296,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             result.RouteValues.Should().ContainKey("certificateId");
             result.RouteValues["certificateId"].Should().Be(certificateId);
             _sharingOrchestratorMock.Verify(s => s.CreateSharing(certificateId), Times.Once);
+            _sessionServiceMock.Verify(s => s.ClearShareEmailAsync(), Times.Once);
         }
 
         [Test]
@@ -455,7 +456,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             result.RouteValues["sharingId"].Should().Be(sharingId);
             result.RouteValues["emailAddress"].Should().Be(string.Empty);
 
-            _sessionServiceMock.Verify(s => s.SetShareEmailAsync(string.Empty), Times.Once);
+            _sessionServiceMock.Verify(s => s.SetShareEmailAsync(string.Empty), Times.Never);
         }
 
         [Test]

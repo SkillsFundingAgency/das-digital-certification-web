@@ -22,7 +22,7 @@ namespace SFA.DAS.DigitalCertificates.Web.StartupExtensions
             services.AddAndConfigureGovUkAuthentication(configuration,
                 new AuthRedirects
                 {
-                    SuspendedRedirectUrl = "/authorise/locked",
+                    SuspendedRedirectUrl = "/authorise/cannot-match",
                     SignedOutRedirectUrl = "/service/signed-out",
                     LoginRedirect = webConfiguration.ServiceBaseUrl + "/stub/sign-in-stub",
                     LocalStubLoginPath = "/stub/sign-in-Stub",

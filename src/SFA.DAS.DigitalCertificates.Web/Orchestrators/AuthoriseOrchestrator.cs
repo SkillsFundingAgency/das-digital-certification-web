@@ -165,7 +165,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             var model = new SelectCourseViewModel
             {
                 SelectedCourseCode = answers?.CourseCode,
-                SelectedCourseUnknown = answers?.CourseUnknown,
                 Courses = courseOptions,
                 IsReturningToCheck = answers?.IsReturningToCheck == true,
                 IsShortJourney = answers?.IsShortJourney == true
@@ -177,17 +176,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         public async Task<SelectCourseViewModel> SaveSelectedCourseAsync(SelectCourseViewModel viewModel)
         {
             var answers = await _sessionService.GetAuthorisationAnswersAsync() ?? new AuthorisationAnswers();
-            if (viewModel.SelectedCourseUnknown == true)
-            {
-                answers.CourseUnknown = true;
-                answers.CourseCode = null;
-                answers.CourseName = null;
-            }
-            else
-            {
-                answers.CourseUnknown = false;
-                answers.CourseCode = viewModel.SelectedCourseCode?.Trim();
-            }
+            answers.CourseUnknown = false;
+            answers.CourseCode = viewModel.SelectedCourseCode?.Trim();
 
             var matches = await GetMatchesAsync();
             var courseOptions = MapMatchesToCourseOptions(matches);
@@ -451,6 +441,13 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             };
         }
 
+        public async Task<bool> HasSingleOwnedCertificateAsync()
+        {
+            var ownedCertificates = await _sessionService.GetOwnedCertificatesAsync();
+
+            return ownedCertificates?.Count == 1;
+        }
+
         public async Task<MatchOutcome> SubmitCheckAnswersAsync()
         {
             var userId = _userService.GetUserId();
@@ -477,6 +474,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             if (matchResult.Outcome == MatchOutcome.SingleMatch || matchResult.Outcome == MatchOutcome.MultipleMatches)
             {
                 var matchResultMatch = matchResult.Match!;
+                var isUlnMatched = answers.Uln != null && matchResultMatch.Uln == answers.Uln.Value;
+
                 await Mediator.Send(new SubmitMatchCommand
                 {
                     UserId = userId.Value,
@@ -490,7 +489,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                     ProviderName = matchResultMatch.ProviderName,
                     Ukprn = matchResultMatch.Ukprn.HasValue ? (int?)matchResultMatch.Ukprn.Value : null,
                     IsMatched = true,
-                    IsFailed = false
+                    IsFailed = false,
+                    IsUlnMatched = isUlnMatched
                 });
 
                 await Mediator.Send(new AuthoriseUserCommand
@@ -519,7 +519,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 ProviderName = answers.ProviderName,
                 Ukprn = answers.ProviderUkprn.HasValue ? (int?)answers.ProviderUkprn.Value : null,
                 IsMatched = false,
-                IsFailed = updatedFailedCount >= failedLimit
+                IsFailed = updatedFailedCount >= failedLimit,
+                IsUlnMatched = answers.Uln != null && matches.Matches.Any(m => m.Uln == answers.Uln.Value)
             });
 
             if (updatedFailedCount >= failedLimit)
