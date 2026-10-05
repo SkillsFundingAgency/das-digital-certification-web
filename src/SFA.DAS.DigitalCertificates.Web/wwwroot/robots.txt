@@ -1,0 +1,3 @@
+User-agent: *
+Disallow: /
+Sitemap: https://certificates.apprenticeships.education.gov.uk/sitemap.xml

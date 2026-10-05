@@ -2,11 +2,11 @@
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
-using SFA.DAS.DigitalCertificates.Domain.Extensions;
 using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
 using SFA.DAS.DigitalCertificates.Web.Infrastructure;
 using SFA.DAS.DigitalCertificates.Web.Models;
@@ -50,6 +50,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             _linkGenerator = linkGenerator;
         }
 
+        [AllowAnonymous]
         [Route("start-page", Name = StartPageRouteGet)]
         public IActionResult Index()
         {
@@ -125,6 +126,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             return View(model);
         }
 
+        [AllowAnonymous]
         [Route("cookie-details", Name = CookieDetailsRouteGet)]
         public IActionResult CookieDetails()
         {
@@ -143,18 +145,40 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             return View(model);
         }
 
+        [AllowAnonymous]
         [Route("error/403")]
         public IActionResult AccessDenied()
         {
             return View();
         }
 
+        [AllowAnonymous]
         [Route("error", Name = ErrorRouteGet)]
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error(string errorMessage)
+        public IActionResult Error()
         {
-            _logger.LogError(errorMessage.SanitizeLogData());
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext?.TraceIdentifier, ErrorMessage = errorMessage });
+            var exceptionFeature =
+                HttpContext.Features.Get<IExceptionHandlerPathFeature>();
+
+            var problemReference =
+                Activity.Current?.Id ??
+                HttpContext.TraceIdentifier;
+
+            if (exceptionFeature?.Error is not null)
+            {
+                _logger.LogError(
+                    exceptionFeature.Error,
+                    "Unhandled exception processing {RequestPath}. RequestId: {RequestId}",
+                    exceptionFeature.Path,
+                    problemReference);
+            }
+
+            Response.StatusCode = StatusCodes.Status500InternalServerError;
+
+            return View(new ErrorViewModel
+            {
+                ProblemReference = problemReference
+            });
         }
 
         private string GetSafeReturnUrl(string? returnUrl, string fallbackUrl = "")
