@@ -225,7 +225,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             }
             else if (model.CertificateType == CertificateType.Framework)
             {
-
 		        templateBlobName = _digitalCertificatesWebConfiguration.FrameworkTemplateBlobName;
                 templateBytes = await _blob.GetBlobBytesAsync(_digitalCertificatesWebConfiguration.ContainerName, templateBlobName);
                 var fwCourseName = model.CourseName ?? string.Empty;
