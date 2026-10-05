@@ -1,5 +1,7 @@
 ﻿@using SFA.DAS.DigitalCertificates.Web.Controllers
 @using SFA.DAS.DigitalCertificates.Web.ViewDataKeys
+@using SFA.DAS.GovUK.Auth.Controllers.Routes
+@model string
 @{
     ViewData[ViewDataKeys.Title] = "Check you've proved your identity";
     ViewBag.GaData.Vpv = @ViewData[ViewDataKeys.GaDataVpvPrefix] + "check";
@@ -35,10 +37,18 @@
                 You can learn more about <a rel="noreferrer noopener" target="_blank" href="https://www.sign-in.service.gov.uk/about/checking-users-identities/evidence-types">how users can prove their identity (opens in a new tab)</a>
             </p>
 
+            <form asp-route="@HomeController.CheckRoutePost"
+                  method="post">
+                <input type="hidden" name="returnUrl" value="@Model" />
 
-            <a asp-route="@HomeController.VerifiedRouteGet" class="govuk-button">
-                Continue
-            </a>
+                <div class="govuk-button-group">
+                    <button type="submit"
+                            class="govuk-button"
+                            data-module="govuk-button">
+                        Continue
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </main>

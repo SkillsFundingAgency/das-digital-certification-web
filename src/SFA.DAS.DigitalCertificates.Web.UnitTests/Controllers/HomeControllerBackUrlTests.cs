@@ -1,6 +1,7 @@
 ﻿using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
@@ -18,6 +19,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
         private Mock<ILogger<HomeController>> _loggerMock;
         private Mock<IUrlHelper> _urlHelperMock;
         private Mock<DigitalCertificatesWebConfiguration> _digitalCertificatesWebConfigurationMock;
+        private Mock<LinkGenerator> _linkGeneratorMock;
+
         private HomeController _sut;
         private DefaultHttpContext _httpContext;
 
@@ -29,16 +32,17 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             _loggerMock = new Mock<ILogger<HomeController>>();
             _urlHelperMock = new Mock<IUrlHelper>();
             _digitalCertificatesWebConfigurationMock = new Mock<DigitalCertificatesWebConfiguration>();
+            _linkGeneratorMock = new Mock<LinkGenerator>();
 
             _httpContext = new DefaultHttpContext();
             _contextAccessorMock.Setup(c => c.HttpContext).Returns(_httpContext);
-          
 
             _sut = new HomeController(
                 _contextAccessorMock.Object,
                 _orchestratorMock.Object,
                 _loggerMock.Object,
-                _digitalCertificatesWebConfigurationMock.Object)
+                _digitalCertificatesWebConfigurationMock.Object,
+                _linkGeneratorMock.Object)
             {
                 ControllerContext = new ControllerContext
                 {
