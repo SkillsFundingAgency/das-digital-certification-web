@@ -66,7 +66,13 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
                 _orchestratorMock.Object,
                 _loggerMock.Object,
                 _digitalCertificatesWebConfig,
-                _linkGeneratorMock.Object);
+                _linkGeneratorMock.Object)
+            {
+                ControllerContext = new ControllerContext
+                {
+                    HttpContext = _httpContext
+                }
+            };
         }
 
         [TearDown]
