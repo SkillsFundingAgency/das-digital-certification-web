@@ -4,6 +4,7 @@ using NUnit.Framework;
 using SFA.DAS.DigitalCertificates.Application.Commands.CreateOrUpdateUser;
 using SFA.DAS.DigitalCertificates.Domain.Interfaces;
 using SFA.DAS.DigitalCertificates.Infrastructure.Api.Requests;
+using SFA.DAS.DigitalCertificates.Infrastructure.Api.Responses;
 
 namespace SFA.DAS.DigitalCertificates.UnitTests.Application.Commands
 {
@@ -34,7 +35,7 @@ namespace SFA.DAS.DigitalCertificates.UnitTests.Application.Commands
 
             _outerApiMock
                 .Setup(x => x.CreateOrUpdateUser(It.IsAny<CreateOrUpdateUserRequest>()))
-                .ReturnsAsync(expectedUserId);
+                .ReturnsAsync(new CreateOrUpdateUserResponse { UserId = expectedUserId });
 
             // Act
             var result = await _sut.Handle(command, CancellationToken.None);
@@ -64,7 +65,7 @@ namespace SFA.DAS.DigitalCertificates.UnitTests.Application.Commands
 
             _outerApiMock
                 .Setup(x => x.CreateOrUpdateUser(It.IsAny<CreateOrUpdateUserRequest>()))
-                .ReturnsAsync(expectedUserId);
+                .ReturnsAsync(new CreateOrUpdateUserResponse { UserId = expectedUserId });
 
             // Act
             var result = await _sut.Handle(command, CancellationToken.None);
