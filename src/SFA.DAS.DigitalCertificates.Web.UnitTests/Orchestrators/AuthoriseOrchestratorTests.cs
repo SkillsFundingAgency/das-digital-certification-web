@@ -69,7 +69,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 new DigitalCertificatesWebConfiguration
                 {
                     ServiceBaseUrl = "https://test.local",
-                    OneLoginSettingsUrl = "https://onelogin",
+                    OneLoginBaseUrl = "https://onelogin/",
+                    OneLoginSettingsPath = "settings",
                     RedisConnectionString = "localhost",
                     DataProtectionKeysDatabase = "keys",
                     ContainerName = "container",
@@ -1356,6 +1357,43 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
 
             // Assert
             Assert.That(result, Is.EqualTo(MatchOutcome.SingleMatch));
+        }
+
+        [Test]
+        public async Task HasSingleOwnedCertificateAsync_Returns_True_When_Exactly_One_StandardOrFramework()
+        {
+            // Arrange
+            var owned = new List<Certificate>
+            {
+                new Certificate { CertificateId = Guid.NewGuid(), CertificateType = CertificateType.Standard, CourseName = "C1", CourseLevel = "1", DateAwarded = DateTime.UtcNow }
+            };
+
+            _sessionServiceMock.Setup(s => s.GetOwnedCertificatesAsync()).ReturnsAsync(owned);
+
+            // Act
+            var result = await _sut.HasSingleOwnedCertificateAsync();
+
+            // Assert
+            Assert.IsTrue(result);
+        }
+
+        [Test]
+        public async Task HasSingleOwnedCertificateAsync_Returns_False_When_More_Than_One_StandardOrFramework()
+        {
+            // Arrange
+            var owned = new List<Certificate>
+            {
+                new Certificate { CertificateId = Guid.NewGuid(), CertificateType = CertificateType.Standard, CourseName = "C1", CourseLevel = "1", DateAwarded = DateTime.UtcNow },
+                new Certificate { CertificateId = Guid.NewGuid(), CertificateType = CertificateType.Framework, CourseName = "C2", CourseLevel = "2", DateAwarded = DateTime.UtcNow }
+            };
+
+            _sessionServiceMock.Setup(s => s.GetOwnedCertificatesAsync()).ReturnsAsync(owned);
+
+            // Act
+            var result = await _sut.HasSingleOwnedCertificateAsync();
+
+            // Assert
+            Assert.IsFalse(result);
         }
     }
 }

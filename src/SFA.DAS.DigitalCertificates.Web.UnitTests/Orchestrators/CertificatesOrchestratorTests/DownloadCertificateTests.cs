@@ -47,7 +47,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
             _digitalCertificatesWebConfig = new DigitalCertificatesWebConfiguration
             {
                 ServiceBaseUrl = "https://test.local",
-                OneLoginSettingsUrl = "http://settings.com",
+                OneLoginBaseUrl = "http://onelogin/",
+                OneLoginSettingsPath = "settings",
                 RedisConnectionString = "UseDevelopmentStorage=true",
                 DataProtectionKeysDatabase = "TestDb",
                 StandardTemplateBlobName = "standard-template",

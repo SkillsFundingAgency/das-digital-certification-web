@@ -1,16 +1,19 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
-using SFA.DAS.DigitalCertificates.Domain.Extensions;
 using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
 using SFA.DAS.DigitalCertificates.Web.Infrastructure;
 using SFA.DAS.DigitalCertificates.Web.Models;
 using SFA.DAS.DigitalCertificates.Web.Models.Sharing;
 using SFA.DAS.DigitalCertificates.Web.Orchestrators;
 using SFA.DAS.GovUK.Auth.Authentication;
+using SFA.DAS.GovUK.Auth.Controllers.Routes;
 
 namespace SFA.DAS.DigitalCertificates.Web.Controllers
 {
@@ -20,12 +23,13 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         private readonly IHomeOrchestrator _homeOrchestrator;
         private readonly ILogger<HomeController> _logger;
         private readonly DigitalCertificatesWebConfiguration _digitalCertificatesWebConfiguration;
+        private readonly LinkGenerator _linkGenerator;
 
         #region Routes
         public const string VerifiedRouteGet = nameof(VerifiedRouteGet);
         public const string CheckRouteGet = nameof(CheckRouteGet);
+        public const string CheckRoutePost = nameof(CheckRoutePost);
         public const string HelpRouteGet = nameof(HelpRouteGet);
-        public const string LockedRouteGet = nameof(LockedRouteGet);
         public const string CookiesRouteGet = nameof(CookiesRouteGet);
         public const string CookiesRoutePost = nameof(CookiesRoutePost);
         public const string CookieDetailsRouteGet = nameof(CookieDetailsRouteGet);
@@ -36,14 +40,17 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         public const string StartPageRouteGet = nameof(StartPageRouteGet);
         #endregion Routes
 
-        public HomeController(IHttpContextAccessor contextAccessor, IHomeOrchestrator homeOrchestrator, ILogger<HomeController> logger, DigitalCertificatesWebConfiguration digitalCertificatesWebConfiguration)
+        public HomeController(IHttpContextAccessor contextAccessor, IHomeOrchestrator homeOrchestrator, 
+            ILogger<HomeController> logger, DigitalCertificatesWebConfiguration digitalCertificatesWebConfiguration, LinkGenerator linkGenerator)
             : base(contextAccessor)
         {
             _homeOrchestrator = homeOrchestrator;
             _logger = logger;
             _digitalCertificatesWebConfiguration = digitalCertificatesWebConfiguration;
+            _linkGenerator = linkGenerator;
         }
 
+        [AllowAnonymous]
         [Route("start-page", Name = StartPageRouteGet)]
         public IActionResult Index()
         {
@@ -55,11 +62,31 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             return View();
         }
 
-        [Route("check", Name = CheckRouteGet)]
+        [HttpGet("check", Name = CheckRouteGet)]
         [Authorize(Policy = nameof(PolicyNames.IsActiveAccount))]
-        public IActionResult Check()
+        public IActionResult Check(string returnUrl = "/")
         {
-            return View();
+            if (!Url.IsLocalUrl(returnUrl))
+            {
+                returnUrl = "/";
+            }
+
+            return View(model: returnUrl);
+        }
+
+        [HttpPost("check", Name = CheckRoutePost)]
+        [Authorize(Policy = nameof(PolicyNames.IsActiveAccount))]
+        [ValidateAntiForgeryToken]
+        public IActionResult CheckContinue(string? returnUrl)
+        {
+            if (returnUrl == null || !Url.IsLocalUrl(returnUrl))
+            {
+                returnUrl = _linkGenerator.GetPathByName(
+                    HttpContext,
+                    CertificatesController.CertificatesListRouteGet);
+            }
+
+            return Redirect($"{ServiceRoutes.Paths.VerifyIdentity.ServiceControllerPath()}?returnUrl={Uri.EscapeDataString(returnUrl!)}");
         }
 
         [Route("verified", Name = VerifiedRouteGet)]
@@ -69,12 +96,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             return RedirectToRoute(CertificatesController.CertificatesListRouteGet);
         }
 
-        [Route("locked", Name = LockedRouteGet)]
-        [Authorize(Policy = nameof(PolicyNames.IsAuthenticated))]
-        public IActionResult Locked()
-        {
-            return View();
-        }
+        
 
         [AllowAnonymous]
         [Route("cookies", Name = CookiesRouteGet)]
@@ -104,6 +126,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             return View(model);
         }
 
+        [AllowAnonymous]
         [Route("cookie-details", Name = CookieDetailsRouteGet)]
         public IActionResult CookieDetails()
         {
@@ -122,18 +145,40 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             return View(model);
         }
 
+        [AllowAnonymous]
         [Route("error/403")]
         public IActionResult AccessDenied()
         {
             return View();
         }
 
+        [AllowAnonymous]
         [Route("error", Name = ErrorRouteGet)]
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error(string errorMessage)
+        public IActionResult Error()
         {
-            _logger.LogError(errorMessage.SanitizeLogData());
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContextAccessor?.HttpContext?.TraceIdentifier, ErrorMessage = errorMessage });
+            var exceptionFeature =
+                HttpContext.Features.Get<IExceptionHandlerPathFeature>();
+
+            var problemReference =
+                Activity.Current?.Id ??
+                HttpContext.TraceIdentifier;
+
+            if (exceptionFeature?.Error is not null)
+            {
+                _logger.LogError(
+                    exceptionFeature.Error,
+                    "Unhandled exception processing {RequestPath}. RequestId: {RequestId}",
+                    exceptionFeature.Path,
+                    problemReference);
+            }
+
+            Response.StatusCode = StatusCodes.Status500InternalServerError;
+
+            return View(new ErrorViewModel
+            {
+                ProblemReference = problemReference
+            });
         }
 
         private string GetSafeReturnUrl(string? returnUrl, string fallbackUrl = "")
