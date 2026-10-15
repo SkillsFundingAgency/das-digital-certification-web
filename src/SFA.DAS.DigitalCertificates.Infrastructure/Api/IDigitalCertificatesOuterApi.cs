@@ -12,7 +12,7 @@ namespace SFA.DAS.DigitalCertificates.Domain.Interfaces
         Task<UserResponse> GetUser([Path] string govUkIdentifier);
 
         [Post("/users")]
-        Task<Guid> CreateOrUpdateUser([Body] CreateOrUpdateUserRequest request);
+        Task<CreateOrUpdateUserResponse> CreateOrUpdateUser([Body] CreateOrUpdateUserRequest request);
 
         [Post("/users/{userId}/identity")]
         Task UpdateUserIdentity([Path] Guid userId, [Body] UpdateUserIdentityRequest request);
