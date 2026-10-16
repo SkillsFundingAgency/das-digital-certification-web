@@ -33,6 +33,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         private Mock<ICacheService> _cacheServiceMock;
         private Mock<ISessionService> _sessionServiceMock;
         private Mock<IGovUkAuthenticationService> _govUkAuthenticationServiceMock;
+        private Mock<IValidator<EnterYourUlnViewModel>> _enterUlnValidatorMock;
         private Mock<IValidator<KnowYourUlnViewModel>> _knowUlnValidatorMock;
         private Mock<IValidator<KnowYearViewModel>> _knowYearValidatorMock;
         private Mock<IValidator<SelectCourseViewModel>> _selectCourseValidatorMock;
@@ -50,6 +51,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             _cacheServiceMock = new Mock<ICacheService>();
             _sessionServiceMock = new Mock<ISessionService>();
             _govUkAuthenticationServiceMock = new Mock<IGovUkAuthenticationService>();
+            _enterUlnValidatorMock = new Mock<IValidator<EnterYourUlnViewModel>>();
             _knowUlnValidatorMock = new Mock<IValidator<KnowYourUlnViewModel>>();
             _knowYearValidatorMock = new Mock<IValidator<KnowYearViewModel>>();
             _selectCourseValidatorMock = new Mock<IValidator<SelectCourseViewModel>>();
@@ -62,6 +64,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 _userServiceMock.Object,
                 _cacheServiceMock.Object,
                 _govUkAuthenticationServiceMock.Object,
+                _enterUlnValidatorMock.Object,
                 _knowUlnValidatorMock.Object,
                 _knowYearValidatorMock.Object,
                 _selectCourseValidatorMock.Object,
@@ -88,6 +91,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         public void TearDown()
         {
             _sut = null;
+            _enterUlnValidatorMock = null;
             _knowUlnValidatorMock = null;
             _knowYearValidatorMock = null;
             _selectCourseValidatorMock = null;
@@ -1259,7 +1263,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         public async Task GetCourseMatchOutcomeAsync_Returns_NoData_When_ViewModel_Null()
         {
             // Act
-            var result = await _sut.GetCourseMatchOutcomeAsync(null);
+            var result = await _sut.GetCourseMatchOutcomeAsync();
 
             // Assert
             Assert.That(result, Is.EqualTo(MatchOutcome.NoData));
@@ -1301,7 +1305,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 });
 
             // Act
-            var result = await _sut.GetCourseMatchOutcomeAsync(new SelectCourseViewModel { SelectedCourseCode = "C1" });
+            var result = await _sut.GetCourseMatchOutcomeAsync();
 
             // Assert
             Assert.That(result, Is.EqualTo(MatchOutcome.SingleMatch));
@@ -1311,7 +1315,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         public async Task GetUlnMatchOutcomeAsync_Returns_NoData_When_ViewModel_Null()
         {
             // Act
-            var result = await _sut.GetUlnMatchOutcomeAsync(null);
+            var result = await _sut.GetUlnMatchOutcomeAsync();
 
             // Assert
             Assert.That(result, Is.EqualTo(MatchOutcome.NoData));
@@ -1353,7 +1357,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 });
 
             // Act
-            var result = await _sut.GetUlnMatchOutcomeAsync(new KnowYourUlnViewModel { Uln = 22222222L });
+            var result = await _sut.GetUlnMatchOutcomeAsync();
 
             // Assert
             Assert.That(result, Is.EqualTo(MatchOutcome.SingleMatch));

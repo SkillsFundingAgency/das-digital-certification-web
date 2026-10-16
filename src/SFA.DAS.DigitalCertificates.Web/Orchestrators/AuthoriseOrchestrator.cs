@@ -28,6 +28,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         private readonly IUserService _userService;
         private readonly ICacheService _cacheService;
         private readonly IGovUkAuthenticationService _govUkAuthenticationService;
+        private readonly IValidator<EnterYourUlnViewModel> _enterUlnValidator;
         private readonly IValidator<KnowYourUlnViewModel> _knowUlnValidator;
         private readonly IValidator<KnowYearViewModel> _knowYearValidator;
         private readonly IValidator<SelectCourseViewModel> _selectCourseValidator;
@@ -36,6 +37,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 
         public AuthoriseOrchestrator(IMediator mediator, IHttpContextAccessor httpContextAccessor, ISessionService sessionService, IUserService userService, 
             ICacheService cacheService, IGovUkAuthenticationService govUkAuthenticationService,
+                IValidator<EnterYourUlnViewModel> enterUlnValidator,
                 IValidator<KnowYourUlnViewModel> knowUlnValidator,
                 IValidator<KnowYearViewModel> knowYearValidator,
                 IValidator<SelectCourseViewModel> selectCourseValidator,
@@ -47,6 +49,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             _userService = userService;
             _cacheService = cacheService;
             _govUkAuthenticationService = govUkAuthenticationService;
+            _enterUlnValidator = enterUlnValidator;
             _knowUlnValidator = knowUlnValidator;
             _knowYearValidator = knowYearValidator;
             _selectCourseValidator = selectCourseValidator;
@@ -60,6 +63,43 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 
             return matches?.Matches?.Any() == true &&
                    matches?.Masks?.Any() == true;
+        }
+
+        public async Task<bool> HasMultipleMatches()
+        {
+            var matches = await GetMatchesAsync();
+            return matches?.Matches?.Count() > 1;
+        }
+
+        public async Task<bool> ValidateEnterYourUlnViewModel(EnterYourUlnViewModel viewModel, ModelStateDictionary modelState)
+        {
+            return await ValidateViewModel(_enterUlnValidator, viewModel, modelState);
+        }
+
+        public async Task<EnterYourUlnViewModel?> GetEnterYourUlnViewModelAsync()
+        {
+            var answers = await _sessionService.GetAuthorisationAnswersAsync();
+            if (answers == null) return new EnterYourUlnViewModel { IsReturningToCheck = false };
+
+            return new EnterYourUlnViewModel
+            {
+                Uln = answers.Uln,
+                IsReturningToCheck = answers.IsReturningToCheck,
+                IsShortJourney = answers.IsShortJourney
+            };
+        }
+
+        public async Task<EnterYourUlnViewModel> SaveEnterYourUlnAsync(EnterYourUlnViewModel viewModel)
+        {
+            var answers = await _sessionService.GetAuthorisationAnswersAsync() ?? new AuthorisationAnswers();
+            answers.Uln = viewModel.Uln;
+
+            await _sessionService.SetAuthorisationAnswersAsync(answers);
+
+            viewModel.IsReturningToCheck = answers.IsReturningToCheck;
+            viewModel.IsShortJourney = answers.IsShortJourney;
+
+            return viewModel;
         }
 
         public async Task<bool> ValidateKnowYourUlnViewModel(KnowYourUlnViewModel viewModel, ModelStateDictionary modelState)
@@ -356,14 +396,12 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             return distinctProviders;
         }
 
-        public async Task<MatchOutcome> GetCourseMatchOutcomeAsync(SelectCourseViewModel viewModel)
+        public async Task<MatchOutcome> GetCourseMatchOutcomeAsync()
         {
-            if (viewModel == null) return MatchOutcome.NoData;
-
-            var answers = await _sessionService.GetAuthorisationAnswersAsync() ?? new AuthorisationAnswers();
             var matches = await GetMatchesAsync();
             if (matches == null) return MatchOutcome.NoData;
 
+            var answers = await _sessionService.GetAuthorisationAnswersAsync() ?? new AuthorisationAnswers();
             var matchResult = FindMatch(answers, matches.Matches ?? Enumerable.Empty<Match>());
 
             await _sessionService.SetAuthorisationAnswersAsync(answers);
@@ -371,10 +409,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             return matchResult.Outcome;
         }
 
-        public async Task<MatchOutcome> GetUlnMatchOutcomeAsync(KnowYourUlnViewModel viewModel)
+        public async Task<MatchOutcome> GetUlnMatchOutcomeAsync()
         {
-            if (viewModel == null) return MatchOutcome.NoData;
-
             var answers = await _sessionService.GetAuthorisationAnswersAsync() ?? new AuthorisationAnswers();
             var matches = await GetMatchesAsync();
             if (matches == null) return MatchOutcome.NoData;
@@ -614,9 +650,11 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             {
                 var firstUln = candidates[0].Uln;
                 var allSameUln = candidates.All(c => c.Uln == firstUln);
-                return allSameUln
-                    ? MatchResult.Multiple(candidates[0])
-                    : MatchResult.NoData();
+
+                if (allSameUln)
+                {
+                    return MatchResult.Multiple(candidates[0]);
+                }
             }
 
             return MatchResult.None();

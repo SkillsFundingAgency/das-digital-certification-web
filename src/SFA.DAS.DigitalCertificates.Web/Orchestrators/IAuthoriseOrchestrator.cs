@@ -9,9 +9,16 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
     public interface IAuthoriseOrchestrator
     {
         Task<bool> PrepareNeedMoreInformationAsync();
+        Task<bool> HasMultipleMatches();
+
+        Task<bool> ValidateEnterYourUlnViewModel(EnterYourUlnViewModel viewModel, ModelStateDictionary modelState);
+        Task<EnterYourUlnViewModel?> GetEnterYourUlnViewModelAsync();
+        Task<EnterYourUlnViewModel> SaveEnterYourUlnAsync(EnterYourUlnViewModel viewModel);
+
         Task<bool> ValidateKnowYourUlnViewModel(KnowYourUlnViewModel viewModel, ModelStateDictionary modelState);
         Task<KnowYourUlnViewModel?> GetKnowYourUlnViewModelAsync();
         Task<KnowYourUlnViewModel> SaveKnowYourUlnAsync(KnowYourUlnViewModel viewModel);
+        
         Task<bool> ValidateKnowYearViewModel(KnowYearViewModel viewModel, ModelStateDictionary modelState);
         Task<KnowYearViewModel?> GetKnowYearViewModelAsync();
         Task<KnowYearViewModel> SaveKnowYearAsync(KnowYearViewModel viewModel);
@@ -24,8 +31,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         Task<SelectProviderViewModel> SaveSelectedProviderAsync(SelectProviderViewModel viewModel);
         Task<CheckAnswersViewModel?> GetCheckAnswersViewModelAsync();
         Task<bool> HasSingleOwnedCertificateAsync();
-        Task<MatchOutcome> GetUlnMatchOutcomeAsync(KnowYourUlnViewModel viewModel);
-        Task<MatchOutcome> GetCourseMatchOutcomeAsync(SelectCourseViewModel viewModel);
+        Task<MatchOutcome> GetUlnMatchOutcomeAsync();
+        Task<MatchOutcome> GetCourseMatchOutcomeAsync();
         Task<MatchOutcome> SubmitCheckAnswersAsync();
         Task<string?> CreateUserActionForCannotMatchAsync(ActionType actionType);
         Task<string?> GetLatestUserActionReferenceAsync(ActionType actionType);

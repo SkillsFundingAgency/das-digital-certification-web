@@ -245,7 +245,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             var vm = new SelectCourseViewModel { SelectedCourseCode = "ABC123" };
             _orchestratorMock.Setup(o => o.ValidateSelectCourseViewModel(vm, It.IsAny<ModelStateDictionary>())).ReturnsAsync(true);
             _orchestratorMock.Setup(o => o.SaveSelectedCourseAsync(vm)).ReturnsAsync(vm);
-            _orchestratorMock.Setup(o => o.GetCourseMatchOutcomeAsync(vm)).ReturnsAsync(MatchOutcome.NoData);
+            _orchestratorMock.Setup(o => o.GetCourseMatchOutcomeAsync()).ReturnsAsync(MatchOutcome.NoData);
 
             // Act
             var result = await _sut.SelectCourse(vm);
@@ -264,7 +264,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             var vm = new SelectCourseViewModel { SelectedCourseCode = "ABC123" };
             _orchestratorMock.Setup(o => o.ValidateSelectCourseViewModel(vm, It.IsAny<ModelStateDictionary>())).ReturnsAsync(true);
             _orchestratorMock.Setup(o => o.SaveSelectedCourseAsync(vm)).ReturnsAsync(vm);
-            _orchestratorMock.Setup(o => o.GetCourseMatchOutcomeAsync(vm)).ReturnsAsync(MatchOutcome.NoMatch);
+            _orchestratorMock.Setup(o => o.GetCourseMatchOutcomeAsync()).ReturnsAsync(MatchOutcome.NoMatch);
 
             // Act
             var result = await _sut.SelectCourse(vm);
@@ -283,7 +283,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             var vm = new SelectCourseViewModel { SelectedCourseCode = "ABC123" };
             _orchestratorMock.Setup(o => o.ValidateSelectCourseViewModel(vm, It.IsAny<ModelStateDictionary>())).ReturnsAsync(true);
             _orchestratorMock.Setup(o => o.SaveSelectedCourseAsync(vm)).ReturnsAsync(vm);
-            _orchestratorMock.Setup(o => o.GetCourseMatchOutcomeAsync(vm)).ReturnsAsync(MatchOutcome.MultipleMatches);
+            _orchestratorMock.Setup(o => o.GetCourseMatchOutcomeAsync()).ReturnsAsync(MatchOutcome.MultipleMatches);
 
             // Act
             var result = await _sut.SelectCourse(vm);
@@ -302,7 +302,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             var vm = new SelectCourseViewModel { SelectedCourseCode = "ABC123" };
             _orchestratorMock.Setup(o => o.ValidateSelectCourseViewModel(vm, It.IsAny<ModelStateDictionary>())).ReturnsAsync(true);
             _orchestratorMock.Setup(o => o.SaveSelectedCourseAsync(vm)).ReturnsAsync(vm);
-            _orchestratorMock.Setup(o => o.GetCourseMatchOutcomeAsync(vm)).ReturnsAsync(MatchOutcome.SingleMatch);
+            _orchestratorMock.Setup(o => o.GetCourseMatchOutcomeAsync()).ReturnsAsync(MatchOutcome.SingleMatch);
 
             // Act
             var result = await _sut.SelectCourse(vm);
