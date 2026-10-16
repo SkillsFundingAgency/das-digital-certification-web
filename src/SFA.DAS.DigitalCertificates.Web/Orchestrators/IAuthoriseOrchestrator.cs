@@ -9,7 +9,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
     public interface IAuthoriseOrchestrator
     {
         Task<bool> PrepareNeedMoreInformationAsync();
-        Task<bool> HasMultipleMatches();
+        Task PrepareChangeCourseAsync();
+        Task<int> GetDistinctUlnCountAsync();
 
         Task<bool> ValidateEnterYourUlnViewModel(EnterYourUlnViewModel viewModel, ModelStateDictionary modelState);
         Task<EnterYourUlnViewModel?> GetEnterYourUlnViewModelAsync();

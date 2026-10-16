@@ -23,6 +23,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         public const string EnterYourUlnRoutePost = nameof(EnterYourUlnRoutePost);
         public const string KnowYourUlnRouteGet = nameof(KnowYourUlnRouteGet);
         public const string KnowYourUlnRoutePost = nameof(KnowYourUlnRoutePost);
+        public const string ChangeCourseRouteGet = nameof(ChangeCourseRouteGet);
         public const string SelectCourseRouteGet = nameof(SelectCourseRouteGet);
         public const string SelectCourseRoutePost = nameof(SelectCourseRoutePost);
         public const string SelectProviderRouteGet = nameof(SelectProviderRouteGet);
@@ -66,12 +67,20 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         {
             await _sessionService.ClearAuthorisationAnswersAsync();
 
-            if(await _authoriseOrchestrator.HasMultipleMatches())
-            {
-                return RedirectToRoute(EnterYourUlnRouteGet);
-            }
+            var distinctUlnCount =
+                await _authoriseOrchestrator.GetDistinctUlnCountAsync();
 
-            return RedirectToRoute(KnowYourUlnRouteGet);
+            switch (distinctUlnCount)
+            {
+                case 0:
+                    return await RedirectToNotFoundAsync();
+
+                case 1:
+                    return RedirectToRoute(KnowYourUlnRouteGet);
+
+                default:
+                    return RedirectToRoute(EnterYourUlnRouteGet);
+            }
         }
 
         [HttpGet("enter-your-uln", Name = EnterYourUlnRouteGet)]
@@ -90,62 +99,113 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             {
                 return RedirectToRoute(EnterYourUlnRouteGet);
             }
-            
-            await _authoriseOrchestrator.SaveEnterYourUlnAsync(model);
-            var matchOutcome = await _authoriseOrchestrator.GetUlnMatchOutcomeAsync();
 
-            switch (matchOutcome)
-            {
-                case MatchOutcome.NoMatch when
-                    model?.IsReturningToCheck == true && !model.IsShortJourney:
-                case MatchOutcome.SingleMatch:
-                    return RedirectToRoute(CheckAnswersRouteGet);
+            var updatedModel =
+                await _authoriseOrchestrator.SaveEnterYourUlnAsync(model);
 
-                case MatchOutcome.NoMatch:
-                    return RedirectToRoute(SelectCourseRouteGet);
-
-                case MatchOutcome.NoData:
-                default:
-                    return await RedirectToNotFoundAsync();
-            }
+            return await RedirectAfterUlnUpdateAsync(updatedModel, hasUln: true);
         }
-
 
         [HttpGet("know-your-uln", Name = KnowYourUlnRouteGet)]
         [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.VerifiedAndNotUlnAuthorised))]
         public async Task<IActionResult> KnowYourUln()
         {
-            var model = await _authoriseOrchestrator.GetKnowYourUlnViewModelAsync();
-            return View(model);
+            var distinctUlnCount =
+                await _authoriseOrchestrator.GetDistinctUlnCountAsync();
+
+            switch (distinctUlnCount)
+            {
+                case 0:
+                    return await RedirectToNotFoundAsync();
+
+                case 1:
+                    var model =
+                        await _authoriseOrchestrator.GetKnowYourUlnViewModelAsync();
+
+                    return View(model);
+
+                default:
+                    return RedirectToRoute(EnterYourUlnRouteGet);
+            }
         }
 
         [HttpPost("know-your-uln", Name = KnowYourUlnRoutePost)]
         [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.VerifiedAndNotUlnAuthorised))]
         public async Task<IActionResult> KnowYourUln(KnowYourUlnViewModel model)
         {
+            var distinctUlnCount =
+                await _authoriseOrchestrator.GetDistinctUlnCountAsync();
+
+            switch (distinctUlnCount)
+            {
+                case 0:
+                    return await RedirectToNotFoundAsync();
+
+                case 1:
+                    break;
+
+                default:
+                    return RedirectToRoute(EnterYourUlnRouteGet);
+            }
+
             if (!await _authoriseOrchestrator.ValidateKnowYourUlnViewModel(model, ModelState))
             {
                 return RedirectToRoute(KnowYourUlnRouteGet);
             }
-            
-            await _authoriseOrchestrator.SaveKnowYourUlnAsync(model);
-            var matchOutcome = await _authoriseOrchestrator.GetUlnMatchOutcomeAsync();
 
-            switch (matchOutcome)
+            var updatedModel =
+                await _authoriseOrchestrator.SaveKnowYourUlnAsync(model);
+
+            return await RedirectAfterUlnUpdateAsync(
+                updatedModel,
+                hasUln: updatedModel.KnowUln == true);
+        }
+
+        private async Task<IActionResult> RedirectAfterUlnUpdateAsync(
+            AuthoriseViewModelBase model,
+            bool hasUln)
+        {
+            var route = SelectCourseRouteGet;
+
+            if (model.IsReturningToCheck)
             {
-                case MatchOutcome.NoMatch when
-                    model?.IsReturningToCheck == true && !model.IsShortJourney:
-                case MatchOutcome.MultipleMatches:
-                case MatchOutcome.SingleMatch:
-                    return RedirectToRoute(CheckAnswersRouteGet);
+                if (!model.IsShortJourney)
+                {
+                    route = CheckAnswersRouteGet;
+                }
+                else if (hasUln)
+                {
+                    var matchOutcome =
+                        await _authoriseOrchestrator.GetUlnMatchOutcomeAsync();
 
-                case MatchOutcome.NoMatch:
-                    return RedirectToRoute(SelectCourseRouteGet);
+                    switch (matchOutcome)
+                    {
+                        case MatchOutcome.SingleMatch:
+                            route = CheckAnswersRouteGet;
+                            break;
 
-                case MatchOutcome.NoData:
-                default:
-                    return await RedirectToNotFoundAsync();
+                        case MatchOutcome.NoMatch:
+                        case MatchOutcome.MultipleMatches:
+                            route = SelectCourseRouteGet;
+                            break;
+
+                        case MatchOutcome.NoData:
+                        default:
+                            return await RedirectToNotFoundAsync();
+                    }
+                }
             }
+
+            return RedirectToRoute(route);
+        }
+
+        [HttpGet("change-course", Name = ChangeCourseRouteGet)]
+        [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.VerifiedAndNotUlnAuthorised))]
+        public async Task<IActionResult> ChangeCourse()
+        {
+            await _authoriseOrchestrator.PrepareChangeCourseAsync();
+
+            return RedirectToRoute(SelectCourseRouteGet);
         }
 
         [HttpGet("select-course", Name = SelectCourseRouteGet)]
@@ -170,18 +230,24 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
                 return RedirectToRoute(SelectCourseRouteGet);
             }
 
-            await _authoriseOrchestrator.SaveSelectedCourseAsync(model);
-            var matchOutcome = await _authoriseOrchestrator.GetCourseMatchOutcomeAsync();
+            var updatedModel =
+                await _authoriseOrchestrator.SaveSelectedCourseAsync(model);
+
+            var returningOnLongJourney =
+                updatedModel.IsReturningToCheck && !updatedModel.IsShortJourney;
+
+            var matchOutcome =
+                await _authoriseOrchestrator.GetCourseMatchOutcomeAsync();
 
             switch (matchOutcome)
             {
-                case MatchOutcome.NoMatch when
-                    model?.IsReturningToCheck == true && !model.IsShortJourney:
-                case MatchOutcome.MultipleMatches:
+                case MatchOutcome.NoMatch when returningOnLongJourney:
+                case MatchOutcome.MultipleMatches when returningOnLongJourney:
                 case MatchOutcome.SingleMatch:
                     return RedirectToRoute(CheckAnswersRouteGet);
 
                 case MatchOutcome.NoMatch:
+                case MatchOutcome.MultipleMatches:
                     return RedirectToRoute(KnowYearRouteGet);
 
                 case MatchOutcome.NoData:
@@ -292,9 +358,13 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
                     }
 
                     return RedirectToRoute(CertificatesController.CertificatesListRouteGet);
+                
                 case MatchOutcome.Locked:
                     return await RedirectToCannotMatchAsync();
-                case MatchOutcome.NoMatch:
+                
+                case MatchOutcome.MandatoryUlnMissing:
+                    return await RedirectToNotFoundAsync();
+
                 default:
                     var answers = await _sessionService.GetAuthorisationAnswersAsync() ?? new AuthorisationAnswers();
                     return HandleNoMatch(answers.Uln);

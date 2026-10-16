@@ -33,6 +33,10 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             _sessionServiceMock = new Mock<ISessionService>();
             _orchestratorMock = new Mock<IAuthoriseOrchestrator>();
 
+            _orchestratorMock
+                .Setup(x => x.GetDistinctUlnCountAsync())
+                .ReturnsAsync(1);
+
             _sut = new AuthoriseController(_contextAccessorMock.Object, _sessionServiceMock.Object, _orchestratorMock.Object);
         }
 
@@ -60,7 +64,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
         public async Task KnowYourUln_Get_Populates_Model_From_Session()
         {
             // Arrange
-            var vm = new KnowYourUlnViewModel { KnowUln = true, Uln = 1234567890L };
+            var vm = new KnowYourUlnViewModel { KnowUln = true, Uln = "1234567890" };
             _orchestratorMock.Setup(o => o.GetKnowYourUlnViewModelAsync()).ReturnsAsync(vm);
 
             // Act
@@ -72,14 +76,113 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             view.Model.Should().BeOfType<KnowYourUlnViewModel>();
             var model = view.Model as KnowYourUlnViewModel;
             model.KnowUln.Should().BeTrue();
-            model.Uln.Should().Be(1234567890L);
+            model.Uln.Should().Be("1234567890");
+        }
+
+        [TestCase(0, AuthoriseController.NotFoundRouteGet)]
+        [TestCase(2, AuthoriseController.EnterYourUlnRouteGet)]
+        [TestCase(3, AuthoriseController.EnterYourUlnRouteGet)]
+        public async Task KnowYourUln_Get_When_OptionalEntry_Not_Applicable_Redirects(
+            int distinctUlnCount,
+            string expectedRoute)
+        {
+            // Arrange
+            _orchestratorMock
+                .Setup(x => x.GetDistinctUlnCountAsync())
+                .ReturnsAsync(distinctUlnCount);
+
+            // Act
+            var result = await _sut.KnowYourUln();
+
+            // Assert
+            result.Should().BeOfType<RedirectToRouteResult>()
+                .Which.RouteName.Should().Be(expectedRoute);
+
+            _orchestratorMock.Verify(
+                x => x.GetKnowYourUlnViewModelAsync(),
+                Times.Never);
+
+            if (distinctUlnCount == 0)
+            {
+                _orchestratorMock.Verify(
+                    x => x.CreateUserActionForCannotMatchAsync(ActionType.NotFound),
+                    Times.Once);
+
+                _sessionServiceMock.Verify(
+                    x => x.ClearAuthorisationAnswersAsync(),
+                    Times.Once);
+            }
+            else
+            {
+                _sessionServiceMock.Verify(
+                    x => x.ClearAuthorisationAnswersAsync(),
+                    Times.Never);
+            }
+        }
+
+        [TestCase(0, AuthoriseController.NotFoundRouteGet)]
+        [TestCase(2, AuthoriseController.EnterYourUlnRouteGet)]
+        [TestCase(3, AuthoriseController.EnterYourUlnRouteGet)]
+        public async Task KnowYourUln_Post_When_OptionalEntry_Not_Applicable_Does_Not_Process_Answers(
+            int distinctUlnCount,
+            string expectedRoute)
+        {
+            // Arrange
+            _orchestratorMock
+                .Setup(x => x.GetDistinctUlnCountAsync())
+                .ReturnsAsync(distinctUlnCount);
+
+            var model = new KnowYourUlnViewModel
+            {
+                KnowUln = false,
+                IsReturningToCheck = true,
+                IsShortJourney = true
+            };
+
+            // Act
+            var result = await _sut.KnowYourUln(model);
+
+            // Assert
+            result.Should().BeOfType<RedirectToRouteResult>()
+                .Which.RouteName.Should().Be(expectedRoute);
+
+            _orchestratorMock.Verify(
+                x => x.ValidateKnowYourUlnViewModel(
+                    It.IsAny<KnowYourUlnViewModel>(),
+                    It.IsAny<ModelStateDictionary>()),
+                Times.Never);
+
+            _orchestratorMock.Verify(
+                x => x.SaveKnowYourUlnAsync(It.IsAny<KnowYourUlnViewModel>()),
+                Times.Never);
+
+            _orchestratorMock.Verify(
+                x => x.GetUlnMatchOutcomeAsync(),
+                Times.Never);
+
+            if (distinctUlnCount == 0)
+            {
+                _orchestratorMock.Verify(
+                    x => x.CreateUserActionForCannotMatchAsync(ActionType.NotFound),
+                    Times.Once);
+
+                _sessionServiceMock.Verify(
+                    x => x.ClearAuthorisationAnswersAsync(),
+                    Times.Once);
+            }
+            else
+            {
+                _sessionServiceMock.Verify(
+                    x => x.ClearAuthorisationAnswersAsync(),
+                    Times.Never);
+            }
         }
 
         [Test]
         public async Task KnowYourUln_Post_Invalid_Redirects_To_Get()
         {
             // Arrange
-            var vm = new KnowYourUlnViewModel { KnowUln = true, Uln = 1234567890L };
+            var vm = new KnowYourUlnViewModel { KnowUln = true, Uln = "1234567890" };
             _orchestratorMock.Setup(o => o.ValidateKnowYourUlnViewModel(vm, It.IsAny<ModelStateDictionary>())).ReturnsAsync(false);
 
             // Act
@@ -92,21 +195,190 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
         }
 
         [Test]
-        public async Task KnowYourUln_Post_Valid_Saves_To_Session_And_Returns_View()
+        public async Task KnowYourUln_Post_Valid_Saves_And_Redirects_To_SelectCourse()
         {
             // Arrange
-            var vm = new KnowYourUlnViewModel { KnowUln = true, Uln = 1234567890L };
-            _orchestratorMock.Setup(o => o.ValidateKnowYourUlnViewModel(vm, It.IsAny<ModelStateDictionary>())).ReturnsAsync(true);
-            _orchestratorMock.Setup(o => o.SaveKnowYourUlnAsync(vm)).ReturnsAsync(vm);
+            var vm = new KnowYourUlnViewModel
+            {
+                KnowUln = true,
+                Uln = "1234567890",
+                IsReturningToCheck = false
+            };
+
+            _orchestratorMock
+                .Setup(x => x.ValidateKnowYourUlnViewModel(
+                    vm, It.IsAny<ModelStateDictionary>()))
+                .ReturnsAsync(true);
+
+            _orchestratorMock
+                .Setup(x => x.SaveKnowYourUlnAsync(vm))
+                .ReturnsAsync(vm);
+
+            _orchestratorMock
+                .Setup(x => x.GetUlnMatchOutcomeAsync())
+                .ReturnsAsync(MatchOutcome.NoMatch);
 
             // Act
             var result = await _sut.KnowYourUln(vm);
 
             // Assert
-            _orchestratorMock.Verify(o => o.SaveKnowYourUlnAsync(vm), Times.Once);
-            result.Should().BeOfType<RedirectToRouteResult>();
-            var redirect = result as RedirectToRouteResult;
-            redirect.RouteName.Should().Be(AuthoriseController.SelectCourseRouteGet);
+            _orchestratorMock.Verify(
+                x => x.SaveKnowYourUlnAsync(vm),
+                Times.Once);
+
+            result.Should().BeOfType<RedirectToRouteResult>()
+                .Which.RouteName.Should().Be(AuthoriseController.SelectCourseRouteGet);
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public async Task Uln_Post_InitialJourney_Saves_And_Redirects_To_SelectCourse_Without_Matching(
+            bool mandatoryPage)
+        {
+            // Arrange
+            SetUpValidUlnSubmissions();
+
+            // Act
+            var result = await SubmitUlnAsync(
+                mandatoryPage,
+                isReturningToCheck: false,
+                isShortJourney: true);
+
+            // Assert
+            result.Should().BeOfType<RedirectToRouteResult>()
+                .Which.RouteName.Should().Be(AuthoriseController.SelectCourseRouteGet);
+
+            _orchestratorMock.Verify(
+                x => x.GetUlnMatchOutcomeAsync(),
+                Times.Never);
+
+            if (mandatoryPage)
+            {
+                _orchestratorMock.Verify(
+                    x => x.SaveEnterYourUlnAsync(It.IsAny<EnterYourUlnViewModel>()),
+                    Times.Once);
+            }
+            else
+            {
+                _orchestratorMock.Verify(
+                    x => x.SaveKnowYourUlnAsync(It.IsAny<KnowYourUlnViewModel>()),
+                    Times.Once);
+            }
+        }
+
+        [TestCase(false, true)]
+        [TestCase(false, false)]
+        [TestCase(true, true)]
+        public async Task Uln_Post_ReturningOnLongJourney_Redirects_To_CheckAnswers_Without_Matching(
+            bool mandatoryPage,
+            bool hasUln)
+        {
+            // Arrange
+            SetUpValidUlnSubmissions();
+
+            // Act
+            var result = await SubmitUlnAsync(
+                mandatoryPage,
+                isReturningToCheck: true,
+                isShortJourney: false,
+                hasUln: hasUln);
+
+            // Assert
+            result.Should().BeOfType<RedirectToRouteResult>()
+                .Which.RouteName.Should().Be(AuthoriseController.CheckAnswersRouteGet);
+
+            _orchestratorMock.Verify(
+                x => x.GetUlnMatchOutcomeAsync(),
+                Times.Never);
+        }
+
+        [TestCase(false, MatchOutcome.SingleMatch, AuthoriseController.CheckAnswersRouteGet)]
+        [TestCase(false, MatchOutcome.NoMatch, AuthoriseController.SelectCourseRouteGet)]
+        [TestCase(false, MatchOutcome.MultipleMatches, AuthoriseController.SelectCourseRouteGet)]
+        [TestCase(false, MatchOutcome.NoData, AuthoriseController.NotFoundRouteGet)]
+        [TestCase(true, MatchOutcome.SingleMatch, AuthoriseController.CheckAnswersRouteGet)]
+        [TestCase(true, MatchOutcome.NoMatch, AuthoriseController.SelectCourseRouteGet)]
+        [TestCase(true, MatchOutcome.MultipleMatches, AuthoriseController.SelectCourseRouteGet)]
+        [TestCase(true, MatchOutcome.NoData, AuthoriseController.NotFoundRouteGet)]
+        public async Task Uln_Post_ReturningOnShortJourney_WithUln_Redirects_Based_On_Match(
+            bool mandatoryPage,
+            MatchOutcome matchOutcome,
+            string expectedRoute)
+        {
+            // Arrange
+            SetUpValidUlnSubmissions();
+
+            _orchestratorMock
+                .Setup(x => x.GetUlnMatchOutcomeAsync())
+                .ReturnsAsync(matchOutcome);
+
+            // Act
+            var result = await SubmitUlnAsync(
+                mandatoryPage,
+                isReturningToCheck: true,
+                isShortJourney: true);
+
+            // Assert
+            result.Should().BeOfType<RedirectToRouteResult>()
+                .Which.RouteName.Should().Be(expectedRoute);
+
+            _orchestratorMock.Verify(
+                x => x.GetUlnMatchOutcomeAsync(),
+                Times.Once);
+
+            if (matchOutcome == MatchOutcome.NoData)
+            {
+                _orchestratorMock.Verify(
+                    x => x.CreateUserActionForCannotMatchAsync(ActionType.NotFound),
+                    Times.Once);
+
+                _sessionServiceMock.Verify(
+                    x => x.ClearAuthorisationAnswersAsync(),
+                    Times.Once);
+            }
+            else
+            {
+                _orchestratorMock.Verify(
+                    x => x.CreateUserActionForCannotMatchAsync(It.IsAny<ActionType>()),
+                    Times.Never);
+
+                _sessionServiceMock.Verify(
+                    x => x.ClearAuthorisationAnswersAsync(),
+                    Times.Never);
+            }
+        }
+
+        [Test]
+        public async Task KnowYourUln_Post_ReturningOnShortJourney_WithUlnRemoved_Redirects_To_SelectCourse_Without_Matching()
+        {
+            // Arrange
+            SetUpValidUlnSubmissions();
+
+            var model = new KnowYourUlnViewModel
+            {
+                KnowUln = false,
+
+                // The old input may still be posted when the user selects No.
+                Uln = "1234567890",
+
+                IsReturningToCheck = true,
+                IsShortJourney = true
+            };
+
+            // Act
+            var result = await _sut.KnowYourUln(model);
+
+            // Assert
+            result.Should().BeOfType<RedirectToRouteResult>()
+                .Which.RouteName.Should().Be(AuthoriseController.SelectCourseRouteGet);
+
+            _orchestratorMock.Verify(
+                x => x.SaveKnowYourUlnAsync(model),
+                Times.Once);
+
+            _orchestratorMock.Verify(
+                x => x.GetUlnMatchOutcomeAsync(),
+                Times.Never);
         }
 
         [Test]
@@ -159,6 +431,30 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             result.Should().BeOfType<RedirectToRouteResult>();
             var redirect = result as RedirectToRouteResult;
             redirect.RouteName.Should().Be(AuthoriseController.SelectProviderRouteGet);
+        }
+
+        [Test]
+        public async Task ChangeCourse_Records_Navigation_And_Redirects_To_SelectCourse()
+        {
+            // Arrange
+            _orchestratorMock
+                .Setup(x => x.PrepareChangeCourseAsync())
+                .Returns(Task.CompletedTask);
+
+            // Act
+            var result = await _sut.ChangeCourse();
+
+            // Assert
+            result.Should().BeOfType<RedirectToRouteResult>()
+                .Which.RouteName.Should().Be(AuthoriseController.SelectCourseRouteGet);
+
+            _orchestratorMock.Verify(
+                x => x.PrepareChangeCourseAsync(),
+                Times.Once);
+
+            _sessionServiceMock.Verify(
+                x => x.ClearAuthorisationAnswersAsync(),
+                Times.Never);
         }
 
         [Test]
@@ -238,83 +534,84 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             redirect.RouteName.Should().Be(AuthoriseController.SelectCourseRouteGet);
         }
 
-        [Test]
-        public async Task SelectCourse_Post_NoData_Redirects_To_NotFound()
+        [TestCase(false, true, MatchOutcome.SingleMatch, AuthoriseController.CheckAnswersRouteGet)]
+        [TestCase(false, true, MatchOutcome.MultipleMatches, AuthoriseController.KnowYearRouteGet)]
+        [TestCase(false, true, MatchOutcome.NoMatch, AuthoriseController.KnowYearRouteGet)]
+        [TestCase(false, true, MatchOutcome.NoData, AuthoriseController.NotFoundRouteGet)]
+        [TestCase(true, true, MatchOutcome.SingleMatch, AuthoriseController.CheckAnswersRouteGet)]
+        [TestCase(true, true, MatchOutcome.MultipleMatches, AuthoriseController.KnowYearRouteGet)]
+        [TestCase(true, true, MatchOutcome.NoMatch, AuthoriseController.KnowYearRouteGet)]
+        [TestCase(true, true, MatchOutcome.NoData, AuthoriseController.NotFoundRouteGet)]
+        [TestCase(true, false, MatchOutcome.SingleMatch, AuthoriseController.CheckAnswersRouteGet)]
+        [TestCase(true, false, MatchOutcome.MultipleMatches, AuthoriseController.CheckAnswersRouteGet)]
+        [TestCase(true, false, MatchOutcome.NoMatch, AuthoriseController.CheckAnswersRouteGet)]
+        [TestCase(true, false, MatchOutcome.NoData, AuthoriseController.NotFoundRouteGet)]
+        public async Task SelectCourse_Post_Redirects_Using_Saved_Journey_And_Match_Outcome(
+            bool isReturningToCheck,
+            bool isShortJourney,
+            MatchOutcome matchOutcome,
+            string expectedRoute)
         {
             // Arrange
-            var vm = new SelectCourseViewModel { SelectedCourseCode = "ABC123" };
-            _orchestratorMock.Setup(o => o.ValidateSelectCourseViewModel(vm, It.IsAny<ModelStateDictionary>())).ReturnsAsync(true);
-            _orchestratorMock.Setup(o => o.SaveSelectedCourseAsync(vm)).ReturnsAsync(vm);
-            _orchestratorMock.Setup(o => o.GetCourseMatchOutcomeAsync()).ReturnsAsync(MatchOutcome.NoData);
+            var submittedModel = new SelectCourseViewModel
+            {
+                SelectedCourseCode = "C1"
+            };
+
+            // Journey flags come from the saved state, not the submitted model.
+            var updatedModel = new SelectCourseViewModel
+            {
+                SelectedCourseCode = "C1",
+                IsReturningToCheck = isReturningToCheck,
+                IsShortJourney = isShortJourney
+            };
+
+            _orchestratorMock
+                .Setup(x => x.ValidateSelectCourseViewModel(
+                    submittedModel,
+                    It.IsAny<ModelStateDictionary>()))
+                .ReturnsAsync(true);
+
+            _orchestratorMock
+                .Setup(x => x.SaveSelectedCourseAsync(submittedModel))
+                .ReturnsAsync(updatedModel);
+
+            _orchestratorMock
+                .Setup(x => x.GetCourseMatchOutcomeAsync())
+                .ReturnsAsync(matchOutcome);
 
             // Act
-            var result = await _sut.SelectCourse(vm);
+            var result = await _sut.SelectCourse(submittedModel);
 
             // Assert
-            _orchestratorMock.Verify(o => o.SaveSelectedCourseAsync(vm), Times.Once);
-            result.Should().BeOfType<RedirectToRouteResult>();
-            var redirect = result as RedirectToRouteResult;
-            redirect.RouteName.Should().Be(AuthoriseController.NotFoundRouteGet);
+            result.Should().BeOfType<RedirectToRouteResult>()
+                .Which.RouteName.Should().Be(expectedRoute);
+
+            _orchestratorMock.Verify(
+                x => x.SaveSelectedCourseAsync(submittedModel),
+                Times.Once);
+
+            _orchestratorMock.Verify(
+                x => x.GetCourseMatchOutcomeAsync(),
+                Times.Once);
+
+            if (matchOutcome == MatchOutcome.NoData)
+            {
+                _orchestratorMock.Verify(
+                    x => x.CreateUserActionForCannotMatchAsync(ActionType.NotFound),
+                    Times.Once);
+
+                _sessionServiceMock.Verify(
+                    x => x.ClearAuthorisationAnswersAsync(),
+                    Times.Once);
+            }
+            else
+            {
+                _sessionServiceMock.Verify(
+                    x => x.ClearAuthorisationAnswersAsync(),
+                    Times.Never);
+            }
         }
-
-        [Test]
-        public async Task SelectCourse_Post_NoMatch_Redirects_To_KnowYear()
-        {
-            // Arrange
-            var vm = new SelectCourseViewModel { SelectedCourseCode = "ABC123" };
-            _orchestratorMock.Setup(o => o.ValidateSelectCourseViewModel(vm, It.IsAny<ModelStateDictionary>())).ReturnsAsync(true);
-            _orchestratorMock.Setup(o => o.SaveSelectedCourseAsync(vm)).ReturnsAsync(vm);
-            _orchestratorMock.Setup(o => o.GetCourseMatchOutcomeAsync()).ReturnsAsync(MatchOutcome.NoMatch);
-
-            // Act
-            var result = await _sut.SelectCourse(vm);
-
-            // Assert
-            _orchestratorMock.Verify(o => o.SaveSelectedCourseAsync(vm), Times.Once);
-            result.Should().BeOfType<RedirectToRouteResult>();
-            var redirect = result as RedirectToRouteResult;
-            redirect.RouteName.Should().Be(AuthoriseController.KnowYearRouteGet);
-        }
-
-        [Test]
-        public async Task SelectCourse_Post_MultipleMatches_Redirects_To_KnowYear()
-        {
-            // Arrange
-            var vm = new SelectCourseViewModel { SelectedCourseCode = "ABC123" };
-            _orchestratorMock.Setup(o => o.ValidateSelectCourseViewModel(vm, It.IsAny<ModelStateDictionary>())).ReturnsAsync(true);
-            _orchestratorMock.Setup(o => o.SaveSelectedCourseAsync(vm)).ReturnsAsync(vm);
-            _orchestratorMock.Setup(o => o.GetCourseMatchOutcomeAsync()).ReturnsAsync(MatchOutcome.MultipleMatches);
-
-            // Act
-            var result = await _sut.SelectCourse(vm);
-
-            // Assert
-            _orchestratorMock.Verify(o => o.SaveSelectedCourseAsync(vm), Times.Once);
-            result.Should().BeOfType<RedirectToRouteResult>();
-            var redirect = result as RedirectToRouteResult;
-            redirect.RouteName.Should().Be(AuthoriseController.CheckAnswersRouteGet);
-        }
-
-        [Test]
-        public async Task SelectCourse_Post_SingleMatch_Redirects_To_CheckAnswers()
-        {
-            // Arrange
-            var vm = new SelectCourseViewModel { SelectedCourseCode = "ABC123" };
-            _orchestratorMock.Setup(o => o.ValidateSelectCourseViewModel(vm, It.IsAny<ModelStateDictionary>())).ReturnsAsync(true);
-            _orchestratorMock.Setup(o => o.SaveSelectedCourseAsync(vm)).ReturnsAsync(vm);
-            _orchestratorMock.Setup(o => o.GetCourseMatchOutcomeAsync()).ReturnsAsync(MatchOutcome.SingleMatch);
-
-            // Act
-            var result = await _sut.SelectCourse(vm);
-
-            // Assert
-            _orchestratorMock.Verify(o => o.SaveSelectedCourseAsync(vm), Times.Once);
-            result.Should().BeOfType<RedirectToRouteResult>();
-            var redirect = result as RedirectToRouteResult;
-            redirect.RouteName.Should().Be(AuthoriseController.CheckAnswersRouteGet);
-        }
-
-        
 
         [Test]
         public async Task SelectProvider_Get_Returns_View_With_Model()
@@ -398,20 +695,33 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             redirect.RouteName.Should().Be(AuthoriseController.CheckAnswersRouteGet);
         }
 
-        [Test]
-        public async Task NeedMoreInformationContinue_Clears_Session_And_Redirects_To_KnowYourUln()
+        [TestCase(0, AuthoriseController.NotFoundRouteGet)]
+        [TestCase(1, AuthoriseController.KnowYourUlnRouteGet)]
+        [TestCase(2, AuthoriseController.EnterYourUlnRouteGet)]
+        [TestCase(3, AuthoriseController.EnterYourUlnRouteGet)]
+        public async Task NeedMoreInformationContinue_Redirects_Based_On_Distinct_Uln_Count(
+            int distinctUlnCount,
+            string expectedRoute)
         {
             // Arrange
-            _sessionServiceMock.Setup(s => s.ClearAuthorisationAnswersAsync()).Returns(Task.CompletedTask);
+            _orchestratorMock
+                .Setup(x => x.GetDistinctUlnCountAsync())
+                .ReturnsAsync(distinctUlnCount);
 
             // Act
             var result = await _sut.NeedMoreInformationContinue();
 
             // Assert
-            _sessionServiceMock.Verify(s => s.ClearAuthorisationAnswersAsync(), Times.Once);
-            result.Should().BeOfType<RedirectToRouteResult>();
-            var redirect = result as RedirectToRouteResult;
-            redirect.RouteName.Should().Be(AuthoriseController.KnowYourUlnRouteGet);
+            result.Should().BeOfType<RedirectToRouteResult>()
+                .Which.RouteName.Should().Be(expectedRoute);
+
+            _sessionServiceMock.Verify(
+                x => x.ClearAuthorisationAnswersAsync(),
+                Times.AtLeastOnce);
+
+            _orchestratorMock.Verify(
+                x => x.CreateUserActionForCannotMatchAsync(ActionType.NotFound),
+                Times.Exactly(distinctUlnCount == 0 ? 1 : 0));
         }
 
         [Test]
@@ -547,6 +857,42 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             _sut.TempData[TempDataDictionaryExtensions.FlashMessageLevelTempDataKey]
                 .Should()
                 .Be(TempDataDictionaryExtensions.FlashMessageLevel.Success.ToString());           
+        }
+
+        [Test]
+        public async Task CheckAnswersPost_MandatoryUlnMissing_Raises_NotFound_And_Clears_Answers()
+        {
+            // Arrange
+            _orchestratorMock
+                .Setup(x => x.SubmitCheckAnswersAsync())
+                .ReturnsAsync(MatchOutcome.MandatoryUlnMissing);
+
+            _orchestratorMock
+                .Setup(x => x.CreateUserActionForCannotMatchAsync(ActionType.NotFound))
+                .ReturnsAsync("NF-123");
+
+            _sessionServiceMock
+                .Setup(x => x.ClearAuthorisationAnswersAsync())
+                .Returns(Task.CompletedTask);
+
+            // Act
+            var result = await _sut.CheckAnswersPost();
+
+            // Assert
+            result.Should().BeOfType<RedirectToRouteResult>()
+                .Which.RouteName.Should().Be(AuthoriseController.NotFoundRouteGet);
+
+            _orchestratorMock.Verify(
+                x => x.CreateUserActionForCannotMatchAsync(ActionType.NotFound),
+                Times.Once);
+
+            _orchestratorMock.Verify(
+                x => x.CreateUserActionForCannotMatchAsync(ActionType.NotMatched),
+                Times.Never);
+
+            _sessionServiceMock.Verify(
+                x => x.ClearAuthorisationAnswersAsync(),
+                Times.Once);
         }
 
         [Test]
@@ -694,6 +1040,64 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             view.ViewName.Should().Be("ShutterPage");
             var model = view.Model as CannotMatchViewModel;
             model.ReferenceNumber.Should().Be("CREATED-REF");
+        }
+
+        private void SetUpValidUlnSubmissions()
+        {
+            _orchestratorMock
+                .Setup(x => x.ValidateEnterYourUlnViewModel(
+                    It.IsAny<EnterYourUlnViewModel>(),
+                    It.IsAny<ModelStateDictionary>()))
+                .ReturnsAsync(true);
+
+            _orchestratorMock
+                .Setup(x => x.SaveEnterYourUlnAsync(
+                    It.IsAny<EnterYourUlnViewModel>()))
+                .ReturnsAsync((EnterYourUlnViewModel model) => model);
+
+            _orchestratorMock
+                .Setup(x => x.ValidateKnowYourUlnViewModel(
+                    It.IsAny<KnowYourUlnViewModel>(),
+                    It.IsAny<ModelStateDictionary>()))
+                .ReturnsAsync(true);
+
+            _orchestratorMock
+                .Setup(x => x.SaveKnowYourUlnAsync(
+                    It.IsAny<KnowYourUlnViewModel>()))
+                .ReturnsAsync((KnowYourUlnViewModel model) => model);
+
+            _orchestratorMock
+                .Setup(x => x.CreateUserActionForCannotMatchAsync(ActionType.NotFound))
+                .ReturnsAsync("NF-123");
+
+            _sessionServiceMock
+                .Setup(x => x.ClearAuthorisationAnswersAsync())
+                .Returns(Task.CompletedTask);
+        }
+
+        private Task<IActionResult> SubmitUlnAsync(
+            bool mandatoryPage,
+            bool isReturningToCheck,
+            bool isShortJourney,
+            bool hasUln = true)
+        {
+            if (mandatoryPage)
+            {
+                return _sut.EnterYourUln(new EnterYourUlnViewModel
+                {
+                    Uln = "1234567890",
+                    IsReturningToCheck = isReturningToCheck,
+                    IsShortJourney = isShortJourney
+                });
+            }
+
+            return _sut.KnowYourUln(new KnowYourUlnViewModel
+            {
+                KnowUln = hasUln,
+                Uln = "1234567890",
+                IsReturningToCheck = isReturningToCheck,
+                IsShortJourney = isShortJourney
+            });
         }
     }
 }

@@ -7,6 +7,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Models.Authorise
     {
         public string? SelectedCourseCode { get; set; }
         public List<CourseOption>? Courses { get; set; }
+        public string BackLinkRouteName { get; set; } = string.Empty;
 
         public class CourseOption
         {

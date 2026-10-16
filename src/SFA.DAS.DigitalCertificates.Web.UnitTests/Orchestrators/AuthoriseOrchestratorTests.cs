@@ -1,23 +1,25 @@
 ﻿using System;
-using System.Threading.Tasks;
 using System.Collections.Generic;
-using Moq;
 using System.Security.Claims;
-using Microsoft.AspNetCore.Http;
-using NUnit.Framework;
-using MediatR;
-using SFA.DAS.DigitalCertificates.Web.Orchestrators;
-using SFA.DAS.DigitalCertificates.Web.Services;
-using SFA.DAS.DigitalCertificates.Web.Enums;
+using System.Threading;
+using System.Threading.Tasks;
+using FluentAssertions;
 using FluentValidation;
-using SFA.DAS.DigitalCertificates.Web.Models.Authorise;
-using SFA.DAS.DigitalCertificates.Domain.Models;
-using SFA.DAS.DigitalCertificates.Application.Commands.SubmitMatch;
+using MediatR;
+using Microsoft.AspNetCore.Http;
+using Moq;
+using NUnit.Framework;
 using SFA.DAS.DigitalCertificates.Application.Commands.AuthoriseUser;
 using SFA.DAS.DigitalCertificates.Application.Commands.CreateUserAction;
+using SFA.DAS.DigitalCertificates.Application.Commands.SubmitMatch;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetUserActions;
-using System.Threading;
+using SFA.DAS.DigitalCertificates.Domain.Models;
 using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
+using SFA.DAS.DigitalCertificates.Web.Controllers;
+using SFA.DAS.DigitalCertificates.Web.Enums;
+using SFA.DAS.DigitalCertificates.Web.Models.Authorise;
+using SFA.DAS.DigitalCertificates.Web.Orchestrators;
+using SFA.DAS.DigitalCertificates.Web.Services;
 using SFA.DAS.GovUK.Auth.Models;
 using SFA.DAS.GovUK.Auth.Services;
 
@@ -174,6 +176,347 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 It.IsAny<GovUkCredentialSubject>()), Times.Never);
         }
 
+        [TestCase(new long[] { }, 0)]
+        [TestCase(new long[] { 1234567890L }, 1)]
+        [TestCase(new long[] { 1234567890L, 1234567890L }, 1)]
+        [TestCase(new long[] { 1234567890L, 2345678901L }, 2)]
+        [TestCase(new long[] { 1234567890L, 1234567890L, 2345678901L }, 2)]
+        [TestCase(new long[] { 1234567890L, 2345678901L, 3456789012L }, 3)]
+        public async Task GetDistinctUlnCountAsync_Returns_Number_Of_Distinct_Ulns(
+            long[] ulns,
+            int expectedCount)
+        {
+            // Arrange
+            const string govUkId = "gov-123";
+
+            _userServiceMock.Setup(x => x.GetGovUkIdentifier()).Returns(govUkId);
+            _userServiceMock.Setup(x => x.GetUserId()).Returns(Guid.NewGuid());
+
+            var matches = new MatchesAndMasks();
+
+            foreach (var uln in ulns)
+            {
+                matches.Matches.Add(new Domain.Models.Match
+                {
+                    Uln = uln,
+                    UserIdentityId = Guid.NewGuid()
+                });
+            }
+
+            // Masking records must not affect the count.
+            matches.Masks.Add(new Mask
+            {
+                CourseCode = "MASK1",
+                CourseName = "Mask course"
+            });
+
+            _cacheServiceMock
+                .Setup(x => x.GetMatchesAsync(govUkId))
+                .ReturnsAsync(matches);
+
+            // Act
+            var result = await _sut.GetDistinctUlnCountAsync();
+
+            // Assert
+            result.Should().Be(expectedCount);
+        }
+
+        [Test]
+        public async Task GetDistinctUlnCountAsync_Returns_Zero_When_Matching_Data_Unavailable()
+        {
+            // Arrange
+            const string govUkId = "gov-123";
+
+            _userServiceMock.Setup(x => x.GetGovUkIdentifier()).Returns(govUkId);
+            _userServiceMock.Setup(x => x.GetUserId()).Returns(Guid.NewGuid());
+
+            _cacheServiceMock
+                .Setup(x => x.GetMatchesAsync(govUkId))
+                .ReturnsAsync((MatchesAndMasks)null);
+
+            // Prevent a cache miss from rebuilding matches through One Login.
+            _httpContextAccessorMock
+                .Setup(x => x.HttpContext)
+                .Returns((HttpContext)null);
+
+            // Act
+            var result = await _sut.GetDistinctUlnCountAsync();
+
+            // Assert
+            result.Should().Be(0);
+        }
+
+        [Test]
+        public async Task PrepareChangeCourseAsync_Records_Navigation_And_Preserves_Answers()
+        {
+            // Arrange
+            var answers = new AuthorisationAnswers
+            {
+                KnowUln = true,
+                Uln = 1234567890L,
+                CourseCode = "C1",
+                YearCompleted = 2024,
+                ProviderUkprn = 12345678,
+                ProviderName = "College A",
+                IsReturningToCheck = true
+            };
+
+            _sessionServiceMock
+                .Setup(x => x.GetAuthorisationAnswersAsync())
+                .ReturnsAsync(answers);
+
+            // Act
+            await _sut.PrepareChangeCourseAsync();
+
+            // Assert
+            answers.CourseSelectionFromCheckAnswers.Should().BeTrue();
+            answers.Uln.Should().Be(1234567890L);
+            answers.CourseCode.Should().Be("C1");
+            answers.YearCompleted.Should().Be(2024);
+            answers.ProviderUkprn.Should().Be(12345678);
+            answers.ProviderName.Should().Be("College A");
+            answers.IsReturningToCheck.Should().BeTrue();
+            answers.IsShortJourney.Should().BeFalse();
+
+            _sessionServiceMock.Verify(
+                x => x.SetAuthorisationAnswersAsync(answers),
+                Times.Once);
+        }
+
+        [TestCase(false, false, 1, AuthoriseController.KnowYourUlnRouteGet)]
+        [TestCase(false, true, 1, AuthoriseController.KnowYourUlnRouteGet)]
+        [TestCase(false, false, 2, AuthoriseController.EnterYourUlnRouteGet)]
+        [TestCase(false, true, 2, AuthoriseController.EnterYourUlnRouteGet)]
+        [TestCase(true, true, 1, AuthoriseController.CheckAnswersRouteGet)]
+        [TestCase(true, true, 2, AuthoriseController.CheckAnswersRouteGet)]
+        public async Task GetSelectCourseViewModelAsync_Sets_BackLink_From_Navigation_Source(
+            bool fromCheckAnswers,
+            bool isReturningToCheck,
+            int distinctUlnCount,
+            string expectedRoute)
+        {
+            // Arrange
+            const string govUkId = "gov-123";
+
+            _userServiceMock.Setup(x => x.GetGovUkIdentifier()).Returns(govUkId);
+            _userServiceMock.Setup(x => x.GetUserId()).Returns(Guid.NewGuid());
+
+            var answers = new AuthorisationAnswers
+            {
+                CourseCode = "C1",
+                CourseSelectionFromCheckAnswers = fromCheckAnswers,
+                IsReturningToCheck = isReturningToCheck
+            };
+
+            _sessionServiceMock
+                .Setup(x => x.GetAuthorisationAnswersAsync())
+                .ReturnsAsync(answers);
+
+            var matches = new MatchesAndMasks();
+
+            for (var i = 0; i < distinctUlnCount; i++)
+            {
+                matches.Matches.Add(new Domain.Models.Match
+                {
+                    Uln = 1234567890L + i,
+                    UserIdentityId = Guid.NewGuid(),
+                    CourseCode = "C1",
+                    CourseName = "Course One"
+                });
+            }
+
+            _cacheServiceMock
+                .Setup(x => x.GetMatchesAsync(govUkId))
+                .ReturnsAsync(matches);
+
+            // Act
+            var result = await _sut.GetSelectCourseViewModelAsync();
+
+            // Assert
+            result.Should().NotBeNull();
+            result!.BackLinkRouteName.Should().Be(expectedRoute);
+            result.SelectedCourseCode.Should().Be("C1");
+            result.IsReturningToCheck.Should().Be(isReturningToCheck);
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public async Task SavingUln_Resets_CourseNavigation_And_Preserves_LongJourney(
+            bool mandatoryPage)
+        {
+            // Arrange
+            var answers = new AuthorisationAnswers
+            {
+                KnowUln = true,
+                Uln = 1234567890L,
+                CourseCode = "C1",
+                YearCompleted = 2024,
+                ProviderUkprn = 12345678,
+                ProviderName = "College A",
+                IsReturningToCheck = true,
+                CourseSelectionFromCheckAnswers = true
+            };
+
+            _sessionServiceMock
+                .Setup(x => x.GetAuthorisationAnswersAsync())
+                .ReturnsAsync(answers);
+
+            // Act
+            if (mandatoryPage)
+            {
+                await _sut.SaveEnterYourUlnAsync(new EnterYourUlnViewModel
+                {
+                    Uln = "2345678901"
+                });
+            }
+            else
+            {
+                await _sut.SaveKnowYourUlnAsync(new KnowYourUlnViewModel
+                {
+                    KnowUln = true,
+                    Uln = "2345678901"
+                });
+            }
+
+            // Assert
+            answers.CourseSelectionFromCheckAnswers.Should().BeFalse();
+            answers.KnowUln.Should().BeTrue();
+            answers.Uln.Should().Be(2345678901L);
+            answers.CourseCode.Should().Be("C1");
+            answers.YearCompleted.Should().Be(2024);
+            answers.ProviderUkprn.Should().Be(12345678);
+            answers.ProviderName.Should().Be("College A");
+            answers.IsReturningToCheck.Should().BeTrue();
+            answers.IsShortJourney.Should().BeFalse();
+
+            _sessionServiceMock.Verify(
+                x => x.SetAuthorisationAnswersAsync(answers),
+                Times.Once);
+        }
+
+        [TestCase(false, "1234567890", 1234567890L, "1234567890")]
+        [TestCase(true, "1234567890", 1234567890L, "1234567890")]
+        [TestCase(false, " 1234567890 ", 1234567890L, "1234567890")]
+        [TestCase(true, " 1234567890 ", 1234567890L, "1234567890")]
+        [TestCase(false, "0123456789", 123456789L, "0123456789")]
+        [TestCase(true, "0123456789", 123456789L, "0123456789")]
+        public async Task SavingUln_Persists_Number_And_Restores_Formatted_Input(
+            bool mandatoryPage,
+            string enteredUln,
+            long expectedSavedUln,
+            string expectedDisplayedUln)
+        {
+            // Arrange
+            var persistedAnswers = new AuthorisationAnswers
+            {
+                CourseCode = "C1",
+                YearCompleted = 2024,
+                ProviderUkprn = 12345678,
+                IsReturningToCheck = true
+            };
+
+            _sessionServiceMock
+                .Setup(x => x.GetAuthorisationAnswersAsync())
+                .ReturnsAsync(() => persistedAnswers);
+
+            _sessionServiceMock
+                .Setup(x => x.SetAuthorisationAnswersAsync(
+                    It.IsAny<AuthorisationAnswers>()))
+                .Callback<AuthorisationAnswers>(answers => persistedAnswers = answers)
+                .Returns(Task.CompletedTask);
+
+            AuthoriseViewModelBase updatedModel;
+            string? restoredUln;
+
+            // Act
+            if (mandatoryPage)
+            {
+                updatedModel = await _sut.SaveEnterYourUlnAsync(
+                    new EnterYourUlnViewModel
+                    {
+                        Uln = enteredUln
+                    });
+
+                var restoredModel = await _sut.GetEnterYourUlnViewModelAsync();
+
+                restoredModel.Should().NotBeNull();
+                restoredUln = restoredModel!.Uln;
+            }
+            else
+            {
+                updatedModel = await _sut.SaveKnowYourUlnAsync(
+                    new KnowYourUlnViewModel
+                    {
+                        KnowUln = true,
+                        Uln = enteredUln
+                    });
+
+                var restoredModel = await _sut.GetKnowYourUlnViewModelAsync();
+
+                restoredModel.Should().NotBeNull();
+                restoredModel!.KnowUln.Should().BeTrue();
+                restoredUln = restoredModel.Uln;
+            }
+
+            // Assert
+            persistedAnswers.Uln.Should().Be(expectedSavedUln);
+            persistedAnswers.KnowUln.Should().BeTrue();
+
+            updatedModel.IsReturningToCheck.Should().BeTrue();
+            updatedModel.IsShortJourney.Should().BeFalse();
+
+            restoredUln.Should().Be(expectedDisplayedUln);
+
+            _sessionServiceMock.Verify(
+                x => x.SetAuthorisationAnswersAsync(
+                    It.IsAny<AuthorisationAnswers>()),
+                Times.Once);
+        }
+
+        [TestCase(null)]
+        [TestCase("1234567890")]
+        [TestCase("not a ULN")]
+        public async Task SaveKnowYourUlnAsync_When_No_Selected_Clears_Previous_Uln(
+            string? postedUln)
+        {
+            // Arrange
+            var answers = new AuthorisationAnswers
+            {
+                KnowUln = true,
+                Uln = 1234567890L,
+                CourseCode = "C1",
+                YearCompleted = 2024,
+                ProviderUkprn = 12345678,
+                IsReturningToCheck = true
+            };
+
+            _sessionServiceMock
+                .Setup(x => x.GetAuthorisationAnswersAsync())
+                .ReturnsAsync(answers);
+
+            // Act
+            var result = await _sut.SaveKnowYourUlnAsync(
+                new KnowYourUlnViewModel
+                {
+                    KnowUln = false,
+                    Uln = postedUln
+                });
+
+            // Assert
+            answers.KnowUln.Should().BeFalse();
+            answers.Uln.Should().BeNull();
+            answers.CourseCode.Should().Be("C1");
+            answers.YearCompleted.Should().Be(2024);
+            answers.ProviderUkprn.Should().Be(12345678);
+
+            result.IsReturningToCheck.Should().BeTrue();
+            result.IsShortJourney.Should().BeFalse();
+
+            _sessionServiceMock.Verify(
+                x => x.SetAuthorisationAnswersAsync(answers),
+                Times.Once);
+        }
+
         [Test]
         public async Task GetSelectCourseViewModelAsync_Returns_Model_With_Courses_And_SelectedCode()
         {
@@ -306,14 +649,14 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             // Assert
             Assert.IsNotNull(result);
             Assert.That(result.KnowUln, Is.EqualTo(true));
-            Assert.That(result.Uln, Is.EqualTo(1234567890L));
+            Assert.That(result.Uln, Is.EqualTo("1234567890"));
         }
 
         [Test]
         public async Task SaveKnowYourUlnAsync_Saves_KnowUln_True_And_Uln()
         {
             // Arrange
-            var vm = new KnowYourUlnViewModel { KnowUln = true, Uln = 999999L };
+            var vm = new KnowYourUlnViewModel { KnowUln = true, Uln = "999999" };
             _sessionServiceMock
                 .Setup(s => s.GetAuthorisationAnswersAsync())
                 .ReturnsAsync((AuthorisationAnswers)null);
@@ -331,7 +674,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         public async Task SaveKnowYourUlnAsync_Sets_Uln_Null_When_KnowUln_False()
         {
             // Arrange
-            var vm = new KnowYourUlnViewModel { KnowUln = false, Uln = 111111L };
+            var vm = new KnowYourUlnViewModel { KnowUln = false, Uln = "111111" };
             _sessionServiceMock
                 .Setup(s => s.GetAuthorisationAnswersAsync())
                 .ReturnsAsync(new AuthorisationAnswers { KnowUln = true, Uln = 222222L });
@@ -1257,6 +1600,253 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 It.IsAny<AuthoriseUserCommand>(),
                 It.IsAny<CancellationToken>()),
                 Times.Never);
+        }
+
+        [Test]
+        public async Task SubmitCheckAnswersAsync_When_Mandatory_Uln_Missing_Does_Not_Authorise_Or_Count_Failure()
+        {
+            // Arrange
+            const string govUkId = "gov-123";
+
+            _userServiceMock.Setup(x => x.GetGovUkIdentifier()).Returns(govUkId);
+            _userServiceMock.Setup(x => x.GetUserId()).Returns(Guid.NewGuid());
+
+            _sessionServiceMock
+                .Setup(x => x.GetAuthorisationAnswersAsync())
+                .ReturnsAsync(new AuthorisationAnswers
+                {
+                    KnowUln = false,
+                    Uln = null,
+                    CourseCode = "C1",
+                    YearCompleted = 2024,
+                    ProviderUkprn = 12345678
+                });
+
+            var matches = new MatchesAndMasks();
+
+            matches.Matches.Add(new Domain.Models.Match
+            {
+                Uln = 1234567890L,
+                UserIdentityId = Guid.NewGuid(),
+                CourseCode = "C1",
+                DateAwarded = new DateTime(2024, 6, 1),
+                Ukprn = 12345678
+            });
+
+            matches.Matches.Add(new Domain.Models.Match
+            {
+                Uln = 2345678901L,
+                UserIdentityId = Guid.NewGuid(),
+                CourseCode = "C1",
+                DateAwarded = new DateTime(2020, 6, 1),
+                Ukprn = 12345678
+            });
+
+            _cacheServiceMock
+                .Setup(x => x.GetMatchesAsync(govUkId))
+                .ReturnsAsync(matches);
+
+            // Act
+            var result = await _sut.SubmitCheckAnswersAsync();
+
+            // Assert
+            result.Should().Be(MatchOutcome.MandatoryUlnMissing);
+
+            _mediatorMock.Verify(x => x.Send(
+                It.IsAny<AuthoriseUserCommand>(),
+                It.IsAny<CancellationToken>()), Times.Never);
+
+            _mediatorMock.Verify(x => x.Send(
+                It.IsAny<SubmitMatchCommand>(),
+                It.IsAny<CancellationToken>()), Times.Never);
+
+            _cacheServiceMock.Verify(
+                x => x.IncrementMatchFailCountAsync(It.IsAny<string>()),
+                Times.Never);
+        }
+
+        [TestCase(1, MatchOutcome.SingleMatch)]
+        [TestCase(2, MatchOutcome.MultipleMatches)]
+        public async Task SubmitCheckAnswersAsync_When_One_Distinct_Uln_Allows_Matching_Without_Entered_Uln(
+            int certificateCount,
+            MatchOutcome expectedOutcome)
+        {
+            // Arrange
+            const string govUkId = "gov-123";
+            const long matchedUln = 1234567890L;
+            var userId = Guid.NewGuid();
+            var userIdentityId = Guid.NewGuid();
+
+            _userServiceMock.Setup(x => x.GetGovUkIdentifier()).Returns(govUkId);
+            _userServiceMock.Setup(x => x.GetUserId()).Returns(userId);
+
+            _sessionServiceMock
+                .Setup(x => x.GetAuthorisationAnswersAsync())
+                .ReturnsAsync(new AuthorisationAnswers
+                {
+                    KnowUln = false,
+                    Uln = null,
+                    CourseCode = "C1",
+                    YearCompleted = 2024,
+                    ProviderUkprn = 12345678
+                });
+
+            var matches = new MatchesAndMasks();
+
+            for (var i = 0; i < certificateCount; i++)
+            {
+                matches.Matches.Add(new Domain.Models.Match
+                {
+                    Uln = matchedUln,
+                    UserIdentityId = userIdentityId,
+                    CertificateType = CertificateType.Standard,
+                    CourseCode = "C1",
+                    DateAwarded = new DateTime(2024, 6, 1),
+                    Ukprn = 12345678
+                });
+            }
+
+            _cacheServiceMock
+                .Setup(x => x.GetMatchesAsync(govUkId))
+                .ReturnsAsync(matches);
+
+            // Act
+            var result = await _sut.SubmitCheckAnswersAsync();
+
+            // Assert
+            result.Should().Be(expectedOutcome);
+
+            _mediatorMock.Verify(x => x.Send(
+                It.Is<AuthoriseUserCommand>(command =>
+                    command.UserId == userId &&
+                    command.Uln == matchedUln),
+                It.IsAny<CancellationToken>()), Times.Once);
+
+            _cacheServiceMock.Verify(
+                x => x.IncrementMatchFailCountAsync(It.IsAny<string>()),
+                Times.Never);
+        }
+
+        [TestCase(1234567890L, "C1", 10000001L, MatchOutcome.MultipleMatches)]
+        [TestCase(2345678901L, "C1", 10000002L, MatchOutcome.SingleMatch)]
+        [TestCase(1234567890L, "C1", 10000002L, MatchOutcome.NoMatch)]
+        [TestCase(9999999999L, "C1", 10000002L, MatchOutcome.NoMatch)]
+        [TestCase(1234567890L, "C2", 10000001L, MatchOutcome.NoMatch)]
+        public async Task SubmitCheckAnswersAsync_When_Uln_Mandatory_Only_Matches_Entered_Learner(
+            long enteredUln,
+            string selectedCourse,
+            long selectedProvider,
+            MatchOutcome expectedOutcome)
+        {
+            // Arrange
+            const string govUkId = "gov-123";
+            var userId = Guid.NewGuid();
+            var learnerAIdentityId = Guid.NewGuid();
+
+            _userServiceMock.Setup(x => x.GetGovUkIdentifier()).Returns(govUkId);
+            _userServiceMock.Setup(x => x.GetUserId()).Returns(userId);
+
+            _sessionServiceMock
+                .Setup(x => x.GetAuthorisationAnswersAsync())
+                .ReturnsAsync(new AuthorisationAnswers
+                {
+                    KnowUln = true,
+                    Uln = enteredUln,
+                    CourseCode = selectedCourse,
+                    YearCompleted = 2024,
+                    ProviderUkprn = selectedProvider,
+                    IsShortJourney = false
+                });
+
+            var matches = new MatchesAndMasks();
+
+            for (var i = 0; i < 2; i++)
+            {
+                matches.Matches.Add(new Domain.Models.Match
+                {
+                    Uln = 1234567890L,
+                    UserIdentityId = learnerAIdentityId,
+                    CertificateType = CertificateType.Standard,
+                    CourseCode = "C1",
+                    CourseName = "Course One",
+                    DateAwarded = new DateTime(2024, 6, 1),
+                    Ukprn = 10000001,
+                    ProviderName = "College A"
+                });
+            }
+
+            matches.Matches.Add(new Domain.Models.Match
+            {
+                Uln = 2345678901L,
+                UserIdentityId = Guid.NewGuid(),
+                CertificateType = CertificateType.Standard,
+                CourseCode = "C1",
+                CourseName = "Course One",
+                DateAwarded = new DateTime(2024, 6, 1),
+                Ukprn = 10000002,
+                ProviderName = "College B"
+            });
+
+            _cacheServiceMock
+                .Setup(x => x.GetMatchesAsync(govUkId))
+                .ReturnsAsync(matches);
+
+            _cacheServiceMock
+                .Setup(x => x.GetMatchFailCountAsync(govUkId))
+                .ReturnsAsync(0);
+
+            _cacheServiceMock
+                .Setup(x => x.IncrementMatchFailCountAsync(govUkId))
+                .ReturnsAsync(1);
+
+            // Act
+            var result = await _sut.SubmitCheckAnswersAsync();
+
+            // Assert
+            result.Should().Be(expectedOutcome);
+
+            if (expectedOutcome == MatchOutcome.NoMatch)
+            {
+                _mediatorMock.Verify(x => x.Send(
+                    It.IsAny<AuthoriseUserCommand>(),
+                    It.IsAny<CancellationToken>()), Times.Never);
+
+                _mediatorMock.Verify(x => x.Send(
+                    It.Is<SubmitMatchCommand>(command =>
+                        command.UserId == userId &&
+                        command.Uln == enteredUln &&
+                        !command.IsMatched &&
+                        !command.IsFailed),
+                    It.IsAny<CancellationToken>()), Times.Once);
+
+                _cacheServiceMock.Verify(
+                    x => x.IncrementMatchFailCountAsync(govUkId),
+                    Times.Once);
+            }
+            else
+            {
+                _mediatorMock.Verify(x => x.Send(
+                    It.IsAny<AuthoriseUserCommand>(),
+                    It.IsAny<CancellationToken>()), Times.Once);
+
+                _mediatorMock.Verify(x => x.Send(
+                    It.Is<AuthoriseUserCommand>(command =>
+                        command.UserId == userId &&
+                        command.Uln == enteredUln),
+                    It.IsAny<CancellationToken>()), Times.Once);
+
+                _mediatorMock.Verify(x => x.Send(
+                    It.Is<SubmitMatchCommand>(command =>
+                        command.UserId == userId &&
+                        command.Uln == enteredUln &&
+                        command.IsMatched &&
+                        command.IsUlnMatched),
+                    It.IsAny<CancellationToken>()), Times.Once);
+
+                _cacheServiceMock.Verify(
+                    x => x.IncrementMatchFailCountAsync(It.IsAny<string>()),
+                    Times.Never);
+            }
         }
 
         [Test]

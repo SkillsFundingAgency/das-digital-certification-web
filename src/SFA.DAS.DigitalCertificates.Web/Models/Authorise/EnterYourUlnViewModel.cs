@@ -2,7 +2,7 @@
 {
     public class EnterYourUlnViewModel : AuthoriseViewModelBase
     {
-        public long? Uln { get; set; }
-        
+        public string? Uln { get; set; }
+
     }
 }
