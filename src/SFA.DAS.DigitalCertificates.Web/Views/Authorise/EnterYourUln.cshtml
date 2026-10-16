@@ -1,0 +1,68 @@
+﻿@using SFA.DAS.DigitalCertificates.Web.Controllers
+@using SFA.DAS.DigitalCertificates.Web.ViewDataKeys
+@model SFA.DAS.DigitalCertificates.Web.Models.Authorise.EnterYourUlnViewModel
+
+@{
+    ViewData[ViewDataKeys.Title] = "What is your unique learner number?";
+    ViewBag.GaData.Vpv = ViewData[ViewDataKeys.GaDataVpvPrefix] + "what-is-your-unique-learner-number";
+}
+
+<div class="govuk-width-container">
+
+    <a asp-route="@(Model?.IsReturningToCheck == true ? AuthoriseController.CheckAnswersRouteGet : AuthoriseController.NeedMoreInformationRouteGet)" class="govuk-back-link">Back</a>
+
+    <main class="govuk-main-wrapper" id="main-content">
+        <partial name="_ValidationSummary" />
+
+        <div class="govuk-grid-row">
+            <div class="govuk-grid-column-two-thirds">
+                <form asp-action="EnterYourUln" method="post" novalidate>
+
+                    <span class="govuk-caption-l">Matching your information</span>
+
+                    <div class="govuk-form-group"
+                         das-highlight-error-for="Uln"
+                         error-class="govuk-form-group--error">
+
+                        <h1 class="govuk-label-wrapper">
+                            <label class="govuk-label govuk-label--l" for="Uln">
+                                What is your unique learner number?
+                            </label>
+                        </h1>
+
+                        <details class="govuk-details" data-module="govuk-details">
+                            <summary class="govuk-details__summary">
+                                <span class="govuk-details__summary-text">
+                                    How to find your unique learner number
+                                </span>
+                            </summary>
+                            <div class="govuk-details__text">
+                                Your training provider can give you your unique learner number, or it may be printed on your exam certificates or results slips.
+                            </div>
+                        </details>
+
+                        <div id="Uln-hint" class="govuk-hint">
+                            Your unique learner number is 10 digits and made of only numbers.
+                        </div>
+
+                        <p id="Uln-error" das-validation-for="Uln" class="govuk-error-message"></p>
+
+                        <input asp-for="Uln"
+                               data-default-value="@Model?.Uln"
+                               aria-describedby="Uln-hint Uln-error"
+                               class="govuk-input govuk-!-width-two-thirds"
+                               type="text"
+                               inputmode="numeric"
+                               pattern="[0-9]*" />
+                    </div>
+
+                    <button type="submit" class="govuk-button" data-module="govuk-button">
+                        Continue
+                    </button>
+
+                </form>
+            </div>
+        </div>
+    </main>
+
+</div>
