@@ -881,7 +881,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 CourseCode = "C1",
                 CourseName = "Course One",
                 CourseLevel = "3",
-                DateAwarded = new DateTime(2023, 1, 1)
+                DateAwarded = new DateTime(2023, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             });
 
             _cacheServiceMock
@@ -1171,10 +1171,34 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             // Assert
             Assert.IsNotNull(result);
             _sessionServiceMock.Verify(s => s.SetAuthorisationAnswersAsync(
-                It.Is<AuthorisationAnswers>(a => a.IsReturningToCheck == true)), Times.Once);
-            Assert.That(result.UlnDisplay, Is.EqualTo("123"));
+                It.Is<AuthorisationAnswers>(a => a.IsReturningToCheck)), Times.Once);
+            Assert.That(result.UlnDisplay, Is.EqualTo("0000000123"));
             Assert.That(result.YearDisplay, Is.EqualTo("2020"));
             Assert.That(result.ProviderDisplay, Is.EqualTo("P"));
+        }
+
+        [Test]
+        public async Task GetCheckAnswersViewModelAsync_Displays_Uln_As_Ten_Digits()
+        {
+            // Arrange
+            var answers = new AuthorisationAnswers
+            {
+                KnowUln = true,
+                Uln = 123456789L,
+                CourseCode = "C1",
+                CourseName = "Course One"
+            };
+
+            _sessionServiceMock
+                .Setup(x => x.GetAuthorisationAnswersAsync())
+                .ReturnsAsync(answers);
+
+            // Act
+            var result = await _sut.GetCheckAnswersViewModelAsync();
+
+            // Assert
+            result.Should().NotBeNull();
+            result!.UlnDisplay.Should().Be("0123456789");
         }
 
         [Test]
@@ -1629,7 +1653,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 Uln = 1234567890L,
                 UserIdentityId = Guid.NewGuid(),
                 CourseCode = "C1",
-                DateAwarded = new DateTime(2024, 6, 1),
+                DateAwarded = new DateTime(2024, 6, 1, 0, 0, 0, DateTimeKind.Utc),
                 Ukprn = 12345678
             });
 
@@ -1638,7 +1662,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 Uln = 2345678901L,
                 UserIdentityId = Guid.NewGuid(),
                 CourseCode = "C1",
-                DateAwarded = new DateTime(2020, 6, 1),
+                DateAwarded = new DateTime(2020, 6, 1, 0, 0, 0, DateTimeKind.Utc),
                 Ukprn = 12345678
             });
 
@@ -1701,7 +1725,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                     UserIdentityId = userIdentityId,
                     CertificateType = CertificateType.Standard,
                     CourseCode = "C1",
-                    DateAwarded = new DateTime(2024, 6, 1),
+                    DateAwarded = new DateTime(2024, 6, 1, 0, 0, 0, DateTimeKind.Utc),
                     Ukprn = 12345678
                 });
             }
@@ -1769,7 +1793,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                     CertificateType = CertificateType.Standard,
                     CourseCode = "C1",
                     CourseName = "Course One",
-                    DateAwarded = new DateTime(2024, 6, 1),
+                    DateAwarded = new DateTime(2024, 6, 1, 0, 0, 0, DateTimeKind.Utc),
                     Ukprn = 10000001,
                     ProviderName = "College A"
                 });
@@ -1782,7 +1806,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 CertificateType = CertificateType.Standard,
                 CourseCode = "C1",
                 CourseName = "Course One",
-                DateAwarded = new DateTime(2024, 6, 1),
+                DateAwarded = new DateTime(2024, 6, 1, 0, 0, 0, DateTimeKind.Utc),
                 Ukprn = 10000002,
                 ProviderName = "College B"
             });
@@ -1877,7 +1901,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 UserIdentityId = userIdentityId,
                 CourseCode = "C1",
                 CourseName = "Course 1",
-                DateAwarded = new DateTime(2019, 1, 1),
+                DateAwarded = new DateTime(2019, 1, 1, 0, 0, 0, DateTimeKind.Utc),
                 Ukprn = 123
             });
 
@@ -1929,7 +1953,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 UserIdentityId = userIdentityId,
                 CourseCode = "C2",
                 CourseName = "Course 2",
-                DateAwarded = new DateTime(2018, 1, 1),
+                DateAwarded = new DateTime(2018, 1, 1, 0, 0, 0, DateTimeKind.Utc),
                 Ukprn = 456
             });
 

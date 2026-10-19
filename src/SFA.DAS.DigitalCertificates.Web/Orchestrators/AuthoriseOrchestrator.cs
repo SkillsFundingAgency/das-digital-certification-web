@@ -510,7 +510,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 
             var ulnDisplay = answers.KnowUln == false
                 ? DisplayConstants.NotKnown
-                : answers.Uln?.ToString();
+                : answers.Uln?.ToString("D10", CultureInfo.InvariantCulture);
 
             var yearDisplay = answers.KnowYear == false
                 ? DisplayConstants.NotKnown
