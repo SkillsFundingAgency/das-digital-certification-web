@@ -6,7 +6,7 @@
     ViewData[ViewDataKeys.Title] = "Check you've proved your identity";
     ViewBag.GaData.Vpv = @ViewData[ViewDataKeys.GaDataVpvPrefix] + "check";
 }
-<main class="govuk-main-wrapper govuk-main-wrapper--auto-spacing">
+<main class="govuk-main-wrapper govuk-main-wrapper--auto-spacing" id="main-content">
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
             <h1 class="govuk-heading-xl">@ViewData[ViewDataKeys.Title]</h1>
@@ -22,10 +22,12 @@
             <p class="govuk-body">
                 To prove your identity GOV.UK will ask you some questions and you'll need:
                 <ul class="govuk-list govuk-list--bullet govuk-!-margin-left-2 govuk-!-margin-top-0">
-                    <li>your passport </li>
-                    <li>your driving licence </li>
-                    or
-                    <li>an equivalent photo ID</li>
+                    <li>your passport</li>
+                    <li>your driving licence</li>
+                    <li class="app-list-item--or">
+                        <span class="app-list-divider">or</span>
+                        <span class="app-list-item__content">an equivalent photo ID</span>
+                    </li>
                 </ul>
             </p>
 

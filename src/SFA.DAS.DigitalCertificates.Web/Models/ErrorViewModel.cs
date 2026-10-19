@@ -1,14 +1,18 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System;
 
 namespace SFA.DAS.DigitalCertificates.Web.Models
 {
-    [ExcludeFromCodeCoverage]
     public class ErrorViewModel
     {
-        public string? RequestId { get; set; }
+        public const string SupportEmailAddress =
+            "helpdesk@manage-apprenticeships.service.gov.uk";
 
-        public bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
+        public required string ProblemReference { get; init; }
 
-        public string? ErrorMessage { get; set; }
+        public string SupportEmailSubject =>
+            $"Support with Apprenticeship certificates, reference: {ProblemReference}";
+
+        public string SupportEmailUrl =>
+            $"mailto:{SupportEmailAddress}?subject={Uri.EscapeDataString(SupportEmailSubject)}";
     }
 }

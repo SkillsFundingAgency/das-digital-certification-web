@@ -335,6 +335,30 @@
     display: inline-block;
 }
 
+.app-list-item--or {
+    list-style: none;
+}
+
+.app-list-divider {
+    display: block;
+    margin-bottom: 2px;
+}
+
+.app-list-item__content {
+    position: relative;
+}
+
+    .app-list-item__content::before {
+        content: "";
+        position: absolute;
+        left: -15px;
+        top: 0.6em;
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: currentColor;
+    }
+
 /* Additional autocomplete */
 .autocomplete__input--error {
     border-color: #d4351c; /* Same color as .govuk-input--error */

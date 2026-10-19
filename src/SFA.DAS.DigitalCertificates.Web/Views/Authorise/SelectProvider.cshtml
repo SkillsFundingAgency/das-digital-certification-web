@@ -23,7 +23,7 @@
 
                         <span class="govuk-caption-l">Matching your information</span>
 
-                            <fieldset id="SelectedProviderOptions-fieldset" class="govuk-fieldset" aria-describedby="SelectProvider-hint">
+                            <fieldset id="SelectedProviderOptions-fieldset" class="govuk-fieldset" aria-describedby="SelectProvider-hint SelectedProviderOption-error">
                             <legend class="govuk-fieldset__legend govuk-fieldset__legend--l">
                                 <h1 class="govuk-fieldset__heading">Who was your training provider?</h1>
                             </legend>
@@ -45,7 +45,6 @@
                                                       class="govuk-radios__input"
                                                       type="radio"
                                                       value="@p.ProviderName"
-                                                      aria-describedby="SelectedProviderOption-error"
                                                       @( (Model?.SelectedProviderName != null && System.String.Equals(p.ProviderName?.Trim(), Model.SelectedProviderName?.Trim(), System.StringComparison.OrdinalIgnoreCase)) ? "checked=\"checked\"" : "" ) />
                                                 <label class="govuk-label govuk-radios__label" for="@inputId">@p.ProviderName</label>
                                             </div>
@@ -61,7 +60,6 @@
                                          class="govuk-radios__input"
                                          type="radio"
                                         value="@UnknownProviderSentinel"
-                                         aria-describedby="SelectedProviderOption-error"
                                             @(Model?.SelectedProviderUnknown == true ? "checked=\"checked\"" : "") />
                                     <label class="govuk-label govuk-radios__label" for="SelectedProviderOption-Unknown">None of these</label>
                                 </div>

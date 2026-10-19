@@ -36,7 +36,8 @@ namespace SFA.DAS.DigitalCertificates.UnitTests.Application.Commands.SubmitMatch
                 CourseCode = "C1",
                 CourseName = "Course One",
                 Ukprn = 12345,
-                IsMatched = true
+                IsMatched = true,
+                IsUlnMatched = true
             };
 
             _outerApiMock
@@ -48,7 +49,7 @@ namespace SFA.DAS.DigitalCertificates.UnitTests.Application.Commands.SubmitMatch
 
             // Assert
             result.Should().Be(Unit.Value);
-            _outerApiMock.Verify(x => x.SubmitMatch(userId, It.Is<SubmitMatchRequest>(r => r.UserIdentityId == command.UserIdentityId && r.Uln == command.Uln && r.IsMatched == command.IsMatched)), Times.Once);
+            _outerApiMock.Verify(x => x.SubmitMatch(userId, It.Is<SubmitMatchRequest>(r => r.UserIdentityId == command.UserIdentityId && r.Uln == command.Uln && r.IsMatched == command.IsMatched && r.IsUlnMatched == command.IsUlnMatched)), Times.Once);
         }
 
         [Test]
