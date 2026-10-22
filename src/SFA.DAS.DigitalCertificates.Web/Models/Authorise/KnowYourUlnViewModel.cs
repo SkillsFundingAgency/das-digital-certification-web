@@ -4,7 +4,7 @@
     {
         public bool? KnowUln { get; set; }
 
-        public long? Uln { get; set; }
-        
+        public string? Uln { get; set; }
+
     }
 }
