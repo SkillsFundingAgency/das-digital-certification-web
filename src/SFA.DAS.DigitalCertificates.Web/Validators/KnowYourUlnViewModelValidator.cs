@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System;
+using System.Text.RegularExpressions;
 using FluentValidation;
 using SFA.DAS.DigitalCertificates.Web.Models.Authorise;
 
@@ -22,7 +23,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Validators
                 .WithMessage(EnterUlnError)
                 .Must(uln =>
                     uln != null &&
-                    Regex.IsMatch(uln.Trim(), @"\A[0-9]{10}\z"))
+                    Regex.IsMatch(uln.Trim(), @"\A[0-9]{10}\z", RegexOptions.None, TimeSpan.FromMilliseconds(100)))
                 .WithMessage(InvalidUlnFormatError)
                 .When(x => x.KnowUln == true);
         }
