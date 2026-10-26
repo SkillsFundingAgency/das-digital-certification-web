@@ -15,14 +15,14 @@ namespace SFA.DAS.DigitalCertificates.Application.Commands.CreateOrUpdateUser
 
         public async Task<Guid> Handle(CreateOrUpdateUserCommand command, CancellationToken cancellationToken)
         {
-            var userId = await _outerApi.CreateOrUpdateUser(new CreateOrUpdateUserRequest
+            var response = await _outerApi.CreateOrUpdateUser(new CreateOrUpdateUserRequest
             {
                 GovUkIdentifier = command.GovUkIdentifier,
                 EmailAddress = command.EmailAddress,
                 PhoneNumber = command.PhoneNumber
             });
 
-            return userId;
+            return response.UserId;
         }
     }
 }
