@@ -34,6 +34,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         public const string CookiesRoutePost = nameof(CookiesRoutePost);
         public const string CookieDetailsRouteGet = nameof(CookieDetailsRouteGet);
         public const string ErrorRouteGet = nameof(ErrorRouteGet);
+        public const string AntiforgeryRouteGet = nameof(AntiforgeryRouteGet);
         public const string SignOutRouteGet = nameof(SignOutRouteGet);
         public const string UserSignedOutRouteGet = nameof(UserSignedOutRouteGet);
         public const string AccessibilityStatementRouteGet = nameof(AccessibilityStatementRouteGet);
@@ -179,6 +180,14 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             {
                 ProblemReference = problemReference
             });
+        }
+
+        [AllowAnonymous]
+        [HttpGet]
+        [Route("error/session-expired", Name = AntiforgeryRouteGet)]
+        public IActionResult AntiforgeryError()
+        {
+            return View();
         }
 
         private string GetSafeReturnUrl(string? returnUrl, string fallbackUrl = "")
