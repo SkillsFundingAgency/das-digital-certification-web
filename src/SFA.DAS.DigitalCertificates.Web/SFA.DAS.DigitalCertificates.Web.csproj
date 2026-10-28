@@ -18,7 +18,7 @@
 		<PackageReference Include="Azure.Storage.Blobs" Version="12.29.1" />
 		<PackageReference Include="FluentValidation" Version="12.1.1" />
 		<PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
-		<PackageReference Include="MediatR" Version="14.2.0" />
+		<PackageReference Include="MediatR" Version="12.5.0" />
 		<PackageReference Include="Microsoft.AspNetCore.DataProtection.StackExchangeRedis" Version="10.0.10" />
 		<PackageReference Include="Azure.Identity" Version="1.21.0" />
 		<PackageReference Include="RestEase.HttpClientFactory" Version="1.6.4" />
