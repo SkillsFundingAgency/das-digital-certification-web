@@ -8,63 +8,103 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Validators
 {
     public class KnowYourUlnViewModelValidatorTests
     {
-        private KnowYourUlnViewModelValidator _validator = null!;
+        private KnowYourUlnViewModelValidator _sut = null!;
 
         [SetUp]
         public void SetUp()
         {
-            _validator = new KnowYourUlnViewModelValidator();
+            _sut = new KnowYourUlnViewModelValidator();
         }
 
         [Test]
-        public async Task Should_have_error_when_KnowUln_not_selected()
+        public async Task Requires_An_Answer_To_KnowUln()
         {
-            var vm = new KnowYourUlnViewModel { KnowUln = null, Uln = null };
+            var model = new KnowYourUlnViewModel
+            {
+                KnowUln = null
+            };
 
-            var result = await _validator.ValidateAsync(vm);
+            var result = await _sut.ValidateAsync(model);
 
-            result.IsValid.Should().BeFalse();
-            result.Errors.Should().Contain(e => e.PropertyName == "KnowUln");
+            var error = result.Errors.Should().ContainSingle().Which;
+
+            error.PropertyName.Should().Be(nameof(model.KnowUln));
+            error.ErrorMessage.Should()
+                .Be("Select 'Yes' if you know your unique learner number");
         }
 
-        [Test]
-        public async Task Should_have_error_when_KnowUln_yes_and_Uln_null()
+        [TestCase(null)]
+        [TestCase("")]
+        [TestCase("   ")]
+        public async Task Requires_Uln_When_Yes_Selected(string? uln)
         {
-            var vm = new KnowYourUlnViewModel { KnowUln = true, Uln = null };
+            var model = new KnowYourUlnViewModel
+            {
+                KnowUln = true,
+                Uln = uln
+            };
 
-            var result = await _validator.ValidateAsync(vm);
+            var result = await _sut.ValidateAsync(model);
 
-            result.IsValid.Should().BeFalse();
-            result.Errors.Should().Contain(e => e.PropertyName == "Uln");
+            var error = result.Errors.Should().ContainSingle().Which;
+
+            error.PropertyName.Should().Be(nameof(model.Uln));
+            error.ErrorMessage.Should().Be("Enter your unique learner number");
         }
 
-        [Test]
-        public async Task Should_have_error_when_KnowUln_yes_and_Uln_not_10_digits()
+        [TestCase("123456789")]
+        [TestCase("12345678901")]
+        [TestCase("-123456789")]
+        [TestCase("+123456789")]
+        [TestCase("12345a7890")]
+        [TestCase("12345.7890")]
+        [TestCase("12345 7890")]
+        [TestCase("١٢٣٤٥٦٧٨٩٠")]
+        public async Task Rejects_Invalid_Uln_When_Yes_Selected(string uln)
         {
-            var vm = new KnowYourUlnViewModel { KnowUln = true, Uln = 12345L };
+            var model = new KnowYourUlnViewModel
+            {
+                KnowUln = true,
+                Uln = uln
+            };
 
-            var result = await _validator.ValidateAsync(vm);
+            var result = await _sut.ValidateAsync(model);
 
-            result.IsValid.Should().BeFalse();
-            result.Errors.Should().Contain(e => e.PropertyName == "Uln");
+            var error = result.Errors.Should().ContainSingle().Which;
+
+            error.PropertyName.Should().Be(nameof(model.Uln));
+            error.ErrorMessage.Should().Be(
+                "Enter a unique learner number that is 10 digits and contains only numbers");
         }
 
-        [Test]
-        public async Task Should_be_valid_when_KnowUln_yes_and_Uln_10_digits()
+        [TestCase("1234567890")]
+        [TestCase("0123456789")]
+        [TestCase(" 1234567890 ")]
+        public async Task Accepts_Valid_Uln_When_Yes_Selected(string uln)
         {
-            var vm = new KnowYourUlnViewModel { KnowUln = true, Uln = 1234567890L };
+            var model = new KnowYourUlnViewModel
+            {
+                KnowUln = true,
+                Uln = uln
+            };
 
-            var result = await _validator.ValidateAsync(vm);
+            var result = await _sut.ValidateAsync(model);
 
             result.IsValid.Should().BeTrue();
         }
 
-        [Test]
-        public async Task Should_be_valid_when_KnowUln_no_and_Uln_null()
+        [TestCase(null)]
+        [TestCase("")]
+        [TestCase("not a ULN")]
+        public async Task Ignores_Uln_When_No_Selected(string? uln)
         {
-            var vm = new KnowYourUlnViewModel { KnowUln = false, Uln = null };
+            var model = new KnowYourUlnViewModel
+            {
+                KnowUln = false,
+                Uln = uln
+            };
 
-            var result = await _validator.ValidateAsync(vm);
+            var result = await _sut.ValidateAsync(model);
 
             result.IsValid.Should().BeTrue();
         }

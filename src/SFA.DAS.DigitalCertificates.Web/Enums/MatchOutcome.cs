@@ -6,6 +6,7 @@
         NoMatch,
         SingleMatch,
         MultipleMatches,
-        Locked
+        Locked,
+        MandatoryUlnMissing
     }
 }
