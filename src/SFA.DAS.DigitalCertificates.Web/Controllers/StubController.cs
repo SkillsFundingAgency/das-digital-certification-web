@@ -54,7 +54,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             {
                 GovUkUser govUkUser = await _stubAuthenticationService.GetStubVerifyGovUkUser(model.UserFile);
 
-                var claims = await _stubAuthenticationService.GetStubSignInClaims(new StubAuthUserDetails
+                var result = await _stubAuthenticationService.GetStubSignInClaims(new StubAuthUserDetails
                 {
                     Id = model.Id,
                     Email = model.Email,
@@ -62,7 +62,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
                     GovUkUser = govUkUser
                 });
 
-                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claims,
+                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, result.Principal,
                     new AuthenticationProperties());
             }
             catch (StubVerifyException ex)

@@ -1,23 +1,24 @@
 ﻿using System;
-using System.Threading.Tasks;
 using System.Collections.Generic;
-using Moq;
 using System.Security.Claims;
-using Microsoft.AspNetCore.Http;
-using NUnit.Framework;
-using MediatR;
-using SFA.DAS.DigitalCertificates.Web.Orchestrators;
-using SFA.DAS.DigitalCertificates.Web.Services;
-using SFA.DAS.DigitalCertificates.Web.Enums;
+using System.Threading;
+using System.Threading.Tasks;
 using FluentValidation;
-using SFA.DAS.DigitalCertificates.Web.Models.Authorise;
-using SFA.DAS.DigitalCertificates.Domain.Models;
-using SFA.DAS.DigitalCertificates.Application.Commands.SubmitMatch;
+using MediatR;
+using Microsoft.AspNetCore.Http;
+using Moq;
+using NUnit.Framework;
 using SFA.DAS.DigitalCertificates.Application.Commands.AuthoriseUser;
 using SFA.DAS.DigitalCertificates.Application.Commands.CreateUserAction;
+using SFA.DAS.DigitalCertificates.Application.Commands.SubmitMatch;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetUserActions;
-using System.Threading;
+using SFA.DAS.DigitalCertificates.Domain.Models;
 using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
+using SFA.DAS.DigitalCertificates.Web.Enums;
+using SFA.DAS.DigitalCertificates.Web.Exceptions;
+using SFA.DAS.DigitalCertificates.Web.Models.Authorise;
+using SFA.DAS.DigitalCertificates.Web.Orchestrators;
+using SFA.DAS.DigitalCertificates.Web.Services;
 using SFA.DAS.GovUK.Auth.Models;
 using SFA.DAS.GovUK.Auth.Services;
 
@@ -1082,7 +1083,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         }
 
         [Test]
-        public async Task PrepareNeedMoreInformationAsync_When_Matches_Not_Cached_And_HttpContext_Is_Null_Does_Not_Create_Matches()
+        public void PrepareNeedMoreInformationAsync_When_Matches_Not_Cached_And_HttpContext_Is_Null_Throws_VerifyException()
         {
             // Arrange
             var govUkId = "gov-1";
@@ -1100,10 +1101,13 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 .ReturnsAsync((MatchesAndMasks)null);
 
             // Act
-            var result = await _sut.PrepareNeedMoreInformationAsync();
+            var exception = Assert.ThrowsAsync<VerifyException>(async () =>
+            {
+                await _sut.PrepareNeedMoreInformationAsync();
+            });
 
             // Assert
-            Assert.That(result, Is.False);
+            Assert.That(exception.Message, Is.EqualTo("Unable to load identity details from GOV.UK verify"));
 
             _cacheServiceMock.Verify(x => x.GetMatchesAsync(govUkId), Times.Once);
             _cacheServiceMock.Verify(x => x.CreateMatchesAsync(
@@ -1111,7 +1115,6 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
                 It.IsAny<Guid>(),
                 It.IsAny<GovUkCredentialSubject>()), Times.Never);
         }
-
         [Test]
         public async Task SubmitCheckAnswersAsync_When_SingleMatch_Found_Submits_UserIdentityId_From_Match()
         {
