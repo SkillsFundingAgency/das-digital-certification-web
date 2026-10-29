@@ -667,16 +667,13 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             var requiresUln = HasMandatoryUln(matchList);
             if (requiresUln)
             {
-                if (answers.Uln == null || string.IsNullOrWhiteSpace(selectedCourse))
+                if (answers.Uln == null)
                 {
                     return MatchResult.None();
                 }
 
                 matches = matchList
-                    .Where(m =>
-                        m.Uln == answers.Uln.Value &&
-                        string.Equals(
-                            m.CourseCode?.Trim(), selectedCourse, StringComparison.OrdinalIgnoreCase))
+                    .Where(m => m.Uln == answers.Uln.Value)
                     .ToList();
             }
 
