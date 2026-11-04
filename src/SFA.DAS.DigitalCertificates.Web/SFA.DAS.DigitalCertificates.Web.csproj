@@ -28,12 +28,15 @@
 		<PackageReference Include="SFA.DAS.Http" Version="3.2.69" />
 		<PackageReference Include="SFA.DAS.Validation" Version="6.0.31" />
 		<PackageReference Include="SFA.DAS.Validation.Mvc" Version="6.0.31" />
-		<PackageReference Include="System.Formats.Asn1" Version="10.0.10" />
-		<PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.10" />
-		<PackageReference Include="System.Text.Json" Version="10.0.10" />
 		<PackageReference Include="WebEssentials.AspNetCore.CdnTagHelpers" Version="1.0.21" />
 		<PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="10.0.10" />
 		<PackageReference Include="DnsClient" Version="1.8.0" />
+	</ItemGroup>
+
+	<!-- Security pins for vulnerable transitive packages. Not used directly - do not remove without checking
+     `dotnet nuget why` and the vulnerability warnings. -->
+	<ItemGroup Label="Transitive security pins">
+		<PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.14" />
 	</ItemGroup>
 
 	<ItemGroup>

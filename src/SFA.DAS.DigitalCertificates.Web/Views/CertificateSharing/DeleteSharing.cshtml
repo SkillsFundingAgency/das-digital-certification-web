@@ -7,7 +7,7 @@
 }
 
 <div class="govuk-width-container">
-    <a asp-route="@CertificatesController.CertificateSharingLinkRouteGet"
+    <a asp-route="@CertificateSharingController.CertificateSharingLinkRouteGet"
        asp-route-certificateId="@Model.CertificateId" asp-route-sharingId="@Model.SharingId" class="govuk-back-link">Back</a>
 
     <main class="govuk-main-wrapper" id="main-content">
@@ -29,10 +29,10 @@
 
                 <p class="govuk-hint govuk-!-margin-top-0">This action cannot be undone</p>
 
-                <form method="post" asp-route="@CertificatesController.DeleteSharingRoutePost" asp-route-certificateId="@Model.CertificateId" asp-route-sharingId="@Model.SharingId">
+                <form method="post" asp-route="@CertificateSharingController.DeleteSharingRoutePost" asp-route-certificateId="@Model.CertificateId" asp-route-sharingId="@Model.SharingId">
                     <div class="govuk-button-group">
                         <button type="submit" class="govuk-button govuk-button--warning" data-module="govuk-button">Delete link</button>
-                        <a asp-route="@CertificatesController.CertificateSharingLinkRouteGet" asp-route-certificateId="@Model.CertificateId" asp-route-sharingId="@Model.SharingId" class="govuk-link govuk-!-margin-left-4">Cancel</a>
+                        <a asp-route="@CertificateSharingController.CertificateSharingLinkRouteGet" asp-route-certificateId="@Model.CertificateId" asp-route-sharingId="@Model.SharingId" class="govuk-link govuk-!-margin-left-4">Cancel</a>
                     </div>
                 </form>
 
