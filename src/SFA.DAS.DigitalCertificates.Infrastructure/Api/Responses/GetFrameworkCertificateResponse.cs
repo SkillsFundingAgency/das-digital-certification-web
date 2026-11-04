@@ -22,10 +22,12 @@ namespace SFA.DAS.DigitalCertificates.Infrastructure.Api.Responses
         public string? EmployerName { get; set; }
         public string? AssessorName { get; set; }
         public DateTime? StartDate { get; set; }
+        public string? Status { get; set; }
         public DateTime? PrintRequestedAt { get; set; }
         public string? PrintRequestedBy { get; set; }
+        public string? PrintStatus { get; set; }
+        public DateTime? PrintStatusAt { get; set; }
         public List<QualificationDetailsResponse>? QualificationsAndAwardingBodies { get; set; }
-        public List<DeliveryInformationResponse>? DeliveryInformation { get; set; }
     }
 
     public class QualificationDetailsResponse

@@ -139,28 +139,34 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
             await _sessionStorageService.ClearAsync(UlnAuthorisationKeyPrefix);
             await _sessionStorageService.ClearAsync(AuthorisationAnswersKeyPrefix);
             await _sessionStorageService.ClearAsync(RecordedSharingAccessKey);
-            await _sessionStorageService.ClearAsync(DeliveryAddressKeyPrefix);
+            await _sessionStorageService.ClearByPrefixAsync(DeliveryAddressKeyPrefix);
             await _sessionStorageService.ClearAsync(ContactReferenceKey);
         }
 
         public Task SetDeliveryAddressAsync(CheckAndSubmitViewModel address)
         {
-            var json = JsonSerializer.Serialize(address);
-            return _sessionStorageService.SetAsync(DeliveryAddressKeyPrefix, json);
+            return _sessionStorageService.SetAsync(
+                DeliveryAddressKey(address.CertificateId),
+                JsonSerializer.Serialize(address));
         }
 
-        public async Task<CheckAndSubmitViewModel?> GetDeliveryAddressAsync()
+        public async Task<CheckAndSubmitViewModel?> GetDeliveryAddressAsync(Guid certificateId)
         {
-            var json = await _sessionStorageService.GetAsync(DeliveryAddressKeyPrefix);
+            var json = await _sessionStorageService.GetAsync(DeliveryAddressKey(certificateId));
+
             if (string.IsNullOrWhiteSpace(json))
                 return null;
 
-            return JsonSerializer.Deserialize<CheckAndSubmitViewModel>(json);
+            var address = JsonSerializer.Deserialize<CheckAndSubmitViewModel>(json);
+
+            return address is not null && address.CertificateId == certificateId
+                ? address
+                : null;
         }
 
-        public Task ClearDeliveryAddressAsync()
+        public Task ClearDeliveryAddressAsync(Guid certificateId)
         {
-            return _sessionStorageService.ClearAsync(DeliveryAddressKeyPrefix);
+            return _sessionStorageService.ClearAsync(DeliveryAddressKey(certificateId));
         }
 
         public Task SetContactReferenceAsync(string referenceNumber)
@@ -204,6 +210,11 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
 
             return JsonSerializer.Deserialize<List<string>>(json) ?? new List<string>();
 
+        }
+
+        private static string DeliveryAddressKey(Guid certificateId)
+        {
+            return $"{DeliveryAddressKeyPrefix}{certificateId:N}";
         }
     }
 }

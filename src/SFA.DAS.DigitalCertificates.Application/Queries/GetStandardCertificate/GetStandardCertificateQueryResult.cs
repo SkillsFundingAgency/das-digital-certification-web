@@ -20,10 +20,13 @@ namespace SFA.DAS.DigitalCertificates.Application.Queries.GetStandardCertificate
         public string? EmployerName { get; set; }
         public string? AssessorName { get; set; }
         public DateTime? StartDate { get; set; }
+        public string? LatestEPAOutcome { get; set; }
+        public string? Status { get; set; }
         public DateTime? PrintRequestedAt { get; set; }
         public string? PrintRequestedBy { get; set; }
+        public string? PrintStatus { get; set; }
+        public DateTime? PrintStatusAt { get; set; }
         public bool CoronationEmblem { get; set; }
-        public List<DeliveryInformationResponse>? DeliveryInformation { get; set; }
 
         public static implicit operator GetStandardCertificateQueryResult?(GetStandardCertificateResponse? source)
         {
@@ -50,10 +53,13 @@ namespace SFA.DAS.DigitalCertificates.Application.Queries.GetStandardCertificate
                 EmployerName = source.EmployerName,
                 AssessorName = source.AssessorName,
                 StartDate = source.StartDate,
+                LatestEPAOutcome = source.LatestEPAOutcome,
+                Status = source.Status,
                 PrintRequestedAt = source.PrintRequestedAt,
                 PrintRequestedBy = source.PrintRequestedBy,
-                CoronationEmblem = source.CoronationEmblem,
-                DeliveryInformation = source.DeliveryInformation    
+                PrintStatus = source.PrintStatus,
+                PrintStatusAt = source.PrintStatusAt,
+                CoronationEmblem = source.CoronationEmblem
             };
         }
     }

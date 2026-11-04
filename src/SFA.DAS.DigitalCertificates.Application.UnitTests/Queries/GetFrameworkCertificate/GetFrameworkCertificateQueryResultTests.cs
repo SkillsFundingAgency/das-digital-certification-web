@@ -34,8 +34,7 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetFramework
                     new QualificationDetailsResponse { Name = "N1", AwardingBody = "B1" },
                     new QualificationDetailsResponse { Name = "", AwardingBody = "OnlyBody" },
                     new QualificationDetailsResponse { Name = "OnlyName", AwardingBody = "" }
-                },
-                DeliveryInformation = new List<DeliveryInformationResponse> { new DeliveryInformationResponse { Id = "D1", Action = "Requested", Status = DeliveryInformationStatuses.Submitted, EventTime = DateTime.UtcNow }, new DeliveryInformationResponse { Id = "D2", Action = "Requested", Status = DeliveryInformationStatuses.Submitted, EventTime = DateTime.UtcNow } }
+                }
             };
 
             // Act
@@ -60,7 +59,6 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetFramework
             result.QualificationsAndAwardingBodies.Should().Contain("N1, B1");
             result.QualificationsAndAwardingBodies.Should().Contain("OnlyBody");
             result.QualificationsAndAwardingBodies.Should().Contain("OnlyName");
-            result.DeliveryInformation.Should().BeEquivalentTo(source.DeliveryInformation);
         }
     }
 }

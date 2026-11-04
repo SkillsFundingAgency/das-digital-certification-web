@@ -12,8 +12,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Services
         Task<string?> GetShareEmailAsync();
         Task ClearShareEmailAsync();
         Task SetDeliveryAddressAsync(CheckAndSubmitViewModel address);
-        Task<CheckAndSubmitViewModel?> GetDeliveryAddressAsync();
-        Task ClearDeliveryAddressAsync();
+        Task<CheckAndSubmitViewModel?> GetDeliveryAddressAsync(Guid certificateId);
+        Task ClearDeliveryAddressAsync(Guid certificateId);
         Task<List<Certificate>?> GetOwnedCertificatesAsync();
         Task<UlnAuthorisation?> GetUlnAuthorisationAsync();
         Task<AuthorisationAnswers?> GetAuthorisationAnswersAsync();

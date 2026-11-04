@@ -16,10 +16,12 @@ namespace SFA.DAS.DigitalCertificates.Application.Queries.GetFrameworkCertificat
         public string? ProviderName { get; set; }
         public string? EmployerName { get; set; }
         public DateTime? StartDate { get; set; }
+        public string? Status { get; set; }
         public DateTime? PrintRequestedAt { get; set; }
         public string? PrintRequestedBy { get; set; }
+        public string? PrintStatus { get; set; }
+        public DateTime? PrintStatusAt { get; set; }
         public List<string>? QualificationsAndAwardingBodies { get; set; }
-        public List<DeliveryInformationResponse>? DeliveryInformation { get; set; }
 
         public static implicit operator GetFrameworkCertificateQueryResult?(GetFrameworkCertificateResponse? source)
         {
@@ -39,14 +41,16 @@ namespace SFA.DAS.DigitalCertificates.Application.Queries.GetFrameworkCertificat
                 ProviderName = source.ProviderName,
                 EmployerName = source.EmployerName,
                 StartDate = source.StartDate,
+                Status = source.Status,
                 PrintRequestedAt = source.PrintRequestedAt,
                 PrintRequestedBy = source.PrintRequestedBy,
+                PrintStatus = source.PrintStatus,
+                PrintStatusAt = source.PrintStatusAt,
                 QualificationsAndAwardingBodies = source.QualificationsAndAwardingBodies?
                     .Select(FormatQualification)
                     .Where(s => !string.IsNullOrWhiteSpace(s))
                     .Select(s => s!)
-                    .ToList(),
-                DeliveryInformation = source.DeliveryInformation
+                    .ToList()
             };
         }
 

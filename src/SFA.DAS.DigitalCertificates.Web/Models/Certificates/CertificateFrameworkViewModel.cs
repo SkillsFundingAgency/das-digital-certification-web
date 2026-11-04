@@ -24,7 +24,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Models.Certificates
         public string? PrintRequestedBy { get; set; }
         public bool ShowBackLink { get; set; } = true;
         public List<string>? QualificationsAndAwardingBodies { get; set; }
-        public List<DeliveryInformationResponse>? DeliveryInformation { get; set; }
         public Enums.PrintStatus PrintStatus { get; set; } = Enums.PrintStatus.None;
         public DateTime? PrintStatusDate { get; set; }
         public string? PrintStatusMessage { get; set; }

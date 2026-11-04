@@ -7,5 +7,6 @@ namespace SFA.DAS.DigitalCertificates.Infrastructure.Services.SessionStorage
         Task SetAsync(string key, string value);
         Task<string?> GetAsync(string key);
         Task ClearAsync(string key);
+        Task ClearByPrefixAsync(string prefix);
     }
 }
