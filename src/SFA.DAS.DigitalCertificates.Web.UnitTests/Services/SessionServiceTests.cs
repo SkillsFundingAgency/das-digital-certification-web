@@ -418,35 +418,62 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
         }
 
         [Test]
-        public async Task SetDeliveryAddressAsync_ShouldStoreSerialisedAddress()
+        public async Task DeliveryAddresses_Are_Stored_And_Cleared_Per_Certificate()
         {
             // Arrange
-            var expected = CreateAddress();
-            string? storedJson = null;
+            var firstAddress = CreateAddress();
+            var secondAddress = CreateAddress();
+            secondAddress.AddressLine1 = "2 Other Street";
+
+            var session = new Dictionary<string, string>();
+
             _sessionStorageService
-                .Setup(x => x.SetAsync(DeliveryAddressKey, It.IsAny<string>()))
-                .Callback<string, string>((_, value) => storedJson = value)
+                .Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<string>()))
+                .Callback<string, string>((key, value) => session[key] = value)
+                .Returns(Task.CompletedTask);
+
+            _sessionStorageService
+                .Setup(x => x.GetAsync(It.IsAny<string>()))
+                .Returns((string key) => Task.FromResult(
+                    session.TryGetValue(key, out var value) ? value : (string?)null));
+
+            _sessionStorageService
+                .Setup(x => x.ClearAsync(It.IsAny<string>()))
+                .Callback<string>(key => session.Remove(key))
                 .Returns(Task.CompletedTask);
 
             // Act
-            await _sut.SetDeliveryAddressAsync(expected);
+            await _sut.SetDeliveryAddressAsync(firstAddress);
+            await _sut.SetDeliveryAddressAsync(secondAddress);
 
             // Assert
-            JsonSerializer.Deserialize<CheckAndSubmitViewModel>(storedJson!).Should().BeEquivalentTo(expected);
+            (await _sut.GetDeliveryAddressAsync(firstAddress.CertificateId))
+                .Should().BeEquivalentTo(firstAddress);
+            (await _sut.GetDeliveryAddressAsync(secondAddress.CertificateId))
+                .Should().BeEquivalentTo(secondAddress);
+
+            await _sut.ClearDeliveryAddressAsync(firstAddress.CertificateId);
+
+            (await _sut.GetDeliveryAddressAsync(firstAddress.CertificateId))
+                .Should().BeNull();
+            (await _sut.GetDeliveryAddressAsync(secondAddress.CertificateId))
+                .Should().BeEquivalentTo(secondAddress);
         }
 
         [Test]
-        public async Task GetDeliveryAddressAsync_ShouldReturnStoredAddress()
+        public async Task GetDeliveryAddressAsync_Rejects_An_Address_For_Another_Certificate()
         {
             // Arrange
-            var expected = CreateAddress();
-            SetupSessionValue(DeliveryAddressKey, expected);
+            var certificateId = Guid.NewGuid();
+            var otherAddress = CreateAddress();
+
+            SetupSessionValue($"{DeliveryAddressKey}{certificateId:N}", otherAddress);
 
             // Act
-            var result = await _sut.GetDeliveryAddressAsync();
+            var result = await _sut.GetDeliveryAddressAsync(certificateId);
 
             // Assert
-            result.Should().BeEquivalentTo(expected);
+            result.Should().BeNull();
         }
 
         [TestCase(null)]
@@ -455,27 +482,17 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
         public async Task GetDeliveryAddressAsync_ShouldReturnNull_WhenAddressIsNotStored(string? storedValue)
         {
             // Arrange
+            var certificateId = Guid.NewGuid();
+
             _sessionStorageService
-                .Setup(x => x.GetAsync(DeliveryAddressKey))
+                .Setup(x => x.GetAsync($"{DeliveryAddressKey}{certificateId:N}"))
                 .ReturnsAsync(storedValue);
 
             // Act
-            var result = await _sut.GetDeliveryAddressAsync();
+            var result = await _sut.GetDeliveryAddressAsync(certificateId);
 
             // Assert
             result.Should().BeNull();
-        }
-
-        [Test]
-        public async Task ClearDeliveryAddressAsync_ShouldClearAddress()
-        {
-            // Arrange
-
-            // Act
-            await _sut.ClearDeliveryAddressAsync();
-
-            // Assert
-            _sessionStorageService.Verify(x => x.ClearAsync(DeliveryAddressKey), Times.Once);
         }
 
         [Test]
@@ -630,9 +647,9 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Services
             _sessionStorageService.Verify(x => x.ClearAsync(UlnAuthorisationKey), Times.Once);
             _sessionStorageService.Verify(x => x.ClearAsync(AuthorisationAnswersKey), Times.Once);
             _sessionStorageService.Verify(x => x.ClearAsync(RecordedSharingAccessKey), Times.Once);
-            _sessionStorageService.Verify(x => x.ClearAsync(DeliveryAddressKey), Times.Once);
+            _sessionStorageService.Verify(x => x.ClearByPrefixAsync(DeliveryAddressKey), Times.Once);
             _sessionStorageService.Verify(x => x.ClearAsync(ContactReferenceKey), Times.Once);
-            _sessionStorageService.Verify(x => x.ClearAsync(It.IsAny<string>()), Times.Exactly(7));
+            _sessionStorageService.Verify(x => x.ClearAsync(It.IsAny<string>()), Times.Exactly(6));
         }
 
         private void SetupUserLookup(string govUkIdentifier, User? user)

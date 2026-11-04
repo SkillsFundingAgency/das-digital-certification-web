@@ -24,7 +24,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         Task<AddAddressManualViewModel?> GetAddAddressViewModel(Guid certificateId);
         Task<bool> StoreDeliveryAddressFromLocationAsync(Guid certificateId, string selectedName, string backRoute);
         Task<CheckAndSubmitViewModel?> GetCheckAndSubmitViewModel(Guid certificateId, string defaultBackRoute);
-        Task CreatePrintRequest(Guid certificateId);
+        Task<bool> CreatePrintRequest(Guid certificateId);
         Task<PrintRequestConfirmationViewModel> GetPrintRequestConfirmationViewModel(Guid certificateId);
     }
 }

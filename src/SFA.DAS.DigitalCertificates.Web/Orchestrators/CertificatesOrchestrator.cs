@@ -40,7 +40,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         private const string FullName = "Full Name";
         private const string PassedInfo = "Passed info";
         private const string AchievedGrade = "Achieved grade";
-        private const string AwardedOn = "Awarded on";        
+        private const string AwardedOn = "Awarded on";
         private const string CertificateNumber = "Certificate no";
         private readonly IValidator<SelectAddressViewModel> _selectAddressValidator;
         private readonly IValidator<AddAddressManualViewModel> _addAddressValidator;
@@ -479,7 +479,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 FamilyName = GetUserSurname()
             };
 
-            var address = await _sessionService.GetDeliveryAddressAsync();
+            var address = await _sessionService.GetDeliveryAddressAsync(certificateId);
             if (address != null)
             {
                 viewModel.Organisation = address.Organisation;
@@ -498,34 +498,30 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             var owned = await _sessionService.GetOwnedCertificatesAsync();
             var ownedCertificate = owned?.FirstOrDefault(c => c.CertificateId == certificateId);
 
-            if (ownedCertificate == null)
-            {
+            if (ownedCertificate is null)
                 return null;
-            }
 
-            var vm = new CheckAndSubmitViewModel
+            var address = await _sessionService.GetDeliveryAddressAsync(certificateId);
+
+            if (address is null)
+                return null;
+
+            return new CheckAndSubmitViewModel
             {
                 CertificateId = certificateId,
                 CourseName = ownedCertificate.CourseName,
                 GivenNames = GetUserGivenNames(),
-                FamilyName = GetUserSurname()
+                FamilyName = GetUserSurname(),
+                BackRoute = string.IsNullOrWhiteSpace(address.BackRoute)
+                    ? defaultBackRoute
+                    : address.BackRoute,
+                Organisation = address.Organisation,
+                AddressLine1 = address.AddressLine1,
+                AddressLine2 = address.AddressLine2,
+                TownOrCity = address.TownOrCity,
+                County = address.County,
+                Postcode = address.Postcode
             };
-
-            var address = await _sessionService.GetDeliveryAddressAsync();
-            if (address != null)
-            {
-                vm.BackRoute = address.BackRoute;
-                vm.Organisation = address.Organisation;
-                vm.AddressLine1 = address.AddressLine1;
-                vm.AddressLine2 = address.AddressLine2;
-                vm.TownOrCity = address.TownOrCity;
-                vm.County = address.County;
-                vm.Postcode = address.Postcode;
-            }
-
-            vm.BackRoute = string.IsNullOrWhiteSpace(vm.BackRoute) ? defaultBackRoute : vm.BackRoute;
-
-            return vm;
         }
 
         public async Task<bool> CanRequestFirstPrintAsync(Guid certificateId)
@@ -577,30 +573,31 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             return true;
         }
 
-        public async Task CreatePrintRequest(Guid certificateId)
+        public async Task<bool> CreatePrintRequest(Guid certificateId)
         {
-            string email = GetUserEmail();
-            string userName = GetUserDisplayName();
+            var deliveryAddress = await _sessionService.GetDeliveryAddressAsync(certificateId);
 
+            if (deliveryAddress is null)
+                return false;
+
+            var userName = GetUserDisplayName();
             var templateId = GetTemplateId(_digitalCertificatesWebConfiguration, NotificationTemplateNames.PrintRequest);
 
-            var deliveryAddress = await _sessionService.GetDeliveryAddressAsync();
-
-            var req = new CreatePrintRequest
+            var request = new CreatePrintRequest
             {
                 Address = new CreatePrintAddressRequest
                 {
                     ContactName = userName,
-                    ContactOrganisation = deliveryAddress?.Organisation,
-                    ContactAddLine1 = deliveryAddress?.AddressLine1,
-                    ContactAddLine2 = deliveryAddress?.AddressLine2,
-                    ContactAddLine3 = deliveryAddress?.TownOrCity,
-                    ContactAddLine4 = deliveryAddress?.County,
-                    ContactPostCode = deliveryAddress?.Postcode ?? string.Empty
+                    ContactOrganisation = deliveryAddress.Organisation,
+                    ContactAddLine1 = deliveryAddress.AddressLine1,
+                    ContactAddLine2 = deliveryAddress.AddressLine2,
+                    ContactAddLine3 = deliveryAddress.TownOrCity,
+                    ContactAddLine4 = deliveryAddress.County,
+                    ContactPostCode = deliveryAddress.Postcode ?? string.Empty
                 },
                 Email = new CreatePrintEmailRequest
                 {
-                    EmailAddress = email,
+                    EmailAddress = GetUserEmail(),
                     UserName = userName,
                     LinkDomain = _digitalCertificatesWebConfiguration.ServiceBaseUrl,
                     TemplateId = templateId ?? string.Empty
@@ -610,8 +607,12 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             await Mediator.Send(new CreatePrintRequestCommand
             {
                 CertificateId = certificateId,
-                Request = req
+                Request = request
             });
+
+            await _sessionService.ClearDeliveryAddressAsync(certificateId);
+
+            return true;
         }
 
         public async Task<PrintRequestConfirmationViewModel> GetPrintRequestConfirmationViewModel(Guid certificateId)

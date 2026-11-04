@@ -110,7 +110,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
                 return RedirectToRoute(CertificateStandardRouteGet, new { certificateId });
             }
 
-            await _sessionService.ClearDeliveryAddressAsync();
+            await _sessionService.ClearDeliveryAddressAsync(certificateId);
 
             return View(model);
         }
@@ -187,7 +187,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
             var vm = await _certificatesOrchestrator.GetCheckAndSubmitViewModel(certificateId, CertificateStandardRouteGet);
             if (vm == null)
             {
-                return RedirectToRoute(CertificateStandardRouteGet, new { certificateId });
+                return RedirectToRoute(AddAddressRouteGet, new { certificateId });
             }
 
             return View(vm);
@@ -202,7 +202,10 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
                 return await RedirectFromPrintRequest(certificateId);
             }
 
-            await _certificatesOrchestrator.CreatePrintRequest(certificateId);
+            if (!await _certificatesOrchestrator.CreatePrintRequest(certificateId))
+            {
+                return RedirectToRoute(AddAddressRouteGet, new { certificateId });
+            }
 
             return RedirectToRoute(PrintRequestConfirmationRouteGet, new { certificateId });
         }
