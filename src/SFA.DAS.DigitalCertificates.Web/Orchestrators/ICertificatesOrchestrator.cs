@@ -17,6 +17,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         Task<CreateUserActionForCertificateResult> CreateUserActionForCertificate(Guid certificateId, ActionType actionType);
         Task<string?> CreateUserActionForNonSpecific();
         Task<ContactUsViewModel?> GetContactUsViewModel(string referenceNumber, Guid? certificateId);
+        Task<bool> CanRequestFirstPrintAsync(Guid certificateId);
         Task<bool> ValidateSelectAddressViewModel(SelectAddressViewModel viewModel, ModelStateDictionary modelState);
         Task<bool> ValidateAddAddressManualViewModel(AddAddressManualViewModel viewModel, ModelStateDictionary modelState);
         Task<SelectAddressViewModel?> GetSelectAddressViewModel(Guid certificateId, string? searchTerm = null);

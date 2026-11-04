@@ -119,14 +119,20 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 PrintRequestedBy = result.PrintRequestedBy
             };
 
-            var (printStatus, printDate, printMessage) = MapPrintStatus(result.DeliveryInformation);
+            var (printStatus, printDate, printMessage) = MapPrintStatus(
+                result.Status,
+                result.PrintRequestedAt,
+                result.PrintStatus,
+                result.PrintStatusAt,
+                isStandard: true);
+
             viewModel.PrintStatus = printStatus;
             viewModel.PrintStatusDate = printDate;
             viewModel.PrintStatusMessage = printMessage;
-            viewModel.PrintStatusDisplay = printStatus == Enums.PrintStatus.Requested ? "Print requested" : printStatus.ToString();
-            viewModel.ShowPrintHeader = printStatus != Enums.PrintStatus.None && printStatus != Enums.PrintStatus.Submitted;
+            viewModel.PrintStatusDisplay = GetPrintStatusLabel(printStatus);
             viewModel.PrintStatusCssClass = CssClassForStatus(printStatus);
-            viewModel.ShowRequestPrint = printStatus == Enums.PrintStatus.Submitted && viewModel.PrintRequestedAt == null;
+            viewModel.ShowPrintHeader = result.PrintRequestedAt.HasValue;
+            viewModel.ShowRequestPrint = CanRequestFirstPrint(result);
 
             var owned = await _sessionService.GetOwnedCertificatesAsync();
 
@@ -171,17 +177,22 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 StartDate = result.StartDate,
                 PrintRequestedAt = result.PrintRequestedAt,
                 PrintRequestedBy = result.PrintRequestedBy,
-                QualificationsAndAwardingBodies = result.QualificationsAndAwardingBodies,
-                DeliveryInformation = result.DeliveryInformation
+                QualificationsAndAwardingBodies = result.QualificationsAndAwardingBodies
             };
 
-            var (printStatus, printDate, printMessage) = MapPrintStatus(result.DeliveryInformation);
+            var (printStatus, printDate, printMessage) = MapPrintStatus(
+                result.Status,
+                result.PrintRequestedAt,
+                result.PrintStatus,
+                result.PrintStatusAt,
+                isStandard: false);
+
             viewModel.PrintStatus = printStatus;
             viewModel.PrintStatusDate = printDate;
             viewModel.PrintStatusMessage = printMessage;
-            viewModel.PrintStatusDisplay = printStatus == Enums.PrintStatus.Requested ? "Print requested" : printStatus.ToString();
+            viewModel.PrintStatusDisplay = GetPrintStatusLabel(printStatus);
             viewModel.PrintStatusCssClass = CssClassForStatus(printStatus);
-            viewModel.ShowPrintHeader = printStatus != Enums.PrintStatus.None && printStatus != Enums.PrintStatus.Submitted;
+            viewModel.ShowPrintHeader = result.PrintRequestedAt.HasValue;
 
             var owned = await _sessionService.GetOwnedCertificatesAsync();
 
@@ -517,6 +528,19 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             return vm;
         }
 
+        public async Task<bool> CanRequestFirstPrintAsync(Guid certificateId)
+        {
+            if (!_digitalCertificatesWebConfiguration.ApprenticeFirstPrintEnabled)
+                return false;
+
+            var certificate = await Mediator.Send(new GetStandardCertificateQuery
+            {
+                CertificateId = certificateId
+            });
+
+            return certificate is not null && CanRequestFirstPrint(certificate);
+        }
+
         public async Task<bool> ValidateSelectAddressViewModel(SelectAddressViewModel viewModel, Microsoft.AspNetCore.Mvc.ModelBinding.ModelStateDictionary modelState)
         {
             return await ValidateViewModel(_selectAddressValidator, viewModel, modelState);
@@ -605,71 +629,74 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             return vm;
         }
 
-        private (Enums.PrintStatus status, DateTime? date, string? message) MapPrintStatus(List<DeliveryInformationResponse>? deliveryInformation)
+        private bool CanRequestFirstPrint(GetStandardCertificateQueryResult certificate)
         {
-            var cutoverDate = _digitalCertificatesWebConfiguration.CutoverDate;
-
-            if (deliveryInformation == null || !deliveryInformation.Any())
-            {
-                return (Enums.PrintStatus.None, null, null);
-            }
-
-            // If a cutover date is configured, ensure we have relevant events after it
-            if (cutoverDate.HasValue)
-            {
-                var relevantEvents = deliveryInformation.Where(d =>
-                    string.Equals(d.Status, DeliveryInformationStatuses.Submitted, StringComparison.OrdinalIgnoreCase) ||
-                    string.Equals(d.Status, DeliveryInformationStatuses.Reprint, StringComparison.OrdinalIgnoreCase) ||
-                    string.Equals(d.Status, DeliveryInformationStatuses.Printed, StringComparison.OrdinalIgnoreCase));
-
-                var hasRelevantAfterCutover = relevantEvents.Any() && relevantEvents.All(d => d.EventTime > cutoverDate.Value);
-
-                if (!hasRelevantAfterCutover)
-                {
-                    return (Enums.PrintStatus.None, null, null);
-                }
-            }
-
-            var ordered = deliveryInformation
-                .OrderByDescending(e => e.EventTime)
-                .ToList();
-
-            var latest = ordered.First();
-            var dt = latest.EventTime;
-
-            switch (latest.Status)
-            {
-                case var s when string.Equals(s, DeliveryInformationStatuses.Delivered, StringComparison.OrdinalIgnoreCase):
-                    {
-                        var msg = $"A certificate was delivered on {dt:dd MMMM yyyy}.";
-                        return (Enums.PrintStatus.Delivered, dt, msg);
-                    }
-
-                case var s when string.Equals(s, DeliveryInformationStatuses.Printed, StringComparison.OrdinalIgnoreCase):
-                    {
-                        var msg = $"A certificate was printed on {dt:dd MMMM yyyy}. It can take up to 3 weeks to be delivered.";
-                        return (Enums.PrintStatus.Printed, dt, msg);
-                    }
-
-                case var s when string.Equals(s, DeliveryInformationStatuses.Submitted, StringComparison.OrdinalIgnoreCase):
-                    {
-                        return (Enums.PrintStatus.Submitted, null, null);
-                    }
-
-                case var s when string.Equals(s, DeliveryInformationStatuses.SentToPrinter, StringComparison.OrdinalIgnoreCase)
-                           || string.Equals(s, DeliveryInformationStatuses.Reprint, StringComparison.OrdinalIgnoreCase)
-                           || string.Equals(s, DeliveryInformationStatuses.PrintRequested, StringComparison.OrdinalIgnoreCase):
-                    {
-                        var msg = $"A certificate was requested on {dt:dd MMMM yyyy}. It can take up to 3 weeks to be delivered.";
-                        return (Enums.PrintStatus.Requested, dt, msg);
-                    }
-
-                default:
-                    return (Enums.PrintStatus.None, null, null);
-            }
+            return _digitalCertificatesWebConfiguration.ApprenticeFirstPrintEnabled
+                && IsStatus(certificate.LatestEPAOutcome, "Pass")
+                && IsStatus(certificate.Status, "Submitted")
+                && !certificate.PrintRequestedAt.HasValue
+                && certificate.PrintStatus is null
+                && !certificate.PrintStatusAt.HasValue;
         }
 
-        private string CssClassForStatus(Enums.PrintStatus status)
+        private static (Enums.PrintStatus Status, DateTime? Date, string? Message) MapPrintStatus(
+            string? certificateStatus,
+            DateTime? printRequestedAt,
+            string? batchStatus,
+            DateTime? batchStatusAt,
+            bool isStandard)
+        {
+            if (!printRequestedAt.HasValue)
+                return (Enums.PrintStatus.None, null, null);
+
+            var requestedAt = printRequestedAt.Value;
+            var requestedMessage =
+                $"A certificate was requested on {FormatPrintDate(requestedAt)}. It can take up to 3 weeks to be delivered.";
+
+            if (IsStatus(certificateStatus, "Reprint")
+                || (isStandard && IsStatus(certificateStatus, "PrintRequested"))
+                || IsStatus(batchStatus, "SentToPrinter"))
+            {
+                return (Enums.PrintStatus.Requested, requestedAt, requestedMessage);
+            }
+
+            if (IsStatus(batchStatus, "Printed") || IsStatus(batchStatus, "NotDelivered"))
+                return (Enums.PrintStatus.Printed, requestedAt, requestedMessage);
+
+            if (IsStatus(batchStatus, "Delivered"))
+            {
+                var message = batchStatusAt.HasValue
+                    ? $"A certificate was delivered on {FormatPrintDate(batchStatusAt.Value)}."
+                    : null;
+
+                return (Enums.PrintStatus.Delivered, batchStatusAt, message);
+            }
+
+            return (Enums.PrintStatus.None, null, null);
+        }
+
+        private static string? GetPrintStatusLabel(Enums.PrintStatus status)
+        {
+            return status switch
+            {
+                Enums.PrintStatus.Requested => "Print requested",
+                Enums.PrintStatus.Printed => "Printed",
+                Enums.PrintStatus.Delivered => "Delivered",
+                _ => null
+            };
+        }
+
+        private static bool IsStatus(string? actual, string expected)
+        {
+            return string.Equals(actual, expected, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string FormatPrintDate(DateTime date)
+        {
+            return date.ToString("dd MMMM yyyy", CultureInfo.GetCultureInfo("en-GB"));
+        }
+
+        private static string CssClassForStatus(Enums.PrintStatus status)
         {
             return status switch
             {

@@ -35,6 +35,10 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             _sharingOrchestratorMock = new Mock<ISharingOrchestrator>();
             _sessionServiceMock = new Mock<ISessionService>();
 
+            _certificatesOrchestratorMock
+                .Setup(x => x.CanRequestFirstPrintAsync(It.IsAny<Guid>()))
+                .ReturnsAsync(true);
+
             _sut = new CertificatesController(
                 _contextAccessorMock.Object,
                 _certificatesOrchestratorMock.Object,
@@ -1566,6 +1570,71 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             result.Should().NotBeNull();
             result!.RouteName.Should().Be(CertificatesController.ContactUsForCertificateRouteGet);
             result.RouteValues["certificateId"].Should().Be(certificateId);
+        }
+
+        [TestCase(nameof(CertificatesController.AddAddress))]
+        [TestCase(nameof(CertificatesController.SelectAddress))]
+        [TestCase(nameof(CertificatesController.SelectAddressPost))]
+        [TestCase(nameof(CertificatesController.AddAddressPost))]
+        [TestCase(nameof(CertificatesController.CheckAndSubmit))]
+        [TestCase(nameof(CertificatesController.CheckAndSubmitPost))]
+        public async Task When_First_Print_Is_Unavailable_Then_The_Action_Returns_To_The_Certificate(string action)
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+
+            _certificatesOrchestratorMock
+                .Setup(x => x.CanRequestFirstPrintAsync(certificateId))
+                .ReturnsAsync(false);
+
+            _sessionServiceMock
+                .Setup(x => x.GetOwnedCertificatesAsync())
+                .ReturnsAsync(new List<Certificate>
+                {
+                    new Certificate
+                    {
+                        CertificateId = certificateId,
+                        CertificateType = CertificateType.Standard,
+                        CourseName = "Test course",
+                        CourseLevel = "3"
+                    }
+                });
+
+            // Act
+            var result = action switch
+            {
+                nameof(CertificatesController.AddAddress) =>
+                    await _sut.AddAddress(certificateId),
+
+                nameof(CertificatesController.SelectAddress) =>
+                    await _sut.SelectAddress(certificateId),
+
+                nameof(CertificatesController.SelectAddressPost) =>
+                    await _sut.SelectAddressPost(certificateId, new SelectAddressViewModel()),
+
+                nameof(CertificatesController.AddAddressPost) =>
+                    await _sut.AddAddressPost(certificateId, new AddAddressManualViewModel()),
+
+                nameof(CertificatesController.CheckAndSubmit) =>
+                    await _sut.CheckAndSubmit(certificateId),
+
+                nameof(CertificatesController.CheckAndSubmitPost) =>
+                    await _sut.CheckAndSubmitPost(certificateId),
+
+                _ => throw new ArgumentOutOfRangeException(nameof(action))
+            };
+
+            // Assert
+            var redirect = result.Should().BeOfType<RedirectToRouteResult>().Which;
+            redirect.RouteName.Should().Be(CertificatesController.CertificateStandardRouteGet);
+            redirect.RouteValues!["certificateId"].Should().Be(certificateId);
+
+            _certificatesOrchestratorMock.Verify(
+                x => x.CanRequestFirstPrintAsync(certificateId), Times.Once);
+            _certificatesOrchestratorMock.VerifyNoOtherCalls();
+
+            _sessionServiceMock.Verify(x => x.GetOwnedCertificatesAsync(), Times.Once);
+            _sessionServiceMock.VerifyNoOtherCalls();
         }
 
         [Test]
