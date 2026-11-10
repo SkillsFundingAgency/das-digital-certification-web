@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentValidation;
@@ -12,6 +13,7 @@ using SFA.DAS.DigitalCertificates.Application.Queries.GetUserActions;
 using SFA.DAS.DigitalCertificates.Domain.Models;
 using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
 using SFA.DAS.DigitalCertificates.Web.Constants;
+using SFA.DAS.DigitalCertificates.Web.Controllers;
 using SFA.DAS.DigitalCertificates.Web.Enums;
 using SFA.DAS.DigitalCertificates.Web.Exceptions;
 using SFA.DAS.DigitalCertificates.Web.Models.Authorise;
@@ -27,6 +29,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         private readonly IUserService _userService;
         private readonly ICacheService _cacheService;
         private readonly IGovUkAuthenticationService _govUkAuthenticationService;
+        private readonly IValidator<EnterYourUlnViewModel> _enterUlnValidator;
         private readonly IValidator<KnowYourUlnViewModel> _knowUlnValidator;
         private readonly IValidator<KnowYearViewModel> _knowYearValidator;
         private readonly IValidator<SelectCourseViewModel> _selectCourseValidator;
@@ -35,6 +38,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 
         public AuthoriseOrchestrator(IMediator mediator, IHttpContextAccessor httpContextAccessor, ISessionService sessionService, IUserService userService, 
             ICacheService cacheService, IGovUkAuthenticationService govUkAuthenticationService,
+                IValidator<EnterYourUlnViewModel> enterUlnValidator,
                 IValidator<KnowYourUlnViewModel> knowUlnValidator,
                 IValidator<KnowYearViewModel> knowYearValidator,
                 IValidator<SelectCourseViewModel> selectCourseValidator,
@@ -46,6 +50,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             _userService = userService;
             _cacheService = cacheService;
             _govUkAuthenticationService = govUkAuthenticationService;
+            _enterUlnValidator = enterUlnValidator;
             _knowUlnValidator = knowUlnValidator;
             _knowYearValidator = knowYearValidator;
             _selectCourseValidator = selectCourseValidator;
@@ -61,6 +66,85 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                    matches?.Masks?.Any() == true;
         }
 
+        public async Task PrepareChangeCourseAsync()
+        {
+            var answers =
+                await _sessionService.GetAuthorisationAnswersAsync()
+                ?? new AuthorisationAnswers();
+
+            answers.CourseSelectionFromCheckAnswers = true;
+
+            await _sessionService.SetAuthorisationAnswersAsync(answers);
+        }
+
+        public async Task<int> GetDistinctUlnCountAsync()
+        {
+            var matches = await GetMatchesAsync();
+            return GetDistinctUlnCount(matches?.Matches);
+        }
+
+        private static int GetDistinctUlnCount(IEnumerable<Match>? matches)
+        {
+            if (matches == null)
+            {
+                return 0;
+            }
+
+            return matches
+                .Select(m => m.Uln)
+                .Distinct()
+                .Count();
+        }
+
+        private static bool HasMandatoryUln(IEnumerable<Match>? matches)
+        {
+            var distinctUlnCount = GetDistinctUlnCount(matches);
+            return distinctUlnCount > 1;
+        }
+
+        public async Task<bool> ValidateEnterYourUlnViewModel(EnterYourUlnViewModel viewModel, ModelStateDictionary modelState)
+        {
+            return await ValidateViewModel(_enterUlnValidator, viewModel, modelState);
+        }
+
+        public async Task<EnterYourUlnViewModel?> GetEnterYourUlnViewModelAsync()
+        {
+            var answers = await _sessionService.GetAuthorisationAnswersAsync();
+            if (answers == null)
+            {
+                return new EnterYourUlnViewModel
+                {
+                    IsReturningToCheck = false
+                };
+            }
+
+            return new EnterYourUlnViewModel
+            {
+                Uln = answers.Uln?.ToString("D10", CultureInfo.InvariantCulture),
+                IsReturningToCheck = answers.IsReturningToCheck,
+                IsShortJourney = answers.IsShortJourney
+            };
+        }
+
+        public async Task<EnterYourUlnViewModel> SaveEnterYourUlnAsync(EnterYourUlnViewModel viewModel)
+        {
+            var answers = await _sessionService.GetAuthorisationAnswersAsync()
+                ?? new AuthorisationAnswers();
+
+            answers.KnowUln = true;
+            answers.Uln = long.Parse(
+                viewModel.Uln!.Trim(),
+                CultureInfo.InvariantCulture);
+
+            answers.CourseSelectionFromCheckAnswers = false;
+            await _sessionService.SetAuthorisationAnswersAsync(answers);
+
+            viewModel.IsReturningToCheck = answers.IsReturningToCheck;
+            viewModel.IsShortJourney = answers.IsShortJourney;
+
+            return viewModel;
+        }
+
         public async Task<bool> ValidateKnowYourUlnViewModel(KnowYourUlnViewModel viewModel, ModelStateDictionary modelState)
         {
             return await ValidateViewModel(_knowUlnValidator, viewModel, modelState);
@@ -74,18 +158,32 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             return new KnowYourUlnViewModel
             {
                 KnowUln = answers.KnowUln,
-                Uln = answers.Uln,
+                Uln = answers.Uln?.ToString("D10", CultureInfo.InvariantCulture),
                 IsReturningToCheck = answers.IsReturningToCheck,
                 IsShortJourney = answers.IsShortJourney
             };
         }
 
-        public async Task<KnowYourUlnViewModel> SaveKnowYourUlnAsync(KnowYourUlnViewModel viewModel)
+        public async Task<KnowYourUlnViewModel> SaveKnowYourUlnAsync(
+            KnowYourUlnViewModel viewModel)
         {
-            var answers = await _sessionService.GetAuthorisationAnswersAsync() ?? new AuthorisationAnswers();
-            answers.KnowUln = viewModel.KnowUln;
-            answers.Uln = viewModel.KnowUln == true ? viewModel.Uln : null;
+            var answers = await _sessionService.GetAuthorisationAnswersAsync()
+                ?? new AuthorisationAnswers();
 
+            answers.KnowUln = viewModel.KnowUln;
+
+            if (viewModel.KnowUln == true)
+            {
+                answers.Uln = long.Parse(
+                    viewModel.Uln!.Trim(),
+                    CultureInfo.InvariantCulture);
+            }
+            else
+            {
+                answers.Uln = null;
+            }
+
+            answers.CourseSelectionFromCheckAnswers = false;
             await _sessionService.SetAuthorisationAnswersAsync(answers);
 
             viewModel.IsReturningToCheck = answers.IsReturningToCheck;
@@ -161,15 +259,29 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             var matches = await GetMatchesAsync();
             var courseOptions = MapMatchesToCourseOptions(matches);
 
-            var model = new SelectCourseViewModel
+            var backLinkRouteName = AuthoriseController.KnowYourUlnRouteGet;
+
+            if (answers?.CourseSelectionFromCheckAnswers == true)
+            {
+                backLinkRouteName = AuthoriseController.CheckAnswersRouteGet;
+            }
+            else
+            {
+                var distinctUlnCount = GetDistinctUlnCount(matches?.Matches);
+                if (distinctUlnCount > 1)
+                {
+                    backLinkRouteName = AuthoriseController.EnterYourUlnRouteGet;
+                }
+            }
+
+            return new SelectCourseViewModel
             {
                 SelectedCourseCode = answers?.CourseCode,
                 Courses = courseOptions,
                 IsReturningToCheck = answers?.IsReturningToCheck == true,
-                IsShortJourney = answers?.IsShortJourney == true
+                IsShortJourney = answers?.IsShortJourney == true,
+                BackLinkRouteName = backLinkRouteName
             };
-
-            return model;
         }
 
         public async Task<SelectCourseViewModel> SaveSelectedCourseAsync(SelectCourseViewModel viewModel)
@@ -355,14 +467,12 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             return distinctProviders;
         }
 
-        public async Task<MatchOutcome> GetCourseMatchOutcomeAsync(SelectCourseViewModel viewModel)
+        public async Task<MatchOutcome> GetCourseMatchOutcomeAsync()
         {
-            if (viewModel == null) return MatchOutcome.NoData;
-
-            var answers = await _sessionService.GetAuthorisationAnswersAsync() ?? new AuthorisationAnswers();
             var matches = await GetMatchesAsync();
             if (matches == null) return MatchOutcome.NoData;
 
+            var answers = await _sessionService.GetAuthorisationAnswersAsync() ?? new AuthorisationAnswers();
             var matchResult = FindMatch(answers, matches.Matches ?? Enumerable.Empty<Match>());
 
             await _sessionService.SetAuthorisationAnswersAsync(answers);
@@ -370,10 +480,8 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             return matchResult.Outcome;
         }
 
-        public async Task<MatchOutcome> GetUlnMatchOutcomeAsync(KnowYourUlnViewModel viewModel)
+        public async Task<MatchOutcome> GetUlnMatchOutcomeAsync()
         {
-            if (viewModel == null) return MatchOutcome.NoData;
-
             var answers = await _sessionService.GetAuthorisationAnswersAsync() ?? new AuthorisationAnswers();
             var matches = await GetMatchesAsync();
             if (matches == null) return MatchOutcome.NoData;
@@ -401,7 +509,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
 
             var ulnDisplay = answers.KnowUln == false
                 ? DisplayConstants.NotKnown
-                : answers.Uln?.ToString();
+                : answers.Uln?.ToString("D10", CultureInfo.InvariantCulture);
 
             var yearDisplay = answers.KnowYear == false
                 ? DisplayConstants.NotKnown
@@ -461,14 +569,20 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             }
 
             var matches = await GetMatchesAsync();
+
             if (matches?.Matches == null || matches.Matches.Count == 0)
             {
                 return MatchOutcome.NoData;
             }
 
-            var matchResult = FindMatch(
-                answers,
-                matches.Matches);
+            var requiresUln = HasMandatoryUln(matches!.Matches);
+
+            if (requiresUln && answers.Uln == null)
+            {
+                return MatchOutcome.MandatoryUlnMissing;
+            }
+
+            var matchResult = FindMatch(answers, matches!.Matches);
 
             if (matchResult.Outcome == MatchOutcome.SingleMatch || matchResult.Outcome == MatchOutcome.MultipleMatches)
             {
@@ -547,12 +661,28 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
         {
             var selectedCourse = answers.CourseCode?.Trim();
 
-            if (!string.IsNullOrWhiteSpace(selectedCourse) && answers.Uln != null && answers.IsShortJourney)
+            var matchList = matches.ToList();
+
+            var requiresUln = HasMandatoryUln(matchList);
+            if (requiresUln)
+            {
+                if (answers.Uln == null)
+                {
+                    return MatchResult.None();
+                }
+
+                matches = matchList
+                    .Where(m => m.Uln == answers.Uln.Value)
+                    .ToList();
+            }
+
+            if (answers.Uln != null && !string.IsNullOrWhiteSpace(selectedCourse) && answers.IsShortJourney)
             {
                 var exactMatches = matches
                     .Where(m =>
-                        string.Equals(m.CourseCode?.Trim(), selectedCourse, StringComparison.OrdinalIgnoreCase) &&
-                        m.Uln == answers.Uln.Value)
+                        m.Uln == answers.Uln.Value &&
+                        string.Equals(
+                            m.CourseCode?.Trim(), selectedCourse, StringComparison.OrdinalIgnoreCase))
                     .ToList();
 
                 if (exactMatches.Count > 0)
@@ -613,9 +743,11 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             {
                 var firstUln = candidates[0].Uln;
                 var allSameUln = candidates.All(c => c.Uln == firstUln);
-                return allSameUln
-                    ? MatchResult.Multiple(candidates[0])
-                    : MatchResult.NoData();
+
+                if (allSameUln)
+                {
+                    return MatchResult.Multiple(candidates[0]);
+                }
             }
 
             return MatchResult.None();

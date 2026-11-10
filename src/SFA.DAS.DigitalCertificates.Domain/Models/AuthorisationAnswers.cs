@@ -39,5 +39,7 @@
         }
 
         public bool IsReturningToCheck { get; set; } = false;
+
+        public bool CourseSelectionFromCheckAnswers { get; set; }
     }
 }

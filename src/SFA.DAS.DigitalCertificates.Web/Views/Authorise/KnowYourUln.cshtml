@@ -16,7 +16,7 @@
         <div class="govuk-grid-row">
             <div class="govuk-grid-column-two-thirds">
 
-                <form asp-action="KnowYourUln" method="post">
+                <form asp-action="KnowYourUln" method="post" novalidate>
 
                     <div class="govuk-form-group" das-highlight-error-for="KnowUln"
                          error-class="govuk-form-group--error">
@@ -60,9 +60,8 @@
                                         <label class="govuk-label" for="Uln">Unique learner number</label>
                                         <p id="Uln-error" das-validation-for="Uln" class="govuk-error-message"></p>
                                         <input asp-for="Uln" data-default-value="@Model?.Uln"
-                                              aria-describedby="Uln-error" class="govuk-input govuk-!-width-two-thirds"
+                                              aria-describedby="Uln-error" class="govuk-input govuk-input--width-10"
                                               type="text"
-                                              maxlength="10"
                                               inputmode="numeric"
                                               pattern="[0-9]*" />
                                     </div>

@@ -27,7 +27,7 @@
             <div class="govuk-summary-list__row">
                 <dt class="govuk-summary-list__key">Course</dt>
                 <dd class="govuk-summary-list__value">@Model?.CourseDisplay</dd>
-                <dd class="govuk-summary-list__actions"><a asp-route="@AuthoriseController.SelectCourseRouteGet" aria-label="Change course">Change</a></dd>
+                <dd class="govuk-summary-list__actions"><a asp-route="@AuthoriseController.ChangeCourseRouteGet" aria-label="Change course">Change</a></dd>
             </div>
 
             @if (!(Model?.IsShortJourney ?? false))
