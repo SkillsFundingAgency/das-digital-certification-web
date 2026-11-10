@@ -17,6 +17,7 @@ using SFA.DAS.DigitalCertificates.Domain.Models;
 using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
 using SFA.DAS.DigitalCertificates.Web.Controllers;
 using SFA.DAS.DigitalCertificates.Web.Enums;
+using SFA.DAS.DigitalCertificates.Web.Exceptions;
 using SFA.DAS.DigitalCertificates.Web.Models.Authorise;
 using SFA.DAS.DigitalCertificates.Web.Orchestrators;
 using SFA.DAS.DigitalCertificates.Web.Services;
@@ -226,24 +227,183 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
         {
             // Arrange
             const string govUkId = "gov-123";
+            var userId = Guid.NewGuid();
+            var credentialSubject = new GovUkCredentialSubject();
 
-            _userServiceMock.Setup(x => x.GetGovUkIdentifier()).Returns(govUkId);
-            _userServiceMock.Setup(x => x.GetUserId()).Returns(Guid.NewGuid());
+            _userServiceMock
+                .Setup(x => x.GetGovUkIdentifier())
+                .Returns(govUkId);
+
+            _userServiceMock
+                .Setup(x => x.GetUserId())
+                .Returns(userId);
 
             _cacheServiceMock
                 .Setup(x => x.GetMatchesAsync(govUkId))
                 .ReturnsAsync((MatchesAndMasks)null);
 
-            // Prevent a cache miss from rebuilding matches through One Login.
-            _httpContextAccessorMock
-                .Setup(x => x.HttpContext)
-                .Returns((HttpContext)null);
+            _govUkAuthenticationServiceMock
+                .Setup(x => x.GetAccountDetails())
+                .Returns(CreateGovUkUser(credentialSubject));
+
+            _cacheServiceMock
+                .Setup(x => x.CreateMatchesAsync(
+                    govUkId,
+                    userId,
+                    credentialSubject))
+                .ReturnsAsync((MatchesAndMasks)null);
 
             // Act
             var result = await _sut.GetDistinctUlnCountAsync();
 
             // Assert
             result.Should().Be(0);
+
+            _govUkAuthenticationServiceMock.Verify(
+                x => x.GetAccountDetails(),
+                Times.Once);
+
+            _cacheServiceMock.Verify(
+                x => x.CreateMatchesAsync(
+                    govUkId,
+                    userId,
+                    credentialSubject),
+                Times.Once);
+        }
+
+        [Test]
+        public async Task PrepareNeedMoreInformationAsync_When_Matches_Not_Cached_Creates_Matches_From_Verified_Identity()
+        {
+            // Arrange
+            const string govUkId = "gov-123";
+            var userId = Guid.NewGuid();
+            var credentialSubject = new GovUkCredentialSubject();
+
+            _userServiceMock
+                .Setup(x => x.GetGovUkIdentifier())
+                .Returns(govUkId);
+
+            _userServiceMock
+                .Setup(x => x.GetUserId())
+                .Returns(userId);
+
+            _cacheServiceMock
+                .Setup(x => x.GetMatchesAsync(govUkId))
+                .ReturnsAsync((MatchesAndMasks)null);
+
+            _govUkAuthenticationServiceMock
+                .Setup(x => x.GetAccountDetails())
+                .Returns(CreateGovUkUser(credentialSubject));
+
+            var matches = new MatchesAndMasks();
+
+            matches.Matches.Add(new Domain.Models.Match
+            {
+                Uln = 1234567890L,
+                UserIdentityId = Guid.NewGuid()
+            });
+
+            matches.Masks.Add(new Mask
+            {
+                CourseCode = "MASK1",
+                CourseName = "Mask course"
+            });
+
+            _cacheServiceMock
+                .Setup(x => x.CreateMatchesAsync(
+                    govUkId,
+                    userId,
+                    credentialSubject))
+                .ReturnsAsync(matches);
+
+            // Act
+            var result = await _sut.PrepareNeedMoreInformationAsync();
+
+            // Assert
+            result.Should().BeTrue();
+
+            _cacheServiceMock.Verify(
+                x => x.GetMatchesAsync(govUkId),
+                Times.Once);
+
+            _govUkAuthenticationServiceMock.Verify(
+                x => x.GetAccountDetails(),
+                Times.Once);
+
+            _cacheServiceMock.Verify(
+                x => x.CreateMatchesAsync(
+                    govUkId,
+                    userId,
+                    credentialSubject),
+                Times.Once);
+        }
+
+        [TestCase("AccountDetails")]
+        [TestCase("CoreIdentityJwt")]
+        [TestCase("Vc")]
+        [TestCase("CredentialSubject")]
+        public async Task PrepareNeedMoreInformationAsync_When_Verified_Identity_Incomplete_Throws_VerifyException(string missingPart)
+        {
+            // Arrange
+            const string govUkId = "gov-123";
+            var userId = Guid.NewGuid();
+
+            _userServiceMock
+                .Setup(x => x.GetGovUkIdentifier())
+                .Returns(govUkId);
+
+            _userServiceMock
+                .Setup(x => x.GetUserId())
+                .Returns(userId);
+
+            _cacheServiceMock
+                .Setup(x => x.GetMatchesAsync(govUkId))
+                .ReturnsAsync((MatchesAndMasks)null);
+
+            var accountDetails = CreateGovUkUser(
+                new GovUkCredentialSubject());
+
+            switch (missingPart)
+            {
+                case "AccountDetails":
+                    accountDetails = null!;
+                    break;
+
+                case "CoreIdentityJwt":
+                    accountDetails.CoreIdentityJwt = null!;
+                    break;
+
+                case "Vc":
+                    accountDetails.CoreIdentityJwt.Vc = null!;
+                    break;
+
+                case "CredentialSubject":
+                    accountDetails.CoreIdentityJwt.Vc.CredentialSubject = null!;
+                    break;
+            }
+
+            _govUkAuthenticationServiceMock
+                .Setup(x => x.GetAccountDetails())
+                .Returns(accountDetails);
+
+            // Act
+            Func<Task> act = () => _sut.PrepareNeedMoreInformationAsync();
+
+            // Assert
+            await act.Should()
+                .ThrowAsync<VerifyException>()
+                .WithMessage("Unable to load identity details from GOV.UK verify");
+
+            _govUkAuthenticationServiceMock.Verify(
+                x => x.GetAccountDetails(),
+                Times.Once);
+
+            _cacheServiceMock.Verify(
+                x => x.CreateMatchesAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<Guid>(),
+                    It.IsAny<GovUkCredentialSubject>()),
+                Times.Never);
         }
 
         [Test]
@@ -1452,36 +1612,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
             _cacheServiceMock.Verify(c => c.ClearMatchFailCountAsync(govUkId), Times.Once);
         }
 
-        [Test]
-        public async Task PrepareNeedMoreInformationAsync_When_Matches_Not_Cached_And_HttpContext_Is_Null_Does_Not_Create_Matches()
-        {
-            // Arrange
-            var govUkId = "gov-1";
-            var userId = Guid.NewGuid();
-
-            _userServiceMock.Setup(x => x.GetGovUkIdentifier()).Returns(govUkId);
-            _userServiceMock.Setup(x => x.GetUserId()).Returns(userId);
-
-            _httpContextAccessorMock
-                .Setup(x => x.HttpContext)
-                .Returns((HttpContext)null);
-
-            _cacheServiceMock
-                .Setup(x => x.GetMatchesAsync(govUkId))
-                .ReturnsAsync((MatchesAndMasks)null);
-
-            // Act
-            var result = await _sut.PrepareNeedMoreInformationAsync();
-
-            // Assert
-            Assert.That(result, Is.False);
-
-            _cacheServiceMock.Verify(x => x.GetMatchesAsync(govUkId), Times.Once);
-            _cacheServiceMock.Verify(x => x.CreateMatchesAsync(
-                It.IsAny<string>(),
-                It.IsAny<Guid>(),
-                It.IsAny<GovUkCredentialSubject>()), Times.Never);
-        }
+        
 
         [Test]
         public async Task SubmitCheckAnswersAsync_When_SingleMatch_Found_Submits_UserIdentityId_From_Match()
@@ -2160,6 +2291,20 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators
 
             // Assert
             Assert.IsFalse(result);
+        }
+
+        private static GovUkUser CreateGovUkUser(GovUkCredentialSubject credentialSubject)
+        {
+            return new GovUkUser
+            {
+                CoreIdentityJwt = new GovUkCoreIdentityJwt
+                {
+                    Vc = new GovUkCoreIdentityCredential
+                    {
+                        CredentialSubject = credentialSubject
+                    }
+                }
+            };
         }
     }
 }

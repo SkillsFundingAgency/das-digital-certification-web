@@ -116,7 +116,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             _stubAuthServiceMock.Setup(s => s.GetStubVerifyGovUkUser(model.UserFile))
                                 .ReturnsAsync(govUkUser);
             _stubAuthServiceMock.Setup(s => s.GetStubSignInClaims(It.IsAny<StubAuthUserDetails>()))
-                                .ReturnsAsync(principal);
+                                .ReturnsAsync(new StubSignInResult { Principal = principal });
 
             var authServiceMock = new Mock<IAuthenticationService>();
             var signInCalled = false;
