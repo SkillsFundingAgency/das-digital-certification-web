@@ -73,7 +73,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
                 {
                     new NotificationTemplate { TemplateName = NotificationTemplateNames.PrintRequest, TemplateId = "template-id" }
                 }
-            };           
+            };
             _selectAddressValidatorMock = new Mock<IValidator<SelectAddressViewModel>>();
             _addAddressValidatorMock = new Mock<IValidator<AddAddressManualViewModel>>();
 
@@ -183,7 +183,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
 
             // Assert
             _mediatorMock.Verify(m => m.Send(It.IsAny<object>(), default), Times.Never);
-        }     
+        }
 
         [Test]
         public async Task GetCertificateStandardViewModel_ReturnsNull_When_MediatorReturnsNull()
@@ -361,8 +361,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
                 StartDate = DateTime.UtcNow.AddYears(-1),
                 PrintRequestedAt = null,
                 PrintRequestedBy = null,
-                QualificationsAndAwardingBodies = new List<string> { "Q1, A1" },
-                DeliveryInformation = new List<DeliveryInformationResponse> { new DeliveryInformationResponse { Id = "D1", Action = "Requested", Status = DeliveryInformationStatuses.Submitted, EventTime = DateTime.UtcNow } }
+                QualificationsAndAwardingBodies = new List<string> { "Q1, A1" }
             };
 
             _mediatorMock
@@ -401,79 +400,8 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
             result.EmployerName.Should().Be(mediatorResult.EmployerName);
             result.StartDate.Should().Be(mediatorResult.StartDate);
             result.QualificationsAndAwardingBodies.Should().BeEquivalentTo(mediatorResult.QualificationsAndAwardingBodies);
-            result.DeliveryInformation.Should().BeEquivalentTo(mediatorResult.DeliveryInformation);
 
             result.ShowBackLink.Should().BeTrue();
-        }
-
-        [Test]
-        public async Task GetCertificateFrameworkViewModel_Sets_ShowPrintHeaderTrue_When_StatusDelivered()
-        {
-            // Arrange
-            var certificateId = Guid.NewGuid();
-
-            var mediatorResult = new GetFrameworkCertificateQueryResult
-            {
-                FamilyName = "Delivered",
-                GivenNames = "D",
-                Uln = 2,
-                CertificateType = "Framework",
-                CourseName = "Course",
-                CourseLevel = "1",
-                DateAwarded = DateTime.UtcNow.Date,
-                PrintRequestedAt = null,
-                PrintRequestedBy = null,
-                DeliveryInformation = new List<DeliveryInformationResponse>
-                {
-                    new DeliveryInformationResponse { Id = "E1", Action = "Requested", Status = DeliveryInformationStatuses.Delivered, EventTime = DateTime.UtcNow }
-                }
-            };
-
-            _mediatorMock
-                .Setup(m => m.Send(It.Is<GetFrameworkCertificateQuery>(q => q.CertificateId == certificateId), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(mediatorResult);
-
-            // Act
-            var result = await _sut.GetCertificateFrameworkViewModel(certificateId);
-
-            // Assert
-            result.Should().NotBeNull();
-            result!.ShowPrintHeader.Should().BeTrue();
-        }
-
-        [Test]
-        public async Task GetCertificateFrameworkViewModel_Sets_ShowPrintHeaderFalse_When_StatusSubmitted()
-        {
-            // Arrange
-            var certificateId = Guid.NewGuid();
-
-            var mediatorResult = new GetFrameworkCertificateQueryResult
-            {
-                FamilyName = "Submitted",
-                GivenNames = "S",
-                Uln = 3,
-                CertificateType = "Framework",
-                CourseName = "Course",
-                CourseLevel = "1",
-                DateAwarded = DateTime.UtcNow.Date,
-                PrintRequestedAt = null,
-                PrintRequestedBy = null,
-                DeliveryInformation = new List<DeliveryInformationResponse>
-                {
-                    new DeliveryInformationResponse { Id = "E1", Action = "Requested", Status = DeliveryInformationStatuses.Submitted, EventTime = DateTime.UtcNow }
-                }
-            };
-
-            _mediatorMock
-                .Setup(m => m.Send(It.Is<GetFrameworkCertificateQuery>(q => q.CertificateId == certificateId), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(mediatorResult);
-
-            // Act
-            var result = await _sut.GetCertificateFrameworkViewModel(certificateId);
-
-            // Assert
-            result.Should().NotBeNull();
-            result!.ShowPrintHeader.Should().BeFalse();
         }
 
         [Test]
@@ -578,6 +506,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
 
             var deliveryAddress = new CheckAndSubmitViewModel
             {
+                CertificateId = certificateId,
                 Organisation = "DelOrg",
                 AddressLine1 = "Del1",
                 AddressLine2 = "Del2",
@@ -586,7 +515,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
                 Postcode = "DEL123"
             };
 
-            _sessionMock.Setup(s => s.GetDeliveryAddressAsync()).ReturnsAsync(deliveryAddress);
+            _sessionMock.Setup(s => s.GetDeliveryAddressAsync(certificateId)).ReturnsAsync(deliveryAddress);
             SetupUserClaims(email: "user@ex.com", displayName: "Test User");
 
             CreatePrintRequestCommand sentCommand = null!;
@@ -597,13 +526,17 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
                 .Returns(Task.CompletedTask);
 
             // Act
-            await _sut.CreatePrintRequest(certificateId);
+            var result = await _sut.CreatePrintRequest(certificateId);
 
             // Assert
+            result.Should().BeTrue();
+            _sessionMock.Verify(s => s.ClearDeliveryAddressAsync(certificateId), Times.Once);
+
             _mediatorMock.Verify(m => m.Send(It.IsAny<CreatePrintRequestCommand>(), It.IsAny<CancellationToken>()), Times.Once);
 
             sentCommand.Should().NotBeNull();
-            sentCommand!.Request.Address.ContactOrganisation.Should().Be(deliveryAddress.Organisation);
+            sentCommand!.CertificateId.Should().Be(certificateId);
+            sentCommand.Request.Address.ContactOrganisation.Should().Be(deliveryAddress.Organisation);
             sentCommand.Request.Address.ContactAddLine1.Should().Be(deliveryAddress.AddressLine1);
             sentCommand.Request.Address.ContactAddLine2.Should().Be(deliveryAddress.AddressLine2);
             sentCommand.Request.Address.ContactAddLine3.Should().Be(deliveryAddress.TownOrCity);
@@ -611,6 +544,63 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
             sentCommand.Request.Address.ContactPostCode.Should().Be(deliveryAddress.Postcode);
             sentCommand.Request.Email.EmailAddress.Should().Be("user@ex.com");
             sentCommand.Request.Email.UserName.Should().Be("Test User");
+        }
+
+        [Test]
+        public async Task CreatePrintRequest_DoesNotSend_When_NoAddressIsSavedForTheCertificate()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+
+            _sessionMock
+                .Setup(x => x.GetDeliveryAddressAsync(certificateId))
+                .ReturnsAsync((CheckAndSubmitViewModel?)null);
+
+            // Act
+            var result = await _sut.CreatePrintRequest(certificateId);
+
+            // Assert
+            result.Should().BeFalse();
+
+            _mediatorMock.Verify(
+                x => x.Send(It.IsAny<CreatePrintRequestCommand>(), It.IsAny<CancellationToken>()),
+                Times.Never);
+
+            _sessionMock.Verify(
+                x => x.ClearDeliveryAddressAsync(It.IsAny<Guid>()),
+                Times.Never);
+        }
+
+        [Test]
+        public async Task CreatePrintRequest_Keeps_The_Address_When_Submission_Fails()
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+
+            _sessionMock
+                .Setup(x => x.GetDeliveryAddressAsync(certificateId))
+                .ReturnsAsync(new CheckAndSubmitViewModel
+                {
+                    CertificateId = certificateId,
+                    AddressLine1 = "1 Test Street",
+                    Postcode = "AA1 1AA"
+                });
+
+            SetupUserClaims();
+
+            _mediatorMock
+                .Setup(x => x.Send(It.IsAny<CreatePrintRequestCommand>(), It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new InvalidOperationException("Request failed"));
+
+            // Act
+            Func<Task> act = () => _sut.CreatePrintRequest(certificateId);
+
+            // Assert
+            await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("Request failed");
+
+            _sessionMock.Verify(
+                x => x.ClearDeliveryAddressAsync(It.IsAny<Guid>()),
+                Times.Never);
         }
 
         [Test]
@@ -759,6 +749,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
 
             var addr = new CheckAndSubmitViewModel
             {
+                CertificateId = certificateId,
                 BackRoute = "addAddress",
                 Organisation = "Org",
                 AddressLine1 = "L1",
@@ -768,7 +759,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
                 Postcode = "PC1"
             };
 
-            _sessionMock.Setup(s => s.GetDeliveryAddressAsync()).ReturnsAsync(addr);
+            _sessionMock.Setup(s => s.GetDeliveryAddressAsync(certificateId)).ReturnsAsync(addr);
 
             // Act
             var result = await _sut.GetCheckAndSubmitViewModel(certificateId, "CertificateStandardRouteGet");
@@ -787,30 +778,33 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
         }
 
         [Test]
-        public async Task GetCheckAndSubmitViewModel_UsesDefaultBackRoute_When_NoSessionAddress()
+        public async Task GetCheckAndSubmitViewModel_ReturnsNull_When_NoSessionAddress()
         {
             // Arrange
             var certificateId = Guid.NewGuid();
-            var courseName = "Course Default";
 
-            var owned = new List<Certificate>
-            {
-                new Certificate { CertificateId = certificateId, CertificateType = CertificateType.Standard, CourseName = courseName, CourseLevel = "1", DateAwarded = DateTime.UtcNow }
-            };
+            _sessionMock
+                .Setup(x => x.GetOwnedCertificatesAsync())
+                .ReturnsAsync(new List<Certificate>
+                {
+                    new Certificate
+                    {
+                        CertificateId = certificateId,
+                        CertificateType = CertificateType.Standard,
+                        CourseName = "Course Default",
+                        CourseLevel = "1"
+                    }
+                });
 
-            _sessionMock.Setup(s => s.GetOwnedCertificatesAsync()).ReturnsAsync(owned);
-            SetupUserClaims(givenNames: "UserGiven", surname: "UserFamily");
-
-            _sessionMock.Setup(s => s.GetDeliveryAddressAsync()).ReturnsAsync((CheckAndSubmitViewModel)null);
-
-            var defaultBack = "defaultRoute";
+            _sessionMock
+                .Setup(x => x.GetDeliveryAddressAsync(certificateId))
+                .ReturnsAsync((CheckAndSubmitViewModel?)null);
 
             // Act
-            var result = await _sut.GetCheckAndSubmitViewModel(certificateId, defaultBack);
+            var result = await _sut.GetCheckAndSubmitViewModel(certificateId, "defaultRoute");
 
             // Assert
-            result.Should().NotBeNull();
-            result!.BackRoute.Should().Be(defaultBack);
+            result.Should().BeNull();
         }
 
         [Test]
@@ -896,265 +890,6 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
             result.CertificateType.Should().Be(CertificateType.Unknown);
 
             _mediatorMock.Verify(m => m.Send(It.IsAny<CreateUserActionCommand>(), It.IsAny<CancellationToken>()), Times.Never);
-        }
-
-        [Test]
-        public async Task GetCertificateStandardViewModel_Sets_PrintStatus_Printed_And_ShowPrintHeaderTrue()
-        {
-            // Arrange
-            var certificateId = Guid.NewGuid();
-            var eventTime = new DateTime(2024, 6, 1, 0, 0, 0, DateTimeKind.Utc);
-
-            var mediatorResult = new GetStandardCertificateQueryResult
-            {
-                FamilyName = "A",
-                GivenNames = "B",
-                Uln = 1,
-                CertificateType = "Standard",
-                CourseName = "Course",
-                CourseLevel = 1,
-                DeliveryInformation = new List<DeliveryInformationResponse>
-                {
-                    new DeliveryInformationResponse { Id = "1", Action = "Printed", Status = DeliveryInformationStatuses.Printed, EventTime = eventTime }
-                }
-            };
-
-            _mediatorMock
-                .Setup(m => m.Send(It.IsAny<GetStandardCertificateQuery>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(mediatorResult);
-
-            _sessionMock.Setup(s => s.GetOwnedCertificatesAsync()).ReturnsAsync(new List<Certificate>());
-
-            // Act
-            var result = await _sut.GetCertificateStandardViewModel(certificateId);
-
-            // Assert
-            result.Should().NotBeNull();
-            result!.PrintStatus.Should().Be(PrintStatus.Printed);
-            result.PrintStatusDate.Should().Be(eventTime);
-            result.PrintStatusMessage.Should().Contain("printed on");
-            result.ShowPrintHeader.Should().BeTrue();
-            result.PrintStatusDisplay.Should().Be(PrintStatus.Printed.ToString());
-        }
-
-        [Test]
-        public async Task GetCertificateStandardViewModel_Sets_PrintStatus_Requested_And_DisplayIsPrintRequested()
-        {
-            // Arrange
-            var certificateId = Guid.NewGuid();
-            var eventTime = new DateTime(2024, 5, 15, 0, 0, 0, DateTimeKind.Utc);
-
-            var mediatorResult = new GetStandardCertificateQueryResult
-            {
-                FamilyName = "A",
-                GivenNames = "B",
-                Uln = 1,
-                CertificateType = "Standard",
-                CourseName = "Course",
-                CourseLevel = 1,
-                DeliveryInformation = new List<DeliveryInformationResponse>
-                {
-                    new DeliveryInformationResponse { Id = "1", Action = "Requested", Status = DeliveryInformationStatuses.PrintRequested, EventTime = eventTime }
-                }
-            };
-
-            _mediatorMock
-                .Setup(m => m.Send(It.IsAny<GetStandardCertificateQuery>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(mediatorResult);
-
-            _sessionMock.Setup(s => s.GetOwnedCertificatesAsync()).ReturnsAsync(new List<Certificate>());
-
-            // Act
-            var result = await _sut.GetCertificateStandardViewModel(certificateId);
-
-            // Assert
-            result.Should().NotBeNull();
-            result!.PrintStatus.Should().Be(PrintStatus.Requested);
-            result.PrintStatusDisplay.Should().Be("Print requested");
-            result.ShowPrintHeader.Should().BeTrue();
-            result.PrintStatusMessage.Should().Contain("requested on");
-        }
-
-        [Test]
-        public async Task GetCertificateStandardViewModel_Sets_ShowRequestPrintTrue_When_StatusSubmittedAndNoPrintRequestedAt()
-        {
-            // Arrange
-            var certificateId = Guid.NewGuid();
-
-            var mediatorResult = new GetStandardCertificateQueryResult
-            {
-                FamilyName = "A",
-                GivenNames = "B",
-                Uln = 1,
-                CertificateType = "Standard",
-                CourseName = "Course",
-                CourseLevel = 1,
-                PrintRequestedAt = null,
-                DeliveryInformation = new List<DeliveryInformationResponse>
-                {
-                    new DeliveryInformationResponse { Id = "1", Action = "Submitted", Status = DeliveryInformationStatuses.Submitted, EventTime = DateTime.UtcNow }
-                }
-            };
-
-            _mediatorMock
-                .Setup(m => m.Send(It.IsAny<GetStandardCertificateQuery>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(mediatorResult);
-
-            _sessionMock.Setup(s => s.GetOwnedCertificatesAsync()).ReturnsAsync(new List<Certificate>());
-
-            // Act
-            var result = await _sut.GetCertificateStandardViewModel(certificateId);
-
-            // Assert
-            result.Should().NotBeNull();
-            result!.ShowRequestPrint.Should().BeTrue();
-        }
-
-        [Test]
-        public async Task GetCertificateStandardViewModel_Sets_PrintStatusNone_When_DeliveryInformationEmpty()
-        {
-            // Arrange
-            var certificateId = Guid.NewGuid();
-
-            var mediatorResult = new GetStandardCertificateQueryResult
-            {
-                FamilyName = "A",
-                GivenNames = "B",
-                Uln = 1,
-                CertificateType = "Standard",
-                CourseName = "Course",
-                CourseLevel = 1,
-                DeliveryInformation = new List<DeliveryInformationResponse>()
-            };
-
-            _mediatorMock
-                .Setup(m => m.Send(It.IsAny<GetStandardCertificateQuery>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(mediatorResult);
-
-            _sessionMock.Setup(s => s.GetOwnedCertificatesAsync()).ReturnsAsync(new List<Certificate>());
-
-            // Act
-            var result = await _sut.GetCertificateStandardViewModel(certificateId);
-
-            // Assert
-            result.Should().NotBeNull();
-            result!.PrintStatus.Should().Be(PrintStatus.None);
-            result.ShowPrintHeader.Should().BeFalse();
-        }
-
-        [Test]
-        public async Task GetCertificateFrameworkViewModel_Sets_PrintStatusNone_When_AllEventsBeforeCutoverDate()
-        {
-            // Arrange
-            _digitalCertificatesWebConfig.CutoverDate = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-
-            var certificateId = Guid.NewGuid();
-
-            var mediatorResult = new GetFrameworkCertificateQueryResult
-            {
-                FamilyName = "A",
-                GivenNames = "B",
-                Uln = 1,
-                CertificateType = "Framework",
-                CourseName = "Course",
-                CourseLevel = "1",
-                DateAwarded = DateTime.UtcNow,
-                DeliveryInformation = new List<DeliveryInformationResponse>
-                {
-                    new DeliveryInformationResponse { Id = "1", Action = "Submitted", Status = DeliveryInformationStatuses.Submitted, EventTime = new DateTime(2023, 6, 1, 0, 0, 0, DateTimeKind.Utc) }
-                }
-            };
-
-            _mediatorMock
-                .Setup(m => m.Send(It.IsAny<GetFrameworkCertificateQuery>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(mediatorResult);
-
-            _sessionMock.Setup(s => s.GetOwnedCertificatesAsync()).ReturnsAsync(new List<Certificate>());
-
-            // Act
-            var result = await _sut.GetCertificateFrameworkViewModel(certificateId);
-
-            // Assert
-            result.Should().NotBeNull();
-            result!.PrintStatus.Should().Be(PrintStatus.None);
-        }
-
-        [Test]
-        public async Task GetCertificateFrameworkViewModel_Sets_PrintStatus_Delivered_WithCorrectMessage()
-        {
-            // Arrange
-            var certificateId = Guid.NewGuid();
-            var eventTime = new DateTime(2024, 3, 20, 0, 0, 0, DateTimeKind.Utc);
-
-            var mediatorResult = new GetFrameworkCertificateQueryResult
-            {
-                FamilyName = "A",
-                GivenNames = "B",
-                Uln = 1,
-                CertificateType = "Framework",
-                CourseName = "Course",
-                CourseLevel = "1",
-                DateAwarded = DateTime.UtcNow,
-                DeliveryInformation = new List<DeliveryInformationResponse>
-                {
-                    new DeliveryInformationResponse { Id = "1", Action = "Delivered", Status = DeliveryInformationStatuses.Delivered, EventTime = eventTime }
-                }
-            };
-
-            _mediatorMock
-                .Setup(m => m.Send(It.IsAny<GetFrameworkCertificateQuery>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(mediatorResult);
-
-            _sessionMock.Setup(s => s.GetOwnedCertificatesAsync()).ReturnsAsync(new List<Certificate>());
-
-            // Act
-            var result = await _sut.GetCertificateFrameworkViewModel(certificateId);
-
-            // Assert
-            result.Should().NotBeNull();
-            result!.PrintStatus.Should().Be(PrintStatus.Delivered);
-            result.PrintStatusDate.Should().Be(eventTime);
-            result.PrintStatusMessage.Should().Contain("delivered on");
-            result.ShowPrintHeader.Should().BeTrue();
-            result.PrintStatusCssClass.Should().Contain("delivered");
-        }
-
-        [Test]
-        public async Task GetCertificateFrameworkViewModel_Sets_PrintStatus_Requested_For_SentToPrinter()
-        {
-            // Arrange
-            var certificateId = Guid.NewGuid();
-            var eventTime = new DateTime(2024, 4, 10, 0, 0, 0, DateTimeKind.Utc);
-
-            var mediatorResult = new GetFrameworkCertificateQueryResult
-            {
-                FamilyName = "A",
-                GivenNames = "B",
-                Uln = 1,
-                CertificateType = "Framework",
-                CourseName = "Course",
-                CourseLevel = "1",
-                DateAwarded = DateTime.UtcNow,
-                DeliveryInformation = new List<DeliveryInformationResponse>
-                {
-                    new DeliveryInformationResponse { Id = "1", Action = "Sent", Status = DeliveryInformationStatuses.SentToPrinter, EventTime = eventTime }
-                }
-            };
-
-            _mediatorMock
-                .Setup(m => m.Send(It.IsAny<GetFrameworkCertificateQuery>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(mediatorResult);
-
-            _sessionMock.Setup(s => s.GetOwnedCertificatesAsync()).ReturnsAsync(new List<Certificate>());
-
-            // Act
-            var result = await _sut.GetCertificateFrameworkViewModel(certificateId);
-
-            // Assert
-            result.Should().NotBeNull();
-            result!.PrintStatus.Should().Be(PrintStatus.Requested);
-            result.PrintStatusDisplay.Should().Be("Print requested");
-            result.PrintStatusMessage.Should().Contain("requested on");
         }
 
         [Test]

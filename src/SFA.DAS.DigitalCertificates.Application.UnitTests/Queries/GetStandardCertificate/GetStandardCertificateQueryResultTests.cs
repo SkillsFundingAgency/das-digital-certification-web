@@ -1,4 +1,5 @@
-﻿using FluentAssertions;
+﻿using System;
+using FluentAssertions;
 using NUnit.Framework;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetStandardCertificate;
 using SFA.DAS.DigitalCertificates.Infrastructure.Api.Responses;
@@ -24,6 +25,9 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetStandardC
         public void When_SourceHasValues_Then_MapsAllFields()
         {
             // Arrange
+            var requestedAt = new DateTime(2026, 10, 1, 9, 0, 0, DateTimeKind.Utc);
+            var printStatusAt = new DateTime(2026, 10, 2, 10, 0, 0, DateTimeKind.Utc);
+
             var source = new GetStandardCertificateResponse
             {
                 FamilyName = "Family",
@@ -36,14 +40,19 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetStandardC
                 CourseOption = "Opt",
                 CourseLevel = 2,
                 DateAwarded = DateTime.UtcNow.Date,
-                OverallGrade = "Pass",
+                OverallGrade = "Distinction",
                 ProviderName = "Provider",
                 Ukprn = "100000",
                 EmployerName = "Employer",
                 AssessorName = "Assessor",
                 StartDate = DateTime.UtcNow.AddYears(-1),
-                PrintRequestedAt = DateTime.UtcNow.AddDays(-2),
-                PrintRequestedBy = "Requester"
+                LatestEPAOutcome = "Pass",
+                Status = "NotDelivered",
+                PrintRequestedAt = requestedAt,
+                PrintRequestedBy = "Requester",
+                PrintStatus = "NotDelivered",
+                PrintStatusAt = printStatusAt,
+                CoronationEmblem = true
             };
 
             // Act
@@ -67,8 +76,13 @@ namespace SFA.DAS.DigitalCertificates.Application.UnitTests.Queries.GetStandardC
             result.EmployerName.Should().Be(source.EmployerName);
             result.AssessorName.Should().Be(source.AssessorName);
             result.StartDate.Should().Be(source.StartDate);
-            result.PrintRequestedAt.Should().Be(source.PrintRequestedAt);
+            result.LatestEPAOutcome.Should().Be("Pass");
+            result.Status.Should().Be("NotDelivered");
+            result.PrintRequestedAt.Should().Be(requestedAt);
             result.PrintRequestedBy.Should().Be(source.PrintRequestedBy);
+            result.PrintStatus.Should().Be("NotDelivered");
+            result.PrintStatusAt.Should().Be(printStatusAt);
+            result.CoronationEmblem.Should().BeTrue();
         }
     }
 }

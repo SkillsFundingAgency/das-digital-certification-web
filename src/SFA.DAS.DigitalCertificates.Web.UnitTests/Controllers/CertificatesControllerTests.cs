@@ -35,6 +35,10 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             _sharingOrchestratorMock = new Mock<ISharingOrchestrator>();
             _sessionServiceMock = new Mock<ISessionService>();
 
+            _certificatesOrchestratorMock
+                .Setup(x => x.CanRequestFirstPrintAsync(It.IsAny<Guid>()))
+                .ReturnsAsync(true);
+
             _sut = new CertificatesController(
                 _contextAccessorMock.Object,
                 _certificatesOrchestratorMock.Object,
@@ -1370,7 +1374,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             result.Should().BeOfType<ViewResult>();
             var view = (ViewResult)result;
             view.Model.Should().BeSameAs(vm);
-            _sessionServiceMock.Verify(x => x.ClearDeliveryAddressAsync(), Times.Once);
+            _sessionServiceMock.Verify(x => x.ClearDeliveryAddressAsync(certId), Times.Once);
         }
 
         [Test]
@@ -1385,7 +1389,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             var redirect = (RedirectToRouteResult)result;
             redirect.RouteName.Should().Be(CertificatesController.CertificateStandardRouteGet);
             redirect.RouteValues.Should().ContainKey("certificateId");
-            _sessionServiceMock.Verify(x => x.ClearDeliveryAddressAsync(), Times.Never);
+            _sessionServiceMock.Verify(x => x.ClearDeliveryAddressAsync(It.IsAny<Guid>()), Times.Never);
         }
 
         [Test]
@@ -1415,7 +1419,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             var redirect = (RedirectToRouteResult)result;
             redirect.RouteName.Should().Be(CertificatesController.CertificateStandardRouteGet);
             redirect.RouteValues.Should().ContainKey("certificateId");
-            _sessionServiceMock.Verify(x => x.ClearDeliveryAddressAsync(), Times.Never);
+            _sessionServiceMock.Verify(x => x.ClearDeliveryAddressAsync(It.IsAny<Guid>()), Times.Never);
         }
 
         [Test]
@@ -1516,7 +1520,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
         }
 
         [Test]
-        public async Task CheckAndSubmit_Get_RedirectsToStandard_When_NoModel()
+        public async Task CheckAndSubmit_Get_RedirectsToAddAddress_When_NoModel()
         {
             var certId = Guid.NewGuid();
             _certificatesOrchestratorMock.Setup(x => x.GetCheckAndSubmitViewModel(certId, It.IsAny<string>())).ReturnsAsync((CheckAndSubmitViewModel)null);
@@ -1525,22 +1529,30 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
 
             result.Should().BeOfType<RedirectToRouteResult>();
             var redirect = (RedirectToRouteResult)result;
-            redirect.RouteName.Should().Be(CertificatesController.CertificateStandardRouteGet);
+            redirect.RouteName.Should().Be(CertificatesController.AddAddressRouteGet);
             redirect.RouteValues.Should().ContainKey("certificateId");
         }
 
-        [Test]
-        public async Task CheckAndSubmitPost_RedirectsToPrintRequestConfirmation()
+        [TestCase(true, CertificatesController.PrintRequestConfirmationRouteGet)]
+        [TestCase(false, CertificatesController.AddAddressRouteGet)]
+        public async Task CheckAndSubmitPost_Redirects_According_To_Whether_The_Request_Was_Sent(
+            bool requestSent,
+            string expectedRoute)
         {
-            var certId = Guid.NewGuid();
-            _certificatesOrchestratorMock.Setup(p => p.CreatePrintRequest(certId)).Returns(Task.CompletedTask);
+            // Arrange
+            var certificateId = Guid.NewGuid();
 
-            var result = await _sut.CheckAndSubmitPost(certId);
+            _certificatesOrchestratorMock
+                .Setup(x => x.CreatePrintRequest(certificateId))
+                .ReturnsAsync(requestSent);
 
-            result.Should().BeOfType<RedirectToRouteResult>();
-            var redirect = (RedirectToRouteResult)result;
-            redirect.RouteName.Should().Be(CertificatesController.PrintRequestConfirmationRouteGet);
-            redirect.RouteValues.Should().ContainKey("certificateId");
+            // Act
+            var result = await _sut.CheckAndSubmitPost(certificateId);
+
+            // Assert
+            var redirect = result.Should().BeOfType<RedirectToRouteResult>().Which;
+            redirect.RouteName.Should().Be(expectedRoute);
+            redirect.RouteValues!["certificateId"].Should().Be(certificateId);
         }
 
 
@@ -1566,6 +1578,71 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             result.Should().NotBeNull();
             result!.RouteName.Should().Be(CertificatesController.ContactUsForCertificateRouteGet);
             result.RouteValues["certificateId"].Should().Be(certificateId);
+        }
+
+        [TestCase(nameof(CertificatesController.AddAddress))]
+        [TestCase(nameof(CertificatesController.SelectAddress))]
+        [TestCase(nameof(CertificatesController.SelectAddressPost))]
+        [TestCase(nameof(CertificatesController.AddAddressPost))]
+        [TestCase(nameof(CertificatesController.CheckAndSubmit))]
+        [TestCase(nameof(CertificatesController.CheckAndSubmitPost))]
+        public async Task When_First_Print_Is_Unavailable_Then_The_Action_Returns_To_The_Certificate(string action)
+        {
+            // Arrange
+            var certificateId = Guid.NewGuid();
+
+            _certificatesOrchestratorMock
+                .Setup(x => x.CanRequestFirstPrintAsync(certificateId))
+                .ReturnsAsync(false);
+
+            _sessionServiceMock
+                .Setup(x => x.GetOwnedCertificatesAsync())
+                .ReturnsAsync(new List<Certificate>
+                {
+                    new Certificate
+                    {
+                        CertificateId = certificateId,
+                        CertificateType = CertificateType.Standard,
+                        CourseName = "Test course",
+                        CourseLevel = "3"
+                    }
+                });
+
+            // Act
+            var result = action switch
+            {
+                nameof(CertificatesController.AddAddress) =>
+                    await _sut.AddAddress(certificateId),
+
+                nameof(CertificatesController.SelectAddress) =>
+                    await _sut.SelectAddress(certificateId),
+
+                nameof(CertificatesController.SelectAddressPost) =>
+                    await _sut.SelectAddressPost(certificateId, new SelectAddressViewModel()),
+
+                nameof(CertificatesController.AddAddressPost) =>
+                    await _sut.AddAddressPost(certificateId, new AddAddressManualViewModel()),
+
+                nameof(CertificatesController.CheckAndSubmit) =>
+                    await _sut.CheckAndSubmit(certificateId),
+
+                nameof(CertificatesController.CheckAndSubmitPost) =>
+                    await _sut.CheckAndSubmitPost(certificateId),
+
+                _ => throw new ArgumentOutOfRangeException(nameof(action))
+            };
+
+            // Assert
+            var redirect = result.Should().BeOfType<RedirectToRouteResult>().Which;
+            redirect.RouteName.Should().Be(CertificatesController.CertificateStandardRouteGet);
+            redirect.RouteValues!["certificateId"].Should().Be(certificateId);
+
+            _certificatesOrchestratorMock.Verify(
+                x => x.CanRequestFirstPrintAsync(certificateId), Times.Once);
+            _certificatesOrchestratorMock.VerifyNoOtherCalls();
+
+            _sessionServiceMock.Verify(x => x.GetOwnedCertificatesAsync(), Times.Once);
+            _sessionServiceMock.VerifyNoOtherCalls();
         }
 
         [Test]
@@ -1646,7 +1723,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             var viewModel = new CertificateSharingLinkViewModel
             {
                 CourseName = "Course",
-                AccessHistory =null
+                AccessHistory = null
             };
 
             // Act
@@ -1683,7 +1760,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
                 CourseName = "Course",
                 AccessHistory = new() { new() { AccessType = AccessType.DirectLink } }
             };
-           
+
             // Act
             var result = viewModel.LinkAccessed;
 
@@ -1707,7 +1784,7 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
             // Assert
             Assert.True(result);
         }
-       
+
         [Test]
         public void LinkAccessed_WhenAccessHistoryContainsMixedAccessTypes_ReturnsTrue()
         {
@@ -1767,6 +1844,6 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Controllers
 
             // Assert
             Assert.That(result, Is.False);
-        }       
+        }
     }
 }

@@ -81,5 +81,24 @@ namespace SFA.DAS.DigitalCertificates.Infrastructure.UnitTests.Services.SessionS
             // Assert
             result.Should().BeNull();
         }
+
+        [Test]
+        public async Task ClearByPrefixAsync_Removes_Only_Matching_Keys()
+        {
+            // Arrange
+            _sessionMock.SetupGet(x => x.Keys).Returns(() => _storage.Keys);
+
+            await _sut.SetAsync("delivery:", "legacy address");
+            await _sut.SetAsync("delivery:certificate-a", "address A");
+            await _sut.SetAsync("delivery:certificate-b", "address B");
+            await _sut.SetAsync("contact-reference", "REF-1");
+
+            // Act
+            await _sut.ClearByPrefixAsync("delivery:");
+
+            // Assert
+            _storage.Keys.Should().ContainSingle().Which.Should().Be("contact-reference");
+            (await _sut.GetAsync("contact-reference")).Should().Be("REF-1");
+        }
     }
 }

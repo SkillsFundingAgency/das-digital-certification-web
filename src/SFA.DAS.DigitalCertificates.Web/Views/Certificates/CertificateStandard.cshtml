@@ -155,53 +155,64 @@
                    asp-route-certificateId="@certificateId" role="button" draggable="false"
                    class="govuk-button govuk-button--secondary" data-module="govuk-button">Create link</a>
 
-
                  <h2 class="govuk-heading-m">Download your certificate</h2>
                  <a asp-route="@CertificatesController.DownloadCertificateStandardPdfRouteGet"
                     asp-route-certificateId="@certificateId" draggable="false"
                     class="govuk-button govuk-button--secondary" data-module="govuk-button">Download printable certificate (PDF)</a>
                    
-                @if (Model?.ShowRequestPrint == true)
-                {
-                    <h2 class="govuk-heading-m">Request a printed certificate</h2>
-                    <p class="govuk-body">
-                        We can post a certificate to you. You need to
-                        <span class="das-js-show--inline">
-                            <a asp-route="@CertificatesController.SelectAddressRouteGet"
-                               asp-route-certificateId="@certificateId" title="Request a printed certificate">
-                                request a printed certificate
-                            </a>
-                        </span>
-                        <span class="das-js-hide">
-                            <a asp-route="@CertificatesController.AddAddressRouteGet"
-                               asp-route-certificateId="@certificateId" title="Request a printed certificate">
-                                request a printed certificate
-                            </a>
-                        </span>.
-                        Certificates can take up to 3 weeks to arrive.
-                    </p>
-                }
-
                 @if (Model?.ShowPrintHeader == true)
                 {
                     <h2 class="govuk-heading-m">Certificate print status</h2>
 
-                    <dl class="govuk-summary-list">
-                        <div class="govuk-summary-list__row">
-                            <dt class="govuk-summary-list__key"><span class="govuk-body">Your certificate is</span></dt>
-                                    <dd class="govuk-summary-list__value">
-                                        <span class="@Model.PrintStatusCssClass">@Model.PrintStatusDisplay</span>
-                                    </dd>
-                        </div>
-                    </dl>
+                    @if (!string.IsNullOrEmpty(Model.PrintStatusDisplay))
+                    {
+                        <dl class="govuk-summary-list">
+                            <div class="govuk-summary-list__row">
+                                <dt class="govuk-summary-list__key">Your certificate is</dt>
+                                <dd class="govuk-summary-list__value">
+                                    <span class="@Model.PrintStatusCssClass">@Model.PrintStatusDisplay</span>
+                                </dd>
+                            </div>
+                        </dl>
+                    }
 
-                    <p class="govuk-body">@Model?.PrintStatusMessage</p>
+                    @if (!string.IsNullOrEmpty(Model.PrintStatusMessage))
+                    {
+                        <p class="govuk-body">@Model.PrintStatusMessage</p>
+                    }
+                }
+                else
+                {
+                    <h2 class="govuk-heading-m">Request a printed certificate</h2>
+                }
+
+                @if (Model?.ShowRequestPrint == true)
+                {
+                    <p class="govuk-body">
+                        We can post a certificate to you. You need to
+                        <span class="das-js-show--inline">
+                            <a asp-route="@CertificatesController.SelectAddressRouteGet"
+                               asp-route-certificateId="@certificateId">request a printed certificate</a>
+                        </span>
+                        <span class="das-js-hide">
+                            <a asp-route="@CertificatesController.AddAddressRouteGet"
+                               asp-route-certificateId="@certificateId">request a printed certificate</a>
+                        </span>.
+                        Certificates can take up to 3 weeks to arrive.
+                    </p>
+                }
+                else
+                {
                     <form asp-route="@CertificatesController.ContactUsForCertificateCreateRoutePost"
                           asp-route-certificateId="@certificateId"
                           method="post">
                         <p class="govuk-body">
-                            If your certificate has been lost, 
-                            <button type="submit" name="actionType" value="Reprint" class="das-button--inline-link" data-prevent-double-click="true" data-module="govuk-button">contact us for a replacement printed certificate</button>.
+                            If your certificate has been lost,
+                            <button type="submit" name="actionType" value="Reprint"
+                                    class="das-button--inline-link" data-prevent-double-click="true"
+                                    data-module="govuk-button">
+                                contact us for a replacement printed certificate
+                            </button>.
                         </p>
                     </form>
                 }

@@ -74,6 +74,11 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsCertificateOwner))]
         public async Task<IActionResult> AddAddress(Guid certificateId, string? backRoute = null)
         {
+            if (!await _certificatesOrchestrator.CanRequestFirstPrintAsync(certificateId))
+            {
+                return await RedirectFromPrintRequest(certificateId);
+            }
+
             var model = await _certificatesOrchestrator.GetAddAddressViewModel(certificateId);
 
             if (model == null)
@@ -93,6 +98,11 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsCertificateOwner))]
         public async Task<IActionResult> SelectAddress(Guid certificateId)
         {
+            if (!await _certificatesOrchestrator.CanRequestFirstPrintAsync(certificateId))
+            {
+                return await RedirectFromPrintRequest(certificateId);
+            }
+
             var model = await _certificatesOrchestrator.GetSelectAddressViewModel(certificateId);
 
             if (model == null)
@@ -100,7 +110,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
                 return RedirectToRoute(CertificateStandardRouteGet, new { certificateId });
             }
 
-            await _sessionService.ClearDeliveryAddressAsync();
+            await _sessionService.ClearDeliveryAddressAsync(certificateId);
 
             return View(model);
         }
@@ -109,6 +119,11 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsCertificateOwner))]
         public async Task<IActionResult> SelectAddressPost(Guid certificateId, SelectAddressViewModel model)
         {
+            if (!await _certificatesOrchestrator.CanRequestFirstPrintAsync(certificateId))
+            {
+                return await RedirectFromPrintRequest(certificateId);
+            }
+
             model.CertificateId = certificateId;
 
             if (!await _certificatesOrchestrator.ValidateSelectAddressViewModel(model, ModelState))
@@ -131,6 +146,11 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsCertificateOwner))]
         public async Task<IActionResult> AddAddressPost(Guid certificateId, AddAddressManualViewModel model)
         {
+            if (!await _certificatesOrchestrator.CanRequestFirstPrintAsync(certificateId))
+            {
+                return await RedirectFromPrintRequest(certificateId);
+            }
+
             model.CertificateId = certificateId;
 
             if (!await _certificatesOrchestrator.ValidateAddAddressManualViewModel(model, ModelState))
@@ -159,10 +179,15 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsCertificateOwner))]
         public async Task<IActionResult> CheckAndSubmit(Guid certificateId)
         {
+            if (!await _certificatesOrchestrator.CanRequestFirstPrintAsync(certificateId))
+            {
+                return await RedirectFromPrintRequest(certificateId);
+            }
+
             var vm = await _certificatesOrchestrator.GetCheckAndSubmitViewModel(certificateId, CertificateStandardRouteGet);
             if (vm == null)
             {
-                return RedirectToRoute(CertificateStandardRouteGet, new { certificateId });
+                return RedirectToRoute(AddAddressRouteGet, new { certificateId });
             }
 
             return View(vm);
@@ -172,7 +197,15 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         [Authorize(Policy = nameof(DigitalCertificatesPolicyNames.IsCertificateOwner))]
         public async Task<IActionResult> CheckAndSubmitPost(Guid certificateId)
         {
-            await _certificatesOrchestrator.CreatePrintRequest(certificateId);
+            if (!await _certificatesOrchestrator.CanRequestFirstPrintAsync(certificateId))
+            {
+                return await RedirectFromPrintRequest(certificateId);
+            }
+
+            if (!await _certificatesOrchestrator.CreatePrintRequest(certificateId))
+            {
+                return RedirectToRoute(AddAddressRouteGet, new { certificateId });
+            }
 
             return RedirectToRoute(PrintRequestConfirmationRouteGet, new { certificateId });
         }
@@ -593,6 +626,23 @@ namespace SFA.DAS.DigitalCertificates.Web.Controllers
         public IActionResult CheckQualificationExpired()
         {
             return View();
+        }
+
+        private async Task<IActionResult> RedirectFromPrintRequest(Guid certificateId)
+        {
+            var certificates = await _sessionService.GetOwnedCertificatesAsync();
+            var certificate = certificates?.FirstOrDefault(c => c.CertificateId == certificateId);
+
+            return certificate?.CertificateType switch
+            {
+                CertificateType.Standard =>
+                    RedirectToRoute(CertificateStandardRouteGet, new { certificateId }),
+
+                CertificateType.Framework =>
+                    RedirectToRoute(CertificateFrameworkRouteGet, new { certificateId }),
+
+                _ => RedirectToRoute(CertificatesListRouteGet)
+            };
         }
     }
 }

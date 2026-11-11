@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 
 namespace SFA.DAS.DigitalCertificates.Infrastructure.Services.SessionStorage
 {
@@ -26,6 +28,25 @@ namespace SFA.DAS.DigitalCertificates.Infrastructure.Services.SessionStorage
         public Task ClearAsync(string key)
         {
             Remove(key);
+            return Task.CompletedTask;
+        }
+
+        public Task ClearByPrefixAsync(string prefix)
+        {
+            var session = Session;
+
+            if (session is null)
+                return Task.CompletedTask;
+
+            var keys = session.Keys
+                .Where(key => key.StartsWith(prefix, StringComparison.Ordinal))
+                .ToArray();
+
+            foreach (var key in keys)
+            {
+                session.Remove(key);
+            }
+
             return Task.CompletedTask;
         }
 
