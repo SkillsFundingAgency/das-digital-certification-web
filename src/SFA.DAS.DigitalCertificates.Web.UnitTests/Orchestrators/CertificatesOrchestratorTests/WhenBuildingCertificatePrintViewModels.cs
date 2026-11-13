@@ -114,7 +114,6 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
             result.Should().NotBeNull();
             result!.ShowPrintHeader.Should().Be(hasRequest);
             result.ShowRequestPrint.Should().BeFalse();
-            result.PrintStatus.Should().Be(expectedStatus);
             result.PrintStatusDisplay.Should().Be(expectedLabel);
             result.PrintStatusDate.Should().Be(ExpectedDisplayDate(expectedStatus));
             result.PrintStatusMessage.Should().Be(ExpectedMessage(expectedStatus));
@@ -158,7 +157,6 @@ namespace SFA.DAS.DigitalCertificates.Web.UnitTests.Orchestrators.CertificatesOr
             // Assert
             result.Should().NotBeNull();
             result!.ShowPrintHeader.Should().Be(hasRequest);
-            result.PrintStatus.Should().Be(expectedStatus);
             result.PrintStatusDisplay.Should().Be(expectedLabel);
             result.PrintStatusDate.Should().Be(ExpectedDisplayDate(expectedStatus));
             result.PrintStatusMessage.Should().Be(ExpectedMessage(expectedStatus));

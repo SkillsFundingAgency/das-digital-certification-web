@@ -10,15 +10,14 @@ using Aspose.Pdf.Forms;
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Http;
-using SFA.DAS.DigitalCertificates.Application.Commands.CreateUserAction;
 using Microsoft.Extensions.Logging;
+using SFA.DAS.DigitalCertificates.Application.Commands.CreateUserAction;
 using SFA.DAS.DigitalCertificates.Application.Commands.RequestPrintCertificate;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetFrameworkCertificate;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetLocations;
 using SFA.DAS.DigitalCertificates.Application.Queries.GetStandardCertificate;
 using SFA.DAS.DigitalCertificates.Domain.Models;
 using SFA.DAS.DigitalCertificates.Infrastructure.Api.Requests;
-using SFA.DAS.DigitalCertificates.Infrastructure.Api.Responses;
 using SFA.DAS.DigitalCertificates.Infrastructure.Configuration;
 using SFA.DAS.DigitalCertificates.Infrastructure.Constants;
 using SFA.DAS.DigitalCertificates.Web.Extensions;
@@ -126,7 +125,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 result.PrintStatusAt,
                 isStandard: true);
 
-            viewModel.PrintStatus = printStatus;
             viewModel.PrintStatusDate = printDate;
             viewModel.PrintStatusMessage = printMessage;
             viewModel.PrintStatusDisplay = GetPrintStatusLabel(printStatus);
@@ -187,7 +185,6 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 result.PrintStatusAt,
                 isStandard: false);
 
-            viewModel.PrintStatus = printStatus;
             viewModel.PrintStatusDate = printDate;
             viewModel.PrintStatusMessage = printMessage;
             viewModel.PrintStatusDisplay = GetPrintStatusLabel(printStatus);
