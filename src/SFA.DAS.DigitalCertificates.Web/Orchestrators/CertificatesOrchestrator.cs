@@ -196,14 +196,14 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             byte[]? templateBytes = null;
             var fullName = $"{model.GivenNames} {model.FamilyName}";
 
-            if(_digitalCertificatesWebConfiguration.MaxFullNameLengthOnOneLine.HasValue &&
+            if (_digitalCertificatesWebConfiguration.MaxFullNameLengthOnOneLine.HasValue &&
                     fullName.Length >= _digitalCertificatesWebConfiguration.MaxFullNameLengthOnOneLine.Value)
             {
                 fullName = $"{model.GivenNames}\n{model.FamilyName}";
             }
 
             var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-            {                             
+            {
                 [FullName] = fullName,
                 [AwardedOn] = $"{model.DateAwarded:dd} {model.DateAwarded.ToString("MMMM", CultureInfo.InvariantCulture).ToUpperInvariant()} {model.DateAwarded:yyyy}",
                 [CertificateNumber] = model.CertificateNumber
@@ -225,7 +225,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
             }
             else if (model.CertificateType == CertificateType.Framework)
             {
-		        templateBlobName = _digitalCertificatesWebConfiguration.FrameworkTemplateBlobName;
+                templateBlobName = _digitalCertificatesWebConfiguration.FrameworkTemplateBlobName;
                 templateBytes = await _blob.GetBlobBytesAsync(_digitalCertificatesWebConfiguration.ContainerName, templateBlobName);
                 var fwCourseName = model.CourseName ?? string.Empty;
                 var fwCourseOption = model.CourseOption;
@@ -251,12 +251,16 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 _logger.LogInformation("Generating certificate for CertificateNumber={CertificateNumber} using templateBlob={TemplateBlob}", model.CertificateNumber, templateBlobName);
             }
 
-            var output = await CreatePDFMemoryStream(templateBytes, values);
+            var downloadFileName = $"CertificateNumber{model.CertificateNumber}.pdf";
+            var output = await CreatePDFMemoryStream(templateBytes, values, downloadFileName);
             return output.ToArray();
         }
 
         [ExcludeFromCodeCoverage]
-        private async Task<MemoryStream> CreatePDFMemoryStream(byte[] templateBytes, Dictionary<string, string> values)
+        private async Task<MemoryStream> CreatePDFMemoryStream(
+            byte[] templateBytes,
+            Dictionary<string, string> values,
+            string downloadFileName)
         {
             await _asposeLicenseService.GetAsposeLicense();
 
@@ -294,6 +298,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Orchestrators
                 permissions: Permissions.PrintDocument,
                 cryptoAlgorithm: CryptoAlgorithm.AESx128);
 
+            document.Info.Title = Path.GetFileNameWithoutExtension(downloadFileName);
             document.Save(output);
             return output;
         }
