@@ -17,6 +17,7 @@ namespace SFA.DAS.DigitalCertificates.Web.Models.Certificates
         public Grade OverallGradeEnum => OverallGrade.ParseFromApi();
         public string OverallGradeBannerDisplay => OverallGradeEnum.ToBannerDisplay();
         public string OverallGradeResultDisplay => OverallGradeEnum.ToResultDisplay();
+        public string OverallGradeSharedDisplay => OverallGradeEnum.IsAvailable() ? OverallGradeEnum.ToResultDisplay() : Grade.Pass.ToResultDisplay();
         public string? ProviderName { get; set; }
         public DateTime? StartDate { get; set; }
         public bool ShowBackLink { get; set; } = false;
